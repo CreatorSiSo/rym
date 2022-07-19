@@ -6,7 +6,7 @@ mod error;
 use error::LexerError;
 
 pub struct Lexer<'src> {
-	input: &'src str,
+	source: &'src str,
 	iter: CharIndices<'src>,
 	c: char,
 	i: usize,
@@ -15,14 +15,14 @@ pub struct Lexer<'src> {
 impl<'src> Lexer<'src> {
 	pub fn new(source: &'src str) -> Self {
 		Self {
-			input: source,
+			source,
 			iter: source.char_indices(),
 			c: '\0',
 			i: 0,
 		}
 	}
 
-	pub fn next_token(&mut self) -> Result<Token, LexerError> {
+	pub fn next_token(&mut self) -> Result<Token<'src>, LexerError> {
 		self.advance();
 		self.consume_whitespace();
 		if self.is_at_end() {
@@ -79,8 +79,7 @@ impl<'src> Lexer<'src> {
 			}
 		}
 
-		let text = &self.input[start..=self.i];
-		println!("{text}");
+		let text = &self.source[start..=self.i];
 
 		match text.parse::<f64>() {
 			Ok(number) => Ok(TokenValue::Number(number)),
@@ -101,17 +100,16 @@ impl<'src> Lexer<'src> {
 		// Consume "
 		self.advance();
 
-		TokenValue::String(&self.input[start..self.i])
+		TokenValue::String(&self.source[start..self.i])
 	}
 
 	fn identifier(&mut self) -> TokenValue<'src> {
 		let start = self.i;
 		while self.peek(1).is_alphanumeric() || self.peek(1) == '_' {
 			self.advance();
-			// println!("{}, {}", self.c, self.c.is_alphanumeric());
 		}
 
-		let text = &self.input[start..=self.i];
+		let text = &self.source[start..=self.i];
 
 		match KEYWORDS.iter().find(|(key, _)| key == &text) {
 			Some((_, token_type)) => token_type.clone(),
@@ -143,9 +141,8 @@ impl<'src> Lexer<'src> {
 		if let Some((i, c)) = self.iter.next() {
 			self.i = i;
 			self.c = c;
-		// println!("({i}, '{c}')");
 		} else {
-			self.i = self.input.len();
+			self.i = self.source.len();
 			self.c = '\0'
 		}
 	}
@@ -159,7 +156,23 @@ impl<'src> Lexer<'src> {
 	}
 
 	fn is_at_end(&self) -> bool {
-		self.i >= self.input.len()
+		self.i >= self.source.len()
+	}
+}
+
+impl<'src> Iterator for Lexer<'src> {
+	type Item = Result<Token<'src>, LexerError>;
+	fn next(&mut self) -> Option<Self::Item> {
+		match self.next_token() {
+			Ok(tok) => {
+				if tok.value == TokenValue::Eof {
+					None
+				} else {
+					Some(Ok(tok))
+				}
+			}
+			err => Some(err),
+		}
 	}
 }
 

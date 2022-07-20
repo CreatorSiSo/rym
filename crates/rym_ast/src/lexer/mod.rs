@@ -43,18 +43,15 @@ impl<'src> Lexer<'src> {
 			let c = self.c;
 			self.start = self.current;
 			match c {
-				' ' | '\t' | '\r' => continue,
-				'\n' => {
-					self.line += 1;
-					self.col = 0;
-					continue;
-				}
+				'\n' | ' ' | '\t' | '\r' => continue,
 
+				// TODO: Comments
+				// '/' if self.matches('/') => break self.line_comment(),
+				// '/' if self.matches('*') => break self.multiline_comment(),
 				'+' => break TokenValue::Plus,
 				'-' => break TokenValue::Minus,
 				'*' => break TokenValue::Star,
-				'/' if self.matches('/') => break TokenValue::Slash,
-				'/' => break TokenValue::Slash, // TODO: Comments // '/' if self.matches('*') => self.multiline_comment(), // '/' if self.matches('/') => self.line_comment(),
+				'/' => break TokenValue::Slash,
 
 				'.' => break TokenValue::Dot,
 				',' => break TokenValue::Comma,
@@ -107,7 +104,7 @@ impl<'src> Lexer<'src> {
 	}
 
 	fn string(&mut self) -> TokenValue<'src> {
-		loop {
+		while !self.is_at_end() {
 			if self.c == '\\' && self.matches('"') {
 				self.advance();
 			}
@@ -152,6 +149,11 @@ impl<'src> Lexer<'src> {
 		} else {
 			self.current = self.source.len();
 			self.c = '\0'
+		}
+
+		if self.c == '\n' {
+			self.line += 1;
+			self.col = 0;
 		}
 	}
 

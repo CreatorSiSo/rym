@@ -29,7 +29,7 @@ impl<'src> Lexer<'src> {
 			current: 0,
 
 			line: 1,
-			col: 0,
+			col: 1,
 		}
 	}
 
@@ -74,7 +74,7 @@ impl<'src> Lexer<'src> {
 				'"' => break self.string(),
 
 				c if c.is_alphabetic() || c == '_' => break self.identifier(),
-				c => return LexerError::err(format!("Unexpected character `{c}`"), self.line, self.col),
+				_ => return LexerError::unexpected_char(&self),
 			};
 		};
 
@@ -82,24 +82,26 @@ impl<'src> Lexer<'src> {
 	}
 
 	fn number(&mut self) -> Result<TokenValue<'src>, LexerError> {
-		while self.peek(1).is_ascii_digit() && !self.is_at_end() {
-			self.advance();
-		}
+		let mut is_int = true;
+		self.consume_while(|c| c.is_ascii_digit());
 
 		if self.peek(1) == '.' && self.peek(2).is_ascii_digit() {
-			// Consume .
-			self.advance();
-
-			while self.peek(1).is_ascii_digit() {
-				self.advance();
-			}
+			is_int = false;
+			self.advance(); // Consume .
+			self.consume_while(|c| c.is_ascii_digit());
 		}
 
-		let text = &self.source[self.start..=self.current];
-
-		match text.parse::<f64>() {
-			Ok(number) => Ok(TokenValue::Number(number)),
-			Err(err) => LexerError::err(format!("{:?}", err), 0, 0),
+		let text = &self.source[self.start..self.current];
+		if is_int {
+			match text.parse::<i64>() {
+				Ok(int) => Ok(TokenValue::Int(int)),
+				Err(err) => LexerError::parse_int(&self, err),
+			}
+		} else {
+			match text.parse::<f64>() {
+				Ok(number) => Ok(TokenValue::Number(number)),
+				Err(err) => LexerError::parse_float(&self, err),
+			}
 		}
 	}
 
@@ -118,12 +120,9 @@ impl<'src> Lexer<'src> {
 	}
 
 	fn identifier(&mut self) -> TokenValue<'src> {
-		while self.peek(1).is_alphanumeric() || self.peek(1) == '_' {
-			self.advance();
-		}
+		self.consume_while(|c| c.is_alphanumeric() || c == '_');
 
 		let text = &self.source[self.start..=self.current];
-
 		match KEYWORDS.iter().find(|(key, _)| key == &text) {
 			Some((_, token_type)) => token_type.clone(),
 			None => TokenValue::Identifier(text),
@@ -132,6 +131,15 @@ impl<'src> Lexer<'src> {
 }
 
 impl<'src> Lexer<'src> {
+	fn consume_while<F>(&mut self, f: F)
+	where
+		F: Fn(char) -> bool,
+	{
+		while f(self.c) && !self.is_at_end() {
+			self.advance()
+		}
+	}
+
 	fn matches(&mut self, c: char) -> bool {
 		if self.is_at_end() || self.peek(1) != c {
 			return false;
@@ -153,7 +161,7 @@ impl<'src> Lexer<'src> {
 
 		if self.c == '\n' {
 			self.line += 1;
-			self.col = 0;
+			self.col = 1;
 		}
 	}
 

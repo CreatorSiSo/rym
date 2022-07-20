@@ -42,23 +42,23 @@ NamedThing
 // named-thing
 
 // keywords
-and
-struct
-else
-false
-fun
-for
 if
-or
-print
-return
-super
-this
-true
+else
+for
 while
 loop
+return
+break
+false
+true
+and
+or
+fn
 const
 mut
+struct
+self
+print
 
 /* /* */
 should be commented out

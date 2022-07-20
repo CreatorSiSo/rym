@@ -46,8 +46,9 @@ impl<'src> Lexer<'src> {
 				'\n' | ' ' | '\t' | '\r' => continue,
 
 				// TODO: Comments
-				// '/' if self.matches('/') => break self.line_comment(),
-				// '/' if self.matches('*') => break self.multiline_comment(),
+				'/' if self.matches('/') => self.consume_while(|c| c != '\n'),
+				'/' if self.matches('*') => self.multiline_comment(),
+
 				'+' => break TokenValue::Plus,
 				'-' => break TokenValue::Minus,
 				'*' => break TokenValue::Star,
@@ -81,6 +82,25 @@ impl<'src> Lexer<'src> {
 		Ok(Token::new(token_value, self.start))
 	}
 
+	fn multiline_comment(&mut self) {
+		let mut nested = 0;
+		while !self.is_at_end() {
+			if self.peek(1) == '/' && self.peek(2) == '*' {
+				nested += 1;
+			}
+			if self.peek(1) == '*' && self.peek(2) == '/' {
+				nested -= 1;
+			}
+			if nested < 0 {
+				break;
+			}
+			self.advance();
+		}
+		// Consume */
+		self.advance();
+		self.advance();
+	}
+
 	fn number(&mut self) -> Result<TokenValue<'src>, LexerError> {
 		let mut is_int = true;
 		self.consume_while(|c| c.is_ascii_digit());
@@ -91,7 +111,7 @@ impl<'src> Lexer<'src> {
 			self.consume_while(|c| c.is_ascii_digit());
 		}
 
-		let text = &self.source[self.start..self.current];
+		let text = &self.source[self.start..=self.current];
 		if is_int {
 			match text.parse::<i64>() {
 				Ok(int) => Ok(TokenValue::Int(int)),
@@ -135,7 +155,7 @@ impl<'src> Lexer<'src> {
 	where
 		F: Fn(char) -> bool,
 	{
-		while f(self.c) && !self.is_at_end() {
+		while f(self.peek(1)) && !self.is_at_end() {
 			self.advance()
 		}
 	}

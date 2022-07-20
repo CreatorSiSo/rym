@@ -1,0 +1,29 @@
+mut value = 20;
+{
+	const value = 0;
+	print value;
+}
+value = value-1;
+print value;
+
+print "";
+
+const a = "\t\tglobal a";
+const b = "\t\tglobal b";
+const c = "\t\tglobal c";
+{
+  const a = "\touter a";
+  const b = "\touter b";
+  {
+    const a = "inner a";
+    print a;
+    print b;
+    print c;
+  }
+  print a;
+  print b;
+  print c;
+}
+print a;
+print b;
+print c;

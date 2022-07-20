@@ -4,7 +4,9 @@ use crate::token::{Token, TokenValue, KEYWORDS};
 
 mod error;
 mod test;
+mod unescape;
 use error::LexerError;
+use unescape::unescape;
 
 pub struct Lexer<'src> {
 	source: &'src str,
@@ -43,7 +45,7 @@ impl<'src> Lexer<'src> {
 			let c = self.c;
 			self.start = self.current;
 			match c {
-				'\n' | ' ' | '\t' | '\r' => continue,
+				' ' | '\t' | '\n' | '\r' => continue,
 
 				// TODO: Comments
 				'/' if self.matches('/') => self.consume_while(|c| c != '\n'),
@@ -136,7 +138,7 @@ impl<'src> Lexer<'src> {
 			self.advance();
 		}
 
-		TokenValue::String(&self.source[self.start + 1..self.current])
+		TokenValue::String(unescape(&self.source[self.start + 1..self.current]))
 	}
 
 	fn identifier(&mut self) -> TokenValue<'src> {

@@ -22,10 +22,10 @@ pub enum TokenValue<'src> {
 	Less,
 	LessEqual,
 
-	Int(i64), // TODO
+	Int(i64),
 	Number(f64),
 	Char(char), // TODO
-	String(&'src str),
+	String(String),
 	Identifier(&'src str),
 
 	If,

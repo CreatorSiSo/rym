@@ -1,6 +1,10 @@
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
-use rym_ast::Lexer;
+use rym_ast::{Lexer, TokenValue};
+
+pub fn exec() {
+	Repl::new().watch();
+}
 
 struct Repl {
 	// interpreter: todo,
@@ -47,14 +51,16 @@ impl Repl {
 		println!("--- Lexer ---");
 		for maybe_token in lexer {
 			match maybe_token {
-				Ok(token) => print!("{:?} ", token),
-				Err(err) => print!("{:?} ", err),
+				Err(err) => println!("\n{:?} ", err),
+				Ok(token) => {
+					print!("{:?} ", token.value);
+					if token.value == TokenValue::Semicolon {
+						print!("\n")
+					}
+				}
 			}
 		}
 		println!("\n");
+		println!("\n");
 	}
-}
-
-pub fn exec() {
-	Repl::new().watch();
 }

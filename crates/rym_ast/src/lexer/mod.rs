@@ -3,13 +3,19 @@ use std::str::CharIndices;
 use crate::token::{Token, TokenValue, KEYWORDS};
 
 mod error;
+mod test;
 use error::LexerError;
 
 pub struct Lexer<'src> {
 	source: &'src str,
 	iter: CharIndices<'src>,
+
 	c: char,
-	i: usize,
+	start: usize,
+	current: usize,
+
+	line: usize,
+	col: usize,
 }
 
 impl<'src> Lexer<'src> {
@@ -17,55 +23,68 @@ impl<'src> Lexer<'src> {
 		Self {
 			source,
 			iter: source.char_indices(),
+
 			c: '\0',
-			i: 0,
+			start: 0,
+			current: 0,
+
+			line: 1,
+			col: 0,
 		}
 	}
 
-	pub fn next_token(&mut self) -> Result<Token<'src>, LexerError> {
-		self.advance();
-		self.consume_whitespace();
-		if self.is_at_end() {
-			return Ok(Token::new(TokenValue::Eof, self.i));
-		}
+	pub fn token(&mut self) -> Result<Token<'src>, LexerError> {
+		let token_value = loop {
+			self.advance();
+			if self.is_at_end() {
+				break TokenValue::Eof;
+			}
 
-		let c = self.c;
-		let token_value = match c {
-			'+' => TokenValue::Plus,
-			'-' => TokenValue::Minus,
-			'*' => TokenValue::Star,
-			'/' => TokenValue::Slash, // TODO: Comments // '/' if self.matches('*') => self.multiline_comment(), // '/' if self.matches('/') => self.line_comment(),
+			let c = self.c;
+			self.start = self.current;
+			match c {
+				' ' | '\t' | '\r' => continue,
+				'\n' => {
+					self.line += 1;
+					self.col = 0;
+					continue;
+				}
 
-			'.' => TokenValue::Dot,
-			',' => TokenValue::Comma,
-			';' => TokenValue::Semicolon,
-			'(' => TokenValue::LeftParen,
-			')' => TokenValue::RightParen,
-			'{' => TokenValue::LeftBrace,
-			'}' => TokenValue::RightBrace,
+				'+' => break TokenValue::Plus,
+				'-' => break TokenValue::Minus,
+				'*' => break TokenValue::Star,
+				'/' if self.matches('/') => break TokenValue::Slash,
+				'/' => break TokenValue::Slash, // TODO: Comments // '/' if self.matches('*') => self.multiline_comment(), // '/' if self.matches('/') => self.line_comment(),
 
-			'!' if self.matches('=') => TokenValue::BangEqual,
-			'!' => TokenValue::Bang,
-			'=' if self.matches('=') => TokenValue::EqualEqual,
-			'=' => TokenValue::Equal,
-			'>' if self.matches('=') => TokenValue::GreaterEqual,
-			'>' => TokenValue::Greater,
-			'<' if self.matches('=') => TokenValue::LessEqual,
-			'<' => TokenValue::Less,
+				'.' => break TokenValue::Dot,
+				',' => break TokenValue::Comma,
+				';' => break TokenValue::Semicolon,
+				'(' => break TokenValue::LeftParen,
+				')' => break TokenValue::RightParen,
+				'{' => break TokenValue::LeftBrace,
+				'}' => break TokenValue::RightBrace,
 
-			'0'..='9' => self.number()?,
-			// '\'' => self.char(),
-			'"' => self.string(),
+				'!' if self.matches('=') => break TokenValue::BangEqual,
+				'!' => break TokenValue::Bang,
+				'=' if self.matches('=') => break TokenValue::EqualEqual,
+				'=' => break TokenValue::Equal,
+				'>' if self.matches('=') => break TokenValue::GreaterEqual,
+				'>' => break TokenValue::Greater,
+				'<' if self.matches('=') => break TokenValue::LessEqual,
+				'<' => break TokenValue::Less,
 
-			c if c.is_alphabetic() || c == '_' => self.identifier(),
-			c => return LexerError::err(format!("Unexpected character {c}"), 0, 0),
+				'0'..='9' => break self.number()?,
+				'"' => break self.string(),
+
+				c if c.is_alphabetic() || c == '_' => break self.identifier(),
+				c => return LexerError::err(format!("Unexpected character `{c}`"), self.line, self.col),
+			};
 		};
 
-		Ok(Token::new(token_value, self.i))
+		Ok(Token::new(token_value, self.start))
 	}
 
 	fn number(&mut self) -> Result<TokenValue<'src>, LexerError> {
-		let start = self.i;
 		while self.peek(1).is_ascii_digit() && !self.is_at_end() {
 			self.advance();
 		}
@@ -79,7 +98,7 @@ impl<'src> Lexer<'src> {
 			}
 		}
 
-		let text = &self.source[start..=self.i];
+		let text = &self.source[self.start..=self.current];
 
 		match text.parse::<f64>() {
 			Ok(number) => Ok(TokenValue::Number(number)),
@@ -88,28 +107,25 @@ impl<'src> Lexer<'src> {
 	}
 
 	fn string(&mut self) -> TokenValue<'src> {
-		// Consume "
-		self.advance();
-
-		let start = self.i;
-		// TODO: Make \" work
-		while self.peek(1) != '"' {
-			self.advance()
+		loop {
+			if self.c == '\\' && self.matches('"') {
+				self.advance();
+			}
+			if self.matches('"') {
+				break;
+			}
+			self.advance();
 		}
 
-		// Consume "
-		self.advance();
-
-		TokenValue::String(&self.source[start..self.i])
+		TokenValue::String(&self.source[self.start + 1..self.current])
 	}
 
 	fn identifier(&mut self) -> TokenValue<'src> {
-		let start = self.i;
 		while self.peek(1).is_alphanumeric() || self.peek(1) == '_' {
 			self.advance();
 		}
 
-		let text = &self.source[start..=self.i];
+		let text = &self.source[self.start..=self.current];
 
 		match KEYWORDS.iter().find(|(key, _)| key == &text) {
 			Some((_, token_type)) => token_type.clone(),
@@ -119,17 +135,8 @@ impl<'src> Lexer<'src> {
 }
 
 impl<'src> Lexer<'src> {
-	fn consume_whitespace(&mut self) {
-		while self.c == ' ' || self.c == '\t' || self.c == '\n' || self.c == '\r' {
-			self.advance();
-		}
-	}
-
 	fn matches(&mut self, c: char) -> bool {
-		if self.is_at_end() {
-			return false;
-		};
-		if self.peek(1) != c {
+		if self.is_at_end() || self.peek(1) != c {
 			return false;
 		};
 
@@ -139,10 +146,11 @@ impl<'src> Lexer<'src> {
 
 	fn advance(&mut self) {
 		if let Some((i, c)) = self.iter.next() {
-			self.i = i;
+			self.col += 1;
+			self.current = i;
 			self.c = c;
 		} else {
-			self.i = self.source.len();
+			self.current = self.source.len();
 			self.c = '\0'
 		}
 	}
@@ -156,67 +164,18 @@ impl<'src> Lexer<'src> {
 	}
 
 	fn is_at_end(&self) -> bool {
-		self.i >= self.source.len()
+		self.current >= self.source.len()
 	}
 }
 
 impl<'src> Iterator for Lexer<'src> {
 	type Item = Result<Token<'src>, LexerError>;
+
 	fn next(&mut self) -> Option<Self::Item> {
-		match self.next_token() {
-			Ok(tok) => {
-				if tok.value == TokenValue::Eof {
-					None
-				} else {
-					Some(Ok(tok))
-				}
-			}
-			err => Some(err),
+		if self.is_at_end() {
+			None
+		} else {
+			Some(self.token())
 		}
-	}
-}
-
-#[test]
-fn test() {
-	let source = "ident ifier
-		- + / *
-		. , ; ( ) { }
-		! != = == > >= < <=
-
-		0 1 2 3 4 5 6 7 8 9
-		12392347.230873460 1 23428934
-		34957533457 96
-
-		\"\"\"asdfsd\"\"\"
-		\"WOoooOOoooWEEeee!\"
-		\"
-		- + / *
-		. , ; ( ) { }
-		! != = == > >= < <=
-		if else for while loop return break
- 		false true and or
- 		fn const mut
- 		struct self
- 		print
-		\"
-
-		if else for while loop return break
-		false true and or
-		fn const mut
-		struct self
-		print
-
-		testing(arg1,, arg2)
-
-		\t\t
-		\n \r \n\r
-	";
-	let mut lexer = Lexer::new(source);
-	loop {
-		let token = lexer.next_token().unwrap();
-		if token.value == TokenValue::Eof {
-			break;
-		}
-		println!("{:?}", token)
 	}
 }

@@ -1,3 +1,4 @@
+mod debug;
 mod file;
 mod repl;
 

@@ -21,6 +21,24 @@ pub struct Lexer<'src> {
 }
 
 impl<'src> Lexer<'src> {
+	pub fn lex(source: &'src str) -> (Vec<Token<'src>>, Vec<LexerError>) {
+		let mut tokens = Vec::new();
+		let mut errors = Vec::new();
+
+		for result in Lexer::new(source) {
+			match result {
+				Ok(token) => {
+					tokens.push(token);
+				}
+				Err(err) => {
+					errors.push(err);
+				}
+			}
+		}
+
+		(tokens, errors)
+	}
+
 	pub fn new(source: &'src str) -> Self {
 		Self {
 			source,
@@ -77,7 +95,7 @@ impl<'src> Lexer<'src> {
 				'"' => break self.string(),
 
 				c if c.is_alphabetic() || c == '_' => break self.identifier(),
-				_ => return LexerError::unexpected_char(&self),
+				_ => return LexerError::unexpected_char(self),
 			};
 		};
 
@@ -117,12 +135,12 @@ impl<'src> Lexer<'src> {
 		if is_int {
 			match text.parse::<i64>() {
 				Ok(int) => Ok(TokenValue::Int(int)),
-				Err(err) => LexerError::parse_int(&self, err),
+				Err(err) => LexerError::parse_int(self, err),
 			}
 		} else {
 			match text.parse::<f64>() {
 				Ok(number) => Ok(TokenValue::Number(number)),
-				Err(err) => LexerError::parse_float(&self, err),
+				Err(err) => LexerError::parse_float(self, err),
 			}
 		}
 	}

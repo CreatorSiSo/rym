@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Stmt {
 	/// A const or mut binding
 	Local(Local),
@@ -9,6 +10,7 @@ pub enum Stmt {
 	Empty,
 }
 
+#[derive(Debug)]
 pub enum Local {
 	/// A constant binding `const a = 0`
 	Const(Expr),
@@ -17,6 +19,7 @@ pub enum Local {
 	Mut(Expr),
 }
 
+#[derive(Debug)]
 pub enum Expr {
 	/// An array `[a, b, c, d]`
 	Array(Vec<Expr>),
@@ -65,6 +68,7 @@ pub enum Expr {
 	Literal(Literal),
 }
 
+#[derive(Debug)]
 pub enum Literal {
 	/// `true` or `false`
 	Bool(bool),
@@ -78,10 +82,12 @@ pub enum Literal {
 	Identifier(String),
 }
 
+#[derive(Debug)]
 pub struct Block {
 	pub stmts: Vec<Stmt>,
 }
 
+#[derive(Debug)]
 pub enum BinaryOp {
 	/// The `+` operator (addition)
 	Add,
@@ -113,6 +119,7 @@ pub enum BinaryOp {
 	Or,
 }
 
+#[derive(Debug)]
 pub enum UnaryOp {
 	/// The `!` operator (not)
 	Not,

@@ -77,7 +77,7 @@ pub const KEYWORDS: &[(&str, TokenValue)] = &[
 	("print", TokenValue::Print),
 ];
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token<'src> {
 	pub value: TokenValue<'src>,
 	pub start: usize,

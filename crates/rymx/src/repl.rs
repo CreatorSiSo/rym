@@ -1,6 +1,7 @@
+use crate::debug::*;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
-use rym_ast::{Lexer, TokenValue};
+use rym_ast::{Lexer, Parser};
 
 pub fn exec() {
 	Repl::new().watch();
@@ -46,21 +47,16 @@ impl Repl {
 	}
 
 	fn eval_line(&mut self, line: String) {
-		let lexer = Lexer::new(&line);
-
 		println!("--- Lexer ---");
-		for maybe_token in lexer {
-			match maybe_token {
-				Err(err) => println!("\n{err}"),
-				Ok(token) => {
-					print!("{:?} ", token.value);
-					if token.value == TokenValue::Semicolon {
-						print!("\n")
-					}
-				}
-			}
-		}
+		let (tokens, errors) = Lexer::lex(&line);
+		print_tokens(&tokens);
+		print_errors(&errors);
 		println!("\n");
+
+		println!("--- Parser ---");
+		let (ast, errors) = Parser::parse(tokens);
+		print_ast(&ast);
+		print_errors(&errors);
 		println!("\n");
 	}
 }

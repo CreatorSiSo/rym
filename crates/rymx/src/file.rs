@@ -1,30 +1,31 @@
-use rym_ast::{Lexer, TokenValue};
+use crate::debug::*;
+use rym_ast::{Lexer, Parser};
 use std::path::Path;
 use std::process::exit;
 
 pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 	let source = std::fs::read_to_string(path)?;
-	let lexer = Lexer::new(&source);
-	let mut had_lexer_error = false;
+	let mut had_syntax_error = false;
 
 	println!("--- Lexer ---");
-	for maybe_token in lexer {
-		match maybe_token {
-			Err(err) => {
-				println!("\n{err}");
-				had_lexer_error = true;
-			}
-			Ok(token) => {
-				print!("{:?} ", token.value);
-				if token.value == TokenValue::Semicolon {
-					print!("\n")
-				}
-			}
-		}
+	let (tokens, errors) = Lexer::lex(&source);
+	if !errors.is_empty() {
+		had_syntax_error = true;
 	}
+	print_tokens(&tokens);
+	print_errors(&errors);
 	println!("\n");
 
-	if had_lexer_error {
+	println!("--- Parser ---");
+	let (ast, errors) = Parser::parse(tokens);
+	if !errors.is_empty() {
+		had_syntax_error = true;
+	}
+	print_ast(&ast);
+	print_errors(&errors);
+	println!("\n");
+
+	if had_syntax_error {
 		exit(65 /* data format error */)
 	}
 

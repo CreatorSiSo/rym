@@ -35,7 +35,7 @@ impl<'src> Lexer<'src> {
 		}
 	}
 
-	pub fn token(&mut self) -> Result<Token<'src>, LexerError> {
+	pub fn next_token(&mut self) -> Result<Token<'src>, LexerError> {
 		let token_value = loop {
 			self.advance();
 			if self.is_at_end() {
@@ -207,7 +207,7 @@ impl<'src> Iterator for Lexer<'src> {
 		if self.is_at_end() {
 			None
 		} else {
-			Some(self.token())
+			Some(self.next_token())
 		}
 	}
 }

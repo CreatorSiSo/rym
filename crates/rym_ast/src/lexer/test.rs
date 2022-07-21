@@ -6,7 +6,7 @@ fn test() {
 	let source = include_str!("../../../../examples/lexer.rym");
 	let mut lexer = Lexer::new(source);
 	loop {
-		match lexer.token() {
+		match lexer.next_token() {
 			Ok(token) => {
 				println!("{token:?}");
 				if token.value == TokenValue::Eof {

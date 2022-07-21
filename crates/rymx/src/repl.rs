@@ -51,7 +51,7 @@ impl Repl {
 		println!("--- Lexer ---");
 		for maybe_token in lexer {
 			match maybe_token {
-				Err(err) => println!("\n{:?} ", err),
+				Err(err) => println!("\n{err}"),
 				Ok(token) => {
 					print!("{:?} ", token.value);
 					if token.value == TokenValue::Semicolon {

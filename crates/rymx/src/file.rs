@@ -11,7 +11,7 @@ pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 	for maybe_token in lexer {
 		match maybe_token {
 			Err(err) => {
-				println!("\n{:?} ", err);
+				println!("\n{err}");
 				had_lexer_error = true;
 			}
 			Ok(token) => {

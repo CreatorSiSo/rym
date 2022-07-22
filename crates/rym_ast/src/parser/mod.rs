@@ -7,7 +7,6 @@ use error::ParserError;
 pub struct Parser<'src> {
 	tokens: Vec<Token<'src>>,
 	pos: usize,
-	finished: bool,
 }
 
 impl<'src> Parser<'src> {
@@ -30,11 +29,7 @@ impl<'src> Parser<'src> {
 	}
 
 	pub fn new(tokens: Vec<Token<'src>>) -> Self {
-		Self {
-			tokens,
-			pos: 0,
-			finished: false,
-		}
+		Self { tokens, pos: 0 }
 	}
 
 	pub fn stmt(&mut self) -> Result<Stmt<'src>, ParserError<'src>> {
@@ -43,7 +38,8 @@ impl<'src> Parser<'src> {
 		}
 
 		let expr = self.expr()?;
-		self.expect(TokenType::Semicolon, "Expected `;`")?;
+		// self.expect(TokenType::Semicolon, "Expected `;`")?;
+		self.matches(TokenType::Semicolon);
 		Ok(Stmt::Expr(expr))
 	}
 
@@ -208,11 +204,11 @@ impl<'src> Parser<'src> {
 	fn block(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
 		let mut stmts = Vec::new();
 		loop {
-			let stmt = self.stmt()?;
-			stmts.push(stmt);
-			if self.matches_any(&[TokenType::RightBrace, TokenType::Semicolon, TokenType::Eof]) {
+			if self.matches(TokenType::RightBrace) {
 				break;
 			}
+			let stmt = self.stmt()?;
+			stmts.push(stmt);
 		}
 		Ok(Expr::Block(Block { stmts }))
 	}
@@ -282,16 +278,11 @@ impl<'src> Iterator for Parser<'src> {
 	type Item = Result<Stmt<'src>, ParserError<'src>>;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		if self.finished {
+		if self.tokens.is_empty() || self.is_at_end() {
 			return None;
 		}
 		match self.stmt() {
-			Ok(stmt) => {
-				if self.is_at_end() {
-					self.finished = true;
-				}
-				Some(Ok(stmt))
-			}
+			Ok(stmt) => Some(Ok(stmt)),
 			Err(err) => Some(Err(err)),
 		}
 	}

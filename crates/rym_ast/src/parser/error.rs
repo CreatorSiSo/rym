@@ -20,12 +20,12 @@ impl Display for ParserError<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			ParserError::TokenMismatch { token, msg } => {
-				writeln!(f, "Error: {msg} got `{:?}`", token.typ)?;
-				writeln!(f, "Position: {}", token.start)
+				writeln!(f, "Error:	{msg} got `{:?}`", token.typ)?;
+				write!(f, "Pos:	{}", token.start)
 			}
 			ParserError::InvalidAssignmentTarget { token } => {
-				writeln!(f, "Error: Invalid assignment target `{:?}`", token.typ)?;
-				writeln!(f, "Position: {}", token.start)
+				writeln!(f, "Error:	Invalid assignment target `{:?}`", token.typ)?;
+				write!(f, "Pos:	{}", token.start)
 			}
 		}
 	}

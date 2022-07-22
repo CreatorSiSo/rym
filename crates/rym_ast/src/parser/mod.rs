@@ -10,7 +10,7 @@ pub struct Parser<'src> {
 }
 
 impl<'src> Parser<'src> {
-	pub fn parse(tokens: Vec<Token<'src>>) -> (Vec<Stmt>, Vec<ParserError>) {
+	pub fn parse(tokens: Vec<Token<'src>>) -> (Vec<Stmt<'src>>, Vec<ParserError<'src>>) {
 		let mut stmts = Vec::new();
 		let mut errors = Vec::new();
 

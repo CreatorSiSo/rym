@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, PartialEq)]
 pub enum Stmt<'src> {
 	/// A const or mut binding
@@ -13,10 +15,10 @@ pub enum Stmt<'src> {
 #[derive(Debug, PartialEq)]
 pub enum Local<'src> {
 	/// A constant binding `const a = 0`
-	Const(Expr<'src>),
+	Const(&'src str, Expr<'src>),
 
 	/// A mutable binding `mut b = "hi"`
-	Mut(Expr<'src>),
+	Mut(&'src str, Expr<'src>),
 }
 
 #[derive(Debug, PartialEq)]
@@ -119,4 +121,26 @@ pub enum Literal<'src> {
 	Number(f64),
 	String(String),
 	Identifier(&'src str),
+}
+
+impl<'src> Display for Literal<'src> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Literal::Bool(value) => write!(f, "{value}"),
+			Literal::Number(value) => write!(f, "{value}"),
+			Literal::String(value) => write!(f, "{value}"),
+			Literal::Identifier(name) => write!(f, "{name}"),
+		}
+	}
+}
+
+impl<'src> Literal<'src> {
+	pub fn to_type_string(&self) -> String {
+		match self {
+			Literal::Bool(_) => "bool".into(),
+			Literal::Number(_) => "number".into(),
+			Literal::String(_) => "string".into(),
+			Literal::Identifier(_) => "identifier".into(),
+		}
+	}
 }

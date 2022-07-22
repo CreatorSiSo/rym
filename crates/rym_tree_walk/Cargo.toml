@@ -1,11 +1,9 @@
 [package]
-name = "rymx"
-version = "0.1.0"
+name = "rym_tree_walk"
+version = "0.0.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rustyline = "10.0.0"
 rym_ast = { path = "../rym_ast" }
-rym_tree_walk = { path = "../rym_tree_walk" }

@@ -251,7 +251,14 @@ dependencies = [
 
 [[package]]
 name = "rym_ast"
-version = "0.1.0"
+version = "0.0.0"
+
+[[package]]
+name = "rym_tree_walk"
+version = "0.0.0"
+dependencies = [
+ "rym_ast",
+]
 
 [[package]]
 name = "rymx"
@@ -259,6 +266,7 @@ version = "0.1.0"
 dependencies = [
  "rustyline",
  "rym_ast",
+ "rym_tree_walk",
 ]
 
 [[package]]

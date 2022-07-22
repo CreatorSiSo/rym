@@ -1,93 +1,82 @@
-#[derive(Debug)]
-pub enum Stmt {
+#[derive(Debug, PartialEq)]
+pub enum Stmt<'src> {
 	/// A const or mut binding
-	Local(Local),
+	Local(Local<'src>),
 
 	/// Expr without trailing semi-colon.
-	Expr(Expr),
+	Expr(Expr<'src>),
 
 	/// Just a trailing semi-colon.
 	Empty,
+
+	/// Singnal that parsing finished
+	Eof,
 }
 
-#[derive(Debug)]
-pub enum Local {
+#[derive(Debug, PartialEq)]
+pub enum Local<'src> {
 	/// A constant binding `const a = 0`
-	Const(Expr),
+	Const(Expr<'src>),
 
 	/// A mutable binding `mut b = "hi"`
-	Mut(Expr),
+	Mut(Expr<'src>),
 }
 
-#[derive(Debug)]
-pub enum Expr {
+#[derive(Debug, PartialEq)]
+pub enum Expr<'src> {
 	/// An array `[a, b, c, d]`
-	Array(Vec<Expr>),
+	Array(Vec<Expr<'src>>),
 
 	/// A tuple `(a, b, c, d)`
-	Tuple(Vec<Expr>),
+	Tuple(Vec<Expr<'src>>),
 
 	/// An `if` block, with an optional `else` block.
 	///
 	/// `if expr { block } else { block }`
-	If(Box<Expr>, Block, Option<Block>),
+	If(Box<Expr<'src>>, Block<'src>, Option<Block<'src>>),
 
 	/// A while loop `while expr { block }`
-	While(Box<Expr>, Block),
+	While(Box<Expr<'src>>, Block<'src>),
 
 	/// Conditionless loop (can be exited with `break`, `continue`, or `return`)
 	///
 	/// `loop { block }`
-	Loop(Block),
+	Loop(Block<'src>),
 
 	/// A block `{ .. }`
-	Block(Block),
+	Block(Block<'src>),
 
 	/// A `break`, with an optional expression
-	Break(Option<Box<Expr>>),
+	Break(Option<Box<Expr<'src>>>),
 
 	/// A `continue`
 	Continue,
 
 	/// A `return`, with an optional value to be returned
-	Return(Option<Box<Expr>>),
+	Return(Option<Box<Expr<'src>>>),
 
 	/// An assignment `a = 20`
-	Assign(Box<Expr>, Box<Expr>),
+	Assign(Box<Expr<'src>>, Box<Expr<'src>>),
 
 	/// A binary operation `a + b`, `a * b`
-	Binary(Box<Expr>, BinaryOp, Box<Expr>),
+	Binary(Box<Expr<'src>>, BinaryOp, Box<Expr<'src>>),
 
 	/// A unary operation `!x`, `*x`
-	Unary(UnaryOp, Box<Expr>),
+	Unary(UnaryOp, Box<Expr<'src>>),
 
 	/// `(9 - 2) * 4`
-	Group(Box<Expr>),
+	Group(Box<Expr<'src>>),
 
 	/// A literal `true`, `2`, `"Hello"`
-	Literal(Literal),
+	Literal(Literal<'src>),
 }
 
-#[derive(Debug)]
-pub enum Literal {
-	/// `true` or `false`
-	Bool(bool),
-
-	/// A 64-bit floating point number
-	Number(f64),
-
-	/// TODO
-	String(String),
-	/// TODO
-	Identifier(String),
+#[derive(Debug, PartialEq)]
+pub struct Block<'src> {
+	pub stmts: Vec<Stmt<'src>>,
 }
 
-#[derive(Debug)]
-pub struct Block {
-	pub stmts: Vec<Stmt>,
-}
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum BinaryOp {
 	/// The `+` operator (addition)
 	Add,
@@ -119,10 +108,18 @@ pub enum BinaryOp {
 	Or,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum UnaryOp {
 	/// The `!` operator (not)
 	Not,
 	/// The `-` operator (negate)
 	Neg,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Literal<'src> {
+	Bool(bool),
+	Number(f64),
+	String(String),
+	Identifier(&'src str),
 }

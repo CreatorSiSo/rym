@@ -1,5 +1,7 @@
+use crate::ast::Literal;
+
 #[derive(Debug, PartialEq, Clone)]
-pub enum TokenValue<'src> {
+pub enum TokenType {
 	Plus,
 	Minus,
 	Star,
@@ -22,11 +24,11 @@ pub enum TokenValue<'src> {
 	Less,
 	LessEqual,
 
-	Int(i64),
-	Number(f64),
-	Char(char), // TODO
-	String(String),
-	Identifier(&'src str),
+	Int,
+	Number,
+	Char,
+	String,
+	Identifier,
 
 	If,
 	Else,
@@ -53,38 +55,51 @@ pub enum TokenValue<'src> {
 	Eof,
 }
 
-pub const KEYWORDS: &[(&str, TokenValue)] = &[
-	("if", TokenValue::If),
-	("else", TokenValue::Else),
-	("for", TokenValue::For),
-	("while", TokenValue::While),
-	("loop", TokenValue::Loop),
-	("return", TokenValue::Return),
-	("break", TokenValue::Break),
+pub const KEYWORDS: &[(&str, TokenType)] = &[
+	("if", TokenType::If),
+	("else", TokenType::Else),
+	("for", TokenType::For),
+	("while", TokenType::While),
+	("loop", TokenType::Loop),
+	("return", TokenType::Return),
+	("break", TokenType::Break),
 	//
-	("false", TokenValue::False),
-	("true", TokenValue::True),
-	("and", TokenValue::And),
-	("or", TokenValue::Or),
+	("false", TokenType::False),
+	("true", TokenType::True),
+	("and", TokenType::And),
+	("or", TokenType::Or),
 	//
-	("fn", TokenValue::Fn),
-	("const", TokenValue::Const),
-	("mut", TokenValue::Mut),
+	("fn", TokenType::Fn),
+	("const", TokenType::Const),
+	("mut", TokenType::Mut),
 	//
-	("struct", TokenValue::Struct),
-	("self", TokenValue::Selff),
+	("struct", TokenType::Struct),
+	("self", TokenType::Selff),
 	//
-	("print", TokenValue::Print),
+	("print", TokenType::Print),
 ];
 
 #[derive(Debug, Clone)]
 pub struct Token<'src> {
-	pub value: TokenValue<'src>,
+	pub typ: TokenType,
+	pub literal: Option<Literal<'src>>,
 	pub start: usize,
 }
 
 impl<'src> Token<'src> {
-	pub fn new(typ: TokenValue<'src>, start: usize) -> Self {
-		Self { value: typ, start }
+	pub fn new(typ: TokenType, start: usize) -> Self {
+		Self {
+			typ,
+			literal: None,
+			start,
+		}
+	}
+
+	pub fn literal(typ: TokenType, literal: Literal<'src>, start: usize) -> Self {
+		Self {
+			typ,
+			literal: Some(literal),
+			start,
+		}
 	}
 }

@@ -1,5 +1,5 @@
 #[cfg(test)]
-use crate::{Lexer, TokenValue};
+use crate::{Lexer, TokenType};
 
 #[test]
 fn test() {
@@ -9,7 +9,7 @@ fn test() {
 		match lexer.next_token() {
 			Ok(token) => {
 				println!("{token:?}");
-				if token.value == TokenValue::Eof {
+				if token.typ == TokenType::Eof {
 					break;
 				}
 			}

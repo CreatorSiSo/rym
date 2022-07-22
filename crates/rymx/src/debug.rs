@@ -1,10 +1,10 @@
-use rym_ast::{Stmt, Token, TokenValue};
+use rym_ast::{Stmt, Token, TokenType};
 use std::fmt::Display;
 
 pub fn print_tokens(tokens: &[Token]) {
 	for token in tokens {
-		match &token.value {
-			TokenValue::Semicolon => println!("Semicolon"),
+		match &token.typ {
+			TokenType::Semicolon => println!("Semicolon"),
 			value => print!("{value:?} "),
 		}
 	}

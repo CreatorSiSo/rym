@@ -1,6 +1,6 @@
+use crate::ast::Literal;
+use crate::token::{Token, TokenType, KEYWORDS};
 use std::str::CharIndices;
-
-use crate::token::{Token, TokenValue, KEYWORDS};
 
 mod error;
 mod test;
@@ -57,7 +57,7 @@ impl<'src> Lexer<'src> {
 		let token_value = loop {
 			self.advance();
 			if self.is_at_end() {
-				break TokenValue::Eof;
+				break TokenType::Eof;
 			}
 
 			let c = self.c;
@@ -69,32 +69,32 @@ impl<'src> Lexer<'src> {
 				'/' if self.matches('/') => self.consume_while(|c| c != '\n'),
 				'/' if self.matches('*') => self.multiline_comment(),
 
-				'+' => break TokenValue::Plus,
-				'-' => break TokenValue::Minus,
-				'*' => break TokenValue::Star,
-				'/' => break TokenValue::Slash,
+				'+' => break TokenType::Plus,
+				'-' => break TokenType::Minus,
+				'*' => break TokenType::Star,
+				'/' => break TokenType::Slash,
 
-				'.' => break TokenValue::Dot,
-				',' => break TokenValue::Comma,
-				';' => break TokenValue::Semicolon,
-				'(' => break TokenValue::LeftParen,
-				')' => break TokenValue::RightParen,
-				'{' => break TokenValue::LeftBrace,
-				'}' => break TokenValue::RightBrace,
+				'.' => break TokenType::Dot,
+				',' => break TokenType::Comma,
+				';' => break TokenType::Semicolon,
+				'(' => break TokenType::LeftParen,
+				')' => break TokenType::RightParen,
+				'{' => break TokenType::LeftBrace,
+				'}' => break TokenType::RightBrace,
 
-				'!' if self.matches('=') => break TokenValue::BangEqual,
-				'!' => break TokenValue::Bang,
-				'=' if self.matches('=') => break TokenValue::EqualEqual,
-				'=' => break TokenValue::Equal,
-				'>' if self.matches('=') => break TokenValue::GreaterEqual,
-				'>' => break TokenValue::Greater,
-				'<' if self.matches('=') => break TokenValue::LessEqual,
-				'<' => break TokenValue::Less,
+				'!' if self.matches('=') => break TokenType::BangEqual,
+				'!' => break TokenType::Bang,
+				'=' if self.matches('=') => break TokenType::EqualEqual,
+				'=' => break TokenType::Equal,
+				'>' if self.matches('=') => break TokenType::GreaterEqual,
+				'>' => break TokenType::Greater,
+				'<' if self.matches('=') => break TokenType::LessEqual,
+				'<' => break TokenType::Less,
 
-				'0'..='9' => break self.number()?,
-				'"' => break self.string(),
+				'0'..='9' => return self.number(),
+				'"' => return self.string(),
 
-				c if c.is_alphabetic() || c == '_' => break self.identifier(),
+				c if c.is_alphabetic() || c == '_' => return self.identifier(),
 				_ => return LexerError::unexpected_char(self),
 			};
 		};
@@ -121,31 +121,28 @@ impl<'src> Lexer<'src> {
 		self.advance();
 	}
 
-	fn number(&mut self) -> Result<TokenValue<'src>, LexerError> {
-		let mut is_int = true;
+	fn number(&mut self) -> Result<Token<'src>, LexerError> {
 		self.consume_while(|c| c.is_ascii_digit());
 
 		if self.peek(1) == '.' && self.peek(2).is_ascii_digit() {
-			is_int = false;
 			self.advance(); // Consume .
 			self.consume_while(|c| c.is_ascii_digit());
 		}
 
 		let text = &self.source[self.start..=self.current];
-		if is_int {
-			match text.parse::<i64>() {
-				Ok(int) => Ok(TokenValue::Int(int)),
-				Err(err) => LexerError::parse_int(self, err),
-			}
-		} else {
-			match text.parse::<f64>() {
-				Ok(number) => Ok(TokenValue::Number(number)),
-				Err(err) => LexerError::parse_float(self, err),
-			}
-		}
+		let value = match text.parse::<f64>() {
+			Ok(number) => number,
+			Err(err) => return LexerError::parse_float(self, err),
+		};
+
+		Ok(Token::literal(
+			TokenType::Number,
+			Literal::Number(value),
+			self.start,
+		))
 	}
 
-	fn string(&mut self) -> TokenValue<'src> {
+	fn string(&mut self) -> Result<Token<'src>, LexerError> {
 		while !self.is_at_end() {
 			if self.c == '\\' && self.matches('"') {
 				self.advance();
@@ -156,17 +153,22 @@ impl<'src> Lexer<'src> {
 			self.advance();
 		}
 
-		TokenValue::String(unescape(&self.source[self.start + 1..self.current]))
+		Ok(Token::literal(
+			TokenType::String,
+			Literal::String(unescape(&self.source[self.start + 1..self.current])),
+			self.start,
+		))
 	}
 
-	fn identifier(&mut self) -> TokenValue<'src> {
+	fn identifier(&mut self) -> Result<Token<'src>, LexerError> {
 		self.consume_while(|c| c.is_alphanumeric() || c == '_');
 
 		let text = &self.source[self.start..=self.current];
-		match KEYWORDS.iter().find(|(key, _)| key == &text) {
+		let typ = match KEYWORDS.iter().find(|(key, _)| key == &text) {
 			Some((_, token_type)) => token_type.clone(),
-			None => TokenValue::Identifier(text),
-		}
+			None => TokenType::Identifier,
+		};
+		Ok(Token::literal(typ, Literal::Identifier(text), self.start))
 	}
 }
 

@@ -17,12 +17,17 @@ pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 	println!("\n");
 
 	println!("--- Parser ---");
-	let (ast, errors) = Parser::parse(tokens);
+	for result in Parser::new(tokens) {
+		match result {
+			Ok(stmt) => print_ast(&[stmt]),
+			Err(err) => print_errors(&[err]),
+		}
+	}
 	if !errors.is_empty() {
 		had_syntax_error = true;
 	}
-	print_ast(&ast);
-	print_errors(&errors);
+	// print_ast(&ast);
+	// print_errors(&errors);
 	println!("\n");
 
 	if had_syntax_error {

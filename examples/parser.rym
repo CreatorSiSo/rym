@@ -8,7 +8,18 @@
 -false;
 !20;
 
-// Literal
+// Groups
+(20);
+
+// Blocks
+{
+	"outer";
+	({
+		"inner";
+	});
+};
+
+// Literals
 false;
 true;
 2099;

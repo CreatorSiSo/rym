@@ -1,4 +1,4 @@
-use crate::ast::{Expr, Literal, Stmt};
+use crate::ast::{Block, Expr, Literal, Stmt};
 use crate::{Token, TokenType};
 
 mod error;
@@ -32,7 +32,7 @@ impl<'src> Parser<'src> {
 		Self { tokens, pos: 0 }
 	}
 
-	pub fn next_stmt(&mut self) -> Result<Stmt<'src>, ParserError<'src>> {
+	pub fn stmt(&mut self) -> Result<Stmt<'src>, ParserError<'src>> {
 		if self.is_at_end() {
 			return Ok(Stmt::Eof);
 		}
@@ -51,10 +51,20 @@ impl<'src> Parser<'src> {
 	}
 
 	fn expr(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
-		self.literal()
+		self.primary()
 	}
 
-	fn literal(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn primary(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		if self.matches(TokenType::LeftParen) {
+			let expr = Box::new(self.expr()?);
+			self.expect(TokenType::RightParen, "Expected `)`")?;
+			return Ok(Expr::Group(expr));
+		}
+
+		if self.matches(TokenType::LeftBrace) {
+			return self.block();
+		}
+
 		match self.matches_any(&[
 			TokenType::False,
 			TokenType::True,
@@ -75,6 +85,22 @@ impl<'src> Parser<'src> {
 			},
 			None => ParserError::token_mismatch(self.advance(), "Expected Literal"),
 		}
+	}
+
+	fn block(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		let mut stmts = Vec::new();
+		loop {
+			if self.matches(TokenType::RightBrace) {
+				break;
+			}
+			let stmt = self.stmt()?;
+			println!("{stmts:?}");
+			stmts.push(stmt);
+			if self.matches(TokenType::RightBrace) {
+				break;
+			}
+		}
+		Ok(Expr::Block(Block { stmts }))
 	}
 }
 
@@ -132,7 +158,7 @@ impl<'src> Iterator for Parser<'src> {
 	type Item = Result<Stmt<'src>, ParserError<'src>>;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		match self.next_stmt() {
+		match self.stmt() {
 			Ok(stmt) if stmt == Stmt::Eof => None,
 			Ok(stmt) => Some(Ok(stmt)),
 			Err(err) => Some(Err(err)),

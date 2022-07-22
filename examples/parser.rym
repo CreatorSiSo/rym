@@ -1,11 +1,45 @@
+// Comparison
+30 < 99 and true;
+false or true;
+	// err
+0 and true;
+"0" or "\t";
+
+// Equality
+20 == 0; // false
+true != false; // true
+"air" == "air"; // true
+"air" != true; // true
+
+// Comparison
+30 < 99;
+999 <= 9;
+10 > 9;
+10 >= 10;
+	// err
+0 < true;
+"0" >= "\t";
+
+// Term
+30 + 99;
+999 - 9;
+	// err
+0 - true;
+"0" - "\t";
+
+// Factor
+30 * 99;
+999 / 9;
+	// err
+999 / 0;
+
 // Unary
-	// ok
 -20;
 !true;
-!false;
+!!false;
 	// err
 -true;
--false;
+--false;
 !20;
 
 // Groups
@@ -14,10 +48,9 @@
 // Blocks
 {
 	"outer";
-	({
-		"inner";
-	});
-};
+	{ "inner1"; } + "\n";
+	({ "inner2"; } + "\n");
+}
 
 // Literals
 false;

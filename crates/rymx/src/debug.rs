@@ -12,7 +12,7 @@ pub fn print_tokens(tokens: &[Token]) {
 
 pub fn print_ast(ast: &[Stmt]) {
 	for stmt in ast {
-		println!("{stmt:#?}");
+		println!("{stmt:?}");
 	}
 }
 

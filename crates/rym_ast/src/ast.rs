@@ -8,9 +8,6 @@ pub enum Stmt<'src> {
 
 	/// Just a trailing semi-colon.
 	Empty,
-
-	/// Singnal that parsing finished
-	Eof,
 }
 
 #[derive(Debug, PartialEq)]

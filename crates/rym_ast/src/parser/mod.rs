@@ -7,6 +7,7 @@ use error::ParserError;
 pub struct Parser<'src> {
 	tokens: Vec<Token<'src>>,
 	pos: usize,
+	finished: bool,
 }
 
 impl<'src> Parser<'src> {
@@ -29,24 +30,20 @@ impl<'src> Parser<'src> {
 	}
 
 	pub fn new(tokens: Vec<Token<'src>>) -> Self {
-		Self { tokens, pos: 0 }
+		Self {
+			tokens,
+			pos: 0,
+			finished: false,
+		}
 	}
 
 	pub fn stmt(&mut self) -> Result<Stmt<'src>, ParserError<'src>> {
-		if self.is_at_end() {
-			return Ok(Stmt::Eof);
-		}
-
 		if self.matches(TokenType::Semicolon) {
 			return Ok(Stmt::Empty);
 		}
-		self.expr_stmt()
-	}
 
-	fn expr_stmt(&mut self) -> Result<Stmt<'src>, ParserError<'src>> {
 		let expr = self.expr()?;
 		self.expect(TokenType::Semicolon, "Expected `;`")?;
-
 		Ok(Stmt::Expr(expr))
 	}
 
@@ -94,7 +91,6 @@ impl<'src> Parser<'src> {
 				break;
 			}
 			let stmt = self.stmt()?;
-			println!("{stmts:?}");
 			stmts.push(stmt);
 			if self.matches(TokenType::RightBrace) {
 				break;
@@ -158,9 +154,16 @@ impl<'src> Iterator for Parser<'src> {
 	type Item = Result<Stmt<'src>, ParserError<'src>>;
 
 	fn next(&mut self) -> Option<Self::Item> {
+		if self.finished {
+			return None;
+		}
 		match self.stmt() {
-			Ok(stmt) if stmt == Stmt::Eof => None,
-			Ok(stmt) => Some(Ok(stmt)),
+			Ok(stmt) => {
+				if self.is_at_end() {
+					self.finished = true;
+				}
+				Some(Ok(stmt))
+			}
 			Err(err) => Some(Err(err)),
 		}
 	}

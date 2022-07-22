@@ -55,10 +55,22 @@ impl<'src> Parser<'src> {
 	}
 
 	fn literal(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
-		match self.matches_any(&[TokenType::False, TokenType::True]) {
+		match self.matches_any(&[
+			TokenType::False,
+			TokenType::True,
+			TokenType::Number,
+			TokenType::String,
+			TokenType::Identifier,
+		]) {
 			Some(token) => match &token.typ {
 				TokenType::False => Ok(Expr::Literal(Literal::Bool(false))),
 				TokenType::True => Ok(Expr::Literal(Literal::Bool(true))),
+				TokenType::Number | TokenType::String | TokenType::Identifier => Ok(Expr::Literal(
+					token
+						.literal
+						.to_owned()
+						.expect("Internal Error: Literal token has no value!"),
+				)),
 				_ => ParserError::token_mismatch(token, "Expected Literal"),
 			},
 			None => ParserError::token_mismatch(self.advance(), "Expected Literal"),

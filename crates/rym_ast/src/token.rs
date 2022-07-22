@@ -48,7 +48,7 @@ pub enum TokenType {
 	Mut,
 
 	Struct,
-	Selff,
+	Self_,
 
 	Print,
 
@@ -74,7 +74,7 @@ pub const KEYWORDS: &[(&str, TokenType)] = &[
 	("mut", TokenType::Mut),
 	//
 	("struct", TokenType::Struct),
-	("self", TokenType::Selff),
+	("self", TokenType::Self_),
 	//
 	("print", TokenType::Print),
 ];

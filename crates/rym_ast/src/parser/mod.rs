@@ -37,6 +37,10 @@ impl<'src> Parser<'src> {
 			return Ok(Stmt::Empty);
 		}
 
+		if self.matches(TokenType::Print) {
+			return Ok(Stmt::Print(self.expr()?));
+		}
+
 		let expr = self.expr()?;
 		// self.expect(TokenType::Semicolon, "Expected `;`")?;
 		self.matches(TokenType::Semicolon);

@@ -5,6 +5,9 @@ pub enum Stmt<'src> {
 	/// A const or mut binding
 	Local(Local<'src>),
 
+	/// Temporary statement for logging until functions are implemented
+	Print(Expr<'src>),
+
 	/// Expr without trailing semi-colon.
 	Expr(Expr<'src>),
 

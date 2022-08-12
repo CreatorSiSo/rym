@@ -31,9 +31,12 @@ pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 	}
 
 	println!("--- Interpreter ---");
-	let error = Interpreter::new().eval(&ast);
-	println!("{error:?}");
-	println!("\n");
+	if let Err(error) = Interpreter::new().eval(&ast) {
+		println!("{error:?}");
+		exit(1)
+	}
+	println!();
+
 
 	Ok(())
 }

@@ -27,9 +27,14 @@ impl<'src> Interpreter<'src> {
 			Stmt::Local(local) => {
 				self.local(local)?;
 			}
+			Stmt::Print(expr) => {
+				let lit = self.expr(expr)?;
+				println!("{lit}")
+			}
 			Stmt::Expr(expr) => {
 				let lit = self.expr(expr)?;
-				println!("{lit}");
+				// TODO: Remove debug messages
+				println!("% {lit}");
 			}
 			Stmt::Empty => {}
 		}

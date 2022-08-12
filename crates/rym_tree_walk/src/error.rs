@@ -1,4 +1,4 @@
-use rym_ast::{BinaryOp, Literal, UnaryOp};
+use rym_ast::{Literal, UnaryOp};
 
 #[derive(Debug)]
 pub enum RuntimeError {
@@ -23,7 +23,7 @@ impl RuntimeError {
 		)))
 	}
 
-	pub fn unary<T>(op: UnaryOp, right: Literal) -> Result<T, Self> {
+	pub fn unary<T>(op: &UnaryOp, right: Literal) -> Result<T, Self> {
 		Err(Self::ForbiddenType(format!(
 			"Cannot apply unary operator `{}` to `{}`",
 			match op {

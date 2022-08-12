@@ -144,3 +144,21 @@ impl<'src> Literal<'src> {
 		}
 	}
 }
+
+impl From<bool> for Literal<'_> {
+	fn from(value: bool) -> Self {
+		Literal::Bool(value)
+	}
+}
+
+impl From<f64> for Literal<'_> {
+	fn from(value: f64) -> Self {
+		Literal::Number(value)
+	}
+}
+
+impl From<String> for Literal<'_> {
+	fn from(value: String) -> Self {
+		Literal::String(value)
+	}
+}

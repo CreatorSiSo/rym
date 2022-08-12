@@ -1,5 +1,6 @@
 use crate::debug::*;
 use rym_ast::{Lexer, Parser};
+use rym_tree_walk::Interpreter;
 use std::path::Path;
 use std::process::exit;
 
@@ -17,22 +18,22 @@ pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 	println!("\n");
 
 	println!("--- Parser ---");
-	for result in Parser::new(tokens) {
-		match result {
-			Ok(stmt) => print_ast(&[stmt]),
-			Err(err) => print_errors(&[err]),
-		}
-	}
+	let (ast, errors) = Parser::parse(tokens);
 	if !errors.is_empty() {
 		had_syntax_error = true;
 	}
-	// print_ast(&ast);
-	// print_errors(&errors);
+	print_ast(&ast);
+	print_errors(&errors);
 	println!("\n");
 
 	if had_syntax_error {
 		exit(65 /* data format error */)
 	}
+
+	println!("--- Interpreter ---");
+	let error = Interpreter::new().eval(&ast);
+	println!("{error:?}");
+	println!("\n");
 
 	Ok(())
 }

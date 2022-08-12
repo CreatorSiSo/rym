@@ -56,12 +56,12 @@ impl<'src> Env<'src> {
 		RuntimeError::undeclared_var(name)
 	}
 
-	pub fn declare(&mut self, name: &'src str, value: &Literal<'src>, mutable: bool) {
+	pub fn declare(&mut self, name: &'src str, value: Literal<'src>, mutable: bool) {
 		self.last_mut().insert(
 			name,
 			Variable {
 				// TODO: Clone?
-				value: value.clone(),
+				value,
 				mutable,
 			},
 		);

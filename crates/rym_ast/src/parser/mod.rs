@@ -1,5 +1,5 @@
 use crate::ast::{BinaryOp, Block, Expr, Literal, Stmt, UnaryOp};
-use crate::{Token, TokenType};
+use crate::{Local, Token, TokenType};
 
 mod error;
 use error::ParserError;
@@ -39,6 +39,36 @@ impl<'src> Parser<'src> {
 
 		if self.matches(TokenType::Print) {
 			return Ok(Stmt::Print(self.expr()?));
+		}
+
+		if let Some(token) = self.matches_which(&[TokenType::Const, TokenType::Mut]) {
+			let mutable = token.typ == TokenType::Mut;
+			self.expect(TokenType::Identifier, "Expected identifier")?;
+			let name = match self
+				.previous()
+				.literal
+				.clone()
+				.expect("Internal Error: Identifier token has no name!")
+			{
+				Literal::Identifier(name) => name,
+				Literal::Bool(val) => {
+					panic!("Internal Error: Identifier token has wrong literal value Bool(`{val}`)!")
+				}
+				Literal::Number(val) => {
+					panic!("Internal Error: Identifier token has wrong literal value Number(`{val}`)!")
+				}
+				Literal::String(val) => {
+					panic!("Internal Error: Identifier token has wrong literal value String(`{val}`)!")
+				}
+			};
+
+			self.expect(TokenType::Equal, "Expected `=`")?;
+
+			return Ok(Stmt::Local(if mutable {
+				Local::Mut(name, self.expr()?)
+			} else {
+				Local::Const(name, self.expr()?)
+			}));
 		}
 
 		let expr = self.expr()?;

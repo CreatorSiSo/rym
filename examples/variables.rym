@@ -6,5 +6,5 @@ const test = test + "!";
 print "both:\t" + test + " " + two;
 
 print "two:\t" + two;
-two = 0;
+// two = 0;
 print "two:\t" + two;

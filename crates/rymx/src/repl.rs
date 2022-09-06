@@ -2,6 +2,7 @@ use crate::debug::*;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use rym_ast::{Lexer, Parser};
+use rym_tree_walk::Interpreter;
 
 pub fn exec() {
 	Repl::new().watch();
@@ -58,5 +59,12 @@ impl Repl {
 		print_ast(&ast);
 		print_errors(&errors);
 		println!("\n");
+
+		println!("--- Interpreter ---");
+		if let Err(error) = Interpreter::new().eval(&ast) {
+			println!("{error:?}");
+			return;
+		}
+		println!();
 	}
 }

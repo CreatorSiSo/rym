@@ -37,6 +37,5 @@ pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 	}
 	println!();
 
-
 	Ok(())
 }

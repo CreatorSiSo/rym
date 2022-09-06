@@ -72,8 +72,8 @@ impl<'src> Parser<'src> {
 		}
 
 		let expr = self.expr()?;
-		// self.expect(TokenType::Semicolon, "Expected `;`")?;
-		self.matches(TokenType::Semicolon);
+		self.expect_any(&[TokenType::Semicolon, TokenType::Eof], "Expected `;`")?;
+
 		Ok(Stmt::Expr(expr))
 	}
 
@@ -251,6 +251,18 @@ impl<'src> Parser<'src> {
 impl<'src> Parser<'src> {
 	fn expect(&mut self, typ: TokenType, error_msg: &str) -> Result<&Token, ParserError<'src>> {
 		if self.matches(typ) {
+			return Ok(self.previous());
+		}
+
+		ParserError::token_mismatch(self.advance(), error_msg)
+	}
+
+	fn expect_any(
+		&mut self,
+		types: &[TokenType],
+		error_msg: &str,
+	) -> Result<&Token, ParserError<'src>> {
+		if self.matches_any(types) {
 			return Ok(self.previous());
 		}
 

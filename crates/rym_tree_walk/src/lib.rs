@@ -31,6 +31,8 @@ impl<'src> Interpreter<'src> {
 				let lit = self.expr(expr)?;
 				if let Literal::Identifier(name) = lit {
 					println!("{}", self.env.get(name)?);
+				} else {
+					println!("{lit}")
 				}
 			}
 			Stmt::Expr(expr) => return self.expr(expr),

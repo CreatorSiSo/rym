@@ -1,10 +1,10 @@
-const test = "Hello World";
-mut two = 2 / 4 * (10 - 1);
-print "test:\t" + test;
+const test = "Hello World"
+mut two = 2 / 4 * (10 - 1)
+print "test:\t" + test
 
-const test = test + "!";
-print "both:\t" + test + " " + two;
+const test = test + "!"
+print "both:\t" + test + " " + two
 
-print "two:\t" + two;
-// two = 0;
-print "two:\t" + two;
+print "two:\t" + two
+// two = 0
+print "two:\t" + two

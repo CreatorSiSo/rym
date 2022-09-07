@@ -38,11 +38,14 @@ impl<'src> Parser<'src> {
 		}
 
 		if self.matches(TokenType::Print) {
-			return Ok(Stmt::Print(self.expr()?));
+			let expr = self.expr()?;
+			self.matches(TokenType::Semicolon);
+			return Ok(Stmt::Print(expr));
 		}
 
 		if let Some(token) = self.matches_which(&[TokenType::Const, TokenType::Mut]) {
 			let mutable = token.typ == TokenType::Mut;
+
 			self.expect(TokenType::Identifier, "Expected identifier")?;
 			let name = match self
 				.previous()
@@ -67,18 +70,17 @@ impl<'src> Parser<'src> {
 
 			self.expect(TokenType::Equal, "Expected `=`")?;
 
+			let expr = self.expr()?;
+			self.matches(TokenType::Semicolon);
 			return Ok(Stmt::Local(if mutable {
-				Local::Mut(name, self.expr()?)
+				Local::Mut(name, expr)
 			} else {
-				Local::Const(name, self.expr()?)
+				Local::Const(name, expr)
 			}));
 		}
 
 		let expr = self.expr()?;
-		if self.previous().typ != TokenType::RightBrace {
-			self.expect_any(&[TokenType::Semicolon, TokenType::Eof], "Expected `;`")?;
-		}
-
+		self.matches(TokenType::Semicolon);
 		Ok(Stmt::Expr(expr))
 	}
 

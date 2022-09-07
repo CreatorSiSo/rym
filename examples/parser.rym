@@ -1,69 +1,69 @@
 // Comparison
-30 < 99 and true;
-false or true;
+30 < 99 and true
+false or true
 	// err
-0 and true;
-"0" or "\t";
+0 and true
+"0" or "\t"
 
 // Equality
-20 == 0; // false
-true != false; // true
-"air" == "air"; // true
-"air" != true; // true
+20 == 0 // false
+true != false // true
+"air" == "air" // true
+"air" != true // true
 
 // Comparison
-30 < 99;
-999 <= 9;
-10 > 9;
-10 >= 10;
+30 < 99
+999 <= 9
+10 > 9
+10 >= 10
 	// err
-0 < true;
-"0" >= "\t";
+0 < true
+"0" >= "\t"
 
 // Term
-30 + 99;
-999 - 9;
+30 + 99
+999 - 9
 	// err
-0 - true;
-"0" - "\t";
+0 - true
+"0" - "\t"
 
 // Factor
-30 * 99;
-999 / 9;
+30 * 99
+999 / 9
 	// err
-999 / 0;
+999 / 0
 
 // Unary
--20;
-!true;
-!!false;
+-20
+!true
+!!false
 	// err
--true;
---false;
-!20;
+-true
+--false
+!20
 
 // Groups
-(20 - 900) * 10;
-(false == "") + "_suffix";
+(20 - 900) * 10
+(false == "") + "_suffix"
 
 // Blocks
 {
-	"outer";
-	{ "inner1"; } + "\n";
-	({ "inner2"; } + "\n");
+	"outer"
+	{ "inner1"; } + "\n"
+	({ "inner2" } + "\n")
 }
 {}
 
 // Literals
-false;
-true;
-2099;
-"Hello World!";
-".\t.\n	. .";
-variable_name;
+false
+true
+2099
+"Hello World!"
+".\t.\n	. ."
+variable_name
 
 // Empty
-;
+
 
 // Should not result in an endless loop
 // {

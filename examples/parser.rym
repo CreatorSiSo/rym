@@ -43,8 +43,8 @@ true != false; // true
 !20;
 
 // Groups
-// (20 - 900) * 10;
-// (false == "") + "_suffix";
+(20 - 900) * 10;
+(false == "") + "_suffix";
 
 // Blocks
 {
@@ -66,4 +66,4 @@ variable_name;
 ;
 
 // Should not result in an endless loop
-{
+// {

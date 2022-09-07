@@ -51,6 +51,9 @@ impl<'src> Parser<'src> {
 				.expect("Internal Error: Identifier token has no name!")
 			{
 				Literal::Identifier(name) => name,
+				Literal::Tuple => {
+					panic!("Internal Error: Identifier token has wrong literal value `()`!")
+				}
 				Literal::Bool(val) => {
 					panic!("Internal Error: Identifier token has wrong literal value Bool(`{val}`)!")
 				}
@@ -72,7 +75,9 @@ impl<'src> Parser<'src> {
 		}
 
 		let expr = self.expr()?;
-		self.expect_any(&[TokenType::Semicolon, TokenType::Eof], "Expected `;`")?;
+		if self.previous().typ != TokenType::RightBrace {
+			self.expect_any(&[TokenType::Semicolon, TokenType::Eof], "Expected `;`")?;
+		}
 
 		Ok(Stmt::Expr(expr))
 	}

@@ -4,7 +4,7 @@ mod env;
 mod error;
 use env::Env;
 use error::RuntimeError;
-use rym_ast::{BinaryOp, Expr, Literal, Local, Stmt, UnaryOp};
+use rym_ast::{BinaryOp, Block, Expr, Literal, Local, Stmt, UnaryOp};
 
 pub struct Interpreter<'src> {
 	env: Env<'src>,
@@ -22,23 +22,21 @@ impl<'src> Interpreter<'src> {
 		Ok(())
 	}
 
-	fn stmt(&mut self, stmt: &Stmt<'src>) -> Result<(), RuntimeError> {
+	fn stmt(&mut self, stmt: &Stmt<'src>) -> Result<Literal<'src>, RuntimeError> {
 		match stmt {
 			Stmt::Local(local) => {
 				self.local(local)?;
 			}
 			Stmt::Print(expr) => {
 				let lit = self.expr(expr)?;
-				println!("{lit}")
+				if let Literal::Identifier(name) = lit {
+					println!("{}", self.env.get(name)?);
+				}
 			}
-			Stmt::Expr(expr) => {
-				let lit = self.expr(expr)?;
-				// TODO: Remove debug messages
-				println!("% {lit}");
-			}
+			Stmt::Expr(expr) => return self.expr(expr),
 			Stmt::Empty => {}
 		}
-		Ok(())
+		Ok(Literal::Tuple)
 	}
 
 	fn local(&mut self, local: &Local<'src>) -> Result<(), RuntimeError> {
@@ -57,7 +55,7 @@ impl<'src> Interpreter<'src> {
 		Ok(())
 	}
 
-	fn expr<'expr>(&self, expr: &'expr Expr<'src>) -> Result<Literal<'src>, RuntimeError> {
+	fn expr<'expr>(&mut self, expr: &'expr Expr<'src>) -> Result<Literal<'src>, RuntimeError> {
 		match expr {
 			Expr::Group(expr) => self.expr(expr),
 			Expr::Literal(literal) => Ok(literal.clone()),
@@ -65,11 +63,27 @@ impl<'src> Interpreter<'src> {
 			Expr::Binary(left, BinaryOp::And, right) => self.logical(left, BinaryOp::And, right),
 			Expr::Binary(left, BinaryOp::Or, right) => self.logical(left, BinaryOp::Or, right),
 			Expr::Binary(left, op, right) => self.binary(left, op, right),
+			Expr::Block(block) => self.block(block),
 			_ => todo!(),
 		}
 	}
 
-	fn unary(&self, op: &UnaryOp, expr: &Expr) -> Result<Literal<'src>, RuntimeError> {
+	fn block(&mut self, block: &Block<'src>) -> Result<Literal<'src>, RuntimeError> {
+		if let Some((last, prev)) = block.stmts.split_last() {
+			self.env.push_scope();
+			for stmt in prev {
+				self.stmt(stmt)?;
+			}
+			let return_value = self.stmt(last)?;
+
+			self.env.pop_scope();
+			Ok(return_value)
+		} else {
+			Ok(Literal::Tuple)
+		}
+	}
+
+	fn unary(&mut self, op: &UnaryOp, expr: &Expr<'src>) -> Result<Literal<'src>, RuntimeError> {
 		let lit = self.expr(expr)?;
 		match (op, lit) {
 			(UnaryOp::Not, Literal::Bool(val)) => Ok(Literal::Bool(!val)),
@@ -79,7 +93,7 @@ impl<'src> Interpreter<'src> {
 	}
 
 	fn logical(
-		&self,
+		&mut self,
 		expr_l: &Expr<'src>,
 		op: BinaryOp,
 		expr_r: &Expr<'src>,
@@ -94,7 +108,7 @@ impl<'src> Interpreter<'src> {
 	}
 
 	fn cmp_bool<F>(
-		&self,
+		&mut self,
 		lit_l: Literal<'src>,
 		expr_r: &Expr<'src>,
 		f: F,
@@ -120,7 +134,7 @@ impl<'src> Interpreter<'src> {
 	}
 
 	fn binary(
-		&self,
+		&mut self,
 		expr_l: &Expr<'src>,
 		op: &BinaryOp,
 		expr_r: &Expr<'src>,

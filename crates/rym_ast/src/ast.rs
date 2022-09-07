@@ -120,6 +120,7 @@ pub enum UnaryOp {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Literal<'src> {
+	Tuple,
 	Bool(bool),
 	Number(f64),
 	String(String),
@@ -129,6 +130,7 @@ pub enum Literal<'src> {
 impl<'src> Display for Literal<'src> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
+			Literal::Tuple => write!(f, "()"),
 			Literal::Bool(value) => write!(f, "{value}"),
 			Literal::Number(value) => write!(f, "{value}"),
 			Literal::String(value) => write!(f, "{value}"),
@@ -140,6 +142,7 @@ impl<'src> Display for Literal<'src> {
 impl<'src> Literal<'src> {
 	pub fn to_type_string(&self) -> String {
 		match self {
+			Literal::Tuple => "()".into(),
 			Literal::Bool(_) => "bool".into(),
 			Literal::Number(_) => "number".into(),
 			Literal::String(_) => "string".into(),

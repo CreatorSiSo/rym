@@ -3,7 +3,7 @@ mut value = 20;
 	const value = 0;
 	print value;
 }
-value = value-1;
+// value = value-1;
 print value;
 
 print "";

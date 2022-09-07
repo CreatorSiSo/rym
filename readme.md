@@ -5,6 +5,24 @@
 	- [Goals](#goals)
 	- [ToDo](#todo)
 
+```rust
+pr main() -> Io, Result<(), Error> {
+	const msg = "Hello World"
+	print msg
+
+	mut num = 2 / 4 * (10 - 1)
+	print "Number:\t" + num
+
+	const msg = msg + "!"
+	print "Combined:\t" + msg + " " + num
+
+	might_return_error()?
+	const maybe_value = do_stuff(testing).even_more(false)
+
+	Ok(())
+}
+```
+
 ## Name
 
 **Rym Lang** or **rym-lang**

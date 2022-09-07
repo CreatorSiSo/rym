@@ -1,10 +1,5 @@
 # Rym Lang
 
-- [Rym Lang](#rym-lang)
-	- [Name](#name)
-	- [Goals](#goals)
-	- [ToDo](#todo)
-
 ```rust
 pr main() -> Io, Result<(), Error> {
 	const msg = "Hello World"
@@ -22,6 +17,14 @@ pr main() -> Io, Result<(), Error> {
 	Ok(())
 }
 ```
+
+## Content
+
+- [Rym Lang](#rym-lang)
+	- [Content](#content)
+	- [Name](#name)
+	- [Goals](#goals)
+	- [ToDo](#todo)
 
 ## Name
 

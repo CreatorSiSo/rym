@@ -1,11 +1,13 @@
-use crate::debug::*;
-use rustyline::error::ReadlineError;
-use rustyline::Editor;
+use crate::log;
 use rym_ast::{Lexer, Parser};
 use rym_tree_walk::Interpreter;
 
-pub fn exec() {
-	Repl::new().watch();
+use rustyline::error::ReadlineError;
+use rustyline::Editor;
+
+pub fn exec() -> rustyline::Result<()> {
+	Repl::new()?.watch();
+	Ok(())
 }
 
 struct Repl {
@@ -14,17 +16,17 @@ struct Repl {
 }
 
 impl Repl {
-	fn new() -> Self {
-		let mut editor = Editor::<()>::new().unwrap();
+	fn new() -> rustyline::Result<Self> {
+		let mut editor = Editor::new()?;
 		if editor.load_history(".history").is_err() {
 			println!("No previous history.");
 		}
-		Self { editor }
+		Ok(Self { editor })
 	}
 
 	fn watch(mut self) {
 		loop {
-			let readline = self.editor.readline(">> ");
+			let readline = self.editor.readline("❯❯ ");
 			match readline {
 				Ok(line) => {
 					self.editor.add_history_entry(line.as_str());
@@ -48,23 +50,26 @@ impl Repl {
 	}
 
 	fn eval_line(&mut self, line: String) {
-		println!("--- Lexer ---");
 		let (tokens, errors) = Lexer::lex(&line);
-		print_tokens(&tokens);
-		print_errors(&errors);
-		println!("\n");
+		let correct_syntax = errors.is_empty();
+		log::title("Lexer", correct_syntax);
+		log::tokens(&tokens);
+		log::errors(&errors);
 
-		println!("--- Parser ---");
 		let (ast, errors) = Parser::parse(tokens);
-		print_ast(&ast);
-		print_errors(&errors);
-		println!("\n");
+		let correct_syntax = errors.is_empty();
+		log::title("Parser", correct_syntax);
+		log::ast(&ast);
+		log::errors(&errors);
 
-		println!("--- Interpreter ---");
+		if !correct_syntax {
+			return;
+		}
+
+		log::title("Interpreter", true);
 		if let Err(error) = Interpreter::new().eval(&ast) {
 			println!("{error:?}");
 			return;
 		}
-		println!();
 	}
 }

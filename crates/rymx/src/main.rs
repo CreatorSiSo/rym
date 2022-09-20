@@ -1,5 +1,5 @@
-mod debug;
 mod file;
+mod log;
 mod repl;
 
 fn main() -> Result<(), std::io::Error> {
@@ -10,7 +10,7 @@ fn main() -> Result<(), std::io::Error> {
 			"help" | "-h" | "--help" => println!("Usage: rys [path to script]"),
 			path => file::exec(path)?,
 		},
-		None => repl::exec(),
+		None => repl::exec().unwrap(),
 	}
 
 	Ok(())

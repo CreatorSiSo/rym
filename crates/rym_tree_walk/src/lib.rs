@@ -4,7 +4,7 @@ mod env;
 mod error;
 use env::Env;
 use error::RuntimeError;
-use rym_ast::{BinaryOp, Block, Expr, Literal, Local, Stmt, UnaryOp};
+use rym_ast::{BinaryOp, Block, Expr, Literal, Local, LogicalOp, Stmt, UnaryOp};
 
 pub struct Interpreter<'src> {
 	env: Env<'src>,
@@ -62,8 +62,8 @@ impl<'src> Interpreter<'src> {
 			Expr::Group(expr) => self.expr(expr),
 			Expr::Literal(literal) => Ok(literal.clone()),
 			Expr::Unary(op, expr) => self.unary(op, expr),
-			Expr::Binary(left, BinaryOp::And, right) => self.logical(left, BinaryOp::And, right),
-			Expr::Binary(left, BinaryOp::Or, right) => self.logical(left, BinaryOp::Or, right),
+			Expr::Logical(left, LogicalOp::And, right) => self.logical(left, LogicalOp::And, right),
+			Expr::Logical(left, LogicalOp::Or, right) => self.logical(left, LogicalOp::Or, right),
 			Expr::Binary(left, op, right) => self.binary(left, op, right),
 			Expr::Block(block) => self.block(block),
 			_ => todo!(),
@@ -94,15 +94,16 @@ impl<'src> Interpreter<'src> {
 		}
 	}
 
+	// TODO: Make this easily understandable
 	fn logical(
 		&mut self,
 		expr_l: &Expr<'src>,
-		op: BinaryOp,
+		op: LogicalOp,
 		expr_r: &Expr<'src>,
 	) -> Result<Literal<'src>, RuntimeError> {
 		let lit_l = self.expr(expr_l)?;
 
-		if op == BinaryOp::And {
+		if op == LogicalOp::And {
 			self.cmp_bool(lit_l, expr_r, |val_l, val_r| val_l && val_r, false)
 		} else {
 			self.cmp_bool(lit_l, expr_r, |val_l, val_r| val_l || val_r, true)
@@ -114,14 +115,14 @@ impl<'src> Interpreter<'src> {
 		lit_l: Literal<'src>,
 		expr_r: &Expr<'src>,
 		f: F,
-		short_if: bool,
+		short_circuit_if: bool,
 	) -> Result<Literal<'src>, RuntimeError>
 	where
 		F: Fn(bool, bool) -> bool,
 	{
 		if let Literal::Bool(val_l) = lit_l {
-			if val_l == short_if {
-				return Ok(Literal::Bool(short_if));
+			if val_l == short_circuit_if {
+				return Ok(Literal::Bool(short_circuit_if));
 			}
 			let lit_r = self.expr(expr_r)?;
 			if let Literal::Bool(val_r) = lit_r {
@@ -134,6 +135,8 @@ impl<'src> Interpreter<'src> {
 		// Should the second value still be calculated if the first does not result in a bool?
 		RuntimeError::comparison(lit_l, Literal::Identifier("not evaluated"))
 	}
+
+	// TODO: Assignment expression
 
 	fn binary(
 		&mut self,
@@ -156,7 +159,6 @@ impl<'src> Interpreter<'src> {
 			BinaryOp::Mod => Self::number(lit_l, lit_r, |val_l, val_r| val_l % val_r),
 			BinaryOp::Sub => Self::number(lit_l, lit_r, |val_l, val_r| val_l - val_r),
 			BinaryOp::Add => Self::number(lit_l, lit_r, |val_l, val_r| val_l + val_r),
-			_ => panic!("Internal Error: Should never be reached!"),
 		}
 	}
 

@@ -1,5 +1,5 @@
 use crate::ast::{BinaryOp, Block, Expr, Literal, Stmt, UnaryOp};
-use crate::{Local, Token, TokenType};
+use crate::{Local, LogicalOp, Token, TokenType};
 
 mod error;
 use error::ParserError;
@@ -94,7 +94,7 @@ impl<'src> Parser<'src> {
 
 		while self.matches(TokenType::Or) {
 			let right = Box::new(self.logic_and()?);
-			left = Expr::Binary(Box::new(left), BinaryOp::Or, right)
+			left = Expr::Logical(Box::new(left), LogicalOp::Or, right)
 		}
 
 		Ok(left)
@@ -106,7 +106,7 @@ impl<'src> Parser<'src> {
 
 		while self.matches(TokenType::And) {
 			let right = Box::new(self.equality()?);
-			left = Expr::Binary(Box::new(left), BinaryOp::And, right)
+			left = Expr::Logical(Box::new(left), LogicalOp::And, right)
 		}
 
 		Ok(left)

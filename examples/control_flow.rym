@@ -14,3 +14,9 @@ if !say_hello {
 // if true {} else if true {
 // 	print "testing"
 // }
+
+mut num = 0
+loop {
+	print num
+	// num = num + 1
+}

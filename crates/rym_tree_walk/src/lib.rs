@@ -70,6 +70,7 @@ impl<'src> Interpreter<'src> {
 			Expr::Binary(left, op, right) => self.binary(left, op, right),
 			Expr::Block(block) => self.block(block),
 			Expr::If(expr, then_block, else_block) => self.if_(expr, then_block, else_block),
+			Expr::Loop(block) => self.loop_(block),
 			_ => panic!("Not yet implemented: {:?}", expr),
 		}
 	}
@@ -94,6 +95,13 @@ impl<'src> Interpreter<'src> {
 		} else {
 			Ok(Literal::Tuple)
 		};
+	}
+
+	// TODO: Implement break, continue and return
+	fn loop_(&mut self, block: &Block<'src>) -> Result<Literal<'src>, RuntimeError> {
+		loop {
+			self.block(block)?;
+		}
 	}
 
 	fn block(&mut self, block: &Block<'src>) -> Result<Literal<'src>, RuntimeError> {

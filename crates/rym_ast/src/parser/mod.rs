@@ -104,6 +104,15 @@ impl<'src> Parser<'src> {
 			return Ok(Expr::If(expr, if_block, else_block));
 		}
 
+		self.loop_()
+	}
+
+	/// loop => "loop" block
+	fn loop_(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		if self.matches(TokenType::Loop) {
+			return Ok(Expr::Loop(self.block()?));
+		}
+
 		self.logic_or()
 	}
 

@@ -1,0 +1,16 @@
+const say_hello = false
+
+if say_hello {
+	print "Hello World!"
+} else {
+	print "Bye World!"
+}
+
+if !say_hello {
+	print "`say_hello` is not `true`"
+}
+
+// TODO
+// if true {} else if true {
+// 	print "testing"
+// }

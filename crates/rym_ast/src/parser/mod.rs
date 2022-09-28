@@ -85,6 +85,25 @@ impl<'src> Parser<'src> {
 	}
 
 	fn expr(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		self.if_()
+	}
+
+	// TODO: Implement else if, to change: `block => (if | block)`
+	// Rust reference: https://doc.rust-lang.org/reference/expressions/if-expr.html
+	/// if => "if" expression block ("else" block)? ;
+	fn if_(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		if self.matches(TokenType::If) {
+			let expr = Box::new(self.expr()?);
+			let if_block = self.block()?;
+			let else_block = if self.matches(TokenType::Else) {
+				Some(self.block()?)
+			} else {
+				None
+			};
+
+			return Ok(Expr::If(expr, if_block, else_block));
+		}
+
 		self.logic_or()
 	}
 
@@ -210,7 +229,7 @@ impl<'src> Parser<'src> {
 	/// primary => "(" expr ")", block, identifier, number | string | "true" | "false"
 	fn primary(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
 		if self.matches(TokenType::LeftBrace) {
-			return self.block();
+			return self.block().map(|b| Expr::Block(b));
 		}
 
 		if self.matches(TokenType::LeftParen) {
@@ -242,16 +261,15 @@ impl<'src> Parser<'src> {
 	}
 
 	/// block => "{" stmt* "}"
-	fn block(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn block(&mut self) -> Result<Block<'src>, ParserError<'src>> {
+		self.expect(TokenType::LeftBrace, "Expected `{`")?;
+
 		let mut stmts = Vec::new();
-		loop {
-			if self.matches(TokenType::RightBrace) {
-				break;
-			}
+		while !self.matches(TokenType::RightBrace) {
 			let stmt = self.stmt()?;
 			stmts.push(stmt);
 		}
-		Ok(Expr::Block(Block { stmts }))
+		Ok(Block { stmts })
 	}
 }
 

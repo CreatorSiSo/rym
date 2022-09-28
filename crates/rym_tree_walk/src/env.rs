@@ -30,7 +30,7 @@ impl<'src> Env<'src> {
 		}
 	}
 
-	pub fn get(&self, name: &str) -> Result<&Literal, RuntimeError> {
+	pub fn get(&self, name: &str) -> Result<&Literal<'src>, RuntimeError> {
 		for scope in self.iter() {
 			match scope.get(name) {
 				Some(var) => return Ok(&var.value),
@@ -76,7 +76,7 @@ impl<'src> Env<'src> {
 			.expect("Internal Error: Stack should never be empty!")
 	}
 
-	fn iter(&self) -> std::iter::Rev<std::slice::Iter<Scope>> {
+	fn iter(&self) -> std::iter::Rev<std::slice::Iter<Scope<'src>>> {
 		self.scopes.iter().rev()
 	}
 

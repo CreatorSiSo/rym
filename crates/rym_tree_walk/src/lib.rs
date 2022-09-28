@@ -57,17 +57,43 @@ impl<'src> Interpreter<'src> {
 		Ok(())
 	}
 
-	fn expr<'expr>(&mut self, expr: &'expr Expr<'src>) -> Result<Literal<'src>, RuntimeError> {
+	fn expr(&mut self, expr: &Expr<'src>) -> Result<Literal<'src>, RuntimeError> {
 		match expr {
+			Expr::Literal(literal) => match literal {
+				Literal::Identifier(identifier) => Ok(self.env.get(identifier).cloned()?),
+				_ => Ok(literal.clone()),
+			},
 			Expr::Group(expr) => self.expr(expr),
-			Expr::Literal(literal) => Ok(literal.clone()),
 			Expr::Unary(op, expr) => self.unary(op, expr),
 			Expr::Logical(left, LogicalOp::And, right) => self.logical(left, LogicalOp::And, right),
 			Expr::Logical(left, LogicalOp::Or, right) => self.logical(left, LogicalOp::Or, right),
 			Expr::Binary(left, op, right) => self.binary(left, op, right),
 			Expr::Block(block) => self.block(block),
-			_ => todo!(),
+			Expr::If(expr, then_block, else_block) => self.if_(expr, then_block, else_block),
+			_ => panic!("Not yet implemented: {:?}", expr),
 		}
+	}
+
+	fn if_(
+		&mut self,
+		expr: &Expr<'src>,
+		then_block: &Block<'src>,
+		else_block: &Option<Block<'src>>,
+	) -> Result<Literal<'src>, RuntimeError> {
+		let bool = match self.expr(expr)? {
+			Literal::Bool(b) => b,
+			// Identifier has already been resolved in self.expr()
+			Literal::Identifier(_) => unreachable!(),
+			result => return RuntimeError::expected("bool", result),
+		};
+
+		return if bool {
+			self.block(then_block)
+		} else if let Some(block) = else_block {
+			self.block(block)
+		} else {
+			Ok(Literal::Tuple)
+		};
 	}
 
 	fn block(&mut self, block: &Block<'src>) -> Result<Literal<'src>, RuntimeError> {

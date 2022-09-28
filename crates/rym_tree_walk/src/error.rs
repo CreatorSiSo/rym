@@ -34,6 +34,13 @@ impl RuntimeError {
 		)))
 	}
 
+	pub fn expected<T>(type_str: &str, value: Literal) -> Result<T, Self> {
+		Err(Self::TypeMismatch(format!(
+			"Expected `{type_str}` got {}",
+			value.to_type_string()
+		)))
+	}
+
 	pub fn comparison<T>(left: Literal, right: Literal) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Cannot compare `{}` with `{}`",

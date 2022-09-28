@@ -24,6 +24,9 @@ pub enum TokenType {
 	Less,
 	LessEqual,
 
+	DoubleAmpersand,
+	DoublePipe,
+
 	Int,
 	Number,
 	Char,
@@ -40,8 +43,6 @@ pub enum TokenType {
 
 	False,
 	True,
-	And,
-	Or,
 
 	Fn,
 	Const,
@@ -66,8 +67,6 @@ pub const KEYWORDS: &[(&str, TokenType)] = &[
 	//
 	("false", TokenType::False),
 	("true", TokenType::True),
-	("and", TokenType::And),
-	("or", TokenType::Or),
 	//
 	("fn", TokenType::Fn),
 	("const", TokenType::Const),

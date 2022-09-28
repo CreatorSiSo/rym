@@ -60,7 +60,7 @@ pub enum Expr<'src> {
 	/// An assignment `a = 20`
 	Assign(Box<Expr<'src>>, Box<Expr<'src>>),
 
-	/// A logical operation `true and false`, `a or b`
+	/// A logical operation `true && false`, `a || b`
 	Logical(Box<Expr<'src>>, LogicalOp, Box<Expr<'src>>),
 
 	/// A binary operation `a + b`, `a * b`
@@ -110,9 +110,9 @@ pub enum BinaryOp {
 
 #[derive(Debug, PartialEq)]
 pub enum LogicalOp {
-	/// The `and` operator (logical and)
+	/// The `&&` operator (logical and)
 	And,
-	/// The `or` operator (logical or)
+	/// The `||` operator (logical or)
 	Or,
 }
 

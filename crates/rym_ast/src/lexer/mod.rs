@@ -69,6 +69,9 @@ impl<'src> Lexer<'src> {
 				'/' if self.matches('/') => self.consume_while(|c| c != '\n'),
 				'/' if self.matches('*') => self.multiline_comment(),
 
+				'&' if self.matches('&') => break TokenType::DoubleAmpersand,
+				'|' if self.matches('|') => break TokenType::DoublePipe,
+
 				'+' => break TokenType::Plus,
 				'-' => break TokenType::Minus,
 				'*' => break TokenType::Star,

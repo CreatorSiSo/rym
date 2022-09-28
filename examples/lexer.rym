@@ -3,6 +3,7 @@ ident	$	ifier
 - + / *
 . , ; ( ) { }
 ! != = == > >= < <=
+&& ||
 
 !== === <== >== ==>
 
@@ -18,14 +19,14 @@ ident	$	ifier
 . , ; ( ) { }
 ! != = == > >= < <=
 if else for while loop return break
- false true and or
+ false true && ||
  fn const mut
  struct self
  print
 "
 
 if else for while loop return break
-false true and or
+false true
 fn const mut
 struct self
 print

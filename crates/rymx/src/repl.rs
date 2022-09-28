@@ -26,7 +26,7 @@ impl Repl {
 
 	fn watch(mut self) {
 		loop {
-			let readline = self.editor.readline("❯❯ ");
+			let readline = self.editor.readline(" ➤ ");
 			match readline {
 				Ok(line) => {
 					self.editor.add_history_entry(line.as_str());

@@ -88,11 +88,11 @@ impl<'src> Parser<'src> {
 		self.logic_or()
 	}
 
-	/// logic_or => logic_and ("and" logic_and)*
+	/// logic_or => logic_and ("&&" logic_and)*
 	fn logic_or(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
 		let mut left = self.logic_and()?;
 
-		while self.matches(TokenType::Or) {
+		while self.matches(TokenType::DoublePipe) {
 			let right = Box::new(self.logic_and()?);
 			left = Expr::Logical(Box::new(left), LogicalOp::Or, right)
 		}
@@ -100,11 +100,11 @@ impl<'src> Parser<'src> {
 		Ok(left)
 	}
 
-	/// logic_and => equality ("and" equality)*
+	/// logic_and => equality ("&&" equality)*
 	fn logic_and(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
 		let mut left = self.equality()?;
 
-		while self.matches(TokenType::And) {
+		while self.matches(TokenType::DoubleAmpersand) {
 			let right = Box::new(self.equality()?);
 			left = Expr::Logical(Box::new(left), LogicalOp::And, right)
 		}

@@ -1,9 +1,9 @@
 // Comparison
-30 < 99 and true
-false or true
+30 < 99 && true
+false || true
 	// err
-0 and true
-"0" or "\t"
+0 && true
+"0" || "\t"
 
 // Equality
 20 == 0 // false

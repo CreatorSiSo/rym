@@ -1,3 +1,15 @@
+
+// Literals
+false
+true
+2099
+//  34_560_000
+560897890.42
+0293457346783873434569999999999999999999999.99999
+"Hello World!"
+".\t.\n	. ."
+variable_name
+
 // Comparison
 30 < 99 && true
 false || true
@@ -54,16 +66,20 @@ true != false // true
 }
 {}
 
-// Literals
-false
-true
-2099
-"Hello World!"
-".\t.\n	. ."
-variable_name
-
 // Empty
+;
 
+/*1
+	and this is a
+	multiline
+	comment
+
+	/*
+		you can
+		nest them too
+	*/
+	/*2 /*3 /*4 */ */ */
+*/
 
 // Should not result in an endless loop
 // {

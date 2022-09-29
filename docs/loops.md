@@ -11,7 +11,7 @@ loop {
 ## While
 
 ```rust
-while (expr) {
+while expr {
 	...
 }
 ```

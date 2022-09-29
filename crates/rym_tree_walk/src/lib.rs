@@ -2,8 +2,10 @@
 
 mod env;
 mod error;
+mod interrupt;
 use env::Env;
 use error::RuntimeError;
+use interrupt::Inter;
 use rym_ast::{BinaryOp, Block, Expr, Literal, Local, LogicalOp, Stmt, UnaryOp};
 
 pub struct Interpreter<'src> {
@@ -22,13 +24,13 @@ impl<'src> Interpreter<'src> {
 		Ok(())
 	}
 
-	fn stmt(&mut self, stmt: &Stmt<'src>) -> Result<Literal<'src>, RuntimeError> {
+	fn stmt(&mut self, stmt: &Stmt<'src>) -> Result<Inter<'src>, RuntimeError> {
 		match stmt {
 			Stmt::Local(local) => {
 				self.local(local)?;
 			}
 			Stmt::Print(expr) => {
-				let lit = self.expr(expr)?;
+				let lit = self.expr(expr)?.into();
 				if let Literal::Identifier(name) = lit {
 					println!("{}", self.env.get(name)?);
 				} else {
@@ -38,18 +40,18 @@ impl<'src> Interpreter<'src> {
 			Stmt::Expr(expr) => return self.expr(expr),
 			Stmt::Empty => {}
 		}
-		Ok(Literal::Unit)
+		Ok(Inter::None(Literal::Unit))
 	}
 
 	fn local(&mut self, local: &Local<'src>) -> Result<(), RuntimeError> {
 		match local {
 			Local::Const(name, init) => {
-				let val = self.expr(init)?;
+				let val: Literal = self.expr(init)?.into();
 				self.env.declare(name, val.clone(), true);
 				println!("const {name} = {val:?}")
 			}
 			Local::Mut(name, init) => {
-				let val = self.expr(init)?;
+				let val: Literal = self.expr(init)?.into();
 				self.env.declare(name, val.clone(), false);
 				println!("mut {name} = {val:?}")
 			}
@@ -57,12 +59,12 @@ impl<'src> Interpreter<'src> {
 		Ok(())
 	}
 
-	fn expr(&mut self, expr: &Expr<'src>) -> Result<Literal<'src>, RuntimeError> {
+	fn expr(&mut self, expr: &Expr<'src>) -> Result<Inter<'src>, RuntimeError> {
 		match expr {
-			Expr::Literal(literal) => match literal {
-				Literal::Identifier(identifier) => Ok(self.env.get(identifier).cloned()?),
-				_ => Ok(literal.clone()),
-			},
+			Expr::Literal(literal) => Ok(Inter::None(match literal {
+				Literal::Identifier(identifier) => self.env.get(identifier).cloned()?,
+				_ => literal.clone(),
+			})),
 			Expr::Assign(left, right) => self.assign(left, right),
 
 			Expr::Unary(op, expr) => self.unary(op, expr),
@@ -73,6 +75,9 @@ impl<'src> Interpreter<'src> {
 			Expr::Block(block) => self.block(block),
 			Expr::If(expr, then_block, else_block) => self.if_(expr, then_block, else_block),
 			Expr::Loop(block) => self.loop_(block),
+
+			Expr::Break(_) => self.break_(),
+
 			_ => panic!("Not yet implemented: {:?}", expr),
 		}
 	}
@@ -82,8 +87,8 @@ impl<'src> Interpreter<'src> {
 		expr: &Expr<'src>,
 		then_block: &Block<'src>,
 		else_block: &Option<Block<'src>>,
-	) -> Result<Literal<'src>, RuntimeError> {
-		let bool = match self.expr(expr)? {
+	) -> Result<Inter<'src>, RuntimeError> {
+		let bool = match self.expr(expr)?.into() {
 			Literal::Bool(b) => b,
 			// Identifier has already been resolved in self.expr()
 			Literal::Identifier(_) => unreachable!(),
@@ -95,54 +100,71 @@ impl<'src> Interpreter<'src> {
 		} else if let Some(block) = else_block {
 			self.block(block)
 		} else {
-			Ok(Literal::Unit)
+			Ok(Inter::None(Literal::Unit))
 		};
 	}
 
 	// TODO: Implement break, continue and return
-	fn loop_(&mut self, block: &Block<'src>) -> Result<Literal<'src>, RuntimeError> {
+	fn loop_(&mut self, block: &Block<'src>) -> Result<Inter<'src>, RuntimeError> {
 		loop {
-			self.block(block)?;
+			match self.block(block)? {
+				Inter::Break(lit) => break Ok(Inter::None(lit)),
+				_ => continue,
+			}
 		}
 	}
 
-	fn block(&mut self, block: &Block<'src>) -> Result<Literal<'src>, RuntimeError> {
-		if let Some((last, prev)) = block.stmts.split_last() {
-			self.env.push_scope();
-			for stmt in prev {
-				self.stmt(stmt)?;
-			}
-			let return_value = self.stmt(last)?;
+	fn block(&mut self, block: &Block<'src>) -> Result<Inter<'src>, RuntimeError> {
+		self.env.push_scope();
 
-			self.env.pop_scope();
-			Ok(return_value)
-		} else {
-			Ok(Literal::Unit)
-		}
+		let mut stmts = block.stmts.iter();
+		let return_value = loop {
+			let stmt = match stmts.next() {
+				Some(stmt) => stmt,
+				None => break Inter::None(Literal::Unit),
+			};
+
+			let inter = self.stmt(stmt)?;
+			match inter {
+				Inter::Break(lit) => break Inter::Break(lit),
+				_ => continue,
+			}
+
+			// TODO: Handle last stmt as result
+		};
+
+		self.env.pop_scope();
+
+		Ok(return_value)
+	}
+
+	fn break_(&self) -> Result<Inter<'src>, RuntimeError> {
+		Ok(Inter::Break(Literal::Unit))
 	}
 
 	fn assign(
 		&mut self,
 		expr_l: &Expr<'src>,
 		expr_r: &Expr<'src>,
-	) -> Result<Literal<'src>, RuntimeError> {
+	) -> Result<Inter<'src>, RuntimeError> {
 		let name = match expr_l {
 			Expr::Literal(Literal::Identifier(name)) => name,
-			_ => return RuntimeError::expected("identfier", self.expr(expr_l)?),
+			_ => return RuntimeError::expected("identfier", self.expr(expr_l)?.into()),
 		};
-		let value = self.expr(expr_r)?;
+		let value = self.expr(expr_r)?.into();
 		self.env.set(name, value)?;
 
-		Ok(Literal::Unit)
+		Ok(Inter::None(Literal::Unit))
 	}
 
-	fn unary(&mut self, op: &UnaryOp, expr: &Expr<'src>) -> Result<Literal<'src>, RuntimeError> {
-		let lit = self.expr(expr)?;
-		match (op, lit) {
-			(UnaryOp::Not, Literal::Bool(val)) => Ok(Literal::Bool(!val)),
-			(UnaryOp::Neg, Literal::Number(val)) => Ok(Literal::Number(-val)),
-			(op, lit) => RuntimeError::unary(op, lit),
-		}
+	fn unary(&mut self, op: &UnaryOp, expr: &Expr<'src>) -> Result<Inter<'src>, RuntimeError> {
+		let lit = self.expr(expr)?.into();
+
+		Ok(Inter::None(match (op, lit) {
+			(UnaryOp::Not, Literal::Bool(val)) => Literal::Bool(!val),
+			(UnaryOp::Neg, Literal::Number(val)) => Literal::Number(-val),
+			(op, lit) => return RuntimeError::unary(op, lit),
+		}))
 	}
 
 	// TODO: Make this easily understandable
@@ -151,14 +173,14 @@ impl<'src> Interpreter<'src> {
 		expr_l: &Expr<'src>,
 		op: &LogicalOp,
 		expr_r: &Expr<'src>,
-	) -> Result<Literal<'src>, RuntimeError> {
-		let lit_l = self.expr(expr_l)?;
+	) -> Result<Inter<'src>, RuntimeError> {
+		let lit_l = self.expr(expr_l)?.into();
 
-		if op == &LogicalOp::And {
-			self.cmp_bool(lit_l, expr_r, |val_l, val_r| val_l && val_r, false)
+		Ok(Inter::None(if op == &LogicalOp::And {
+			self.cmp_bool(lit_l, expr_r, |val_l, val_r| val_l && val_r, false)?
 		} else {
-			self.cmp_bool(lit_l, expr_r, |val_l, val_r| val_l || val_r, true)
-		}
+			self.cmp_bool(lit_l, expr_r, |val_l, val_r| val_l || val_r, true)?
+		}))
 	}
 
 	fn cmp_bool<F>(
@@ -175,7 +197,8 @@ impl<'src> Interpreter<'src> {
 			if val_l == short_circuit_if {
 				return Ok(Literal::Bool(short_circuit_if));
 			}
-			let lit_r = self.expr(expr_r)?;
+
+			let lit_r = self.expr(expr_r)?.into();
 			if let Literal::Bool(val_r) = lit_r {
 				return Ok(Literal::Bool(f(val_l, val_r)));
 			}
@@ -194,23 +217,23 @@ impl<'src> Interpreter<'src> {
 		expr_l: &Expr<'src>,
 		op: &BinaryOp,
 		expr_r: &Expr<'src>,
-	) -> Result<Literal<'src>, RuntimeError> {
-		let lit_l = self.expr(expr_l)?;
-		let lit_r = self.expr(expr_r)?;
+	) -> Result<Inter<'src>, RuntimeError> {
+		let lit_l = self.expr(expr_l)?.into();
+		let lit_r = self.expr(expr_r)?.into();
 
-		match op {
-			BinaryOp::Eq => Ok(Literal::from(lit_l == lit_r)),
-			BinaryOp::Ne => Ok(Literal::from(lit_l != lit_r)),
-			BinaryOp::Gt => Self::number(lit_l, lit_r, |val_l, val_r| val_l > val_r),
-			BinaryOp::Ge => Self::number(lit_l, lit_r, |val_l, val_r| val_l >= val_r),
-			BinaryOp::Lt => Self::number(lit_l, lit_r, |val_l, val_r| val_l < val_r),
-			BinaryOp::Le => Self::number(lit_l, lit_r, |val_l, val_r| val_l <= val_r),
-			BinaryOp::Mul => Self::number(lit_l, lit_r, |val_l, val_r| val_l * val_r),
-			BinaryOp::Div => Self::number(lit_l, lit_r, |val_l, val_r| val_l / val_r),
-			BinaryOp::Mod => Self::number(lit_l, lit_r, |val_l, val_r| val_l % val_r),
-			BinaryOp::Sub => Self::number(lit_l, lit_r, |val_l, val_r| val_l - val_r),
-			BinaryOp::Add => Self::number(lit_l, lit_r, |val_l, val_r| val_l + val_r),
-		}
+		Ok(Inter::None(match op {
+			BinaryOp::Eq => Literal::from(lit_l == lit_r),
+			BinaryOp::Ne => Literal::from(lit_l != lit_r),
+			BinaryOp::Gt => Self::number(lit_l, lit_r, |val_l, val_r| val_l > val_r)?,
+			BinaryOp::Ge => Self::number(lit_l, lit_r, |val_l, val_r| val_l >= val_r)?,
+			BinaryOp::Lt => Self::number(lit_l, lit_r, |val_l, val_r| val_l < val_r)?,
+			BinaryOp::Le => Self::number(lit_l, lit_r, |val_l, val_r| val_l <= val_r)?,
+			BinaryOp::Mul => Self::number(lit_l, lit_r, |val_l, val_r| val_l * val_r)?,
+			BinaryOp::Div => Self::number(lit_l, lit_r, |val_l, val_r| val_l / val_r)?,
+			BinaryOp::Mod => Self::number(lit_l, lit_r, |val_l, val_r| val_l % val_r)?,
+			BinaryOp::Sub => Self::number(lit_l, lit_r, |val_l, val_r| val_l - val_r)?,
+			BinaryOp::Add => Self::number(lit_l, lit_r, |val_l, val_r| val_l + val_r)?,
+		}))
 	}
 
 	fn number<F, R>(

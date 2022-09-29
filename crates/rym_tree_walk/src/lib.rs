@@ -38,19 +38,19 @@ impl<'src> Interpreter<'src> {
 			Stmt::Expr(expr) => return self.expr(expr),
 			Stmt::Empty => {}
 		}
-		Ok(Literal::Tuple)
+		Ok(Literal::Unit)
 	}
 
 	fn local(&mut self, local: &Local<'src>) -> Result<(), RuntimeError> {
 		match local {
 			Local::Const(name, init) => {
 				let val = self.expr(init)?;
-				self.env.declare(name, val.clone(), false);
+				self.env.declare(name, val.clone(), true);
 				println!("const {name} = {val:?}")
 			}
 			Local::Mut(name, init) => {
 				let val = self.expr(init)?;
-				self.env.declare(name, val.clone(), true);
+				self.env.declare(name, val.clone(), false);
 				println!("mut {name} = {val:?}")
 			}
 		}
@@ -63,11 +63,13 @@ impl<'src> Interpreter<'src> {
 				Literal::Identifier(identifier) => Ok(self.env.get(identifier).cloned()?),
 				_ => Ok(literal.clone()),
 			},
-			Expr::Group(expr) => self.expr(expr),
+			Expr::Assign(left, right) => self.assign(left, right),
+
 			Expr::Unary(op, expr) => self.unary(op, expr),
-			Expr::Logical(left, LogicalOp::And, right) => self.logical(left, LogicalOp::And, right),
-			Expr::Logical(left, LogicalOp::Or, right) => self.logical(left, LogicalOp::Or, right),
+			Expr::Logical(left, op, right) => self.logical(left, op, right),
 			Expr::Binary(left, op, right) => self.binary(left, op, right),
+
+			Expr::Group(expr) => self.expr(expr),
 			Expr::Block(block) => self.block(block),
 			Expr::If(expr, then_block, else_block) => self.if_(expr, then_block, else_block),
 			Expr::Loop(block) => self.loop_(block),
@@ -93,7 +95,7 @@ impl<'src> Interpreter<'src> {
 		} else if let Some(block) = else_block {
 			self.block(block)
 		} else {
-			Ok(Literal::Tuple)
+			Ok(Literal::Unit)
 		};
 	}
 
@@ -115,8 +117,23 @@ impl<'src> Interpreter<'src> {
 			self.env.pop_scope();
 			Ok(return_value)
 		} else {
-			Ok(Literal::Tuple)
+			Ok(Literal::Unit)
 		}
+	}
+
+	fn assign(
+		&mut self,
+		expr_l: &Expr<'src>,
+		expr_r: &Expr<'src>,
+	) -> Result<Literal<'src>, RuntimeError> {
+		let name = match expr_l {
+			Expr::Literal(Literal::Identifier(name)) => name,
+			_ => return RuntimeError::expected("identfier", self.expr(expr_l)?),
+		};
+		let value = self.expr(expr_r)?;
+		self.env.set(name, value)?;
+
+		Ok(Literal::Unit)
 	}
 
 	fn unary(&mut self, op: &UnaryOp, expr: &Expr<'src>) -> Result<Literal<'src>, RuntimeError> {
@@ -132,12 +149,12 @@ impl<'src> Interpreter<'src> {
 	fn logical(
 		&mut self,
 		expr_l: &Expr<'src>,
-		op: LogicalOp,
+		op: &LogicalOp,
 		expr_r: &Expr<'src>,
 	) -> Result<Literal<'src>, RuntimeError> {
 		let lit_l = self.expr(expr_l)?;
 
-		if op == LogicalOp::And {
+		if op == &LogicalOp::And {
 			self.cmp_bool(lit_l, expr_r, |val_l, val_r| val_l && val_r, false)
 		} else {
 			self.cmp_bool(lit_l, expr_r, |val_l, val_r| val_l || val_r, true)

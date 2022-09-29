@@ -54,7 +54,7 @@ impl<'src> Parser<'src> {
 				.expect("Internal Error: Identifier token has no name!")
 			{
 				Literal::Identifier(name) => name,
-				Literal::Tuple => {
+				Literal::Unit => {
 					panic!("Internal Error: Identifier token has wrong literal value `()`!")
 				}
 				Literal::Bool(val) => {
@@ -85,6 +85,19 @@ impl<'src> Parser<'src> {
 	}
 
 	fn expr(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		self.assignment()
+	}
+
+	// assignment => identifier "=" expr
+	fn assignment(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		if self.peek(1).typ == TokenType::Equal {
+			let expr_l = Box::new(self.primary()?);
+			self.advance();
+			let expr_r = Box::new(self.expr()?);
+
+			return Ok(Expr::Assign(expr_l, expr_r));
+		}
+
 		self.if_()
 	}
 
@@ -324,7 +337,7 @@ impl<'src> Parser<'src> {
 	}
 
 	fn matches(&mut self, typ: TokenType) -> bool {
-		if self.peek().typ == typ {
+		if self.peek(0).typ == typ {
 			self.advance();
 			return true;
 		}
@@ -343,14 +356,19 @@ impl<'src> Parser<'src> {
 	}
 
 	fn is_at_end(&self) -> bool {
-		if self.peek().typ == TokenType::Eof {
+		if self.peek(0).typ == TokenType::Eof {
 			return true;
 		}
 		false
 	}
 
-	fn peek(&self) -> &Token<'src> {
-		&self.tokens[self.pos]
+	fn peek(&self, dist: usize) -> &Token<'src> {
+		match self.tokens.get(self.pos + dist) {
+			Some(token) => token,
+			// TODO: Think about how this could be improved or if its fine
+			// Should always return TokenType::Eof
+			None => &self.tokens[self.tokens.len() - 1],
+		}
 	}
 }
 

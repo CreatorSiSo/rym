@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 pub struct Variable<'src> {
 	value: Literal<'src>,
-	mutable: bool,
+	is_const: bool,
 }
 
 type Scope<'src> = HashMap<&'src str, Variable<'src>>;
@@ -40,14 +40,14 @@ impl<'src> Env<'src> {
 		RuntimeError::undeclared_var(name)
 	}
 
-	pub fn set(&mut self, name: &str, new: Literal<'src>) -> Result<(), RuntimeError> {
+	pub fn set(&mut self, name: &str, value: Literal<'src>) -> Result<(), RuntimeError> {
 		for scope in self.iter_mut() {
 			match scope.get_mut(name) {
 				Some(var) => {
-					if !var.mutable {
-						return RuntimeError::assignment(name, new);
+					if var.is_const {
+						return RuntimeError::const_assign(name, value);
 					}
-					var.value = new;
+					var.value = value;
 					return Ok(());
 				}
 				None => continue,
@@ -56,13 +56,13 @@ impl<'src> Env<'src> {
 		RuntimeError::undeclared_var(name)
 	}
 
-	pub fn declare(&mut self, name: &'src str, value: Literal<'src>, mutable: bool) {
+	pub fn declare(&mut self, name: &'src str, value: Literal<'src>, is_const: bool) {
 		self.last_mut().insert(
 			name,
 			Variable {
 				// TODO: Clone?
 				value,
-				mutable,
+				is_const,
 			},
 		);
 	}

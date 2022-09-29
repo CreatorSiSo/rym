@@ -10,7 +10,7 @@ if !say_hello {
 	print "`say_hello` is not `true`"
 }
 
-// TODO
+// TODO: Make else if work
 // if true {} else if true {
 // 	print "testing"
 // }
@@ -18,5 +18,5 @@ if !say_hello {
 mut num = 0
 loop {
 	print num
-	// num = num + 1
+	num = num + 1
 }

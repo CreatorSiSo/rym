@@ -11,7 +11,7 @@ pub enum RuntimeError {
 
 // TODO: Print line number as well
 impl RuntimeError {
-	pub fn assignment<T>(name: &str, value: Literal) -> Result<T, Self> {
+	pub fn const_assign<T>(name: &str, value: Literal) -> Result<T, Self> {
 		Err(Self::Assignment(format!(
 			"Cannot assign `{value}` to constant {name}"
 		)))

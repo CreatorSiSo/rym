@@ -11,9 +11,22 @@ fn main() {
 		println!("`say_hello` is not `true`");
 	}
 
-	let mut num = 0;
+	let mut x = 0;
 	loop {
-		println!("{num}");
-		num = num + 1;
+		println!("Round: {x}");
+		x = x + 1;
+		if x > 3 {
+			break;
+		}
+
+		let mut y = 0;
+		loop {
+			println!("{y}");
+			y = y + 1;
+
+			if y > 3 {
+				break;
+			}
+		}
 	}
 }

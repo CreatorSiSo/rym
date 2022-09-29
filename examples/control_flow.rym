@@ -15,8 +15,17 @@ if !say_hello {
 // 	print "testing"
 // }
 
-mut num = 0
+mut x = 0
 loop {
-	print num
-	num = num + 1
+	print "Round: x"
+	x = x + 1
+
+	mut y = 0
+	loop {
+		print y
+		y = y + 1
+		if y >= 3 { break	}
+	}
+
+	if x >= 3 { break	}
 }

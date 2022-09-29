@@ -245,6 +245,15 @@ impl<'src> Parser<'src> {
 			let expr = Box::new(self.expr()?);
 			return Ok(Expr::Unary(UnaryOp::Neg, expr));
 		}
+		self.break_()
+	}
+
+	/// break => "break" TODO: expr?
+	fn break_(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		if self.matches(TokenType::Break) {
+			return Ok(Expr::Break(None));
+		}
+
 		self.primary()
 	}
 

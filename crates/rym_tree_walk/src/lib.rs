@@ -76,7 +76,8 @@ impl<'src> Interpreter<'src> {
 			Expr::If(expr, then_block, else_block) => self.if_(expr, then_block, else_block),
 			Expr::Loop(block) => self.loop_(block),
 
-			Expr::Break(_) => self.break_(),
+			Expr::Break(_) => Ok(Inter::Break(Literal::Unit)),
+			Expr::Continue => Ok(Inter::Continue),
 
 			_ => panic!("Not yet implemented: {:?}", expr),
 		}
@@ -136,10 +137,6 @@ impl<'src> Interpreter<'src> {
 		self.env.pop_scope();
 
 		Ok(return_value)
-	}
-
-	fn break_(&self) -> Result<Inter<'src>, RuntimeError> {
-		Ok(Inter::Break(Literal::Unit))
 	}
 
 	fn assign(

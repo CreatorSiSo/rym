@@ -248,13 +248,25 @@ impl<'src> Parser<'src> {
 			let expr = Box::new(self.expr()?);
 			return Ok(Expr::Unary(UnaryOp::Neg, expr));
 		}
-		self.break_()
+		self.interruptions()
 	}
 
-	/// break => "break" TODO: expr?
-	fn break_(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn interruptions(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		// return => "return" expr?;
+		if self.matches(TokenType::Return) {
+			if self.matches(TokenType::Semicolon) {
+				return Ok(Expr::Break(None));
+			}
+
+			return Ok(Expr::Break(Some(Box::new(self.expr()?))));
+		}
+		// break => "break" TODO: expr?
 		if self.matches(TokenType::Break) {
 			return Ok(Expr::Break(None));
+		}
+		// continue => "continue"
+		if self.matches(TokenType::Continue) {
+			return Ok(Expr::Continue);
 		}
 
 		self.primary()

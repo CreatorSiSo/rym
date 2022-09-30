@@ -40,6 +40,7 @@ pub enum TokenType {
 	Loop,
 	Return,
 	Break,
+	Continue,
 
 	False,
 	True,

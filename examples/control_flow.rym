@@ -10,10 +10,13 @@ if !say_hello {
 	print "`say_hello` is not `true`"
 }
 
-// TODO: Make else if work
-// if true {} else if true {
-// 	print "testing"
-// }
+if true {
+
+} else if false {
+	print "testing"
+} else {
+	print "nope"
+}
 
 mut x = 0
 loop {

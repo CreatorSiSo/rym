@@ -109,6 +109,9 @@ impl<'src> Parser<'src> {
 			let expr = Box::new(self.expr()?);
 			let if_block = self.block()?;
 			let else_block = if self.matches(TokenType::Else) {
+				if self.peek(0).typ == TokenType::If {
+					return self.if_();
+				}
 				Some(self.block()?)
 			} else {
 				None

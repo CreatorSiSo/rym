@@ -2,17 +2,17 @@
 
 ```rust
 pr main() -> Io, Result<(), Error> {
-	const msg = "Hello World"
-	print msg
+	const msg = "Hello World";
+	print(msg);
 
-	mut num = 2 / 4 * (10 - 1)
-	print "Number:\t" + num
+	mut num = 2 / 4 * (10 - 1);
+	print("Number:\t" + num);
 
-	const msg = msg + "!"
-	print "Combined:\t" + msg + " " + num
+	const msg = msg + "!";
+	print("Combined:\t" + msg + " " + num);
 
-	might_return_error()?
-	const maybe_value = do_stuff(testing).even_more(false)
+	might_return_error()?;
+	const maybe_value = do_stuff(testing).even_more(false);
 
 	Ok(())
 }
@@ -24,7 +24,6 @@ pr main() -> Io, Result<(), Error> {
 	- [Content](#content)
 	- [Name](#name)
 	- [Goals](#goals)
-	- [ToDo](#todo)
 
 ## Name
 
@@ -41,9 +40,3 @@ pr main() -> Io, Result<(), Error> {
   - Easy to use (simple)
   - Fast to write Binding
 - ~~Ui Structure and Functionality coding~~ (Maybe later)
-
-## ToDo
-
-- [ ] Make assingments to mut variables work
-- [ ] Have a look at
-  - [ ] Go Routines

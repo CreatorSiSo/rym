@@ -88,7 +88,7 @@ impl<'src> Parser<'src> {
 		self.assignment()
 	}
 
-	// assignment => identifier "=" expr
+	/// assignment => identifier "=" expr
 	fn assignment(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
 		if self.peek(1).typ == TokenType::Equal {
 			let expr_l = Box::new(self.primary()?);
@@ -101,13 +101,11 @@ impl<'src> Parser<'src> {
 		self.if_()
 	}
 
-	// TODO: Implement else if, to change: `block => (if | block)`
-	// Rust reference: https://doc.rust-lang.org/reference/expressions/if-expr.html
-	/// if => "if" expression block ("else" block)? ;
+	/// if => "if" expression block ("else" (if | block))?
 	fn if_(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
 		if self.matches(TokenType::If) {
 			let expr = Box::new(self.expr()?);
-			let if_block = self.block()?;
+			let then_block = self.block()?;
 			let else_block = if self.matches(TokenType::Else) {
 				if self.peek(0).typ == TokenType::If {
 					return self.if_();
@@ -117,7 +115,7 @@ impl<'src> Parser<'src> {
 				None
 			};
 
-			return Ok(Expr::If(expr, if_block, else_block));
+			return Ok(Expr::If(expr, then_block, else_block));
 		}
 
 		self.loop_()

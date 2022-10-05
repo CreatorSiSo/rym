@@ -1,6 +1,6 @@
 use crate::ast::Literal;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum TokenType {
 	Plus,
 	Minus,

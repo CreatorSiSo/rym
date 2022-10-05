@@ -275,7 +275,7 @@ impl<'src> Parser<'src> {
 	/// primary => "(" expr ")", block, identifier, number | string | "true" | "false"
 	fn primary(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
 		if self.matches(TokenType::LeftBrace) {
-			return self.block().map(|b| Expr::Block(b));
+			return self.block().map(Expr::Block);
 		}
 
 		if self.matches(TokenType::LeftParen) {

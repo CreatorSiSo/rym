@@ -15,11 +15,11 @@ pub enum Inter<'src> {
 // 	}
 // }
 
-impl<'src> Into<Literal<'src>> for Inter<'src> {
-	fn into(self) -> Literal<'src> {
-		match self {
+impl<'src> From<Inter<'src>> for Literal<'src> {
+	fn from(inter: Inter<'src>) -> Self {
+		match inter {
 			Inter::Break(lit) | Inter::None(lit) => lit,
-			_ => Literal::Unit
+			_ => Literal::Unit,
 		}
 	}
 }

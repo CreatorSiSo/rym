@@ -81,7 +81,7 @@ pub struct Block<'src> {
 	pub stmts: Vec<Stmt<'src>>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum BinaryOp {
 	/// The `+` operator (addition)
 	Add,
@@ -108,7 +108,7 @@ pub enum BinaryOp {
 	Le,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum LogicalOp {
 	/// The `&&` operator (logical and)
 	And,
@@ -116,7 +116,7 @@ pub enum LogicalOp {
 	Or,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum UnaryOp {
 	/// The `!` operator (not)
 	Not,

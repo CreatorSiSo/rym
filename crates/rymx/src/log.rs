@@ -19,7 +19,7 @@ pub(crate) fn tokens(tokens: &[Token]) {
 			value => print!("{value:?} "),
 		}
 	}
-	print!("\n")
+	println!()
 }
 
 pub(crate) fn ast(ast: &[Stmt]) {

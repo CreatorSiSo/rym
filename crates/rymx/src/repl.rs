@@ -69,7 +69,6 @@ impl Repl {
 		log::title("Interpreter", true);
 		if let Err(error) = Interpreter::new().eval(&ast) {
 			println!("{error:?}");
-			return;
 		}
 	}
 }

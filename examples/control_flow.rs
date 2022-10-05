@@ -11,6 +11,14 @@ fn main() {
 		println!("`say_hello` is not `true`");
 	}
 
+	if true {
+		//
+	} else if false {
+		println!("testing")
+	} else {
+		println!("nope")
+	}
+
 	let mut x = 0;
 	loop {
 		println!("Round: {x}");

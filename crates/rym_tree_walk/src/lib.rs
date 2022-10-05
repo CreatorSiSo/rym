@@ -48,12 +48,10 @@ impl<'src> Interpreter<'src> {
 			Local::Const(name, init) => {
 				let val: Literal = self.expr(init)?.into();
 				self.env.declare(name, val.clone(), true);
-				println!("const {name} = {val:?}")
 			}
 			Local::Mut(name, init) => {
 				let val: Literal = self.expr(init)?.into();
 				self.env.declare(name, val.clone(), false);
-				println!("mut {name} = {val:?}")
 			}
 		}
 		Ok(())

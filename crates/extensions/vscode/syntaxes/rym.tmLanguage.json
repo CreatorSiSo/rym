@@ -1,0 +1,152 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Rym",
+	"patterns": [
+		{
+			"include": "#block-comments"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		}
+	],
+	"repository": {
+		"constants": {
+			"patterns": [
+				{
+					"comment": "booleans",
+					"name": "constant.other.rym",
+					"match": "\\b(true|false)\\b"
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"comment": "documentation comments",
+					"name": "comment.line.documentation.rym",
+					"match": "^\\s*///.*"
+				},
+				{
+					"comment": "line comments",
+					"name": "comment.line.double-slash.rym",
+					"match": "\\s*//.*"
+				}
+			]
+		},
+		"block-comments": {
+			"patterns": [
+				{
+					"comment": "empty block comments",
+					"name": "comment.block.rym",
+					"match": "/\\*\\*/"
+				},
+				{
+					"comment": "block documentation comments",
+					"name": "comment.block.documentation.rym",
+					"begin": "/\\*\\*",
+					"end": "\\*/",
+					"patterns": [
+						{
+							"include": "#block-comments"
+						}
+					]
+				},
+				{
+					"comment": "block comments",
+					"name": "comment.block.rym",
+					"begin": "/\\*(?!\\*)",
+					"end": "\\*/",
+					"patterns": [
+						{
+							"include": "#block-comments"
+						}
+					]
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"comment": "control flow keywords",
+					"name": "keyword.control.rym",
+					"match": "\\b(break|continue|else|for|if|loop|return|while)\\b"
+				},
+				{
+					"comment": "storage keywords",
+					"name": "keyword.other.rym storage.type.rym",
+					"match": "\\b(mut|const)\\b"
+				},
+				{
+					"comment": "other keywords",
+					"name": "keyword.other.rym",
+					"match": "\\b(print)\\b"
+				},
+				{
+					"comment": "logical operators",
+					"name": "keyword.operator.logical.rym",
+					"match": "(\\||\\|\\||&|&&|<<|>>|!)(?!=)"
+				},
+				{
+					"comment": "single equal",
+					"name": "keyword.operator.assignment.equal.rym",
+					"match": "(?<![<>])=(?!=|>)"
+				},
+				{
+					"comment": "comparison operators",
+					"name": "keyword.operator.comparison.rym",
+					"match": "(=(=)?(?!>)|!=|<=|(?<!=)>=)"
+				},
+				{
+					"comment": "math operators",
+					"name": "keyword.operator.math.rym",
+					"match": "(([+%]|(\\*(?!\\w)))(?!=))|(-(?!>))|(/(?!/))"
+				},
+				{
+					"comment": "less than, greater than (special case)",
+					"match": "(?:\\b|(?:(\\))|(\\])|(\\})))[ \\t]+([<>])[ \\t]+(?:\\b|(?:(\\()|(\\[)|(\\{)))",
+					"captures": {
+						"1": {
+							"name": "punctuation.brackets.round.rym"
+						},
+						"2": {
+							"name": "punctuation.brackets.square.rym"
+						},
+						"3": {
+							"name": "punctuation.brackets.curly.rym"
+						},
+						"4": {
+							"name": "keyword.operator.comparison.rym"
+						},
+						"5": {
+							"name": "punctuation.brackets.round.rym"
+						},
+						"6": {
+							"name": "punctuation.brackets.square.rym"
+						},
+						"7": {
+							"name": "punctuation.brackets.curly.rym"
+						}
+					}
+				}
+			]
+		},
+		"strings": {
+			"name": "string.quoted.double.rym",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.rym",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "source.rym"
+}

@@ -22,12 +22,12 @@ mut x = 0
 loop {
 	print "Round: x"
 	x = x + 1
-	if x > 3 { break	}
+	if x > 3 { break }
 
 	mut y = 0
 	loop {
 		print y
 		y = y + 1
-		if y >= 3 { break	}
+		if y >= 3 { break }
 	}
 }

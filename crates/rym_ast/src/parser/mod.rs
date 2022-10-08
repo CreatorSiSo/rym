@@ -272,16 +272,17 @@ impl<'src> Parser<'src> {
 
 	/// call => primary "(" arguments? ")"
 	fn call(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
-		let callee = Box::new(self.primary()?);
+		let expr = self.primary()?;
 
 		if self.matches(TokenType::LeftParen) {
 			self.expect(
 				TokenType::RightParen,
 				"Expected closing `)` after arguments",
 			)?;
+			return Ok(Expr::Call(Box::new(expr), Vec::new()));
 		}
 
-		Ok(Expr::Call(callee, Vec::new()))
+		Ok(expr)
 	}
 
 	/// primary => "(" expr ")", block, identifier, number | string | "true" | "false"
@@ -290,7 +291,6 @@ impl<'src> Parser<'src> {
 			return self.block().map(Expr::Block);
 		}
 
-		// TODO: Use self.peek_eq
 		if self.matches(TokenType::LeftParen) {
 			let expr = Box::new(self.expr()?);
 			self.expect(TokenType::RightParen, "Expected closing `)`")?;
@@ -324,12 +324,22 @@ impl<'src> Parser<'src> {
 		self.expect(TokenType::LeftBrace, "Expected `{`")?;
 
 		let mut stmts = Vec::new();
-		// TODO: Return error when no RightBrace was encountered
-		while !self.matches(TokenType::RightBrace) {
+		let closed = loop {
+			if self.matches(TokenType::RightBrace) {
+				break true;
+			}
+			if self.matches(TokenType::Eof) {
+				break false;
+			}
 			let stmt = self.stmt()?;
 			stmts.push(stmt);
+		};
+
+		if closed {
+			Ok(Block { stmts })
+		} else {
+			ParserError::token_mismatch(self.previous(), "Unclosed block, expected `}`")
 		}
-		Ok(Block { stmts })
 	}
 }
 
@@ -387,9 +397,7 @@ impl<'src> Parser<'src> {
 	}
 
 	fn advance(&mut self) -> &Token<'src> {
-		if !self.is_at_end() {
-			self.pos += 1;
-		}
+		self.pos += 1;
 		self.previous()
 	}
 

@@ -10,16 +10,28 @@
     "Programming Languages"
   ],
   "contributes": {
-    "languages": [{
-      "id": "rym",
-      "aliases": ["Rym", "rym"],
-      "extensions": [".rym"],
-      "configuration": "./language-configuration.json"
-    }],
-    "grammars": [{
-      "language": "rym",
-      "scopeName": "source.rym",
-      "path": "./syntaxes/rym.tmLanguage.json"
-    }]
+    "languages": [
+      {
+        "id": "rym",
+        "aliases": [
+          "Rym",
+          "rym"
+        ],
+        "extensions": [
+          ".rym"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "rym",
+        "scopeName": "source.rym",
+        "path": "./syntaxes/rym.tmLanguage.json"
+      }
+    ]
+  },
+  "devDependencies": {
+    "vsce": "^2.11.0"
   }
 }

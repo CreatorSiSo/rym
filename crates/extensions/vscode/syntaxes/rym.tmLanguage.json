@@ -13,18 +13,12 @@
 		},
 		{
 			"include": "#strings"
+		},
+		{
+			"include": "#constants"
 		}
 	],
 	"repository": {
-		"constants": {
-			"patterns": [
-				{
-					"comment": "booleans",
-					"name": "constant.other.rym",
-					"match": "\\b(true|false)\\b"
-				}
-			]
-		},
 		"comments": {
 			"patterns": [
 				{
@@ -67,6 +61,37 @@
 							"include": "#block-comments"
 						}
 					]
+				}
+			]
+		},
+		"constants": {
+			"patterns": [
+				{
+					"comment": "decimal integers and floats",
+					"name": "constant.numeric.decimal.rym",
+					"match": "\\b\\d[\\d_]*(\\.?)[\\d_]*(?:(E)([+-])([\\d_]+))?(f32|f64|i128|i16|i32|i64|i8|isize|u128|u16|u32|u64|u8|usize)?\\b",
+					"captures": {
+						"1": {
+							"name": "punctuation.separator.dot.decimal.rym"
+						},
+						"2": {
+							"name": "keyword.operator.exponent.rym"
+						},
+						"3": {
+							"name": "keyword.operator.exponent.sign.rym"
+						},
+						"4": {
+							"name": "constant.numeric.decimal.exponent.mantissa.rym"
+						},
+						"5": {
+							"name": "entity.name.type.numeric.rym"
+						}
+					}
+				},
+				{
+					"comment": "booleans",
+					"name": "constant.language.bool.rym",
+					"match": "\\b(true|false)\\b"
 				}
 			]
 		},

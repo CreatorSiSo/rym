@@ -1,6 +1,6 @@
 # Rym vs Rust Timings
 
-## control_flow
+## [control_flow](./control_flow.rs)
 
 0..5_000_000
 

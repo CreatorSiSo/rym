@@ -1,36 +1,37 @@
+use crate::Value;
+
 use super::error::RuntimeError;
-use rym_ast::Literal;
 use std::collections::HashMap;
 
-pub struct Variable<'src> {
-	value: Literal<'src>,
+pub(crate) struct Variable {
+	value: Value,
 	is_const: bool,
 }
 
-type Scope<'src> = HashMap<&'src str, Variable<'src>>;
+type Scope<'scope> = HashMap<&'scope str, Variable>;
 
-pub struct Env<'src> {
-	scopes: Vec<Scope<'src>>,
+pub(crate) struct Env<'scope> {
+	scopes: Vec<Scope<'scope>>,
 }
 
-impl<'src> Env<'src> {
-	pub fn new() -> Self {
+impl<'scope> Env<'scope> {
+	pub(crate) fn new() -> Self {
 		Self {
 			scopes: vec![Scope::new()],
 		}
 	}
 
-	pub fn push_scope(&mut self) {
+	pub(crate) fn push_scope(&mut self) {
 		self.scopes.push(Scope::new())
 	}
 
-	pub fn pop_scope(&mut self) {
+	pub(crate) fn pop_scope(&mut self) {
 		if self.scopes.len() > 1 {
 			self.scopes.pop();
 		}
 	}
 
-	pub fn get(&self, name: &str) -> Result<&Literal<'src>, RuntimeError> {
+	pub(crate) fn get(&self, name: &str) -> Result<&Value, RuntimeError> {
 		for scope in self.iter() {
 			match scope.get(name) {
 				Some(var) => return Ok(&var.value),
@@ -40,7 +41,7 @@ impl<'src> Env<'src> {
 		RuntimeError::undeclared_var(name)
 	}
 
-	pub fn set(&mut self, name: &str, value: Literal<'src>) -> Result<(), RuntimeError> {
+	pub(crate) fn set(&mut self, name: &str, value: Value) -> Result<(), RuntimeError> {
 		for scope in self.iter_mut() {
 			match scope.get_mut(name) {
 				Some(var) => {
@@ -56,7 +57,7 @@ impl<'src> Env<'src> {
 		RuntimeError::undeclared_var(name)
 	}
 
-	pub fn declare(&mut self, name: &'src str, value: Literal<'src>, is_const: bool) {
+	pub(crate) fn declare(&mut self, name: &'scope str, value: Value, is_const: bool) {
 		self.last_mut().insert(
 			name,
 			Variable {
@@ -68,19 +69,19 @@ impl<'src> Env<'src> {
 	}
 }
 
-impl<'src> Env<'src> {
-	fn last_mut(&mut self) -> &mut Scope<'src> {
+impl<'scope> Env<'scope> {
+	fn last_mut(&mut self) -> &mut Scope<'scope> {
 		self
 			.scopes
 			.last_mut()
 			.expect("Internal Error: Stack should never be empty!")
 	}
 
-	fn iter(&self) -> std::iter::Rev<std::slice::Iter<Scope<'src>>> {
+	fn iter(&self) -> std::iter::Rev<std::slice::Iter<Scope<'scope>>> {
 		self.scopes.iter().rev()
 	}
 
-	fn iter_mut(&mut self) -> std::iter::Rev<std::slice::IterMut<Scope<'src>>> {
+	fn iter_mut(&mut self) -> std::iter::Rev<std::slice::IterMut<Scope<'scope>>> {
 		self.scopes.iter_mut().rev()
 	}
 }

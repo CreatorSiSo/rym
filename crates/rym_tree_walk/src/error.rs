@@ -1,5 +1,7 @@
 use rym_ast::{Literal, UnaryOp};
 
+use crate::{Type, Value};
+
 #[derive(Debug)]
 pub enum RuntimeError {
 	ForbiddenType(String),
@@ -11,45 +13,43 @@ pub enum RuntimeError {
 
 // TODO: Print line number as well
 impl RuntimeError {
-	pub fn const_assign<T>(name: &str, value: Literal) -> Result<T, Self> {
+	pub(crate) fn const_assign<T>(name: &str, value: Value) -> Result<T, Self> {
 		Err(Self::Assignment(format!(
-			"Cannot assign `{value}` to constant {name}"
+			"Cannot assign `{value:?}` to constant {name}"
 		)))
 	}
 
-	pub fn undeclared_var<T>(name: &str) -> Result<T, Self> {
+	pub(crate) fn undeclared_var<T>(name: &str) -> Result<T, Self> {
 		Err(Self::UndeclaredVar(format!(
 			"Variable `{name}` has not been declared"
 		)))
 	}
 
-	pub fn unary<T>(op: &UnaryOp, right: Literal) -> Result<T, Self> {
+	pub(crate) fn unary<T>(op: &UnaryOp, right: Type) -> Result<T, Self> {
 		Err(Self::ForbiddenType(format!(
 			"Cannot apply unary operator `{}` to `{}`",
 			match op {
 				UnaryOp::Neg => "-",
 				UnaryOp::Not => "!",
 			},
-			right.to_type_string(),
+			right,
 		)))
 	}
 
-	pub fn expected<T>(type_str: &str, value: Literal) -> Result<T, Self> {
+	pub(crate) fn expected<T>(expected: Type, got: Type) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
-			"Expected `{type_str}` got {}",
-			value.to_type_string()
+			"Expected `{expected}` got {got}",
 		)))
 	}
 
-	pub fn comparison<T>(left: Literal, right: Literal) -> Result<T, Self> {
+	pub(crate) fn comparison<T>(left: Type, right: Type) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Cannot compare `{}` with `{}`",
-			left.to_type_string(),
-			right.to_type_string(),
+			left, right,
 		)))
 	}
 
-	pub fn addition<T>(left: Literal, right: Literal) -> Result<T, Self> {
+	pub(crate) fn addition<T>(left: Literal, right: Literal) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Cannot add `{}` to `{}`",
 			left.to_type_string(),
@@ -57,7 +57,7 @@ impl RuntimeError {
 		)))
 	}
 
-	pub fn substraction<T>(left: Literal, right: Literal) -> Result<T, Self> {
+	pub(crate) fn substraction<T>(left: Literal, right: Literal) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Cannot substract `{}` from `{}`",
 			right.to_type_string(),
@@ -65,7 +65,7 @@ impl RuntimeError {
 		)))
 	}
 
-	pub fn multiplication<T>(left: Literal, right: Literal) -> Result<T, Self> {
+	pub(crate) fn multiplication<T>(left: Literal, right: Literal) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Cannot multiply `{}` by `{}`",
 			left.to_type_string(),
@@ -73,7 +73,7 @@ impl RuntimeError {
 		)))
 	}
 
-	pub fn division<T>(left: Literal, right: Literal) -> Result<T, Self> {
+	pub(crate) fn division<T>(left: Literal, right: Literal) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Cannot divide `{}` by `{}`",
 			left.to_type_string(),

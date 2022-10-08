@@ -69,6 +69,9 @@ pub enum Expr<'src> {
 	/// A unary operation `!x`, `*x`
 	Unary(UnaryOp, Box<Expr<'src>>),
 
+	/// A function call `test_fn(0, "hello")`
+	Call(Box<Expr<'src>>, Vec<Expr<'src>>),
+
 	/// `(9 - 2) * 4`
 	Group(Box<Expr<'src>>),
 

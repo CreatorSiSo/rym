@@ -85,6 +85,27 @@ impl<'src> Parser<'src> {
 	}
 
 	fn expr(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		self.interrupts()
+	}
+
+	fn interrupts(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		// return => "return" expr?;
+		if self.matches(TokenType::Return) {
+			if self.matches(TokenType::Semicolon) {
+				return Ok(Expr::Break(None));
+			}
+
+			return Ok(Expr::Break(Some(Box::new(self.expr()?))));
+		}
+		// break => "break" TODO: expr?
+		if self.matches(TokenType::Break) {
+			return Ok(Expr::Break(None));
+		}
+		// continue => "continue"
+		if self.matches(TokenType::Continue) {
+			return Ok(Expr::Continue);
+		}
+
 		self.assignment()
 	}
 
@@ -236,7 +257,7 @@ impl<'src> Parser<'src> {
 		Ok(left)
 	}
 
-	/// unary => ("!" | "-") unary
+	/// unary => ("!" | "-") (unary | call)
 	fn unary(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
 		if self.matches(TokenType::Bang) {
 			let expr = Box::new(self.expr()?);
@@ -246,39 +267,33 @@ impl<'src> Parser<'src> {
 			let expr = Box::new(self.expr()?);
 			return Ok(Expr::Unary(UnaryOp::Neg, expr));
 		}
-		self.interruptions()
+		self.call()
 	}
 
-	fn interruptions(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
-		// return => "return" expr?;
-		if self.matches(TokenType::Return) {
-			if self.matches(TokenType::Semicolon) {
-				return Ok(Expr::Break(None));
-			}
+	/// call => primary "(" arguments? ")"
+	fn call(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+		let callee = Box::new(self.primary()?);
 
-			return Ok(Expr::Break(Some(Box::new(self.expr()?))));
-		}
-		// break => "break" TODO: expr?
-		if self.matches(TokenType::Break) {
-			return Ok(Expr::Break(None));
-		}
-		// continue => "continue"
-		if self.matches(TokenType::Continue) {
-			return Ok(Expr::Continue);
+		if self.matches(TokenType::LeftParen) {
+			self.expect(
+				TokenType::RightParen,
+				"Expected closing `)` after arguments",
+			)?;
 		}
 
-		self.primary()
+		Ok(Expr::Call(callee, Vec::new()))
 	}
 
 	/// primary => "(" expr ")", block, identifier, number | string | "true" | "false"
 	fn primary(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
-		if self.matches(TokenType::LeftBrace) {
+		if self.peek_eq(TokenType::LeftBrace) {
 			return self.block().map(Expr::Block);
 		}
 
+		// TODO: Use self.peek_eq
 		if self.matches(TokenType::LeftParen) {
 			let expr = Box::new(self.expr()?);
-			self.expect(TokenType::RightParen, "Expected `)`")?;
+			self.expect(TokenType::RightParen, "Expected closing `)`")?;
 			return Ok(Expr::Group(expr));
 		}
 
@@ -298,7 +313,7 @@ impl<'src> Parser<'src> {
 						.to_owned()
 						.expect("Internal Error: Literal token has no value!"),
 				)),
-				_ => panic!("Internal Error: Should never be reached!"),
+				_ => unreachable!(),
 			},
 			None => ParserError::token_mismatch(self.advance(), "Expected Literal"),
 		}
@@ -309,6 +324,7 @@ impl<'src> Parser<'src> {
 		self.expect(TokenType::LeftBrace, "Expected `{`")?;
 
 		let mut stmts = Vec::new();
+		// TODO: Return error when no RightBrace was encountered
 		while !self.matches(TokenType::RightBrace) {
 			let stmt = self.stmt()?;
 			stmts.push(stmt);
@@ -326,17 +342,17 @@ impl<'src> Parser<'src> {
 		ParserError::token_mismatch(self.advance(), error_msg)
 	}
 
-	fn expect_any(
-		&mut self,
-		types: &[TokenType],
-		error_msg: &str,
-	) -> Result<&Token, ParserError<'src>> {
-		if self.matches_any(types) {
-			return Ok(self.previous());
-		}
+	// fn expect_any(
+	// 	&mut self,
+	// 	types: &[TokenType],
+	// 	error_msg: &str,
+	// ) -> Result<&Token, ParserError<'src>> {
+	// 	if self.matches_any(types) {
+	// 		return Ok(self.previous());
+	// 	}
 
-		ParserError::token_mismatch(self.advance(), error_msg)
-	}
+	// 	ParserError::token_mismatch(self.advance(), error_msg)
+	// }
 
 	fn matches_any(&mut self, types: &[TokenType]) -> bool {
 		for typ in types {
@@ -356,6 +372,10 @@ impl<'src> Parser<'src> {
 		}
 
 		None
+	}
+
+	fn peek_eq(&mut self, typ: TokenType) -> bool {
+		self.peek(0).typ == typ
 	}
 
 	fn matches(&mut self, typ: TokenType) -> bool {

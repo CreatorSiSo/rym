@@ -1,0 +1,9 @@
+// fn returns_fn() -> Fn {
+// 	() { print "works" }
+// }
+
+const fn_ = returns_fn()
+// const called_fn_1 = returns_fn()()
+
+const called_fn_1 = (returns_fn())()
+const called_fn_1 = { const test = returns_fn; returns_fn() }()

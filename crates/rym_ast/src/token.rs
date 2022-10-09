@@ -1,4 +1,4 @@
-use crate::ast::Literal;
+use crate::{ast::Literal, Identifier};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum TokenType {
@@ -80,25 +80,37 @@ pub const KEYWORDS: &[(&str, TokenType)] = &[
 ];
 
 #[derive(Debug, Clone)]
-pub struct Token<'src> {
+pub struct Token {
 	pub typ: TokenType,
-	pub literal: Option<Literal<'src>>,
+	pub literal: Option<Literal>,
+	pub ident: Option<Identifier>,
 	pub start: usize,
 }
 
-impl<'src> Token<'src> {
+impl Token {
 	pub fn new(typ: TokenType, start: usize) -> Self {
 		Self {
 			typ,
 			literal: None,
+			ident: None,
 			start,
 		}
 	}
 
-	pub fn literal(typ: TokenType, literal: Literal<'src>, start: usize) -> Self {
+	pub fn literal(typ: TokenType, literal: Literal, start: usize) -> Self {
 		Self {
 			typ,
 			literal: Some(literal),
+			ident: None,
+			start,
+		}
+	}
+
+	pub fn ident(typ: TokenType, ident: Identifier, start: usize) -> Self {
+		Self {
+			typ,
+			literal: None,
+			ident: Some(ident),
 			start,
 		}
 	}

@@ -1,5 +1,6 @@
 use crate::ast::Literal;
 use crate::token::{Token, TokenType, KEYWORDS};
+use crate::Identifier;
 use std::str::CharIndices;
 
 mod error;
@@ -21,7 +22,7 @@ pub struct Lexer<'src> {
 }
 
 impl<'src> Lexer<'src> {
-	pub fn lex(source: &'src str) -> (Vec<Token<'src>>, Vec<LexerError>) {
+	pub fn lex(source: &'src str) -> (Vec<Token>, Vec<LexerError>) {
 		let mut tokens = Vec::new();
 		let mut errors = Vec::new();
 
@@ -53,7 +54,7 @@ impl<'src> Lexer<'src> {
 		}
 	}
 
-	pub fn next_token(&mut self) -> Result<Token<'src>, LexerError> {
+	pub fn next_token(&mut self) -> Result<Token, LexerError> {
 		let token_value = loop {
 			self.advance();
 			if self.is_at_end() {
@@ -124,7 +125,7 @@ impl<'src> Lexer<'src> {
 		self.advance();
 	}
 
-	fn number(&mut self) -> Result<Token<'src>, LexerError> {
+	fn number(&mut self) -> Result<Token, LexerError> {
 		self.consume_while(|c| c.is_ascii_digit());
 
 		if self.peek(1) == '.' && self.peek(2).is_ascii_digit() {
@@ -145,7 +146,7 @@ impl<'src> Lexer<'src> {
 		))
 	}
 
-	fn string(&mut self) -> Result<Token<'src>, LexerError> {
+	fn string(&mut self) -> Result<Token, LexerError> {
 		while !self.is_at_end() {
 			if self.c == '\\' && self.matches('"') {
 				self.advance();
@@ -163,15 +164,23 @@ impl<'src> Lexer<'src> {
 		))
 	}
 
-	fn identifier(&mut self) -> Result<Token<'src>, LexerError> {
+	fn identifier(&mut self) -> Result<Token, LexerError> {
 		self.consume_while(|c| c.is_alphanumeric() || c == '_');
 
-		let text = &self.source[self.start..=self.current];
-		let typ = match KEYWORDS.iter().find(|(key, _)| key == &text) {
+		let name = String::from(&self.source[self.start..=self.current]);
+		let typ = match KEYWORDS.iter().find(|(key, _)| key == &name) {
 			Some((_, token_type)) => token_type.clone(),
 			None => TokenType::Identifier,
 		};
-		Ok(Token::literal(typ, Literal::Identifier(text), self.start))
+		Ok(Token::ident(
+			typ,
+			Identifier {
+				name,
+				line: self.line,
+				col: self.col,
+			},
+			self.start,
+		))
 	}
 }
 
@@ -224,7 +233,7 @@ impl<'src> Lexer<'src> {
 }
 
 impl<'src> Iterator for Lexer<'src> {
-	type Item = Result<Token<'src>, LexerError>;
+	type Item = Result<Token, LexerError>;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		if self.is_at_end() {

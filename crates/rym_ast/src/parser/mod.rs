@@ -4,13 +4,13 @@ use crate::{Local, LogicalOp, Token, TokenType};
 mod error;
 use error::ParserError;
 
-pub struct Parser<'src> {
-	tokens: Vec<Token<'src>>,
+pub struct Parser {
+	tokens: Vec<Token>,
 	pos: usize,
 }
 
-impl<'src> Parser<'src> {
-	pub fn parse(tokens: Vec<Token<'src>>) -> (Vec<Stmt<'src>>, Vec<ParserError<'src>>) {
+impl Parser {
+	pub fn parse(tokens: Vec<Token>) -> (Vec<Stmt>, Vec<ParserError>) {
 		let mut stmts = Vec::new();
 		let mut errors = Vec::new();
 
@@ -28,11 +28,11 @@ impl<'src> Parser<'src> {
 		(stmts, errors)
 	}
 
-	pub fn new(tokens: Vec<Token<'src>>) -> Self {
+	pub fn new(tokens: Vec<Token>) -> Self {
 		Self { tokens, pos: 0 }
 	}
 
-	pub fn stmt(&mut self) -> Result<Stmt<'src>, ParserError<'src>> {
+	pub fn stmt(&mut self) -> Result<Stmt, ParserError> {
 		if self.matches(TokenType::Semicolon) {
 			return Ok(Stmt::Empty);
 		}
@@ -47,26 +47,12 @@ impl<'src> Parser<'src> {
 			let mutable = token.typ == TokenType::Mut;
 
 			self.expect(TokenType::Identifier, "Expected identifier")?;
-			let name = match self
+			let name = self
 				.previous()
-				.literal
+				.ident
 				.clone()
 				.expect("Internal Error: Identifier token has no name!")
-			{
-				Literal::Identifier(name) => name,
-				Literal::Unit => {
-					panic!("Internal Error: Identifier token has wrong literal value `()`!")
-				}
-				Literal::Bool(val) => {
-					panic!("Internal Error: Identifier token has wrong literal value Bool(`{val}`)!")
-				}
-				Literal::Number(val) => {
-					panic!("Internal Error: Identifier token has wrong literal value Number(`{val}`)!")
-				}
-				Literal::String(val) => {
-					panic!("Internal Error: Identifier token has wrong literal value String(`{val}`)!")
-				}
-			};
+				.name;
 
 			self.expect(TokenType::Equal, "Expected `=`")?;
 
@@ -84,11 +70,11 @@ impl<'src> Parser<'src> {
 		Ok(Stmt::Expr(expr))
 	}
 
-	fn expr(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn expr(&mut self) -> Result<Expr, ParserError> {
 		self.interrupts()
 	}
 
-	fn interrupts(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn interrupts(&mut self) -> Result<Expr, ParserError> {
 		// return => "return" expr?;
 		if self.matches(TokenType::Return) {
 			if self.matches(TokenType::Semicolon) {
@@ -110,7 +96,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// assignment => identifier "=" expr
-	fn assignment(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn assignment(&mut self) -> Result<Expr, ParserError> {
 		if self.peek(1).typ == TokenType::Equal {
 			let expr_l = Box::new(self.primary()?);
 			self.advance();
@@ -123,7 +109,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// if => "if" expression block ("else" (if | block))?
-	fn if_(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn if_(&mut self) -> Result<Expr, ParserError> {
 		if self.matches(TokenType::If) {
 			let expr = Box::new(self.expr()?);
 			let then_block = self.block()?;
@@ -143,7 +129,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// loop => "loop" block
-	fn loop_(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn loop_(&mut self) -> Result<Expr, ParserError> {
 		if self.matches(TokenType::Loop) {
 			return Ok(Expr::Loop(self.block()?));
 		}
@@ -152,7 +138,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// logic_or => logic_and ("&&" logic_and)*
-	fn logic_or(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn logic_or(&mut self) -> Result<Expr, ParserError> {
 		let mut left = self.logic_and()?;
 
 		while self.matches(TokenType::DoublePipe) {
@@ -164,7 +150,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// logic_and => equality ("&&" equality)*
-	fn logic_and(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn logic_and(&mut self) -> Result<Expr, ParserError> {
 		let mut left = self.equality()?;
 
 		while self.matches(TokenType::DoubleAmpersand) {
@@ -176,7 +162,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// equality => comparison (("==" | "!=") comparison)*
-	fn equality(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn equality(&mut self) -> Result<Expr, ParserError> {
 		let mut left = self.comparison()?;
 
 		while self.matches_any(&[TokenType::EqualEqual, TokenType::BangEqual]) {
@@ -194,7 +180,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// comparison => term ((">" | ">=" | "<" | "<=") term)*
-	fn comparison(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn comparison(&mut self) -> Result<Expr, ParserError> {
 		let mut left = self.term()?;
 
 		while self.matches_any(&[
@@ -222,7 +208,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// term => factor (("+" | "-") factor)*
-	fn term(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn term(&mut self) -> Result<Expr, ParserError> {
 		let mut left = self.factor()?;
 
 		while self.matches_any(&[TokenType::Plus, TokenType::Minus]) {
@@ -240,7 +226,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// factor => unary (("/" | "*") unary)*
-	fn factor(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn factor(&mut self) -> Result<Expr, ParserError> {
 		let mut left = self.unary()?;
 
 		while self.matches_any(&[TokenType::Star, TokenType::Slash]) {
@@ -258,7 +244,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// unary => ("!" | "-") (unary | call)
-	fn unary(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn unary(&mut self) -> Result<Expr, ParserError> {
 		if self.matches(TokenType::Bang) {
 			let expr = Box::new(self.expr()?);
 			return Ok(Expr::Unary(UnaryOp::Not, expr));
@@ -271,7 +257,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// call => primary "(" arguments? ")"
-	fn call(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn call(&mut self) -> Result<Expr, ParserError> {
 		let expr = self.primary()?;
 
 		if self.matches(TokenType::LeftParen) {
@@ -286,7 +272,7 @@ impl<'src> Parser<'src> {
 	}
 
 	/// primary => "(" expr ")", block, identifier, number | string | "true" | "false"
-	fn primary(&mut self) -> Result<Expr<'src>, ParserError<'src>> {
+	fn primary(&mut self) -> Result<Expr, ParserError> {
 		if self.peek_eq(TokenType::LeftBrace) {
 			return self.block().map(Expr::Block);
 		}
@@ -304,23 +290,32 @@ impl<'src> Parser<'src> {
 			TokenType::String,
 			TokenType::Identifier,
 		]) {
-			Some(token) => match &token.typ {
-				TokenType::False => Ok(Expr::Literal(Literal::Bool(false))),
-				TokenType::True => Ok(Expr::Literal(Literal::Bool(true))),
-				TokenType::Number | TokenType::String | TokenType::Identifier => Ok(Expr::Literal(
-					token
-						.literal
-						.to_owned()
-						.expect("Internal Error: Literal token has no value!"),
-				)),
+			Some(Token {
+				typ,
+				literal,
+				ident,
+				..
+			}) => Ok(match typ {
+				TokenType::False => Expr::Literal(Literal::Bool(false)),
+				TokenType::True => Expr::Literal(Literal::Bool(true)),
+				TokenType::Number | TokenType::String => Expr::Literal(
+					literal
+						.clone()
+						.expect("Internal Error: Literal token should have a value!"),
+				),
+				TokenType::Identifier => Expr::Identifier(
+					ident
+						.clone()
+						.expect("Internal Error: Identifier token should have a value!"),
+				),
 				_ => unreachable!(),
-			},
+			}),
 			None => ParserError::token_mismatch(self.advance(), "Expected Literal"),
 		}
 	}
 
 	/// block => "{" stmt* "}"
-	fn block(&mut self) -> Result<Block<'src>, ParserError<'src>> {
+	fn block(&mut self) -> Result<Block, ParserError> {
 		self.expect(TokenType::LeftBrace, "Expected `{`")?;
 
 		let mut stmts = Vec::new();
@@ -343,8 +338,8 @@ impl<'src> Parser<'src> {
 	}
 }
 
-impl<'src> Parser<'src> {
-	fn expect(&mut self, typ: TokenType, error_msg: &str) -> Result<&Token, ParserError<'src>> {
+impl Parser {
+	fn expect(&mut self, typ: TokenType, error_msg: &str) -> Result<&Token, ParserError> {
 		if self.matches(typ) {
 			return Ok(self.previous());
 		}
@@ -356,7 +351,7 @@ impl<'src> Parser<'src> {
 	// 	&mut self,
 	// 	types: &[TokenType],
 	// 	error_msg: &str,
-	// ) -> Result<&Token, ParserError<'src>> {
+	// ) -> Result<&Token, ParserError> {
 	// 	if self.matches_any(types) {
 	// 		return Ok(self.previous());
 	// 	}
@@ -374,7 +369,7 @@ impl<'src> Parser<'src> {
 		false
 	}
 
-	fn matches_which(&mut self, types: &[TokenType]) -> Option<&Token<'src>> {
+	fn matches_which(&mut self, types: &[TokenType]) -> Option<&Token> {
 		for typ in types {
 			if self.matches(typ.clone()) {
 				return Some(self.previous());
@@ -396,12 +391,12 @@ impl<'src> Parser<'src> {
 		false
 	}
 
-	fn advance(&mut self) -> &Token<'src> {
+	fn advance(&mut self) -> &Token {
 		self.pos += 1;
 		self.previous()
 	}
 
-	fn previous(&self) -> &Token<'src> {
+	fn previous(&self) -> &Token {
 		&self.tokens[self.pos - 1]
 	}
 
@@ -412,7 +407,7 @@ impl<'src> Parser<'src> {
 		false
 	}
 
-	fn peek(&self, dist: usize) -> &Token<'src> {
+	fn peek(&self, dist: usize) -> &Token {
 		match self.tokens.get(self.pos + dist) {
 			Some(token) => token,
 			// TODO: Think about how this could be improved or if its fine
@@ -422,8 +417,8 @@ impl<'src> Parser<'src> {
 	}
 }
 
-impl<'src> Iterator for Parser<'src> {
-	type Item = Result<Stmt<'src>, ParserError<'src>>;
+impl Iterator for Parser {
+	type Item = Result<Stmt, ParserError>;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		if self.tokens.is_empty() || self.is_at_end() {

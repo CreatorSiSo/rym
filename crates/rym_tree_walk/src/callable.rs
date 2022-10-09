@@ -1,11 +1,7 @@
 use crate::{error::RuntimeError, Interpreter, Value};
 
 pub(crate) trait Callabe {
-	fn call<'src>(
-		&self,
-		interpreter: &mut Interpreter,
-		args: &[Value],
-	) -> Result<Value, RuntimeError>;
+	fn call(&self, interpreter: &mut Interpreter, args: &[Value]) -> Result<Value, RuntimeError>;
 }
 
 #[derive(Clone)]

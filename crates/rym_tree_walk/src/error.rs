@@ -1,4 +1,4 @@
-use rym_ast::{Literal, UnaryOp};
+use rym_ast::UnaryOp;
 
 use crate::{Type, Value};
 
@@ -49,35 +49,34 @@ impl RuntimeError {
 		)))
 	}
 
-	pub(crate) fn addition<T>(left: Literal, right: Literal) -> Result<T, Self> {
+	pub(crate) fn addition<T>(left: Type, right: Type) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Cannot add `{}` to `{}`",
-			left.to_type_string(),
-			right.to_type_string(),
+			left, right,
 		)))
 	}
 
-	pub(crate) fn substraction<T>(left: Literal, right: Literal) -> Result<T, Self> {
+	// TODO: Use this error
+	pub(crate) fn _substraction<T>(left: Type, right: Type) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Cannot substract `{}` from `{}`",
-			right.to_type_string(),
-			left.to_type_string(),
+			right, left,
 		)))
 	}
 
-	pub(crate) fn multiplication<T>(left: Literal, right: Literal) -> Result<T, Self> {
+	// TODO: Use this error
+	pub(crate) fn _multiplication<T>(left: Type, right: Type) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Cannot multiply `{}` by `{}`",
-			left.to_type_string(),
-			right.to_type_string(),
+			left, right,
 		)))
 	}
 
-	pub(crate) fn division<T>(left: Literal, right: Literal) -> Result<T, Self> {
+	// TODO: Use this error
+	pub(crate) fn _division<T>(left: Type, right: Type) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Cannot divide `{}` by `{}`",
-			left.to_type_string(),
-			right.to_type_string(),
+			left, right,
 		)))
 	}
 }

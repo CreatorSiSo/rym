@@ -8,13 +8,13 @@ pub(crate) struct Variable {
 	is_const: bool,
 }
 
-type Scope<'scope> = HashMap<&'scope str, Variable>;
+type Scope = HashMap<String, Variable>;
 
-pub(crate) struct Env<'scope> {
-	scopes: Vec<Scope<'scope>>,
+pub(crate) struct Env {
+	scopes: Vec<Scope>,
 }
 
-impl<'scope> Env<'scope> {
+impl Env {
 	pub(crate) fn new() -> Self {
 		Self {
 			scopes: vec![Scope::new()],
@@ -57,9 +57,9 @@ impl<'scope> Env<'scope> {
 		RuntimeError::undeclared_var(name)
 	}
 
-	pub(crate) fn declare(&mut self, name: &'scope str, value: Value, is_const: bool) {
+	pub(crate) fn declare(&mut self, name: &str, value: Value, is_const: bool) {
 		self.last_mut().insert(
-			name,
+			name.to_owned(),
 			Variable {
 				// TODO: Clone?
 				value,
@@ -69,19 +69,19 @@ impl<'scope> Env<'scope> {
 	}
 }
 
-impl<'scope> Env<'scope> {
-	fn last_mut(&mut self) -> &mut Scope<'scope> {
+impl Env {
+	fn last_mut(&mut self) -> &mut Scope {
 		self
 			.scopes
 			.last_mut()
 			.expect("Internal Error: Stack should never be empty!")
 	}
 
-	fn iter(&self) -> std::iter::Rev<std::slice::Iter<Scope<'scope>>> {
+	fn iter(&self) -> std::iter::Rev<std::slice::Iter<Scope>> {
 		self.scopes.iter().rev()
 	}
 
-	fn iter_mut(&mut self) -> std::iter::Rev<std::slice::IterMut<Scope<'scope>>> {
+	fn iter_mut(&mut self) -> std::iter::Rev<std::slice::IterMut<Scope>> {
 		self.scopes.iter_mut().rev()
 	}
 }

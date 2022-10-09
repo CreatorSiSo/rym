@@ -7,13 +7,14 @@ mod error;
 use callable::{Callabe, NativeFunction, RymFunction};
 use env::Env;
 use error::RuntimeError;
-use rym_ast::{BinaryOp, Block, Expr, Literal, Local, LogicalOp, Stmt, UnaryOp};
+use rym_ast::{BinaryOp, Block, Expr, Identifier, Literal, Local, LogicalOp, Stmt, UnaryOp};
 
 enum Type {
 	Unit,
 	Bool,
 	Number,
 	String,
+	Identifier,
 	NativeFunction,
 	RymFunction,
 }
@@ -50,6 +51,7 @@ impl core::fmt::Display for Type {
 			Type::Bool => f.write_str("bool"),
 			Type::Number => f.write_str("number"),
 			Type::String => f.write_str("string"),
+			Type::Identifier => f.write_str("identifier"),
 			Type::NativeFunction => f.write_str("native_fn"),
 			Type::RymFunction => f.write_str("rym_fn"),
 		}
@@ -66,14 +68,26 @@ enum Value {
 	RymFunction(RymFunction),
 }
 
-impl From<Literal<'_>> for Value {
-	fn from(lit: Literal<'_>) -> Self {
+impl core::fmt::Display for Value {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Value::Unit => f.write_str("()"),
+			Value::Number(num) => f.write_str(&num.to_string()),
+			Value::String(str) => f.write_str(str),
+			Value::Bool(bool) => f.write_str(&bool.to_string()),
+			Value::NativeFunction(_) => f.write_str("native_fn"),
+			Value::RymFunction(_) => f.write_str("rym_fn"),
+		}
+	}
+}
+
+impl From<Literal> for Value {
+	fn from(lit: Literal) -> Self {
 		match lit {
 			Literal::Unit => Self::Unit,
 			Literal::Bool(bool) => Self::Bool(bool),
 			Literal::Number(num) => Self::Number(num),
 			Literal::String(str) => Self::String(str),
-			Literal::Identifier(_) => todo!(),
 		}
 	}
 }
@@ -111,34 +125,33 @@ pub(crate) enum Inter {
 	None(Value),
 }
 
-pub struct Interpreter<'src> {
-	env: Env<'src>,
+pub struct Interpreter {
+	env: Env,
 }
 
-impl<'src> Interpreter<'src> {
+impl Interpreter {
 	pub fn new() -> Self {
 		Self { env: Env::new() }
 	}
 
-	pub fn eval(&mut self, ast: &'src [Stmt]) -> Result<(), RuntimeError> {
+	pub fn eval(&mut self, ast: &[Stmt]) -> Result<(), RuntimeError> {
 		for stmt in ast {
 			self.stmt(stmt)?;
 		}
 		Ok(())
 	}
 
-	fn stmt(&mut self, stmt: &Stmt<'src>) -> Result<Inter, RuntimeError> {
+	fn stmt(&mut self, stmt: &Stmt) -> Result<Inter, RuntimeError> {
 		match stmt {
 			Stmt::Local(local) => {
 				self.local(local)?;
 			}
 			Stmt::Print(expr) => {
-				let val: Value = self.expr(expr)?.into();
-				if let Value::String(string) = val {
-					println!("{string}")
-				} else {
-					return RuntimeError::expected(Type::String, val.into());
+				match self.expr(expr)?.into() {
+					val @ (Value::Number(_) | Value::String(_) | Value::Bool(_)) => println!("{val}"),
+					val => return RuntimeError::expected(Type::String, val.into()),
 				}
+				//
 			}
 			Stmt::Expr(expr) => return self.expr(expr),
 			Stmt::Empty => {}
@@ -146,26 +159,24 @@ impl<'src> Interpreter<'src> {
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn local(&mut self, local: &Local<'src>) -> Result<(), RuntimeError> {
+	fn local(&mut self, local: &Local) -> Result<(), RuntimeError> {
 		match local {
 			Local::Const(name, init) => {
 				let val: Value = self.expr(init)?.into();
-				self.env.declare(name, val.clone(), true);
+				self.env.declare(name, val, true);
 			}
 			Local::Mut(name, init) => {
 				let val: Value = self.expr(init)?.into();
-				self.env.declare(name, val.clone(), false);
+				self.env.declare(name, val, false);
 			}
 		}
 		Ok(())
 	}
 
-	fn expr(&mut self, expr: &Expr<'src>) -> Result<Inter, RuntimeError> {
+	fn expr(&mut self, expr: &Expr) -> Result<Inter, RuntimeError> {
 		match expr {
-			Expr::Literal(literal) => Ok(Inter::None(match literal {
-				Literal::Identifier(identifier) => self.env.get(identifier)?.clone(),
-				_ => literal.clone().into(),
-			})),
+			Expr::Identifier(Identifier { name, .. }) => Ok(Inter::None(self.env.get(name)?.clone())),
+			Expr::Literal(lit) => Ok(Inter::None(lit.clone().into())),
 			Expr::Assign(left, right) => self.assign(left, right),
 			Expr::Call(callee, args) => self.call(callee, args),
 
@@ -187,26 +198,26 @@ impl<'src> Interpreter<'src> {
 
 	fn if_(
 		&mut self,
-		expr: &Expr<'src>,
-		then_block: &Block<'src>,
-		else_block: &Option<Block<'src>>,
+		expr: &Expr,
+		then_block: &Block,
+		else_block: &Option<Block>,
 	) -> Result<Inter, RuntimeError> {
 		let bool = match self.expr(expr)?.into() {
 			Value::Bool(bool) => bool,
 			val => return RuntimeError::expected(Type::Bool, val.into()),
 		};
 
-		return if bool {
+		if bool {
 			self.block(then_block)
 		} else if let Some(block) = else_block {
 			self.block(block)
 		} else {
 			Ok(Inter::None(Value::Unit))
-		};
+		}
 	}
 
 	// TODO: Implement break, continue and return
-	fn loop_(&mut self, block: &Block<'src>) -> Result<Inter, RuntimeError> {
+	fn loop_(&mut self, block: &Block) -> Result<Inter, RuntimeError> {
 		loop {
 			match self.block(block)? {
 				Inter::Break(val) => break Ok(Inter::None(val)),
@@ -215,7 +226,7 @@ impl<'src> Interpreter<'src> {
 		}
 	}
 
-	fn block(&mut self, block: &Block<'src>) -> Result<Inter, RuntimeError> {
+	fn block(&mut self, block: &Block) -> Result<Inter, RuntimeError> {
 		self.env.push_scope();
 
 		let mut stmts = block.stmts.iter();
@@ -239,10 +250,10 @@ impl<'src> Interpreter<'src> {
 		Ok(return_value)
 	}
 
-	fn assign(&mut self, expr_l: &Expr<'src>, expr_r: &Expr<'src>) -> Result<Inter, RuntimeError> {
+	fn assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Result<Inter, RuntimeError> {
 		let name = match expr_l {
-			Expr::Literal(Literal::Identifier(name)) => name,
-			_ => return RuntimeError::expected(todo!("symbol"), self.expr(expr_l)?.into()),
+			Expr::Identifier(Identifier { name, .. }) => name,
+			_ => return RuntimeError::expected(Type::Identifier, self.expr(expr_l)?.into()),
 		};
 		let value = self.expr(expr_r)?.into();
 		self.env.set(name, value)?;
@@ -250,12 +261,8 @@ impl<'src> Interpreter<'src> {
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn call(
-		&mut self,
-		callee_expr: &Box<Expr<'src>>,
-		args_expr: &Vec<Expr<'src>>,
-	) -> Result<Inter, RuntimeError> {
-		let callee: Value = self.expr(&callee_expr)?.into();
+	fn call(&mut self, callee_expr: &Expr, args_expr: &Vec<Expr>) -> Result<Inter, RuntimeError> {
+		let callee: Value = self.expr(callee_expr)?.into();
 		let args: Vec<Value> = {
 			let mut vec = Vec::new();
 			for arg_expr in args_expr {
@@ -271,7 +278,7 @@ impl<'src> Interpreter<'src> {
 		}))
 	}
 
-	fn unary(&mut self, op: &UnaryOp, expr: &Expr<'src>) -> Result<Inter, RuntimeError> {
+	fn unary(&mut self, op: &UnaryOp, expr: &Expr) -> Result<Inter, RuntimeError> {
 		let val = self.expr(expr)?.into();
 
 		Ok(Inter::None(match (op, val) {
@@ -284,82 +291,87 @@ impl<'src> Interpreter<'src> {
 	// TODO: Make this easily understandable
 	fn logical(
 		&mut self,
-		expr_l: &Expr<'src>,
+		expr_l: &Expr,
 		op: &LogicalOp,
-		expr_r: &Expr<'src>,
+		expr_r: &Expr,
 	) -> Result<Inter, RuntimeError> {
-		let lit_l = self.expr(expr_l)?.into();
+		let val_l = self.expr(expr_l)?.into();
 
 		Ok(Inter::None(if op == &LogicalOp::And {
-			self.cmp_bool(lit_l, expr_r, |val_l, val_r| val_l && val_r, false)?
+			self.cmp_bool(val_l, expr_r, |val_l, val_r| val_l && val_r, false)?
 		} else {
-			self.cmp_bool(lit_l, expr_r, |val_l, val_r| val_l || val_r, true)?
+			self.cmp_bool(val_l, expr_r, |val_l, val_r| val_l || val_r, true)?
 		}))
 	}
 
 	fn cmp_bool<F>(
 		&mut self,
 		val_l: Value,
-		expr_r: &Expr<'src>,
+		expr_r: &Expr,
 		f: F,
 		short_circuit_if: bool,
 	) -> Result<Value, RuntimeError>
 	where
 		F: Fn(bool, bool) -> bool,
 	{
-		if let Value::Bool(val_l) = val_l {
-			if val_l == short_circuit_if {
-				return Ok(Value::Bool(short_circuit_if));
+		match val_l {
+			Value::Bool(bool_l) => {
+				if bool_l == short_circuit_if {
+					return Ok(Value::Bool(short_circuit_if));
+				}
+				let val_r = self.expr(expr_r)?.into();
+				if let Value::Bool(bool_r) = val_r {
+					return Ok(Value::Bool(f(bool_l, bool_r)));
+				}
+				RuntimeError::expected(Type::Bool, val_r.into())
 			}
-
-			let val_r = self.expr(expr_r)?.into();
-			if let Value::Bool(val_r) = val_r {
-				return Ok(Value::Bool(f(val_l, val_r)));
-			}
-			return RuntimeError::comparison(val_l.into(), val_r.into());
+			_ => RuntimeError::expected(Type::Bool, val_l.into()),
 		}
-
-		// TODO: How should errors and short circuiting work?
-		// Should the second value still be calculated if the first does not result in a bool?
-		RuntimeError::comparison(val_l.into(), todo!())
 	}
 
 	// TODO: Assignment expression
 
-	fn binary(
-		&mut self,
-		expr_l: &Expr<'src>,
-		op: &BinaryOp,
-		expr_r: &Expr<'src>,
-	) -> Result<Inter, RuntimeError> {
-		let lit_l = self.expr(expr_l)?.into();
-		let lit_r = self.expr(expr_r)?.into();
+	fn binary(&mut self, expr_l: &Expr, op: &BinaryOp, expr_r: &Expr) -> Result<Inter, RuntimeError> {
+		let val_l = self.expr(expr_l)?.into();
+		let val_r = self.expr(expr_r)?.into();
 
 		Ok(Inter::None(match op {
-			BinaryOp::Eq => Value::from(lit_l == lit_r),
-			BinaryOp::Ne => Value::from(lit_l != lit_r),
-			BinaryOp::Gt => Self::number(lit_l, lit_r, |val_l, val_r| val_l > val_r)?,
-			BinaryOp::Ge => Self::number(lit_l, lit_r, |val_l, val_r| val_l >= val_r)?,
-			BinaryOp::Lt => Self::number(lit_l, lit_r, |val_l, val_r| val_l < val_r)?,
-			BinaryOp::Le => Self::number(lit_l, lit_r, |val_l, val_r| val_l <= val_r)?,
-			BinaryOp::Mul => Self::number(lit_l, lit_r, |val_l, val_r| val_l * val_r)?,
-			BinaryOp::Div => Self::number(lit_l, lit_r, |val_l, val_r| val_l / val_r)?,
-			BinaryOp::Mod => Self::number(lit_l, lit_r, |val_l, val_r| val_l % val_r)?,
-			BinaryOp::Sub => Self::number(lit_l, lit_r, |val_l, val_r| val_l - val_r)?,
-			BinaryOp::Add => Self::number(lit_l, lit_r, |val_l, val_r| val_l + val_r)?,
+			BinaryOp::Eq => Value::from(val_l == val_r),
+			BinaryOp::Ne => Value::from(val_l != val_r),
+			BinaryOp::Gt => Self::number(val_l, val_r, |val_l, val_r| val_l > val_r)?,
+			BinaryOp::Ge => Self::number(val_l, val_r, |val_l, val_r| val_l >= val_r)?,
+			BinaryOp::Lt => Self::number(val_l, val_r, |val_l, val_r| val_l < val_r)?,
+			BinaryOp::Le => Self::number(val_l, val_r, |val_l, val_r| val_l <= val_r)?,
+			BinaryOp::Mul => Self::number(val_l, val_r, |val_l, val_r| val_l * val_r)?,
+			BinaryOp::Div => Self::number(val_l, val_r, |val_l, val_r| val_l / val_r)?,
+			BinaryOp::Mod => Self::number(val_l, val_r, |val_l, val_r| val_l % val_r)?,
+			BinaryOp::Sub => Self::number(val_l, val_r, |val_l, val_r| val_l - val_r)?,
+			BinaryOp::Add => match (val_l, val_r) {
+				(val_l @ Value::Number(_), val_r @ Value::Number(_)) => {
+					Self::number(val_l, val_r, |val_l, val_r| val_l + val_r)?
+				}
+
+				(Value::String(l), Value::String(r)) => (l + &r).into(),
+				(Value::Number(l), Value::String(r)) => (l.to_string() + &r).into(),
+				(Value::Bool(l), Value::String(r)) => (l.to_string() + &r).into(),
+				(Value::String(l), Value::Number(r)) => (l + &r.to_string()).into(),
+				(Value::String(l), Value::Bool(r)) => (l + &r.to_string()).into(),
+
+				(val_l, val_r) => return RuntimeError::addition(val_l.into(), val_r.into()),
+			},
 		}))
 	}
 
-	fn number<F, R>(lit_l: Value, lit_r: Value, f: F) -> Result<Value, RuntimeError>
+	fn number<F, R>(val_l: Value, val_r: Value, f: F) -> Result<Value, RuntimeError>
 	where
 		F: Fn(f64, f64) -> R,
 		Value: From<R>,
 	{
-		if let Value::Number(val_l) = lit_l {
-			if let Value::Number(val_r) = lit_r {
+		if let Value::Number(val_l) = val_l {
+			if let Value::Number(val_r) = val_r {
 				return Ok(Value::from(f(val_l, val_r)));
 			}
 		}
-		RuntimeError::comparison(lit_l.into(), lit_r.into())
+		RuntimeError::comparison(val_l.into(), val_r.into())
 	}
 }

@@ -1,87 +1,103 @@
 use std::fmt::Display;
 
 #[derive(Debug, PartialEq)]
-pub enum Stmt<'src> {
+pub enum Stmt {
 	/// A const or mut binding
-	Local(Local<'src>),
+	Local(Local),
 
 	/// Temporary statement for logging until functions are implemented
-	Print(Expr<'src>),
+	Print(Expr),
 
 	/// Expr without trailing semi-colon.
-	Expr(Expr<'src>),
+	Expr(Expr),
 
 	/// Just a trailing semi-colon.
 	Empty,
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Local<'src> {
+pub enum Local {
 	/// A constant binding `const a = 0`
-	Const(&'src str, Expr<'src>),
+	Const(String, Expr),
 
 	/// A mutable binding `mut b = "hi"`
-	Mut(&'src str, Expr<'src>),
+	Mut(String, Expr),
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Expr<'src> {
+pub enum Expr {
 	/// An array `[a, b, c, d]`
-	Array(Vec<Expr<'src>>),
+	Array(Vec<Expr>),
 
 	/// A tuple `(a, b, c, d)`
-	Tuple(Vec<Expr<'src>>),
+	Tuple(Vec<Expr>),
 
 	/// An `if` block, with an optional `else` block.
 	///
 	/// `if expr { block } else { block }`
-	If(Box<Expr<'src>>, Block<'src>, Option<Block<'src>>),
+	If(Box<Expr>, Block, Option<Block>),
 
 	/// A while loop `while expr { block }`
-	While(Box<Expr<'src>>, Block<'src>),
+	While(Box<Expr>, Block),
 
 	/// Conditionless loop (can be exited with `break`, `continue`, or `return`)
 	///
 	/// `loop { block }`
-	Loop(Block<'src>),
+	Loop(Block),
 
 	/// A block `{ .. }`
-	Block(Block<'src>),
+	Block(Block),
 
 	/// A `break`, with an optional expression
-	Break(Option<Box<Expr<'src>>>),
+	Break(Option<Box<Expr>>),
 
 	/// A `continue`
 	Continue,
 
 	/// A `return`, with an optional value to be returned
-	Return(Option<Box<Expr<'src>>>),
+	Return(Option<Box<Expr>>),
 
 	/// An assignment `a = 20`
-	Assign(Box<Expr<'src>>, Box<Expr<'src>>),
+	Assign(Box<Expr>, Box<Expr>),
 
 	/// A logical operation `true && false`, `a || b`
-	Logical(Box<Expr<'src>>, LogicalOp, Box<Expr<'src>>),
+	Logical(Box<Expr>, LogicalOp, Box<Expr>),
 
 	/// A binary operation `a + b`, `a * b`
-	Binary(Box<Expr<'src>>, BinaryOp, Box<Expr<'src>>),
+	Binary(Box<Expr>, BinaryOp, Box<Expr>),
 
 	/// A unary operation `!x`, `*x`
-	Unary(UnaryOp, Box<Expr<'src>>),
+	Unary(UnaryOp, Box<Expr>),
 
 	/// A function call `test_fn(0, "hello")`
-	Call(Box<Expr<'src>>, Vec<Expr<'src>>),
+	Call(Box<Expr>, Vec<Expr>),
 
 	/// `(9 - 2) * 4`
-	Group(Box<Expr<'src>>),
+	Group(Box<Expr>),
 
 	/// A literal `true`, `2`, `"Hello"`
-	Literal(Literal<'src>),
+	Literal(Literal),
+
+	/// A literal `true`, `2`, `"Hello"`
+	Identifier(Identifier),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Identifier {
+	pub name: String,
+	pub line: usize,
+	pub col: usize,
+}
+
+impl Identifier {
+	pub fn new(name: String, line: usize, col: usize) -> Self {
+		Self { name, line, col }
+	}
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Block<'src> {
-	pub stmts: Vec<Stmt<'src>>,
+pub struct Block {
+	pub stmts: Vec<Stmt>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -128,34 +144,31 @@ pub enum UnaryOp {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Literal<'src> {
+pub enum Literal {
 	Unit,
 	Bool(bool),
 	Number(f64),
 	String(String),
-	Identifier(&'src str),
 }
 
-impl<'src> Display for Literal<'src> {
+impl Display for Literal {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Literal::Unit => write!(f, "()"),
 			Literal::Bool(value) => write!(f, "{value}"),
 			Literal::Number(value) => write!(f, "{value}"),
 			Literal::String(value) => write!(f, "{value}"),
-			Literal::Identifier(name) => write!(f, "{name}"),
 		}
 	}
 }
 
-impl<'src> Literal<'src> {
+impl Literal {
 	pub fn to_type_string(&self) -> String {
 		match self {
 			Literal::Unit => "()".into(),
 			Literal::Bool(_) => "bool".into(),
 			Literal::Number(_) => "number".into(),
 			Literal::String(_) => "string".into(),
-			Literal::Identifier(_) => "identifier".into(),
 		}
 	}
 }

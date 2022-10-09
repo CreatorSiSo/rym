@@ -2,13 +2,13 @@ use crate::token::*;
 use std::fmt::Display;
 
 #[derive(Debug)]
-pub enum ParserError<'src> {
-	TokenMismatch { token: Token<'src>, msg: String },
-	InvalidAssignmentTarget { token: Token<'src> },
+pub enum ParserError {
+	TokenMismatch { token: Token, msg: String },
+	InvalidAssignmentTarget { token: Token },
 }
 
-impl<'src> ParserError<'src> {
-	pub(super) fn token_mismatch<T>(token: &Token<'src>, msg: &str) -> Result<T, Self> {
+impl ParserError {
+	pub(super) fn token_mismatch<T>(token: &Token, msg: &str) -> Result<T, Self> {
 		Err(ParserError::TokenMismatch {
 			token: token.clone(),
 			msg: msg.into(),
@@ -16,7 +16,7 @@ impl<'src> ParserError<'src> {
 	}
 }
 
-impl Display for ParserError<'_> {
+impl Display for ParserError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			ParserError::TokenMismatch { token, msg } => {

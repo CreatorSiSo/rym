@@ -15,7 +15,7 @@ pub enum RuntimeError {
 impl RuntimeError {
 	pub(crate) fn const_assign<T>(name: &str, value: Value) -> Result<T, Self> {
 		Err(Self::Assignment(format!(
-			"Cannot assign `{value:?}` to constant {name}"
+			"Assignment of `{value}` to constant `{name}` is forbidden"
 		)))
 	}
 

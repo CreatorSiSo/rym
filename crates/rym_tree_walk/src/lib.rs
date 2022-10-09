@@ -119,6 +119,12 @@ impl From<String> for Value {
 	}
 }
 
+impl From<NativeFunction> for Value {
+	fn from(value: NativeFunction) -> Self {
+		Self::NativeFunction(value)
+	}
+}
+
 pub(crate) enum Inter {
 	Break(Value),
 	Continue,
@@ -133,37 +139,35 @@ impl Interpreter {
 	pub fn new() -> Self {
 		let mut env = Env::new();
 
-		env.declare(
-			"print",
-			Value::NativeFunction(NativeFunction::new(
-				|_: &mut Interpreter, args: &[Value]| {
-					print!(
-						"{}",
-						args
-							.iter()
-							.fold(String::new(), |accum, arg| format!("{accum}{arg}"))
-					);
-					Ok(Value::Unit)
-				},
-			)),
-			true,
-		);
+		let print_fn = NativeFunction::new(|_: _, args: &[Value]| {
+			let mut string = String::new();
+			for arg in args {
+				string.push_str(&arg.to_string())
+			}
+			print!("{string}");
+			// TODO make this work properly in repl
+			Ok(Value::Unit)
+		});
+		let println_fn = NativeFunction::new(|_: _, args: &[Value]| {
+			let mut string = String::new();
+			for arg in args {
+				string.push_str(&arg.to_string())
+			}
+			println!("{string}");
+			Ok(Value::Unit)
+		});
 
-		env.declare(
-			"println",
-			Value::NativeFunction(NativeFunction::new(
-				|_: &mut Interpreter, args: &[Value]| {
-					println!(
-						"{}",
-						args
-							.iter()
-							.fold(String::new(), |accum, arg| format!("{accum}{arg}"))
-					);
-					Ok(Value::Unit)
-				},
-			)),
-			true,
-		);
+		let globals = [
+			("print", print_fn.into()),
+			("println", println_fn.into()),
+			("PI", std::f64::consts::PI.into()),
+			("TAU", std::f64::consts::TAU.into()),
+			("E", std::f64::consts::E.into()),
+			("SQRT_2", std::f64::consts::SQRT_2.into()),
+		];
+		for (name, val) in globals {
+			env.declare(name, val, true)
+		}
 
 		Self { env }
 	}

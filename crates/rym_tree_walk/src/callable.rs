@@ -1,23 +1,30 @@
 use crate::{error::RuntimeError, Interpreter, Value};
 
-type CallableFn = fn(&mut Interpreter, &[Value]) -> Result<Value, RuntimeError>;
+pub(crate) type Arity = Option<usize>;
+pub(crate) type CallableFn = fn(&mut Interpreter, &[Value]) -> Result<Value, RuntimeError>;
 
-pub(crate) trait Callabe {
+pub(crate) trait Callable {
+	fn arity(&self) -> Option<usize>;
 	fn call(&self, interpreter: &mut Interpreter, args: &[Value]) -> Result<Value, RuntimeError>;
 }
 
 #[derive(Clone)]
 pub(crate) struct NativeFunction {
+	arity: Arity,
 	callable: CallableFn,
 }
 
 impl NativeFunction {
-	pub(crate) fn new(callable: CallableFn) -> Self {
-		Self { callable }
+	pub(crate) fn new(arity: Arity, callable: CallableFn) -> Self {
+		Self { arity, callable }
 	}
 }
 
-impl Callabe for NativeFunction {
+impl Callable for NativeFunction {
+	fn arity(&self) -> Option<usize> {
+		self.arity
+	}
+
 	fn call<'src>(
 		&self,
 		interpreter: &mut Interpreter,
@@ -42,10 +49,15 @@ impl core::fmt::Debug for NativeFunction {
 
 #[derive(Clone)]
 pub(crate) struct RymFunction {
+	arity: Arity,
 	callable: CallableFn,
 }
 
-impl Callabe for RymFunction {
+impl Callable for RymFunction {
+	fn arity(&self) -> Option<usize> {
+		self.arity
+	}
+
 	fn call<'src>(
 		&self,
 		interpreter: &mut Interpreter,

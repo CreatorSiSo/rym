@@ -4,7 +4,7 @@ mod callable;
 mod env;
 mod error;
 
-use callable::{Callabe, NativeFunction, RymFunction};
+use callable::{Callable, NativeFunction, RymFunction};
 use env::Env;
 use error::RuntimeError;
 use rym_ast::{BinaryOp, Block, Expr, Identifier, Literal, Local, LogicalOp, Stmt, UnaryOp};
@@ -139,7 +139,7 @@ impl Interpreter {
 	pub fn new() -> Self {
 		let mut env = Env::new();
 
-		let print_fn = NativeFunction::new(|_: _, args: &[Value]| {
+		let print_fn = NativeFunction::new(None, |_: _, args: &[Value]| {
 			let mut string = String::new();
 			for arg in args {
 				string.push_str(&arg.to_string())
@@ -148,7 +148,7 @@ impl Interpreter {
 			// TODO make this work properly in repl
 			Ok(Value::Unit)
 		});
-		let println_fn = NativeFunction::new(|_: _, args: &[Value]| {
+		let println_fn = NativeFunction::new(None, |_: _, args: &[Value]| {
 			let mut string = String::new();
 			for arg in args {
 				string.push_str(&arg.to_string())
@@ -319,11 +319,19 @@ impl Interpreter {
 			vec
 		};
 
-		Ok(Inter::None(match callee {
-			Value::NativeFunction(f) => f.call(self, &args)?,
-			Value::RymFunction(f) => f.call(self, &args)?,
+		let f: Box<dyn Callable> = match callee {
+			Value::NativeFunction(f) => Box::new(f),
+			Value::RymFunction(f) => Box::new(f),
 			val => return RuntimeError::call(val.into()),
-		}))
+		};
+
+		if let Some(arity) = f.arity() {
+			if arity != args.len() {
+				return RuntimeError::num_args_mismatch(arity, args.len());
+			}
+		}
+
+		Ok(Inter::None(f.call(self, &args)?))
 	}
 
 	// TODO: Make this easily understandable

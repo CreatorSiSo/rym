@@ -8,11 +8,18 @@ pub enum RuntimeError {
 	TypeMismatch(String),
 	UndeclaredVar(String),
 	Assignment(String),
+	NumArgsMismatch(String),
 	DivideByZero,
 }
 
 // TODO: Print line number as well
 impl RuntimeError {
+	pub(crate) fn num_args_mismatch<T>(expected: usize, got: usize) -> Result<T, Self> {
+		Err(Self::NumArgsMismatch(format!(
+			"Expected `{expected}` arguments but got `{got}`"
+		)))
+	}
+
 	pub(crate) fn const_assign<T>(name: &str, value: Value) -> Result<T, Self> {
 		Err(Self::Assignment(format!(
 			"Assignment of `{value}` to constant `{name}` is forbidden"

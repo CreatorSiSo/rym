@@ -22,17 +22,17 @@ fn main() {
 	let mut x = 0;
 	loop {
 		println!("Round: {x}");
-		x = x + 1;
-		if x > 3 {
+		x += 1;
+		if x > 99 {
 			break;
 		}
 
 		let mut y = 0;
 		loop {
 			println!("{y}");
-			y = y + 1;
+			y += 1;
 
-			if y > 3 {
+			if y > 99 {
 				break;
 			}
 		}

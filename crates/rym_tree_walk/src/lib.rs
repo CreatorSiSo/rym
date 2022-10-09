@@ -131,7 +131,41 @@ pub struct Interpreter {
 
 impl Interpreter {
 	pub fn new() -> Self {
-		Self { env: Env::new() }
+		let mut env = Env::new();
+
+		env.declare(
+			"print",
+			Value::NativeFunction(NativeFunction::new(
+				|_: &mut Interpreter, args: &[Value]| {
+					print!(
+						"{}",
+						args
+							.iter()
+							.fold(String::new(), |accum, arg| format!("{accum}{arg}"))
+					);
+					Ok(Value::Unit)
+				},
+			)),
+			true,
+		);
+
+		env.declare(
+			"println",
+			Value::NativeFunction(NativeFunction::new(
+				|_: &mut Interpreter, args: &[Value]| {
+					println!(
+						"{}",
+						args
+							.iter()
+							.fold(String::new(), |accum, arg| format!("{accum}{arg}"))
+					);
+					Ok(Value::Unit)
+				},
+			)),
+			true,
+		);
+
+		Self { env }
 	}
 
 	pub fn eval(&mut self, ast: &[Stmt]) -> Result<(), RuntimeError> {
@@ -261,6 +295,16 @@ impl Interpreter {
 		Ok(Inter::None(Value::Unit))
 	}
 
+	fn unary(&mut self, op: &UnaryOp, expr: &Expr) -> Result<Inter, RuntimeError> {
+		let val = self.expr(expr)?.into();
+
+		Ok(Inter::None(match (op, val) {
+			(UnaryOp::Not, Value::Bool(val)) => Value::Bool(!val),
+			(UnaryOp::Neg, Value::Number(val)) => Value::Number(-val),
+			(op, val) => return RuntimeError::unary(op, val.into()),
+		}))
+	}
+
 	fn call(&mut self, callee_expr: &Expr, args_expr: &Vec<Expr>) -> Result<Inter, RuntimeError> {
 		let callee: Value = self.expr(callee_expr)?.into();
 		let args: Vec<Value> = {
@@ -274,17 +318,7 @@ impl Interpreter {
 		Ok(Inter::None(match callee {
 			Value::NativeFunction(f) => f.call(self, &args)?,
 			Value::RymFunction(f) => f.call(self, &args)?,
-			val => return RuntimeError::expected(Type::RymFunction, val.into()),
-		}))
-	}
-
-	fn unary(&mut self, op: &UnaryOp, expr: &Expr) -> Result<Inter, RuntimeError> {
-		let val = self.expr(expr)?.into();
-
-		Ok(Inter::None(match (op, val) {
-			(UnaryOp::Not, Value::Bool(val)) => Value::Bool(!val),
-			(UnaryOp::Neg, Value::Number(val)) => Value::Number(-val),
-			(op, val) => return RuntimeError::unary(op, val.into()),
+			val => return RuntimeError::call(val.into()),
 		}))
 	}
 

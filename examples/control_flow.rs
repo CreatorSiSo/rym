@@ -29,10 +29,10 @@ fn main() {
 
 		let mut y = 0;
 		loop {
-			println!("{y}");
-			y += 1;
-
-			if y > 99 {
+			print!(y);
+			y = y + 1;
+			if y >= 99 {
+				println!();
 				break;
 			}
 		}

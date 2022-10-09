@@ -22,4 +22,4 @@ const rS = d2 / 200
 
 const t = (rZ * rZ * h) / (rS * rS * vS)
 
-print "Time: " + t + "s"
+println("Time: ", t, "s")

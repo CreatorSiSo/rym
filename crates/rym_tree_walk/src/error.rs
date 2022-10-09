@@ -36,6 +36,14 @@ impl RuntimeError {
 		)))
 	}
 
+	pub(crate) fn call<T>(typ: Type) -> Result<T, Self> {
+		Err(Self::TypeMismatch(format!(
+			"Cannot call `{typ}`, expected `{}` or `{}`",
+			Type::RymFunction,
+			Type::NativeFunction
+		)))
+	}
+
 	pub(crate) fn expected<T>(expected: Type, got: Type) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Expected `{expected}` got {got}",

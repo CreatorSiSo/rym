@@ -108,11 +108,6 @@
 					"match": "\\b(mut|const)\\b"
 				},
 				{
-					"comment": "other keywords",
-					"name": "keyword.other.rym",
-					"match": "\\b(print)\\b"
-				},
-				{
 					"comment": "logical operators",
 					"name": "keyword.operator.logical.rym",
 					"match": "(\\||\\|\\||&|&&|<<|>>|!)(?!=)"

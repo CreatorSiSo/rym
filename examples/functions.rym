@@ -1,8 +1,8 @@
 // fn returns_fn() -> Fn {
-// 	() { print "works" }
+// 	() { println("works") }
 // }
 
-const returns_fn = "placeholder";
+const returns_fn = "placeholder"
 
 const fn_ = returns_fn()
 // const called_fn_1 = returns_fn()()

@@ -1,10 +1,10 @@
 const test = "Hello World"
 mut two = 2 / 4 * (10 - 1)
-print "test:\t" + test
+println("test:\t", test)
 
 const test = test + "!"
-print "both:\t" + test + " " + two
+println("both:\t", test, " " + two)
 
-print "two:\t" + two
-// two = 0
-print "two:\t" + two
+println("two:\t", two)
+two = 0
+println("two:\t", two)

@@ -1,33 +1,36 @@
 const say_hello = false
 
 if say_hello {
-	print "Hello World!"
+	println("Hello World!")
 } else {
-	print "Bye World!"
+	println("Bye World!")
 }
 
 if !say_hello {
-	print "`say_hello` is not `true`"
+	println("`say_hello` is not `true`")
 }
 
 if true {
 
 } else if false {
-	print "testing"
+	println("testing")
 } else {
-	print "nope"
+	println("nope")
 }
 
 mut x = 0
 loop {
-	print "Round: " + x
+	println("Round: ", x)
 	x = x + 1
 	if x > 99 { break }
 
 	mut y = 0
 	loop {
-		print y
+		print(y)
 		y = y + 1
-		if y >= 99 { break }
+		if y >= 99 {
+			println()
+			break
+		}
 	}
 }

@@ -29,6 +29,5 @@ if else for while loop return break
 false true
 fn const mut
 struct self
-print
 
 testing(arg1,, arg2)

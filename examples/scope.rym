@@ -1,12 +1,12 @@
 mut value = 20
 {
 	const value = 0
-	print value
+	println(value)
 }
 // value = value-1
-print value
+println(value)
 
-print ""
+println("")
 
 const a = "\t\tglobal a"
 const b = "\t\tglobal b"
@@ -16,8 +16,8 @@ const c = "\t\tglobal c"
   const b = "\touter b"
   {
     const a = "inner a"
-    print a;print b;print c
+    println(a); println(b); println(c)
   }
-  print a;print b;print c
+  println(a); println(b); println(c)
 }
-print a;print b;print c
+println(a); println(b); println(c)

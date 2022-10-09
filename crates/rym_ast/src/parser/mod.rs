@@ -37,12 +37,6 @@ impl Parser {
 			return Ok(Stmt::Empty);
 		}
 
-		if self.matches(TokenType::Print) {
-			let expr = self.expr()?;
-			self.matches(TokenType::Semicolon);
-			return Ok(Stmt::Print(expr));
-		}
-
 		if let Some(token) = self.matches_which(&[TokenType::Const, TokenType::Mut]) {
 			let mutable = token.typ == TokenType::Mut;
 
@@ -261,14 +255,31 @@ impl Parser {
 		let expr = self.primary()?;
 
 		if self.matches(TokenType::LeftParen) {
-			self.expect(
-				TokenType::RightParen,
-				"Expected closing `)` after arguments",
-			)?;
-			return Ok(Expr::Call(Box::new(expr), Vec::new()));
+			let args = if self.matches(TokenType::RightParen) {
+				Vec::new()
+			} else {
+				let args = self.arguments()?;
+				self.expect(
+					TokenType::RightParen,
+					"Expected closing `)` after arguments",
+				)?;
+				args
+			};
+			return Ok(Expr::Call(Box::new(expr), args));
 		}
 
 		Ok(expr)
+	}
+
+	/// expr ("," expr)*
+	fn arguments(&mut self) -> Result<Vec<Expr>, ParserError> {
+		let mut args = Vec::new();
+		args.push(self.expr()?);
+		while self.matches(TokenType::Comma) {
+			let expr = self.expr()?;
+			args.push(expr);
+		}
+		Ok(args)
 	}
 
 	/// primary => "(" expr ")", block, identifier, number | string | "true" | "false"

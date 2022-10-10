@@ -24,6 +24,7 @@ pr main() -> Io, Result<(), Error> {
 	- [Content](#content)
 	- [Name](#name)
 	- [Goals](#goals)
+	- [Todos](#todos)
 
 ## Name
 
@@ -40,3 +41,35 @@ pr main() -> Io, Result<(), Error> {
   - Easy to use (simple)
   - Fast to write Binding
 - ~~Ui Structure and Functionality coding~~ (Maybe later)
+
+## Todos
+
+- [ ] `Spanned<T>`
+  - [ ] should behave like `Box<T>`/`Rc<T>`
+  - [ ] contains start index and length
+- [ ] `AstVisitor<R>` trait
+  - [ ] takes in some ast and produces `R`
+- [ ] Interpreter
+  - [ ] add custom constructor to define globals `with_globals(&[(String, Into<Value>)])`?
+  - [ ] add method for defining variable on interpreter directly
+- [ ] change lib internal file structure
+
+  ```
+  crates
+  	/ast        ⇒         Ast Types:  Spanned<T>, AstVisitor<T>, Token, ...
+  	/interpret  ⇒ Interpreter Types:  Value, Interpreter, ...
+
+  	/tokenize   ⇒ API to produce Spanned<Token>
+  	/parse      ⇒ API to produce some ast
+  	/lint       ⇒ API to visit and generate warnings (dead code, ...) for ast
+  	/tree_walk  ⇒ API to visit and evaluate ast
+
+  	/rymx
+  ```
+
+- [ ] functions
+  - [ ] add parsing for declarations
+  - [ ] fix nested calls eg. `name()()()`
+- [ ] errors
+  - [ ] use annotations lib to display errors
+- [ ] types

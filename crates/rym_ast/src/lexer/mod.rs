@@ -4,9 +4,8 @@ use crate::Identifier;
 use std::str::CharIndices;
 
 mod error;
-mod test;
 mod unescape;
-use error::LexerError;
+pub use error::LexerError;
 use unescape::unescape;
 
 pub struct Lexer<'src> {
@@ -50,7 +49,7 @@ impl<'src> Lexer<'src> {
 			current: 0,
 
 			line: 1,
-			col: 1,
+			col: 0,
 		}
 	}
 
@@ -99,7 +98,7 @@ impl<'src> Lexer<'src> {
 				'"' => return self.string(),
 
 				c if c.is_alphabetic() || c == '_' => return self.identifier(),
-				_ => return LexerError::unexpected_char(self),
+				_ => return LexerError::invalid_char(self),
 			};
 		};
 

@@ -2,9 +2,9 @@ use crate::Lexer;
 use std::fmt::Display;
 use std::num::{ParseFloatError, ParseIntError};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum LexerError {
-	UnexpectedChar {
+	InvalidChar {
 		msg: String,
 		line: usize,
 		col: usize,
@@ -22,9 +22,9 @@ pub enum LexerError {
 }
 
 impl LexerError {
-	pub fn unexpected_char<T>(lexer: &Lexer) -> Result<T, Self> {
-		Err(Self::UnexpectedChar {
-			msg: format!("Unexpected character `{}`", lexer.c),
+	pub fn invalid_char<T>(lexer: &Lexer) -> Result<T, Self> {
+		Err(Self::InvalidChar {
+			msg: format!("Found invalid character `{}`", lexer.c),
 			line: lexer.line,
 			col: lexer.col,
 		})
@@ -50,7 +50,7 @@ impl LexerError {
 impl Display for LexerError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			LexerError::UnexpectedChar { msg, line, col } => {
+			LexerError::InvalidChar { msg, line, col } => {
 				writeln!(f, "Error: {msg}")?;
 				writeln!(f, "       {line}:{col}")
 			}

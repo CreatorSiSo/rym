@@ -90,8 +90,12 @@ pub struct Identifier {
 }
 
 impl Identifier {
-	pub fn new(name: String, line: usize, col: usize) -> Self {
-		Self { name, line, col }
+	pub fn new(name: &str, line: usize, col: usize) -> Self {
+		Self {
+			name: name.into(),
+			line,
+			col,
+		}
 	}
 }
 

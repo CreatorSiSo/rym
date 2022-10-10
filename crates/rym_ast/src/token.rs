@@ -75,7 +75,7 @@ pub const KEYWORDS: &[(&str, TokenType)] = &[
 	("self", TokenType::Self_),
 ];
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token {
 	pub typ: TokenType,
 	pub literal: Option<Literal>,

@@ -2,7 +2,6 @@ use std::str::CharIndices;
 
 mod error;
 mod unescape;
-
 use ast::{Identifier, Literal, Token, TokenType, KEYWORDS};
 pub use error::LexerError;
 use unescape::unescape;

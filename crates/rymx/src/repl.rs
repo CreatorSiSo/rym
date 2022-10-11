@@ -1,6 +1,7 @@
 use crate::log;
-use rym_ast::{Lexer, Parser};
+use rym_ast::Parser;
 use rym_tree_walk::Interpreter;
+use tokenize::Lexer;
 
 use rustyline::error::ReadlineError;
 use rustyline::Editor;

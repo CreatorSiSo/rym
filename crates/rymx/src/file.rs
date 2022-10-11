@@ -2,8 +2,9 @@ use std::path::Path;
 use std::process::exit;
 
 use crate::log;
-use rym_ast::{Lexer, Parser};
+use rym_ast::Parser;
 use rym_tree_walk::Interpreter;
+use tokenize::Lexer;
 
 pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 	let source = std::fs::read_to_string(path)?;

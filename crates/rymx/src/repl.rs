@@ -1,5 +1,5 @@
 use crate::log;
-use rym_ast::Parser;
+use parse::Parser;
 use rym_tree_walk::Interpreter;
 use tokenize::Lexer;
 

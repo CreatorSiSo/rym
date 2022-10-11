@@ -53,11 +53,11 @@
 		{
 			"type": "lldb",
 			"request": "launch",
-			"name": "Debug unit tests in library 'rym_ast'",
+			"name": "Debug unit tests in library 'rym_tree_walk'",
 			"cargo": {
-				"args": ["test", "--no-run", "--lib", "--package=rym_ast"],
+				"args": ["test", "--no-run", "--lib", "--package=rym_tree_walk"],
 				"filter": {
-					"name": "rym_ast",
+					"name": "rym_tree_walk",
 					"kind": "lib"
 				}
 			},
@@ -67,11 +67,39 @@
 		{
 			"type": "lldb",
 			"request": "launch",
-			"name": "Debug unit tests in library 'rym_tree_walk'",
+			"name": "Debug unit tests in library 'ast'",
 			"cargo": {
-				"args": ["test", "--no-run", "--lib", "--package=rym_tree_walk"],
+				"args": ["test", "--no-run", "--lib", "--package=ast"],
 				"filter": {
-					"name": "rym_tree_walk",
+					"name": "ast",
+					"kind": "lib"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests in library 'tokenize'",
+			"cargo": {
+				"args": ["test", "--no-run", "--lib", "--package=tokenize"],
+				"filter": {
+					"name": "tokenize",
+					"kind": "lib"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests in library 'parse'",
+			"cargo": {
+				"args": ["test", "--no-run", "--lib", "--package=parse"],
+				"filter": {
+					"name": "parse",
 					"kind": "lib"
 				}
 			},

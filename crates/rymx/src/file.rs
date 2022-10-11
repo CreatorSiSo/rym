@@ -2,7 +2,7 @@ use std::path::Path;
 use std::process::exit;
 
 use crate::log;
-use rym_ast::Parser;
+use parse::Parser;
 use rym_tree_walk::Interpreter;
 use tokenize::Lexer;
 

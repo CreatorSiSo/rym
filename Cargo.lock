@@ -206,6 +206,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "parse"
+version = "0.0.0"
+dependencies = [
+ "ast",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -291,18 +298,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "rym_ast"
-version = "0.0.0"
-dependencies = [
- "ast",
-]
-
-[[package]]
 name = "rym_tree_walk"
 version = "0.0.0"
 dependencies = [
  "ast",
- "rym_ast",
+ "parse",
 ]
 
 [[package]]
@@ -311,8 +311,8 @@ version = "0.1.0"
 dependencies = [
  "ast",
  "colored",
+ "parse",
  "rustyline",
- "rym_ast",
  "rym_tree_walk",
  "tokenize",
 ]

@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 ast = { path = "../ast" }
-rym_ast = { path = "../rym_ast" }
+parse = { path = "../parse" }

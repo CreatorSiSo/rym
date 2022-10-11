@@ -5,10 +5,10 @@ mod env;
 mod error;
 mod value;
 
+use ast::{BinaryOp, Block, Expr, Identifier, Local, LogicalOp, Stmt, UnaryOp};
 use callable::{Callable, NativeFunction};
 use env::Env;
 use error::RuntimeError;
-use rym_ast::{BinaryOp, Block, Expr, Identifier, Local, LogicalOp, Stmt, UnaryOp};
 use value::{Type, Value};
 
 pub(crate) enum Inter {

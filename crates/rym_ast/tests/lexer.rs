@@ -1,4 +1,5 @@
-use rym_ast::{Lexer, LexerError, Literal, Token, TokenType};
+use ast::{Literal, Token, TokenType};
+use rym_ast::{Lexer, LexerError};
 
 #[test]
 fn file() {

@@ -1,5 +1,6 @@
-use crate::token::*;
 use std::fmt::Display;
+
+use ast::Token;
 
 #[derive(Debug)]
 pub enum ParserError {

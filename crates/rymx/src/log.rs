@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use rym_ast::{Stmt, Token, TokenType};
+use ast::{Stmt, Token, TokenType};
 
 use colored::Colorize;
 

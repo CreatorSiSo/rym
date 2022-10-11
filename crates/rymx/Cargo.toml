@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 colored = "2.0.0"
 rustyline = "10.0.0"
+ast = { path = "../ast" }
 rym_ast = { path = "../rym_ast" }
 rym_tree_walk = { path = "../rym_tree_walk" }

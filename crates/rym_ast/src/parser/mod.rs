@@ -1,7 +1,6 @@
-use crate::ast::{BinaryOp, Block, Expr, Literal, Stmt, UnaryOp};
-use crate::{Local, LogicalOp, Token, TokenType};
-
 mod error;
+
+use ast::{BinaryOp, Block, Expr, Literal, Local, LogicalOp, Stmt, Token, TokenType, UnaryOp};
 use error::ParserError;
 
 pub struct Parser {

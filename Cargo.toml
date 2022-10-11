@@ -2,4 +2,9 @@
 
 [workspace]
 
-members = ["crates/rym_ast", "crates/rym_tree_walk", "crates/rymx"]
+members = [
+	"crates/ast",
+	"crates/rym_ast",
+	"crates/rym_tree_walk",
+	"crates/rymx",
+]

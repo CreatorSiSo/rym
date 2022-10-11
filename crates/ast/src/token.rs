@@ -1,4 +1,4 @@
-use crate::{ast::Literal, Identifier};
+use crate::{Identifier, Literal};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum TokenType {

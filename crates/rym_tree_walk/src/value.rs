@@ -1,4 +1,4 @@
-use rym_ast::Literal;
+use ast::Literal;
 
 use crate::callable::{NativeFunction, RymFunction};
 use crate::Inter;

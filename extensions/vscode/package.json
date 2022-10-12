@@ -1,37 +1,41 @@
 {
-  "name": "rym-lang",
-  "displayName": "Rym Lang",
-  "description": "",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.72.0"
-  },
-  "categories": [
-    "Programming Languages"
-  ],
-  "contributes": {
-    "languages": [
-      {
-        "id": "rym",
-        "aliases": [
-          "Rym",
-          "rym"
-        ],
-        "extensions": [
-          ".rym"
-        ],
-        "configuration": "./language-configuration.json"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "rym",
-        "scopeName": "source.rym",
-        "path": "./syntaxes/rym.tmLanguage.json"
-      }
-    ]
-  },
-  "devDependencies": {
-    "vsce": "^2.11.0"
-  }
+	"name": "rym-lang",
+	"displayName": "Rym Lang",
+	"description": "Language extension for the Rym programming language.",
+	"repository": {
+		"url": "https://github.com/creatorsiso/rym",
+		"directory": "extensions/vscode"
+	},
+	"version": "0.0.2",
+	"engines": {
+		"vscode": "^1.72.1"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"contributes": {
+		"languages": [
+			{
+				"id": "rym",
+				"aliases": [
+					"Rym",
+					"rym"
+				],
+				"extensions": [
+					".rym"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "rym",
+				"scopeName": "source.rym",
+				"path": "./syntaxes/rym.tmLanguage.json"
+			}
+		]
+	},
+	"devDependencies": {
+		"vsce": "^2.11.0"
+	}
 }

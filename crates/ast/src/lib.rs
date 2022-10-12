@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
 mod token;
 
@@ -86,7 +86,7 @@ pub enum Expr {
 	Identifier(Identifier),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Identifier {
 	pub name: String,
 	pub line: usize,
@@ -103,9 +103,22 @@ impl Identifier {
 	}
 }
 
-#[derive(Debug, PartialEq)]
+impl Debug for Identifier {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_tuple("Identifier").field(&self.name).finish()
+	}
+}
+
+#[derive(PartialEq)]
 pub struct Block {
 	pub stmts: Vec<Stmt>,
+}
+
+impl Debug for Block {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str("Block")?;
+		f.debug_list().entries(self.stmts.iter()).finish()
+	}
 }
 
 #[derive(Debug, PartialEq, Eq)]

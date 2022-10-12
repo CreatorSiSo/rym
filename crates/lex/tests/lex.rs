@@ -1,9 +1,9 @@
 use ast::{Literal, Token, TokenType};
-use tokenize::{Lexer, LexerError};
+use lex::{Lexer, LexerError};
 
 #[test]
 fn file() {
-	let source = include_str!("./tokenize.rym");
+	let source = include_str!("./lex.rym");
 	let mut lexer = Lexer::new(source);
 	loop {
 		match lexer.next_token() {

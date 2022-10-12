@@ -159,6 +159,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
+name = "lex"
+version = "0.0.0"
+dependencies = [
+ "ast",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -303,9 +310,9 @@ version = "0.1.0"
 dependencies = [
  "ast",
  "colored",
+ "lex",
  "parse",
  "rustyline",
- "tokenize",
  "tree_walk",
 ]
 
@@ -356,13 +363,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "tokenize"
-version = "0.0.0"
-dependencies = [
- "ast",
 ]
 
 [[package]]

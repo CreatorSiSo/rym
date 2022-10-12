@@ -1,6 +1,6 @@
 use crate::log;
+use lex::Lexer;
 use parse::Parser;
-use tokenize::Lexer;
 use tree_walk::Interpreter;
 
 use rustyline::error::ReadlineError;

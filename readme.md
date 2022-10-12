@@ -67,7 +67,6 @@ pr main() -> Io, Result<(), Error> {
   	/rymx
   ```
 
-- [ ] rename Lexer to Tokenizer
 - [ ] functions
   - [ ] add parsing for declarations
   - [ ] fix nested calls eg. `name()()()`

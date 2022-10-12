@@ -2,8 +2,8 @@ use std::path::Path;
 use std::process::exit;
 
 use crate::log;
+use lex::Lexer;
 use parse::Parser;
-use tokenize::Lexer;
 use tree_walk::Interpreter;
 
 pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {

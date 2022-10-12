@@ -7,7 +7,7 @@ members = [
 	"crates/ast",
 
 	# Abstraction implementations
-	"crates/tokenize",
+	"crates/lex",
 	"crates/parse",
 	"crates/tree_walk",
 

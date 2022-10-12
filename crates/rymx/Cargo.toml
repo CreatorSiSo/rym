@@ -9,6 +9,6 @@ edition = "2021"
 colored = "2.0.0"
 rustyline = "10.0.0"
 ast = { path = "../ast" }
-tokenize = { path = "../tokenize" }
+lex = { path = "../lex" }
 parse = { path = "../parse" }
 tree_walk = { path = "../tree_walk" }

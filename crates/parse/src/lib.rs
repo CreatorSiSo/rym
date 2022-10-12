@@ -1,6 +1,6 @@
 mod error;
 
-use ast::{BinaryOp, Block, Expr, Literal, Local, LogicalOp, Stmt, Token, TokenType, UnaryOp};
+use ast::{BinaryOp, Block, Decl, Expr, Literal, LogicalOp, Stmt, Token, TokenType, UnaryOp};
 use error::ParserError;
 
 pub struct Parser {
@@ -51,10 +51,10 @@ impl Parser {
 
 			let expr = self.expr()?;
 			self.matches(TokenType::Semicolon);
-			return Ok(Stmt::Local(if mutable {
-				Local::Mut(name, expr)
+			return Ok(Stmt::Decl(if mutable {
+				Decl::Mut(name, expr)
 			} else {
-				Local::Const(name, expr)
+				Decl::Const(name, expr)
 			}));
 		}
 
@@ -71,14 +71,14 @@ impl Parser {
 		// return => "return" expr?;
 		if self.matches(TokenType::Return) {
 			if self.matches(TokenType::Semicolon) {
-				return Ok(Expr::Break(None));
+				return Ok(Expr::Break(Box::new(None)));
 			}
 
-			return Ok(Expr::Break(Some(Box::new(self.expr()?))));
+			return Ok(Expr::Break(Box::new(Some(self.expr()?))));
 		}
 		// break => "break" TODO: expr?
 		if self.matches(TokenType::Break) {
-			return Ok(Expr::Break(None));
+			return Ok(Expr::Break(Box::new(None)));
 		}
 		// continue => "continue"
 		if self.matches(TokenType::Continue) {

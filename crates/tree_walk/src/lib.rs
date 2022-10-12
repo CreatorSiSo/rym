@@ -5,13 +5,13 @@ mod env;
 mod error;
 mod value;
 
-use ast::{BinaryOp, Block, Expr, Identifier, Local, LogicalOp, Stmt, UnaryOp};
+use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, Identifier, LogicalOp, Stmt, UnaryOp};
 use callable::{Callable, NativeFunction};
 use env::Env;
 use error::RuntimeError;
 use value::{Type, Value};
 
-pub(crate) enum Inter {
+pub enum Inter {
 	Break(Value),
 	Continue,
 	None(Value),
@@ -58,7 +58,7 @@ impl Interpreter {
 			env: globals
 				.into_iter()
 				.fold(Env::new(), |mut env, (name, val)| {
-					env.declare(name, val.into(), true);
+					env.declare(name, val, true);
 					env
 				}),
 		}
@@ -66,152 +66,83 @@ impl Interpreter {
 
 	pub fn eval(&mut self, ast: &[Stmt]) -> Result<(), RuntimeError> {
 		for stmt in ast {
-			self.stmt(stmt)?;
+			self.walk_stmt(stmt)?;
 		}
 		Ok(())
 	}
 
-	fn stmt(&mut self, stmt: &Stmt) -> Result<Inter, RuntimeError> {
-		match stmt {
-			Stmt::Local(local) => {
-				self.local(local)?;
-			}
-			Stmt::Print(expr) => {
-				match self.expr(expr)?.into() {
-					val @ (Value::Number(_) | Value::String(_) | Value::Bool(_)) => println!("{val}"),
-					val => {
-						return RuntimeError::expected(
-							// TODO: Update error so that bool and number are valid as well
-							Type::String,
-							val.into(),
-						);
-					}
+	fn cmp_bool<F>(
+		&mut self,
+		val_l: Value,
+		expr_r: &Expr,
+		f: F,
+		short_circuit_if: bool,
+	) -> Result<Value, RuntimeError>
+	where
+		F: Fn(bool, bool) -> bool,
+	{
+		match val_l {
+			Value::Bool(bool_l) => {
+				if bool_l == short_circuit_if {
+					return Ok(Value::Bool(short_circuit_if));
 				}
+				let val_r = self.walk_expr(expr_r)?.into();
+				if let Value::Bool(bool_r) = val_r {
+					return Ok(Value::Bool(f(bool_l, bool_r)));
+				}
+				RuntimeError::expected(Type::Bool, val_r.into())
 			}
-			Stmt::Expr(expr) => return self.expr(expr),
-			Stmt::Empty => {}
+			_ => RuntimeError::expected(Type::Bool, val_l.into()),
+		}
+	}
+}
+
+impl AstVisitor for Interpreter {
+	type Result = Result<Inter, RuntimeError>;
+
+	fn visit_empty(&mut self) -> Self::Result {
+		Ok(Inter::None(Value::Unit))
+	}
+
+	fn visit_decl(&mut self, decl: &Decl) -> Self::Result {
+		match decl {
+			Decl::Const(name, init) => {
+				let val: Value = self.walk_expr(init)?.into();
+				self.env.declare(name, val, true);
+			}
+			Decl::Mut(name, init) => {
+				let val: Value = self.walk_expr(init)?.into();
+				self.env.declare(name, val, false);
+			}
 		}
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn local(&mut self, local: &Local) -> Result<(), RuntimeError> {
-		match local {
-			Local::Const(name, init) => {
-				let val: Value = self.expr(init)?.into();
-				self.env.declare(name, val, true);
-			}
-			Local::Mut(name, init) => {
-				let val: Value = self.expr(init)?.into();
-				self.env.declare(name, val, false);
-			}
-		}
-		Ok(())
+	fn visit_ident(&mut self, ident: &Identifier) -> Self::Result {
+		Ok(Inter::None(self.env.get(&ident.name)?.clone()))
 	}
 
-	fn expr(&mut self, expr: &Expr) -> Result<Inter, RuntimeError> {
-		match expr {
-			Expr::Identifier(Identifier { name, .. }) => Ok(Inter::None(self.env.get(name)?.clone())),
-			Expr::Literal(lit) => Ok(Inter::None(lit.clone().into())),
-			Expr::Assign(left, right) => self.assign(left, right),
-			Expr::Call(callee, args) => self.call(callee, args),
-
-			Expr::Unary(op, expr) => self.unary(op, expr),
-			Expr::Logical(left, op, right) => self.logical(left, op, right),
-			Expr::Binary(left, op, right) => self.binary(left, op, right),
-
-			Expr::Group(expr) => self.expr(expr),
-			Expr::Block(block) => self.block(block),
-			Expr::If(expr, then_block, else_block) => self.if_(expr, then_block, else_block),
-			Expr::Loop(block) => self.loop_(block),
-
-			Expr::Break(_) => Ok(Inter::Break(Value::Unit)),
-			Expr::Continue => Ok(Inter::Continue),
-
-			_ => panic!("Not yet implemented: {:?}", expr),
-		}
+	fn visit_lit(&mut self, lit: &ast::Literal) -> Self::Result {
+		Ok(Inter::None(lit.clone().into()))
 	}
 
-	fn if_(
-		&mut self,
-		expr: &Expr,
-		then_block: &Block,
-		else_block: &Option<Block>,
-	) -> Result<Inter, RuntimeError> {
-		let bool = match self.expr(expr)?.into() {
-			Value::Bool(bool) => bool,
-			val => return RuntimeError::expected(Type::Bool, val.into()),
-		};
-
-		if bool {
-			self.block(then_block)
-		} else if let Some(block) = else_block {
-			self.block(block)
-		} else {
-			Ok(Inter::None(Value::Unit))
-		}
-	}
-
-	// TODO: Implement break, continue and return
-	fn loop_(&mut self, block: &Block) -> Result<Inter, RuntimeError> {
-		loop {
-			match self.block(block)? {
-				Inter::Break(val) => break Ok(Inter::None(val)),
-				_ => continue,
-			}
-		}
-	}
-
-	fn block(&mut self, block: &Block) -> Result<Inter, RuntimeError> {
-		self.env.push_scope();
-
-		let mut stmts = block.stmts.iter();
-		let return_value = loop {
-			let stmt = match stmts.next() {
-				Some(stmt) => stmt,
-				None => break Inter::None(Value::Unit),
-			};
-
-			let inter = self.stmt(stmt)?;
-			match inter {
-				Inter::Break(val) => break Inter::Break(val),
-				_ => continue,
-			}
-
-			// TODO: Handle last stmt as result
-		};
-
-		self.env.pop_scope();
-
-		Ok(return_value)
-	}
-
-	fn assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Result<Inter, RuntimeError> {
+	fn visit_assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Self::Result {
 		let name = match expr_l {
 			Expr::Identifier(Identifier { name, .. }) => name,
-			_ => return RuntimeError::expected(Type::Identifier, self.expr(expr_l)?.into()),
+			_ => return RuntimeError::expected(Type::Identifier, self.walk_expr(expr_l)?.into()),
 		};
-		let value = self.expr(expr_r)?.into();
+		let value = self.walk_expr(expr_r)?.into();
 		self.env.set(name, value)?;
 
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn unary(&mut self, op: &UnaryOp, expr: &Expr) -> Result<Inter, RuntimeError> {
-		let val = self.expr(expr)?.into();
-
-		Ok(Inter::None(match (op, val) {
-			(UnaryOp::Not, Value::Bool(val)) => Value::Bool(!val),
-			(UnaryOp::Neg, Value::Number(val)) => Value::Number(-val),
-			(op, val) => return RuntimeError::unary(op, val.into()),
-		}))
-	}
-
-	fn call(&mut self, callee_expr: &Expr, args_expr: &Vec<Expr>) -> Result<Inter, RuntimeError> {
-		let callee: Value = self.expr(callee_expr)?.into();
+	fn visit_call(&mut self, callee: &Expr, args: &[Expr]) -> Self::Result {
+		let callee: Value = self.walk_expr(callee)?.into();
 		let args: Vec<Value> = {
 			let mut vec = Vec::new();
-			for arg_expr in args_expr {
-				vec.push(self.expr(arg_expr)?.into())
+			for arg in args {
+				vec.push(self.walk_expr(arg)?.into())
 			}
 			vec
 		};
@@ -231,14 +162,18 @@ impl Interpreter {
 		Ok(Inter::None(f.call(self, &args)?))
 	}
 
-	// TODO: Make this easily understandable
-	fn logical(
-		&mut self,
-		expr_l: &Expr,
-		op: &LogicalOp,
-		expr_r: &Expr,
-	) -> Result<Inter, RuntimeError> {
-		let val_l = self.expr(expr_l)?.into();
+	fn visit_unary(&mut self, op: &UnaryOp, expr: &Expr) -> Self::Result {
+		let val = self.walk_expr(expr)?.into();
+
+		Ok(Inter::None(match (op, val) {
+			(UnaryOp::Not, Value::Bool(val)) => Value::Bool(!val),
+			(UnaryOp::Neg, Value::Number(val)) => Value::Number(-val),
+			(op, val) => return RuntimeError::unary(op, val.into()),
+		}))
+	}
+
+	fn visit_logical(&mut self, expr_l: &Expr, op: &LogicalOp, expr_r: &Expr) -> Self::Result {
+		let val_l = self.walk_expr(expr_l)?.into();
 
 		Ok(Inter::None(if op == &LogicalOp::And {
 			self.cmp_bool(val_l, expr_r, |val_l, val_r| val_l && val_r, false)?
@@ -247,51 +182,37 @@ impl Interpreter {
 		}))
 	}
 
-	fn cmp_bool<F>(
-		&mut self,
-		val_l: Value,
-		expr_r: &Expr,
-		f: F,
-		short_circuit_if: bool,
-	) -> Result<Value, RuntimeError>
-	where
-		F: Fn(bool, bool) -> bool,
-	{
-		match val_l {
-			Value::Bool(bool_l) => {
-				if bool_l == short_circuit_if {
-					return Ok(Value::Bool(short_circuit_if));
+	fn visit_binary(&mut self, expr_l: &Expr, op: &BinaryOp, expr_r: &Expr) -> Self::Result {
+		let val_l = self.walk_expr(expr_l)?.into();
+		let val_r = self.walk_expr(expr_r)?.into();
+
+		fn apply_num_fn<F, R>(val_l: Value, val_r: Value, f: F) -> Result<Value, RuntimeError>
+		where
+			F: Fn(f64, f64) -> R,
+			Value: From<R>,
+		{
+			if let Value::Number(val_l) = val_l {
+				if let Value::Number(val_r) = val_r {
+					return Ok(Value::from(f(val_l, val_r)));
 				}
-				let val_r = self.expr(expr_r)?.into();
-				if let Value::Bool(bool_r) = val_r {
-					return Ok(Value::Bool(f(bool_l, bool_r)));
-				}
-				RuntimeError::expected(Type::Bool, val_r.into())
 			}
-			_ => RuntimeError::expected(Type::Bool, val_l.into()),
+			RuntimeError::comparison(val_l.into(), val_r.into())
 		}
-	}
-
-	// TODO: Assignment expression
-
-	fn binary(&mut self, expr_l: &Expr, op: &BinaryOp, expr_r: &Expr) -> Result<Inter, RuntimeError> {
-		let val_l = self.expr(expr_l)?.into();
-		let val_r = self.expr(expr_r)?.into();
 
 		Ok(Inter::None(match op {
 			BinaryOp::Eq => Value::from(val_l == val_r),
 			BinaryOp::Ne => Value::from(val_l != val_r),
-			BinaryOp::Gt => Self::number(val_l, val_r, |val_l, val_r| val_l > val_r)?,
-			BinaryOp::Ge => Self::number(val_l, val_r, |val_l, val_r| val_l >= val_r)?,
-			BinaryOp::Lt => Self::number(val_l, val_r, |val_l, val_r| val_l < val_r)?,
-			BinaryOp::Le => Self::number(val_l, val_r, |val_l, val_r| val_l <= val_r)?,
-			BinaryOp::Mul => Self::number(val_l, val_r, |val_l, val_r| val_l * val_r)?,
-			BinaryOp::Div => Self::number(val_l, val_r, |val_l, val_r| val_l / val_r)?,
-			BinaryOp::Mod => Self::number(val_l, val_r, |val_l, val_r| val_l % val_r)?,
-			BinaryOp::Sub => Self::number(val_l, val_r, |val_l, val_r| val_l - val_r)?,
+			BinaryOp::Gt => apply_num_fn(val_l, val_r, |val_l, val_r| val_l > val_r)?,
+			BinaryOp::Ge => apply_num_fn(val_l, val_r, |val_l, val_r| val_l >= val_r)?,
+			BinaryOp::Lt => apply_num_fn(val_l, val_r, |val_l, val_r| val_l < val_r)?,
+			BinaryOp::Le => apply_num_fn(val_l, val_r, |val_l, val_r| val_l <= val_r)?,
+			BinaryOp::Mul => apply_num_fn(val_l, val_r, |val_l, val_r| val_l * val_r)?,
+			BinaryOp::Div => apply_num_fn(val_l, val_r, |val_l, val_r| val_l / val_r)?,
+			BinaryOp::Mod => apply_num_fn(val_l, val_r, |val_l, val_r| val_l % val_r)?,
+			BinaryOp::Sub => apply_num_fn(val_l, val_r, |val_l, val_r| val_l - val_r)?,
 			BinaryOp::Add => match (val_l, val_r) {
 				(val_l @ Value::Number(_), val_r @ Value::Number(_)) => {
-					Self::number(val_l, val_r, |val_l, val_r| val_l + val_r)?
+					apply_num_fn(val_l, val_r, |val_l, val_r| val_l + val_r)?
 				}
 
 				(Value::String(l), Value::String(r)) => (l + &r).into(),
@@ -305,16 +226,69 @@ impl Interpreter {
 		}))
 	}
 
-	fn number<F, R>(val_l: Value, val_r: Value, f: F) -> Result<Value, RuntimeError>
-	where
-		F: Fn(f64, f64) -> R,
-		Value: From<R>,
-	{
-		if let Value::Number(val_l) = val_l {
-			if let Value::Number(val_r) = val_r {
-				return Ok(Value::from(f(val_l, val_r)));
+	fn visit_block(&mut self, block: &Block) -> Self::Result {
+		self.env.push_scope();
+
+		let mut stmts = block.stmts.iter();
+		let return_value = loop {
+			let stmt = match stmts.next() {
+				Some(stmt) => stmt,
+				None => break Inter::None(Value::Unit),
+			};
+
+			let inter = self.walk_stmt(stmt)?;
+			match inter {
+				Inter::Break(val) => break Inter::Break(val),
+				_ => continue,
+			}
+
+			// TODO: Handle last stmt as result
+		};
+
+		self.env.pop_scope();
+
+		Ok(return_value)
+	}
+
+	// TODO: Implement break, continue and return
+	fn visit_loop(&mut self, block: &Block) -> Self::Result {
+		loop {
+			match self.visit_block(block)? {
+				Inter::Break(val) => break Ok(Inter::None(val)),
+				_ => continue,
 			}
 		}
-		RuntimeError::comparison(val_l.into(), val_r.into())
+	}
+
+	fn visit_if(
+		&mut self,
+		expr: &Expr,
+		then_block: &Block,
+		else_block: &Option<Block>,
+	) -> Self::Result {
+		let bool = match self.walk_expr(expr)?.into() {
+			Value::Bool(bool) => bool,
+			val => return RuntimeError::expected(Type::Bool, val.into()),
+		};
+
+		if bool {
+			self.visit_block(then_block)
+		} else if let Some(block) = else_block {
+			self.visit_block(block)
+		} else {
+			Ok(Inter::None(Value::Unit))
+		}
+	}
+
+	fn visit_break(&mut self, expr: &Option<Expr>) -> Self::Result {
+		Ok(Inter::Break(match expr {
+			// TODO: Do loops work inside of break expr?
+			Some(expr) => self.walk_expr(expr)?.into(),
+			None => Value::Unit,
+		}))
+	}
+
+	fn visit_continue(&mut self) -> Self::Result {
+		Ok(Inter::Continue)
 	}
 }

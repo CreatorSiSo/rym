@@ -2,25 +2,25 @@ use std::fmt::Display;
 
 mod token;
 
+mod visitor;
+
 pub use token::{Token, TokenType, KEYWORDS};
+pub use visitor::AstVisitor;
 
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
 	/// A const or mut binding
-	Local(Local),
+	Decl(Decl),
 
-	/// Temporary statement for logging until functions are implemented
-	Print(Expr),
-
-	/// Expr without trailing semi-colon.
+	/// Expr with trailing semicolon or newline
 	Expr(Expr),
 
-	/// Just a trailing semi-colon.
+	/// Just a trailing semicolon
 	Empty,
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Local {
+pub enum Decl {
 	/// A constant binding `const a = 0`
 	Const(String, Expr),
 
@@ -53,7 +53,7 @@ pub enum Expr {
 	Block(Block),
 
 	/// A `break`, with an optional expression
-	Break(Option<Box<Expr>>),
+	Break(Box<Option<Expr>>),
 
 	/// A `continue`
 	Continue,

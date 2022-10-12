@@ -2,7 +2,7 @@ use crate::Lexer;
 use std::fmt::Display;
 use std::num::{ParseFloatError, ParseIntError};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum LexerError {
 	InvalidChar {
 		msg: String,

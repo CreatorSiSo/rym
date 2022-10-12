@@ -38,7 +38,7 @@ pr main() -> Io, Result<(), Error> {
 }
 ```
 
-## Lamdas
+## Clojures
 
 ```rust
 const add = |a: int, b: int| a + b

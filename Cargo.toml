@@ -6,6 +6,6 @@ members = [
 	"crates/ast",
 	"crates/tokenize",
 	"crates/parse",
-	"crates/rym_tree_walk",
+	"crates/tree_walk",
 	"crates/rymx",
 ]

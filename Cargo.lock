@@ -298,14 +298,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rym_tree_walk"
-version = "0.0.0"
-dependencies = [
- "ast",
- "parse",
-]
-
-[[package]]
 name = "rymx"
 version = "0.1.0"
 dependencies = [
@@ -313,8 +305,8 @@ dependencies = [
  "colored",
  "parse",
  "rustyline",
- "rym_tree_walk",
  "tokenize",
+ "tree_walk",
 ]
 
 [[package]]
@@ -371,6 +363,14 @@ name = "tokenize"
 version = "0.0.0"
 dependencies = [
  "ast",
+]
+
+[[package]]
+name = "tree_walk"
+version = "0.0.0"
+dependencies = [
+ "ast",
+ "parse",
 ]
 
 [[package]]

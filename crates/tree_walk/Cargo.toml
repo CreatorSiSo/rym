@@ -1,5 +1,5 @@
 [package]
-name = "rym_tree_walk"
+name = "tree_walk"
 version = "0.0.0"
 edition = "2021"
 

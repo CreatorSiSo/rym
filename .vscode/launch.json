@@ -53,11 +53,11 @@
 		{
 			"type": "lldb",
 			"request": "launch",
-			"name": "Debug unit tests in library 'rym_tree_walk'",
+			"name": "Debug unit tests in library 'tree_walk'",
 			"cargo": {
-				"args": ["test", "--no-run", "--lib", "--package=rym_tree_walk"],
+				"args": ["test", "--no-run", "--lib", "--package=tree_walk"],
 				"filter": {
-					"name": "rym_tree_walk",
+					"name": "tree_walk",
 					"kind": "lib"
 				}
 			},

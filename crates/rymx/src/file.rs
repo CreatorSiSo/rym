@@ -3,7 +3,7 @@ use std::process::exit;
 
 use crate::log;
 use parse::Parser;
-use rym_tree_walk::Interpreter;
+use tree_walk::Interpreter;
 use tokenize::Lexer;
 
 pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {

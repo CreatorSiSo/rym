@@ -1,5 +1,7 @@
 #![allow(clippy::new_without_default)]
 
+use std::io::Write;
+
 mod callable;
 mod env;
 mod error;
@@ -28,8 +30,11 @@ impl Default for Interpreter {
 			for arg in args {
 				string.push_str(&arg.to_string())
 			}
+			// TODO fix print() for repl
 			print!("{string}");
-			// TODO make this work properly in repl
+			std::io::stdout()
+				.flush()
+				.expect("Internal Error: Could not flush stout");
 			Ok(Value::Unit)
 		});
 		let println_fn = NativeFunction::new(None, |_: _, args: &[Value]| {

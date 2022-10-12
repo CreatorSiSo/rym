@@ -47,17 +47,17 @@ pr main() -> Io, Result<(), Error> {
 - [ ] `Spanned<T>`
   - [ ] should behave like `Box<T>`/`Rc<T>`
   - [ ] contains start index and length
-- [ ] `AstVisitor<R>` trait
-  - [ ] takes in some ast and produces `R`
+- [x] `AstVisitor<R>` trait
+  - [x] takes in some ast and produces `R`
 - [ ] Interpreter
-  - [ ] add custom constructor to define globals `with_globals(&[(String, Into<Value>)])`?
+  - [x] add custom constructor to define globals `with_globals(&[(String, Into<Value>)])`?
   - [ ] add method for defining variable on interpreter directly
-- [ ] change lib internal file structure
+- [x] change lib internal file structure
 
   ```
   crates
   	/ast        ⇒         Ast Types:  Spanned<T>, AstVisitor<T>, Token, ...
-  	/interpret  ⇒ Interpreter Types:  Value, Interpreter, ...
+  	? /interpret  ⇒ Interpreter Types:  Value, Interpreter, ...
 
   	/tokenize   ⇒ API to produce Spanned<Token>
   	/parse      ⇒ API to produce some ast

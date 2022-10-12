@@ -3,28 +3,28 @@ use std::fmt::Display;
 use ast::Token;
 
 #[derive(Debug)]
-pub enum ParserError {
+pub enum ParseError {
 	TokenMismatch { token: Token, msg: String },
 	InvalidAssignmentTarget { token: Token },
 }
 
-impl ParserError {
+impl ParseError {
 	pub(super) fn token_mismatch<T>(token: &Token, msg: &str) -> Result<T, Self> {
-		Err(ParserError::TokenMismatch {
+		Err(ParseError::TokenMismatch {
 			token: token.clone(),
 			msg: msg.into(),
 		})
 	}
 }
 
-impl Display for ParserError {
+impl Display for ParseError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			ParserError::TokenMismatch { token, msg } => {
+			ParseError::TokenMismatch { token, msg } => {
 				writeln!(f, "Error:	{msg} got `{:?}`", token.typ)?;
 				write!(f, "Pos:	{}", token.start)
 			}
-			ParserError::InvalidAssignmentTarget { token } => {
+			ParseError::InvalidAssignmentTarget { token } => {
 				writeln!(f, "Error:	Invalid assignment target `{:?}`", token.typ)?;
 				write!(f, "Pos:	{}", token.start)
 			}

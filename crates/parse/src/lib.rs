@@ -1,7 +1,7 @@
 mod error;
 
 use ast::{BinaryOp, Block, Decl, Expr, Literal, LogicalOp, Stmt, Token, TokenType, UnaryOp};
-use error::ParserError;
+use error::ParseError;
 
 pub struct Parser {
 	tokens: Vec<Token>,
@@ -9,7 +9,7 @@ pub struct Parser {
 }
 
 impl Parser {
-	pub fn parse(tokens: Vec<Token>) -> (Vec<Stmt>, Vec<ParserError>) {
+	pub fn parse(tokens: Vec<Token>) -> (Vec<Stmt>, Vec<ParseError>) {
 		let mut stmts = Vec::new();
 		let mut errors = Vec::new();
 
@@ -31,7 +31,7 @@ impl Parser {
 		Self { tokens, pos: 0 }
 	}
 
-	pub fn stmt(&mut self) -> Result<Stmt, ParserError> {
+	pub fn stmt(&mut self) -> Result<Stmt, ParseError> {
 		if self.matches(TokenType::Semicolon) {
 			return Ok(Stmt::Empty);
 		}
@@ -63,11 +63,11 @@ impl Parser {
 		Ok(Stmt::Expr(expr))
 	}
 
-	fn expr(&mut self) -> Result<Expr, ParserError> {
+	fn expr(&mut self) -> Result<Expr, ParseError> {
 		self.interrupts()
 	}
 
-	fn interrupts(&mut self) -> Result<Expr, ParserError> {
+	fn interrupts(&mut self) -> Result<Expr, ParseError> {
 		// return => "return" expr?;
 		if self.matches(TokenType::Return) {
 			if self.matches(TokenType::Semicolon) {
@@ -89,7 +89,7 @@ impl Parser {
 	}
 
 	/// assignment => identifier "=" expr
-	fn assignment(&mut self) -> Result<Expr, ParserError> {
+	fn assignment(&mut self) -> Result<Expr, ParseError> {
 		if self.peek(1).typ == TokenType::Equal {
 			let expr_l = Box::new(self.primary()?);
 			self.advance();
@@ -102,7 +102,7 @@ impl Parser {
 	}
 
 	/// if => "if" expression block ("else" (if | block))?
-	fn if_(&mut self) -> Result<Expr, ParserError> {
+	fn if_(&mut self) -> Result<Expr, ParseError> {
 		if self.matches(TokenType::If) {
 			let expr = Box::new(self.expr()?);
 			let then_block = self.block()?;
@@ -122,7 +122,7 @@ impl Parser {
 	}
 
 	/// loop => "loop" block
-	fn loop_(&mut self) -> Result<Expr, ParserError> {
+	fn loop_(&mut self) -> Result<Expr, ParseError> {
 		if self.matches(TokenType::Loop) {
 			return Ok(Expr::Loop(self.block()?));
 		}
@@ -131,7 +131,7 @@ impl Parser {
 	}
 
 	/// logic_or => logic_and ("&&" logic_and)*
-	fn logic_or(&mut self) -> Result<Expr, ParserError> {
+	fn logic_or(&mut self) -> Result<Expr, ParseError> {
 		let mut left = self.logic_and()?;
 
 		while self.matches(TokenType::DoublePipe) {
@@ -143,7 +143,7 @@ impl Parser {
 	}
 
 	/// logic_and => equality ("&&" equality)*
-	fn logic_and(&mut self) -> Result<Expr, ParserError> {
+	fn logic_and(&mut self) -> Result<Expr, ParseError> {
 		let mut left = self.equality()?;
 
 		while self.matches(TokenType::DoubleAmpersand) {
@@ -155,7 +155,7 @@ impl Parser {
 	}
 
 	/// equality => comparison (("==" | "!=") comparison)*
-	fn equality(&mut self) -> Result<Expr, ParserError> {
+	fn equality(&mut self) -> Result<Expr, ParseError> {
 		let mut left = self.comparison()?;
 
 		while self.matches_any(&[TokenType::EqualEqual, TokenType::BangEqual]) {
@@ -173,7 +173,7 @@ impl Parser {
 	}
 
 	/// comparison => term ((">" | ">=" | "<" | "<=") term)*
-	fn comparison(&mut self) -> Result<Expr, ParserError> {
+	fn comparison(&mut self) -> Result<Expr, ParseError> {
 		let mut left = self.term()?;
 
 		while self.matches_any(&[
@@ -201,7 +201,7 @@ impl Parser {
 	}
 
 	/// term => factor (("+" | "-") factor)*
-	fn term(&mut self) -> Result<Expr, ParserError> {
+	fn term(&mut self) -> Result<Expr, ParseError> {
 		let mut left = self.factor()?;
 
 		while self.matches_any(&[TokenType::Plus, TokenType::Minus]) {
@@ -219,7 +219,7 @@ impl Parser {
 	}
 
 	/// factor => unary (("/" | "*") unary)*
-	fn factor(&mut self) -> Result<Expr, ParserError> {
+	fn factor(&mut self) -> Result<Expr, ParseError> {
 		let mut left = self.unary()?;
 
 		while self.matches_any(&[TokenType::Star, TokenType::Slash]) {
@@ -237,7 +237,7 @@ impl Parser {
 	}
 
 	/// unary => ("!" | "-") (unary | call)
-	fn unary(&mut self) -> Result<Expr, ParserError> {
+	fn unary(&mut self) -> Result<Expr, ParseError> {
 		if self.matches(TokenType::Bang) {
 			let expr = Box::new(self.expr()?);
 			return Ok(Expr::Unary(UnaryOp::Not, expr));
@@ -250,7 +250,7 @@ impl Parser {
 	}
 
 	/// call => primary "(" arguments? ")"
-	fn call(&mut self) -> Result<Expr, ParserError> {
+	fn call(&mut self) -> Result<Expr, ParseError> {
 		let expr = self.primary()?;
 
 		if self.matches(TokenType::LeftParen) {
@@ -271,7 +271,7 @@ impl Parser {
 	}
 
 	/// expr ("," expr)*
-	fn arguments(&mut self) -> Result<Vec<Expr>, ParserError> {
+	fn arguments(&mut self) -> Result<Vec<Expr>, ParseError> {
 		let mut args = Vec::new();
 		args.push(self.expr()?);
 		while self.matches(TokenType::Comma) {
@@ -282,7 +282,7 @@ impl Parser {
 	}
 
 	/// primary => "(" expr ")", block, identifier, number | string | "true" | "false"
-	fn primary(&mut self) -> Result<Expr, ParserError> {
+	fn primary(&mut self) -> Result<Expr, ParseError> {
 		if self.peek_eq(TokenType::LeftBrace) {
 			return self.block().map(Expr::Block);
 		}
@@ -320,12 +320,12 @@ impl Parser {
 				),
 				_ => unreachable!(),
 			}),
-			None => ParserError::token_mismatch(self.advance(), "Expected Literal"),
+			None => ParseError::token_mismatch(self.advance(), "Expected Literal"),
 		}
 	}
 
 	/// block => "{" stmt* "}"
-	fn block(&mut self) -> Result<Block, ParserError> {
+	fn block(&mut self) -> Result<Block, ParseError> {
 		self.expect(TokenType::LeftBrace, "Expected `{`")?;
 
 		let mut stmts = Vec::new();
@@ -343,18 +343,18 @@ impl Parser {
 		if closed {
 			Ok(Block { stmts })
 		} else {
-			ParserError::token_mismatch(self.previous(), "Unclosed block, expected `}`")
+			ParseError::token_mismatch(self.previous(), "Unclosed block, expected `}`")
 		}
 	}
 }
 
 impl Parser {
-	fn expect(&mut self, typ: TokenType, error_msg: &str) -> Result<&Token, ParserError> {
+	fn expect(&mut self, typ: TokenType, error_msg: &str) -> Result<&Token, ParseError> {
 		if self.matches(typ) {
 			return Ok(self.previous());
 		}
 
-		ParserError::token_mismatch(self.advance(), error_msg)
+		ParseError::token_mismatch(self.advance(), error_msg)
 	}
 
 	// fn expect_any(
@@ -428,7 +428,7 @@ impl Parser {
 }
 
 impl Iterator for Parser {
-	type Item = Result<Stmt, ParserError>;
+	type Item = Result<Stmt, ParseError>;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		if self.tokens.is_empty() || self.is_at_end() {

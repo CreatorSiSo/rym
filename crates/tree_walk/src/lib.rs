@@ -21,10 +21,8 @@ pub struct Interpreter {
 	env: Env,
 }
 
-impl Interpreter {
-	pub fn new() -> Self {
-		let mut env = Env::new();
-
+impl Default for Interpreter {
+	fn default() -> Self {
 		let print_fn = NativeFunction::new(None, |_: _, args: &[Value]| {
 			let mut string = String::new();
 			for arg in args {
@@ -43,19 +41,27 @@ impl Interpreter {
 			Ok(Value::Unit)
 		});
 
-		let globals = [
+		Self::with_globals(vec![
 			("print", print_fn.into()),
 			("println", println_fn.into()),
 			("PI", std::f64::consts::PI.into()),
 			("TAU", std::f64::consts::TAU.into()),
 			("E", std::f64::consts::E.into()),
 			("SQRT_2", std::f64::consts::SQRT_2.into()),
-		];
-		for (name, val) in globals {
-			env.declare(name, val, true)
-		}
+		])
+	}
+}
 
-		Self { env }
+impl Interpreter {
+	pub fn with_globals(globals: Vec<(&str, Value)>) -> Self {
+		Self {
+			env: globals
+				.into_iter()
+				.fold(Env::new(), |mut env, (name, val)| {
+					env.declare(name, val.into(), true);
+					env
+				}),
+		}
 	}
 
 	pub fn eval(&mut self, ast: &[Stmt]) -> Result<(), RuntimeError> {
@@ -73,9 +79,14 @@ impl Interpreter {
 			Stmt::Print(expr) => {
 				match self.expr(expr)?.into() {
 					val @ (Value::Number(_) | Value::String(_) | Value::Bool(_)) => println!("{val}"),
-					val => return RuntimeError::expected(Type::String, val.into()),
+					val => {
+						return RuntimeError::expected(
+							// TODO: Update error so that bool and number are valid as well
+							Type::String,
+							val.into(),
+						);
+					}
 				}
-				//
 			}
 			Stmt::Expr(expr) => return self.expr(expr),
 			Stmt::Empty => {}

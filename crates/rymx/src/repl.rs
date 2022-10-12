@@ -68,7 +68,7 @@ impl Repl {
 		}
 
 		log::title("Interpreter", true);
-		if let Err(error) = Interpreter::new().eval(&ast) {
+		if let Err(error) = Interpreter::default().eval(&ast) {
 			println!("{error:?}");
 		}
 	}

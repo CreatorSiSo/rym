@@ -3,9 +3,14 @@
 [workspace]
 
 members = [
+	# Internal abstraction
 	"crates/ast",
+
+	# Abstraction implementations
 	"crates/tokenize",
 	"crates/parse",
 	"crates/tree_walk",
+
+	# Cli
 	"crates/rymx",
 ]

@@ -53,7 +53,7 @@ impl core::fmt::Display for Type {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum Value {
+pub enum Value {
 	Unit,
 	Number(f64),
 	String(String),

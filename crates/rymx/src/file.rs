@@ -3,8 +3,8 @@ use std::process::exit;
 
 use crate::log;
 use parse::Parser;
-use tree_walk::Interpreter;
 use tokenize::Lexer;
+use tree_walk::Interpreter;
 
 pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 	let source = std::fs::read_to_string(path)?;
@@ -26,7 +26,7 @@ pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 	}
 
 	log::title("Interpreter", true);
-	if let Err(error) = Interpreter::new().eval(&ast) {
+	if let Err(error) = Interpreter::default().eval(&ast) {
 		println!("{error:?}");
 		exit(1)
 	}

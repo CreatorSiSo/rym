@@ -9,7 +9,7 @@ pub(crate) trait Callable {
 }
 
 #[derive(Clone)]
-pub(crate) struct NativeFunction {
+pub struct NativeFunction {
 	arity: Arity,
 	callable: CallableFn,
 }
@@ -48,7 +48,7 @@ impl core::fmt::Debug for NativeFunction {
 }
 
 #[derive(Clone)]
-pub(crate) struct RymFunction {
+pub struct RymFunction {
 	arity: Arity,
 	callable: CallableFn,
 }

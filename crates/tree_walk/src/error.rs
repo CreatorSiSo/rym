@@ -4,6 +4,7 @@ use ast::UnaryOp;
 #[derive(Debug)]
 pub enum RuntimeError {
 	ForbiddenType(String),
+	ForbiddenInter(String),
 	TypeMismatch(String),
 	UndeclaredVar(String),
 	Assignment(String),
@@ -15,7 +16,7 @@ pub enum RuntimeError {
 impl RuntimeError {
 	pub(crate) fn num_args_mismatch<T>(expected: usize, got: usize) -> Result<T, Self> {
 		Err(Self::NumArgsMismatch(format!(
-			"Expected `{expected}` arguments but got `{got}`"
+			"Expected `{expected}` argument(s) but got `{got}`"
 		)))
 	}
 

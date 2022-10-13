@@ -8,7 +8,7 @@ mod error;
 mod value;
 
 use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, Identifier, LogicalOp, Stmt, UnaryOp};
-use callable::{Callable, NativeFunction};
+use callable::{Callable, NativeFunction, RymFunction};
 use env::Env;
 use error::RuntimeError;
 use value::{Type, Value};
@@ -111,6 +111,10 @@ impl AstVisitor for Interpreter {
 
 	fn visit_decl(&mut self, decl: &Decl) -> Self::Result {
 		match decl {
+			Decl::Fn(name, params, body) => {
+				let val = RymFunction::new(Some(params.len()), params.clone(), body);
+				self.env.declare(name, val.into(), true);
+			}
 			Decl::Const(name, init) => {
 				let val: Value = self.walk_expr(init)?.into();
 				self.env.declare(name, val, true);

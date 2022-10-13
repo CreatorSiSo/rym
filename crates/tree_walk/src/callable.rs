@@ -1,3 +1,5 @@
+use ast::{AstVisitor, Expr};
+
 use crate::{error::RuntimeError, Interpreter, Value};
 
 pub(crate) type Arity = Option<usize>;
@@ -50,7 +52,18 @@ impl core::fmt::Debug for NativeFunction {
 #[derive(Clone)]
 pub struct RymFunction {
 	arity: Arity,
-	callable: CallableFn,
+	params: Vec<String>,
+	body: Expr,
+}
+
+impl RymFunction {
+	pub(crate) fn new(arity: Arity, params: Vec<String>, body: &Expr) -> Self {
+		Self {
+			arity,
+			params,
+			body: body.clone(),
+		}
+	}
 }
 
 impl Callable for RymFunction {
@@ -63,7 +76,33 @@ impl Callable for RymFunction {
 		interpreter: &mut Interpreter,
 		args: &[Value],
 	) -> Result<Value, RuntimeError> {
-		(self.callable)(interpreter, args)
+		assert_eq!(
+			self.params.len(),
+			args.len(),
+			"Internal Error: Number of `rym_fn` parameters does not match number of arguments."
+		);
+
+		interpreter.env.push_scope();
+		let return_val = {
+			for (idx, param) in self.params.iter().enumerate() {
+				interpreter.env.declare(param, args[idx].clone(), true)
+			}
+			interpreter.walk_expr(&self.body)
+		};
+		interpreter.env.push_scope();
+
+		match return_val {
+			Ok(inter) => match inter {
+				crate::Inter::None(val) => Ok(val),
+				crate::Inter::Break(_) => Err(RuntimeError::ForbiddenInter(
+					"Using `break` outside of a loop is not allowed.".into(),
+				)),
+				crate::Inter::Continue => Err(RuntimeError::ForbiddenInter(
+					"Using `continue` outside of a loop is not allowed.".into(),
+				)),
+			},
+			Err(err) => Err(err),
+		}
 	}
 }
 

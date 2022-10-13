@@ -58,6 +58,50 @@ impl Parser {
 			}));
 		}
 
+		// TODO: Refactor
+		// fn => "fn" identifier()
+		if self.matches(TokenType::Fn) {
+			let name = match self
+				.expect(TokenType::Identifier, "Expected function name")?
+				.ident
+				.clone()
+			{
+				Some(ident) => ident.name,
+				_ => unreachable!("Internal Error: Identifier Token has no value!"),
+			};
+
+			if self.matches(TokenType::LeftParen) {
+				let params = if self.matches(TokenType::RightParen) {
+					Vec::new()
+				} else {
+					let mut params = Vec::new();
+					params.push(
+						self
+							.expect(TokenType::Identifier, "Expected function parameter")?
+							.ident
+							.clone()
+							.expect("Internal Error: Identifier Token has no value!")
+							.name,
+					);
+					while self.matches(TokenType::Comma) {
+						let string = self
+							.expect(TokenType::Identifier, "Expected function parameter")?
+							.ident
+							.clone()
+							.expect("Internal Error: Identifier Token has no value!")
+							.name;
+						params.push(string);
+					}
+					self.expect(
+						TokenType::RightParen,
+						"Expected closing `)` after parameters",
+					)?;
+					params
+				};
+				return Ok(Stmt::Decl(Decl::Fn(name, params, self.expr()?)));
+			}
+		}
+
 		let expr = self.expr()?;
 		self.matches(TokenType::Semicolon);
 		Ok(Stmt::Expr(expr))

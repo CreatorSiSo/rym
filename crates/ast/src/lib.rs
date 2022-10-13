@@ -7,9 +7,9 @@ mod visitor;
 pub use token::{Token, TokenType, KEYWORDS};
 pub use visitor::AstVisitor;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Stmt {
-	/// A const or mut binding
+	/// Variable or function declaration
 	Decl(Decl),
 
 	/// Expr with trailing semicolon or newline
@@ -19,8 +19,11 @@ pub enum Stmt {
 	Empty,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
+	/// A function declaration `fn name(param_1, param_2) { .. }`
+	Fn(String, Vec<String>, Expr),
+
 	/// A constant binding `const a = 0`
 	Const(String, Expr),
 
@@ -28,7 +31,7 @@ pub enum Decl {
 	Mut(String, Expr),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
 	/// An array `[a, b, c, d]`
 	Array(Vec<Expr>),
@@ -109,7 +112,7 @@ impl Debug for Identifier {
 	}
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Block {
 	pub stmts: Vec<Stmt>,
 }
@@ -121,7 +124,7 @@ impl Debug for Block {
 	}
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BinaryOp {
 	/// The `+` operator (addition)
 	Add,
@@ -148,7 +151,7 @@ pub enum BinaryOp {
 	Le,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LogicalOp {
 	/// The `&&` operator (logical and)
 	And,
@@ -156,7 +159,7 @@ pub enum LogicalOp {
 	Or,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UnaryOp {
 	/// The `!` operator (not)
 	Not,

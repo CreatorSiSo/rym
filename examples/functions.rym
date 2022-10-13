@@ -1,11 +1,13 @@
-// fn returns_fn() -> Fn {
-// 	() { println("works") }
-// }
+fn returns_fn(string) /* -> Fn */ {
+	println(string)
+	// fn _() {
+	// }
+}
 
-const returns_fn = "placeholder"
+// const returns_fn = "placeholder"
 
-const fn_ = returns_fn()
+const fn_ = returns_fn("test")
 // const called_fn_1 = returns_fn()()
 
-const called_fn_1 = (returns_fn())()
-const called_fn_1 = { const test = returns_fn; returns_fn() }()
+// const called_fn_1 = (returns_fn())()
+// const called_fn_1 = { const test = returns_fn; returns_fn() }()

@@ -118,3 +118,9 @@ impl From<NativeFunction> for Value {
 		Self::NativeFunction(value)
 	}
 }
+
+impl From<RymFunction> for Value {
+	fn from(value: RymFunction) -> Self {
+		Self::RymFunction(value)
+	}
+}

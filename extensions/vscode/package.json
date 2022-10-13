@@ -6,7 +6,7 @@
 		"url": "https://github.com/creatorsiso/rym",
 		"directory": "extensions/vscode"
 	},
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"engines": {
 		"vscode": "^1.72.1"
 	},

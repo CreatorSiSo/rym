@@ -16,6 +16,12 @@
 		},
 		{
 			"include": "#constants"
+		},
+		{
+			"include": "#function_declaration"
+		},
+		{
+			"include": "#function_name"
 		}
 	],
 	"repository": {
@@ -95,8 +101,61 @@
 				}
 			]
 		},
+		"function_declaration": {
+			"patterns": [
+				{
+					"begin": "\\b(fn)\\b",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.type.fn.rym"
+						}
+					},
+					"end": "(\\{)|(?=\\/\\/|\\n|\\r)",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.definition.block.begin.rym"
+						}
+					},
+					"name": "meta.function.signature.rym",
+					"patterns": [
+						{
+							"include": "#function_declaration"
+						},
+						{
+							"include": "#function_name"
+						},
+						{
+							"include": "#parameters"
+						}
+					]
+				}
+			]
+		},
+		"function_name": {
+			"patterns": [
+				{
+					"match": "([_a-zA-Z][_a-zA-Z0-9]*)(?=\\s*\\()",
+					"name": "entity.name.function.rym"
+				},
+				{
+					"match": "([_a-zA-Z][_a-zA-Z0-9]*)\\s*(:?=)(?=\\s*fn\\()",
+					"captures": {
+						"1": {
+							"name": "entity.name.function.rym"
+						},
+						"2": {
+							"name": "keyword.operator.assignment.rym"
+						}
+					}
+				}
+			]
+		},
 		"keywords": {
 			"patterns": [
+				{
+					"name": "keyword.other.rym",
+					"match": "\\b(fn)\\b"
+				},
 				{
 					"comment": "control flow keywords",
 					"name": "keyword.control.rym",

@@ -6,6 +6,6 @@ fn fib_recurse(n) {
 	fib_recurse(n - 1) + fib_recurse(n - 2)
 }
 
-const N = 78 // 78 is max for result without deviation
+const N = 30 // higher values take way too long to compute
 print("fib_recurse("+ N + ") => ")
 println(fib_recurse(N))

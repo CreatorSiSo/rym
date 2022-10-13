@@ -1,6 +1,6 @@
 use ast::{AstVisitor, Expr};
 
-use crate::{error::RuntimeError, Interpreter, Value};
+use crate::{error::RuntimeError, Inter, Interpreter, Value};
 
 pub(crate) type Arity = Option<usize>;
 pub(crate) type CallableFn = fn(&mut Interpreter, &[Value]) -> Result<Value, RuntimeError>;
@@ -89,15 +89,15 @@ impl Callable for RymFunction {
 			}
 			interpreter.walk_expr(&self.body)
 		};
-		interpreter.env.push_scope();
+		interpreter.env.pop_scope();
 
 		match return_val {
 			Ok(inter) => match inter {
-				crate::Inter::None(val) => Ok(val),
-				crate::Inter::Break(_) => Err(RuntimeError::ForbiddenInter(
+				Inter::Return(val) | Inter::None(val) => Ok(val),
+				Inter::Break(_) => Err(RuntimeError::ForbiddenInter(
 					"Using `break` outside of a loop is not allowed.".into(),
 				)),
-				crate::Inter::Continue => Err(RuntimeError::ForbiddenInter(
+				Inter::Continue => Err(RuntimeError::ForbiddenInter(
 					"Using `continue` outside of a loop is not allowed.".into(),
 				)),
 			},

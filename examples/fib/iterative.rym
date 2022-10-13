@@ -18,5 +18,5 @@ fn fib_iter(n) {
 }
 
 const N = 78 // 78 is max for result without deviation
-print("fib_iter("+ N + ") => ")
+print("fib_iter(", N, ") => ")
 println(fib_iter(N))

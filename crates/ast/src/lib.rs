@@ -62,7 +62,7 @@ pub enum Expr {
 	Continue,
 
 	/// A `return`, with an optional value to be returned
-	Return(Option<Box<Expr>>),
+	Return(Box<Expr>),
 
 	/// An assignment `a = 20`
 	Assign(Box<Expr>, Box<Expr>),

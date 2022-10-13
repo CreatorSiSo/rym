@@ -118,7 +118,7 @@ impl Parser {
 				return Ok(Expr::Break(Box::new(None)));
 			}
 
-			return Ok(Expr::Break(Box::new(Some(self.expr()?))));
+			return Ok(Expr::Return(Box::new(self.expr()?)));
 		}
 		// break => "break" TODO: expr?
 		if self.matches(TokenType::Break) {

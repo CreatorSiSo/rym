@@ -14,6 +14,7 @@ use error::RuntimeError;
 use value::{Type, Value};
 
 pub enum Inter {
+	Return(Value),
 	Break(Value),
 	Continue,
 	None(Value),
@@ -247,6 +248,7 @@ impl AstVisitor for Interpreter {
 
 			let inter = self.walk_stmt(stmt)?;
 			match inter {
+				Inter::Return(val) => break Inter::Return(val),
 				Inter::Break(val) => break Inter::Break(val),
 				Inter::Continue => break Inter::Continue,
 				Inter::None(val) => {
@@ -259,6 +261,7 @@ impl AstVisitor for Interpreter {
 		};
 
 		self.env.pop_scope();
+		// dbg!(&self.env);
 
 		Ok(return_value)
 	}
@@ -291,6 +294,10 @@ impl AstVisitor for Interpreter {
 		} else {
 			Ok(Inter::None(Value::Unit))
 		}
+	}
+
+	fn visit_return(&mut self, expr: &Expr) -> Self::Result {
+		Ok(Inter::Return(self.walk_expr(expr)?.into()))
 	}
 
 	fn visit_break(&mut self, expr: &Option<Expr>) -> Self::Result {

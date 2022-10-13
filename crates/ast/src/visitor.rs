@@ -31,6 +31,7 @@ pub trait AstVisitor {
 			Expr::Loop(block) => self.visit_loop(block),
 			Expr::If(expr, then_block, else_block) => self.visit_if(expr, then_block, else_block),
 
+			Expr::Return(expr) => self.visit_return(&**expr),
 			Expr::Break(expr) => self.visit_break(&**expr),
 			Expr::Continue => self.visit_continue(),
 
@@ -56,6 +57,7 @@ pub trait AstVisitor {
 		else_block: &Option<Block>,
 	) -> Self::Result;
 
+	fn visit_return(&mut self, expr: &Expr) -> Self::Result;
 	fn visit_break(&mut self, expr: &Option<Expr>) -> Self::Result;
 	fn visit_continue(&mut self) -> Self::Result;
 }

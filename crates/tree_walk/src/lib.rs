@@ -242,16 +242,20 @@ impl AstVisitor for Interpreter {
 		let return_value = loop {
 			let stmt = match stmts.next() {
 				Some(stmt) => stmt,
-				None => break Inter::None(Value::Unit),
+				None => unreachable!(),
 			};
 
 			let inter = self.walk_stmt(stmt)?;
 			match inter {
 				Inter::Break(val) => break Inter::Break(val),
-				_ => continue,
+				Inter::Continue => break Inter::Continue,
+				Inter::None(val) => {
+					if stmts.len() == 0 {
+						break Inter::None(val);
+					}
+					continue;
+				}
 			}
-
-			// TODO: Handle last stmt as result
 		};
 
 		self.env.pop_scope();

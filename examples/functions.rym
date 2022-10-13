@@ -1,13 +1,22 @@
-fn returns_fn(string) /* -> Fn */ {
-	println(string)
-	// fn _() {
-	// }
+fn returns_fn(value, info) /* -> Fn */ {
+	println("called outer with value: `", value, "`")
+	println("\t", info)
+
+	fn inner(value) /* -> () */ {
+		println("called inner with value: `", value, "`")
+		println("\t", info)
+	}
+
+	inner
 }
 
 // const returns_fn = "placeholder"
 
-const fn_ = returns_fn("test")
-// const called_fn_1 = returns_fn()()
+const fn_ = returns_fn(1, "test")
+println(" ---")
 
-// const called_fn_1 = (returns_fn())()
-// const called_fn_1 = { const test = returns_fn; returns_fn() }()
+// TODO: Remove () once that works
+const called_fn_1 = (returns_fn(false, "Functions are currently closures..."))(true)
+println(" ---")
+
+const called_fn_1 = { const test = returns_fn; test(32, "Blocky") }(64)

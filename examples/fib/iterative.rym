@@ -1,19 +1,22 @@
 // Other fibonacci sequence algorithms:
 // https://eskeype.github.io/2018/04/20/7-Fibonacci-Algorithms/
 
-const n = 78 // 78 is max for result without deviation
-mut current = 0
-mut next = 1
+fn fib_iter(n) {
+	mut current = 0
+	mut next = 1
 
-print("fib_iter("+ n + ") => ")
+	mut i = 0
+	loop {
+		if i >= n { break }
+		const new = next + current
+		current = next
+		next = new
+		i = i + 1
+	}
 
-mut i = 0
-loop {
-	if i >= n { break }
-	const new = next + current
-	current = next
-	next = new
-	i = i + 1
+	current
 }
 
-println(current)
+const N = 78 // 78 is max for result without deviation
+print("fib_iter("+ N + ") => ")
+println(fib_iter(N))

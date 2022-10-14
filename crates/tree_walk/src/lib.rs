@@ -46,10 +46,19 @@ impl Default for Interpreter {
 			println!("{string}");
 			Ok(Value::Unit)
 		});
+		let floor_fn = NativeFunction::new(Some(1), |_: _, args: &[Value]| {
+			let val = &args[0];
+			if let Value::Number(num) = val {
+				Ok(Value::Number(num.floor()))
+			} else {
+				RuntimeError::expected(Type::Number, val.clone().into())
+			}
+		});
 
 		Self::with_globals(vec![
 			("print", print_fn.into()),
 			("println", println_fn.into()),
+			("floor", floor_fn.into()),
 			("PI", std::f64::consts::PI.into()),
 			("TAU", std::f64::consts::TAU.into()),
 			("E", std::f64::consts::E.into()),

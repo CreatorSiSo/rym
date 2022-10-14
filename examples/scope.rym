@@ -14,10 +14,11 @@ const c = "\t\tglobal c"
 {
   const a = "\touter a"
   const b = "\touter b"
-  {
+  fn inner() {
     const a = "inner a"
     println(a); println(b); println(c)
   }
+	inner()
   println(a); println(b); println(c)
 }
 println(a); println(b); println(c)

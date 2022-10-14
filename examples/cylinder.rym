@@ -12,14 +12,11 @@
 // rZ * rZ * h = rS * rS * vS * t            | /(rS * rS * vS)
 // t = (rZ * rZ * h) / (rS * rS * vS)
 
-const d1 = 0.8 // m
-const h = 1 // m
-const d2 = 2 // cm
-const vS = 1 // m/s
+fn t_filled(d1 /* m */, h /* m */, d2 /* cm */, vS /* m/s */) {
+	const rZ = d1 / 2
+	const rS = d2 / 200
 
-const rZ = d1 / 2
-const rS = d2 / 200
+	(rZ * rZ * h) / (rS * rS * vS)
+}
 
-const t = (rZ * rZ * h) / (rS * rS * vS)
-
-println("Time: ", t, "s")
+println("Time: ", t_filled(0.8, 1, 2, 1), "s")

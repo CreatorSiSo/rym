@@ -68,8 +68,11 @@ pr main() -> Io, Result<(), Error> {
   ```
 
 - [ ] functions
-  - [ ] add parsing for declarations
+  - [x] add parsing for declarations
   - [ ] fix nested calls eg. `name()()()`
+- [ ] add benchmarking capabilities
+  - [ ] cargo alias
+- [ ] use logos lexer generator
 - [ ] errors
   - [ ] use annotations lib to display errors
 - [ ] types

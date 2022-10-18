@@ -30,7 +30,7 @@ pr main() -> Io, Result<(), Error> {
 
 **Rym Lang** or **rym-lang**
 
-- **R**ust**y** ⇒ Heavily borrows ;) from Rust
+- **R**ust**y** ⇒ Heavily borrows 🙃 from Rust
 - **M**ulti-paradigm ⇒ Mix of object oriented, procedural and functional programming
 - Programming **Lang**uage ⇒ because thats what it is
 
@@ -75,4 +75,5 @@ pr main() -> Io, Result<(), Error> {
 - [ ] use logos lexer generator
 - [ ] errors
   - [ ] use annotations lib to display errors
+  - [ ] implement error recovery to safe expr/stmt
 - [ ] types

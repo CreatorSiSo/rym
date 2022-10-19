@@ -36,17 +36,17 @@ pr main() -> Io, Result<(), Error> {
 
 ## Goals
 
-- Scripting
+- Works well for scripting and serious projects
 - Great interoperabilty with Rust
   - Easy to use (simple)
-  - Fast to write Binding
+  - Fast to write Bindings
 - ~~Ui Structure and Functionality coding~~ (Maybe later)
 
 ## Todos
 
 - [ ] `Spanned<T>`
   - [ ] should behave like `Box<T>`/`Rc<T>`
-  - [ ] contains start index and length
+  - [ ] contains start index and length or Range<usize>
 - [x] `AstVisitor<R>` trait
   - [x] takes in some ast and produces `R`
 - [ ] Interpreter

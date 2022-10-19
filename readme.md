@@ -72,6 +72,8 @@ pr main() -> Io, Result<(), Error> {
   - [ ] fix nested calls eg. `name()()()`
 - [ ] add benchmarking capabilities
   - [ ] cargo alias
+- [ ] use arena allocator for scopes
+  - [ ] benchmark before & after
 - [ ] use logos lexer generator
 - [ ] errors
   - [ ] use annotations lib to display errors

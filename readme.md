@@ -44,9 +44,8 @@ pr main() -> Io, Result<(), Error> {
 
 ## Todos
 
-- [ ] `Spanned<T>`
-  - [ ] should behave like `Box<T>`/`Rc<T>`
-  - [ ] contains start index and length or Range<usize>
+- [x] `Spanned<T>`
+  - [x] contains start index and length or Range<usize>
 - [x] `AstVisitor<R>` trait
   - [x] takes in some ast and produces `R`
 - [ ] Interpreter
@@ -76,6 +75,8 @@ pr main() -> Io, Result<(), Error> {
   - [ ] benchmark before & after
 - [ ] use logos lexer generator
 - [ ] errors
+  - [ ] use Spanned<T> where possible
+  - [ ] construct error location from Span and source (file)
   - [ ] use annotations lib to display errors
   - [ ] implement error recovery to safe expr/stmt
 - [ ] types

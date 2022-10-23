@@ -1,15 +1,16 @@
 mod error;
 
-use ast::{BinaryOp, Block, Decl, Expr, Literal, LogicalOp, Stmt, Token, TokenType, UnaryOp};
+use ast::*;
 use error::ParseError;
+type ParseResult<T> = Result<T, ParseError>;
 
 pub struct Parser {
-	tokens: Vec<Token>,
+	tokens: Vec<SpannedToken>,
 	pos: usize,
 }
 
 impl Parser {
-	pub fn parse(tokens: Vec<Token>) -> (Vec<Stmt>, Vec<ParseError>) {
+	pub fn parse(tokens: Vec<SpannedToken>) -> (Vec<Stmt>, Vec<ParseError>) {
 		let mut stmts = Vec::new();
 		let mut errors = Vec::new();
 
@@ -27,21 +28,22 @@ impl Parser {
 		(stmts, errors)
 	}
 
-	pub fn new(tokens: Vec<Token>) -> Self {
+	pub fn new(tokens: Vec<SpannedToken>) -> Self {
 		Self { tokens, pos: 0 }
 	}
 
-	pub fn stmt(&mut self) -> Result<Stmt, ParseError> {
+	pub fn stmt(&mut self) -> ParseResult<Stmt> {
 		if self.matches(TokenType::Semicolon) {
 			return Ok(Stmt::Empty);
 		}
 
 		if let Some(token) = self.matches_which(&[TokenType::Const, TokenType::Mut]) {
-			let mutable = token.typ == TokenType::Mut;
+			let mutable = token.0.typ == TokenType::Mut;
 
 			self.expect(TokenType::Identifier, "Expected identifier")?;
 			let name = self
 				.previous()
+				.0
 				.ident
 				.clone()
 				.expect("Internal Error: Identifier token has no name!")
@@ -63,6 +65,7 @@ impl Parser {
 		if self.matches(TokenType::Fn) {
 			let name = match self
 				.expect(TokenType::Identifier, "Expected function name")?
+				.0
 				.ident
 				.clone()
 			{
@@ -78,6 +81,7 @@ impl Parser {
 					params.push(
 						self
 							.expect(TokenType::Identifier, "Expected function parameter")?
+							.0
 							.ident
 							.clone()
 							.expect("Internal Error: Identifier Token has no value!")
@@ -86,6 +90,7 @@ impl Parser {
 					while self.matches(TokenType::Comma) {
 						let string = self
 							.expect(TokenType::Identifier, "Expected function parameter")?
+							.0
 							.ident
 							.clone()
 							.expect("Internal Error: Identifier Token has no value!")
@@ -107,11 +112,11 @@ impl Parser {
 		Ok(Stmt::Expr(expr))
 	}
 
-	fn expr(&mut self) -> Result<Expr, ParseError> {
+	fn expr(&mut self) -> ParseResult<Expr> {
 		self.interrupts()
 	}
 
-	fn interrupts(&mut self) -> Result<Expr, ParseError> {
+	fn interrupts(&mut self) -> ParseResult<Expr> {
 		// return => "return" expr?;
 		if self.matches(TokenType::Return) {
 			if self.matches(TokenType::Semicolon) {
@@ -133,8 +138,8 @@ impl Parser {
 	}
 
 	/// assignment => identifier "=" expr
-	fn assignment(&mut self) -> Result<Expr, ParseError> {
-		if self.peek(1).typ == TokenType::Equal {
+	fn assignment(&mut self) -> ParseResult<Expr> {
+		if self.peek(1).0.typ == TokenType::Equal {
 			let expr_l = Box::new(self.primary()?);
 			self.advance();
 			let expr_r = Box::new(self.expr()?);
@@ -146,12 +151,12 @@ impl Parser {
 	}
 
 	/// if => "if" expression block ("else" (if | block))?
-	fn if_(&mut self) -> Result<Expr, ParseError> {
+	fn if_(&mut self) -> ParseResult<Expr> {
 		if self.matches(TokenType::If) {
 			let expr = Box::new(self.expr()?);
 			let then_block = self.block()?;
 			let else_block = if self.matches(TokenType::Else) {
-				if self.peek(0).typ == TokenType::If {
+				if self.peek(0).0.typ == TokenType::If {
 					return self.if_();
 				}
 				Some(self.block()?)
@@ -166,7 +171,7 @@ impl Parser {
 	}
 
 	/// loop => "loop" block
-	fn loop_(&mut self) -> Result<Expr, ParseError> {
+	fn loop_(&mut self) -> ParseResult<Expr> {
 		if self.matches(TokenType::Loop) {
 			return Ok(Expr::Loop(self.block()?));
 		}
@@ -175,7 +180,7 @@ impl Parser {
 	}
 
 	/// logic_or => logic_and ("&&" logic_and)*
-	fn logic_or(&mut self) -> Result<Expr, ParseError> {
+	fn logic_or(&mut self) -> ParseResult<Expr> {
 		let mut left = self.logic_and()?;
 
 		while self.matches(TokenType::DoublePipe) {
@@ -187,7 +192,7 @@ impl Parser {
 	}
 
 	/// logic_and => equality ("&&" equality)*
-	fn logic_and(&mut self) -> Result<Expr, ParseError> {
+	fn logic_and(&mut self) -> ParseResult<Expr> {
 		let mut left = self.equality()?;
 
 		while self.matches(TokenType::DoubleAmpersand) {
@@ -199,11 +204,11 @@ impl Parser {
 	}
 
 	/// equality => comparison (("==" | "!=") comparison)*
-	fn equality(&mut self) -> Result<Expr, ParseError> {
+	fn equality(&mut self) -> ParseResult<Expr> {
 		let mut left = self.comparison()?;
 
 		while self.matches_any(&[TokenType::EqualEqual, TokenType::BangEqual]) {
-			let typ = self.previous().typ.clone();
+			let typ = self.previous().0.typ.clone();
 			let right = Box::new(self.comparison()?);
 
 			left = if typ == TokenType::EqualEqual {
@@ -217,7 +222,7 @@ impl Parser {
 	}
 
 	/// comparison => term ((">" | ">=" | "<" | "<=") term)*
-	fn comparison(&mut self) -> Result<Expr, ParseError> {
+	fn comparison(&mut self) -> ParseResult<Expr> {
 		let mut left = self.term()?;
 
 		while self.matches_any(&[
@@ -226,7 +231,7 @@ impl Parser {
 			TokenType::Less,
 			TokenType::LessEqual,
 		]) {
-			let typ = self.previous().typ.clone();
+			let typ = self.previous().0.typ.clone();
 			let right = Box::new(self.term()?);
 
 			left = Expr::Binary(
@@ -245,11 +250,11 @@ impl Parser {
 	}
 
 	/// term => factor (("+" | "-") factor)*
-	fn term(&mut self) -> Result<Expr, ParseError> {
+	fn term(&mut self) -> ParseResult<Expr> {
 		let mut left = self.factor()?;
 
 		while self.matches_any(&[TokenType::Plus, TokenType::Minus]) {
-			let typ = self.previous().typ.clone();
+			let typ = self.previous().0.typ.clone();
 			let right = Box::new(self.factor()?);
 
 			left = if typ == TokenType::Plus {
@@ -263,11 +268,11 @@ impl Parser {
 	}
 
 	/// factor => unary (("/" | "*") unary)*
-	fn factor(&mut self) -> Result<Expr, ParseError> {
+	fn factor(&mut self) -> ParseResult<Expr> {
 		let mut left = self.unary()?;
 
 		while self.matches_any(&[TokenType::Star, TokenType::Slash]) {
-			let typ = self.previous().typ.clone();
+			let typ = self.previous().0.typ.clone();
 			let right = Box::new(self.unary()?);
 
 			left = if typ == TokenType::Star {
@@ -281,7 +286,7 @@ impl Parser {
 	}
 
 	/// unary => ("!" | "-") (unary | call)
-	fn unary(&mut self) -> Result<Expr, ParseError> {
+	fn unary(&mut self) -> ParseResult<Expr> {
 		if self.matches(TokenType::Bang) {
 			let expr = Box::new(self.expr()?);
 			return Ok(Expr::Unary(UnaryOp::Not, expr));
@@ -294,7 +299,7 @@ impl Parser {
 	}
 
 	/// call => primary "(" arguments? ")"
-	fn call(&mut self) -> Result<Expr, ParseError> {
+	fn call(&mut self) -> ParseResult<Expr> {
 		let expr = self.primary()?;
 
 		if self.matches(TokenType::LeftParen) {
@@ -315,7 +320,7 @@ impl Parser {
 	}
 
 	/// expr ("," expr)*
-	fn arguments(&mut self) -> Result<Vec<Expr>, ParseError> {
+	fn arguments(&mut self) -> ParseResult<Vec<Expr>> {
 		let mut args = Vec::new();
 		args.push(self.expr()?);
 		while self.matches(TokenType::Comma) {
@@ -326,7 +331,7 @@ impl Parser {
 	}
 
 	/// primary => "(" expr ")", block, identifier, number | string | "true" | "false"
-	fn primary(&mut self) -> Result<Expr, ParseError> {
+	fn primary(&mut self) -> ParseResult<Expr> {
 		if self.peek_eq(TokenType::LeftBrace) {
 			return self.block().map(Expr::Block);
 		}
@@ -344,12 +349,15 @@ impl Parser {
 			TokenType::String,
 			TokenType::Identifier,
 		]) {
-			Some(Token {
-				typ,
-				literal,
-				ident,
-				..
-			}) => Ok(match typ {
+			Some(Spanned(
+				Token {
+					typ,
+					literal,
+					ident,
+					..
+				},
+				_,
+			)) => Ok(match typ {
 				TokenType::False => Expr::Literal(Literal::Bool(false)),
 				TokenType::True => Expr::Literal(Literal::Bool(true)),
 				TokenType::Number | TokenType::String => Expr::Literal(
@@ -369,7 +377,7 @@ impl Parser {
 	}
 
 	/// block => "{" stmt* "}"
-	fn block(&mut self) -> Result<Block, ParseError> {
+	fn block(&mut self) -> ParseResult<Block> {
 		self.expect(TokenType::LeftBrace, "Expected `{`")?;
 
 		let mut stmts = Vec::new();
@@ -393,25 +401,13 @@ impl Parser {
 }
 
 impl Parser {
-	fn expect(&mut self, typ: TokenType, error_msg: &str) -> Result<&Token, ParseError> {
+	fn expect(&mut self, typ: TokenType, error_msg: &str) -> ParseResult<&SpannedToken> {
 		if self.matches(typ) {
 			return Ok(self.previous());
 		}
 
 		ParseError::token_mismatch(self.advance(), error_msg)
 	}
-
-	// fn expect_any(
-	// 	&mut self,
-	// 	types: &[TokenType],
-	// 	error_msg: &str,
-	// ) -> Result<&Token, ParserError> {
-	// 	if self.matches_any(types) {
-	// 		return Ok(self.previous());
-	// 	}
-
-	// 	ParserError::token_mismatch(self.advance(), error_msg)
-	// }
 
 	fn matches_any(&mut self, types: &[TokenType]) -> bool {
 		for typ in types {
@@ -423,7 +419,7 @@ impl Parser {
 		false
 	}
 
-	fn matches_which(&mut self, types: &[TokenType]) -> Option<&Token> {
+	fn matches_which(&mut self, types: &[TokenType]) -> Option<&SpannedToken> {
 		for typ in types {
 			if self.matches(typ.clone()) {
 				return Some(self.previous());
@@ -434,34 +430,34 @@ impl Parser {
 	}
 
 	fn peek_eq(&mut self, typ: TokenType) -> bool {
-		self.peek(0).typ == typ
+		self.peek(0).0.typ == typ
 	}
 
 	fn matches(&mut self, typ: TokenType) -> bool {
-		if self.peek(0).typ == typ {
+		if self.peek(0).0.typ == typ {
 			self.advance();
 			return true;
 		}
 		false
 	}
 
-	fn advance(&mut self) -> &Token {
+	fn advance(&mut self) -> &SpannedToken {
 		self.pos += 1;
 		self.previous()
 	}
 
-	fn previous(&self) -> &Token {
+	fn previous(&self) -> &SpannedToken {
 		&self.tokens[self.pos - 1]
 	}
 
 	fn is_at_end(&self) -> bool {
-		if self.peek(0).typ == TokenType::Eof {
+		if self.peek(0).0.typ == TokenType::Eof {
 			return true;
 		}
 		false
 	}
 
-	fn peek(&self, dist: usize) -> &Token {
+	fn peek(&self, dist: usize) -> &SpannedToken {
 		match self.tokens.get(self.pos + dist) {
 			Some(token) => token,
 			// TODO: Think about how this could be improved or if its fine
@@ -472,7 +468,7 @@ impl Parser {
 }
 
 impl Iterator for Parser {
-	type Item = Result<Stmt, ParseError>;
+	type Item = ParseResult<Stmt>;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		if self.tokens.is_empty() || self.is_at_end() {

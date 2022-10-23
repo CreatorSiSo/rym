@@ -80,34 +80,30 @@ pub struct Token {
 	pub typ: TokenType,
 	pub literal: Option<Literal>,
 	pub ident: Option<Identifier>,
-	pub start: usize,
 }
 
 impl Token {
-	pub fn new(typ: TokenType, start: usize) -> Self {
+	pub fn new(typ: TokenType) -> Self {
 		Self {
 			typ,
 			literal: None,
 			ident: None,
-			start,
 		}
 	}
 
-	pub fn literal(typ: TokenType, literal: Literal, start: usize) -> Self {
+	pub fn literal(typ: TokenType, literal: Literal) -> Self {
 		Self {
 			typ,
 			literal: Some(literal),
 			ident: None,
-			start,
 		}
 	}
 
-	pub fn ident(typ: TokenType, ident: Identifier, start: usize) -> Self {
+	pub fn ident(typ: TokenType, ident: Identifier) -> Self {
 		Self {
 			typ,
 			literal: None,
 			ident: Some(ident),
-			start,
 		}
 	}
 }

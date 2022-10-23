@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use ast::{Stmt, Token, TokenType};
+use ast::{SpannedToken, Stmt, TokenType};
 
 use colored::Colorize;
 
@@ -12,9 +12,9 @@ pub(crate) fn title(title: &str, success: bool) {
 	};
 }
 
-pub(crate) fn tokens(tokens: &[Token]) {
+pub(crate) fn tokens(tokens: &[SpannedToken]) {
 	for token in tokens {
-		match &token.typ {
+		match &token.0.typ {
 			TokenType::Semicolon => println!("Semicolon"),
 			value => print!("{value:?} "),
 		}

@@ -1,8 +1,14 @@
 use std::fmt::{Debug, Display};
+use std::ops::Range;
 
 mod token;
-
 mod visitor;
+
+pub type Span = Range<usize>;
+pub type SpannedToken = Spanned<Token>;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Spanned<T>(pub T, pub Span);
 
 pub use token::{Token, TokenType, KEYWORDS};
 pub use visitor::AstVisitor;
@@ -92,6 +98,7 @@ pub enum Expr {
 #[derive(Clone, PartialEq, Eq)]
 pub struct Identifier {
 	pub name: String,
+	// TODO Replace line, col with Spanned<T>
 	pub line: usize,
 	pub col: usize,
 }

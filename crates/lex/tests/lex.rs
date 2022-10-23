@@ -1,4 +1,4 @@
-use ast::{Literal, Token, TokenType};
+use ast::{Literal, Spanned, SpannedToken, Token, TokenType};
 use lex::{Lexer, LexerError};
 
 #[test]
@@ -9,7 +9,7 @@ fn file() {
 		match lexer.next_token() {
 			Ok(token) => {
 				println!("{token:?}");
-				if token.typ == TokenType::Eof {
+				if token.0.typ == TokenType::Eof {
 					break;
 				}
 			}
@@ -22,7 +22,7 @@ fn file() {
 fn keywords() {
 	let source = "if else for while loop return break false true fn const mut struct self";
 	let lexer = Lexer::new(source);
-	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().typ).collect();
+	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().0.typ).collect();
 	assert_eq!(
 		tokens,
 		vec![
@@ -49,7 +49,7 @@ fn keywords() {
 fn operators() {
 	let source = "- + / * ! != = == > >= < <=	&& ||";
 	let lexer = Lexer::new(source);
-	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().typ).collect();
+	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().0.typ).collect();
 	assert_eq!(
 		tokens,
 		vec![
@@ -76,7 +76,7 @@ fn operators() {
 fn special_chars() {
 	let source = ". , ; ( ) { }";
 	let lexer = Lexer::new(source);
-	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().typ).collect();
+	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().0.typ).collect();
 	assert_eq!(
 		tokens,
 		vec![
@@ -96,12 +96,15 @@ fn special_chars() {
 fn strings() {
 	let source = r#" "str€ng" "#;
 	let lexer = Lexer::new(source);
-	let tokens: Vec<Token> = lexer.map(|token| token.unwrap()).collect();
+	let tokens: Vec<SpannedToken> = lexer.map(|token| token.unwrap()).collect();
 	assert_eq!(
 		tokens,
 		vec![
-			Token::literal(TokenType::String, Literal::String("str€ng".into()), 1),
-			Token::new(TokenType::Eof, 11)
+			Spanned(
+				Token::literal(TokenType::String, Literal::String("str€ng".into())),
+				1..10
+			),
+			Spanned(Token::new(TokenType::Eof), 11..12)
 		]
 	)
 }
@@ -110,13 +113,19 @@ fn strings() {
 fn number() {
 	let source = r#" 9 0.23042 "#;
 	let lexer = Lexer::new(source);
-	let tokens: Vec<Token> = lexer.map(|token| token.unwrap()).collect();
+	let tokens: Vec<SpannedToken> = lexer.map(|token| token.unwrap()).collect();
 	assert_eq!(
 		tokens,
 		vec![
-			Token::literal(TokenType::Number, Literal::Number(9.0), 1),
-			Token::literal(TokenType::Number, Literal::Number(0.23042), 3),
-			Token::new(TokenType::Eof, 10)
+			Spanned(
+				Token::literal(TokenType::Number, Literal::Number(9.0)),
+				1..1
+			),
+			Spanned(
+				Token::literal(TokenType::Number, Literal::Number(0.23042)),
+				3..9
+			),
+			Spanned(Token::new(TokenType::Eof), 10..11)
 		]
 	)
 }

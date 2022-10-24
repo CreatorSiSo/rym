@@ -10,25 +10,25 @@ pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 	let source = std::fs::read_to_string(path)?;
 
 	let (tokens, errors) = Lexer::lex(&source);
-	let syntax_correct = errors.is_empty();
-	log::title("Lexer", syntax_correct);
+	let lex_success = errors.is_empty();
+	log::title("Lexer", lex_success);
 	log::tokens(&tokens);
 	log::errors(&errors);
 
 	let (ast, errors) = Parser::parse(tokens);
-	let syntax_correct = errors.is_empty();
-	log::title("Parser", syntax_correct);
+	let parse_success = errors.is_empty();
+	log::title("Parser", parse_success);
 	log::ast(&ast);
 	log::errors(&errors);
 
-	if !syntax_correct {
-		exit(65 /* data format error */)
+	if !lex_success | !parse_success {
+		exit(65 /* Data format error */)
 	}
 
 	log::title("Interpreter", true);
 	if let Err(error) = Interpreter::default().eval(&ast) {
 		println!("{error:?}");
-		exit(1)
+		exit(1 /* Failure */)
 	}
 
 	Ok(())

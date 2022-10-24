@@ -1,0 +1,7 @@
+// TODO Use this to test that if lexing fails but parsing
+// succeeds the interpreter/compiler wont run
+if ³ true {
+
+} else {
+
+}

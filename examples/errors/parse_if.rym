@@ -1,0 +1,8 @@
+// TODO Add proper error recovery for parsing
+// eg. this should either ignore the whole if expression or
+// every thing until the then block
+if mut test = 0 {
+	println("cool feature but not implemented :(")
+} else {
+	println("Hää?")
+}

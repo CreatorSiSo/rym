@@ -1,7 +1,7 @@
 # Rym Lang
 
 ```rust
-pr main() -> Io, Result<(), Error> {
+fn main() -> Io, Result<(), Error> {
 	const msg = "Hello World";
 	println(msg);
 
@@ -45,7 +45,7 @@ pr main() -> Io, Result<(), Error> {
 ## Todos
 
 - [x] `Spanned<T>`
-  - [x] contains start index and length or Range<usize>
+  - [x] contains start index and length or `Range<usize>`
 - [x] `AstVisitor<R>` trait
   - [x] takes in some ast and produces `R`
 - [ ] Interpreter
@@ -70,13 +70,13 @@ pr main() -> Io, Result<(), Error> {
   - [x] add parsing for declarations
   - [ ] fix nested calls eg. `name()()()`
 - [ ] add benchmarking capabilities
-  - [ ] cargo alias
+  - [ ] cargo alias eg. `cargo bench`
 - [ ] use arena allocator for scopes
   - [ ] benchmark before & after
 - [ ] use logos lexer generator
 - [ ] errors
-  - [ ] use Spanned<T> where possible
-  - [ ] construct error location from Span and source (file)
+  - [ ] use `Spanned<T>` where possible
+  - [ ] construct error location from `Span` and source (file)
   - [ ] use annotations lib to display errors
   - [ ] implement error recovery to safe expr/stmt
 - [ ] types

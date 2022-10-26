@@ -26,7 +26,7 @@ impl Env {
 	}
 
 	pub(crate) fn pop_scope(&mut self) {
-		if self.scopes.len() > 0 {
+		if !self.scopes.is_empty() {
 			self.scopes.pop();
 		}
 	}

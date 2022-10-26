@@ -139,7 +139,7 @@ impl Parser {
 
 	/// assignment => identifier "=" expr
 	fn assignment(&mut self) -> ParseResult<Expr> {
-		if self.peek(1).0.typ == TokenType::Equal {
+		if self.peek_eq(1, TokenType::Equal) {
 			let expr_l = Box::new(self.primary()?);
 			self.advance();
 			let expr_r = Box::new(self.expr()?);
@@ -156,7 +156,7 @@ impl Parser {
 			let expr = Box::new(self.expr()?);
 			let then_block = self.block()?;
 			let else_block = if self.matches(TokenType::Else) {
-				if self.peek(0).0.typ == TokenType::If {
+				if self.peek_eq(0, TokenType::If) {
 					return self.if_();
 				}
 				Some(self.block()?)
@@ -332,7 +332,7 @@ impl Parser {
 
 	/// primary => "(" expr ")", block, identifier, number | string | "true" | "false"
 	fn primary(&mut self) -> ParseResult<Expr> {
-		if self.peek_eq(TokenType::LeftBrace) {
+		if self.peek_eq(0, TokenType::LeftBrace) {
 			return self.block().map(Expr::Block);
 		}
 
@@ -385,7 +385,7 @@ impl Parser {
 			if self.matches(TokenType::RightBrace) {
 				break true;
 			}
-			if self.matches(TokenType::Eof) {
+			if self.is_at_end() {
 				break false;
 			}
 			let stmt = self.stmt()?;
@@ -429,12 +429,8 @@ impl Parser {
 		None
 	}
 
-	fn peek_eq(&mut self, typ: TokenType) -> bool {
-		self.peek(0).0.typ == typ
-	}
-
 	fn matches(&mut self, typ: TokenType) -> bool {
-		if self.peek(0).0.typ == typ {
+		if self.peek_eq(0, typ) {
 			self.advance();
 			return true;
 		}
@@ -451,19 +447,26 @@ impl Parser {
 	}
 
 	fn is_at_end(&self) -> bool {
-		if self.peek(0).0.typ == TokenType::Eof {
-			return true;
+		match self.peek(0) {
+			None => true,
+			_ => false,
 		}
-		false
 	}
 
-	fn peek(&self, dist: usize) -> &SpannedToken {
-		match self.tokens.get(self.pos + dist) {
-			Some(token) => token,
-			// TODO: Think about how this could be improved or if its fine
-			// Should always return TokenType::Eof
-			None => &self.tokens[self.tokens.len() - 1],
+	fn peek_eq(&mut self, dist: usize, typ: TokenType) -> bool {
+		match self.peek(dist) {
+			Some(Spanned(
+				Token {
+					typ: peeked_typ, ..
+				},
+				_,
+			)) => peeked_typ == &typ,
+			None => false,
 		}
+	}
+
+	fn peek(&self, dist: usize) -> Option<&SpannedToken> {
+		self.tokens.get(self.pos + dist)
 	}
 }
 

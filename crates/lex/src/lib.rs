@@ -239,7 +239,13 @@ impl<'src> Iterator for Lexer<'src> {
 		if self.is_at_end() {
 			None
 		} else {
-			Some(self.next_token())
+			let next = self.next_token();
+			if let Ok(Spanned(tok, _)) = &next {
+				if tok.typ == TokenType::Eof {
+					return None;
+				}
+			}
+			Some(next)
 		}
 	}
 }

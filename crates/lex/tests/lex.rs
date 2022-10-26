@@ -5,13 +5,10 @@ use lex::{Lexer, LexerError};
 fn file() {
 	let source = include_str!("./lex.rym");
 	let mut lexer = Lexer::new(source);
-	loop {
-		match lexer.next_token() {
+	while let Some(result) = lexer.next() {
+		match result {
 			Ok(token) => {
 				println!("{token:?}");
-				if token.0.typ == TokenType::Eof {
-					break;
-				}
 			}
 			Err(err) => println!("{err:?}"),
 		}
@@ -40,7 +37,6 @@ fn keywords() {
 			TokenType::Mut,
 			TokenType::Struct,
 			TokenType::Self_,
-			TokenType::Eof
 		]
 	)
 }
@@ -67,7 +63,6 @@ fn operators() {
 			TokenType::LessEqual,
 			TokenType::DoubleAmpersand,
 			TokenType::DoublePipe,
-			TokenType::Eof
 		]
 	)
 }
@@ -87,7 +82,6 @@ fn special_chars() {
 			TokenType::RightParen,
 			TokenType::LeftBrace,
 			TokenType::RightBrace,
-			TokenType::Eof
 		]
 	)
 }
@@ -99,13 +93,10 @@ fn strings() {
 	let tokens: Vec<SpannedToken> = lexer.map(|token| token.unwrap()).collect();
 	assert_eq!(
 		tokens,
-		vec![
-			Spanned(
-				Token::literal(TokenType::String, Literal::String("str€ng".into())),
-				1..10
-			),
-			Spanned(Token::new(TokenType::Eof), 11..12)
-		]
+		vec![Spanned(
+			Token::literal(TokenType::String, Literal::String("str€ng".into())),
+			1..10
+		)]
 	)
 }
 
@@ -124,8 +115,7 @@ fn number() {
 			Spanned(
 				Token::literal(TokenType::Number, Literal::Number(0.23042)),
 				3..9
-			),
-			Spanned(Token::new(TokenType::Eof), 10..11)
+			)
 		]
 	)
 }

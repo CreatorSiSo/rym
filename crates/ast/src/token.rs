@@ -3,6 +3,7 @@ use std::fmt::Display;
 use crate::{Identifier, Literal};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
+#[non_exhaustive]
 pub enum TokenType {
 	Plus,
 	Minus,
@@ -54,6 +55,7 @@ pub enum TokenType {
 	Struct,
 	Self_,
 
+	/// Do not use outside of `lex` crate!
 	Eof,
 }
 

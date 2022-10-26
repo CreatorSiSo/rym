@@ -163,6 +163,7 @@ name = "lex"
 version = "0.0.0"
 dependencies = [
  "ast",
+ "colored",
 ]
 
 [[package]]
@@ -217,6 +218,7 @@ name = "parse"
 version = "0.0.0"
 dependencies = [
  "ast",
+ "colored",
 ]
 
 [[package]]

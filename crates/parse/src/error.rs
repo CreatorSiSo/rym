@@ -1,33 +1,33 @@
 use std::fmt::Display;
 
-use ast::SpannedToken;
+use ast::{Spanned, SpannedToken};
+use colored::Colorize;
 
 #[derive(Debug)]
 pub enum ParseError {
-	TokenMismatch { token: SpannedToken, msg: String },
-	InvalidAssignmentTarget { token: SpannedToken },
+	TokenMismatch(SpannedToken, String),
+	InvalidAssignmentTarget(SpannedToken),
 }
 
 impl ParseError {
 	pub(super) fn token_mismatch<T>(token: &SpannedToken, msg: &str) -> Result<T, Self> {
-		Err(ParseError::TokenMismatch {
-			token: token.clone(),
-			msg: msg.into(),
-		})
+		Err(ParseError::TokenMismatch(token.clone(), msg.into()))
 	}
 }
 
 // TODO: Improve error messages by using Spanned properly
 impl Display for ParseError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let err = "Error:".red().bold();
+
 		match self {
-			ParseError::TokenMismatch { token, msg } => {
-				writeln!(f, "Error:	{msg} got `{:?}`", token.0.typ)?;
-				write!(f, "Pos:	{:?}", token.1)
+			ParseError::TokenMismatch(Spanned(token, span), msg) => {
+				writeln!(f, "{err}	{msg} got `{:?}`", token.typ)?;
+				writeln!(f, "Span:	{:?}", span)
 			}
-			ParseError::InvalidAssignmentTarget { token } => {
-				writeln!(f, "Error:	Invalid assignment target `{:?}`", token.0.typ)?;
-				write!(f, "Pos:	{:?}", token.1)
+			ParseError::InvalidAssignmentTarget(Spanned(token, span)) => {
+				writeln!(f, "{err}	Invalid assignment target `{:?}`", token.typ)?;
+				writeln!(f, "Span:	{:?}", span)
 			}
 		}
 	}

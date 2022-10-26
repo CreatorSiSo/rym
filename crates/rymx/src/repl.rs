@@ -52,24 +52,31 @@ impl Repl {
 
 	fn eval_line(&mut self, line: String) {
 		let (tokens, errors) = Lexer::lex(&line);
-		let correct_syntax = errors.is_empty();
-		log::title("Lexer", correct_syntax);
-		log::tokens(&tokens);
-		log::errors(&errors);
+		log::block("Lexer", || {
+			log::tokens(&tokens);
+			log::errors(&errors);
+			errors.is_empty()
+		});
 
 		let (ast, errors) = Parser::parse(tokens);
 		let correct_syntax = errors.is_empty();
-		log::title("Parser", correct_syntax);
-		log::ast(&ast);
-		log::errors(&errors);
+		log::block("Parser", || {
+			log::ast(&ast);
+			log::errors(&errors);
+			errors.is_empty()
+		});
 
 		if !correct_syntax {
 			return;
 		}
 
-		log::title("Interpreter", true);
-		if let Err(error) = Interpreter::default().eval(&ast) {
-			println!("{error:?}");
-		}
+		log::block("Interpreter", || {
+			if let Err(error) = Interpreter::default().eval(&ast) {
+				println!("{error:?}");
+				false
+			} else {
+				true
+			}
+		});
 	}
 }

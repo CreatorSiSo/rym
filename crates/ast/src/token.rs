@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{Identifier, Literal};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -53,6 +55,55 @@ pub enum TokenType {
 	Self_,
 
 	Eof,
+}
+
+impl Display for TokenType {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(match self {
+			TokenType::Plus => "Plus",
+			TokenType::Minus => "Minus",
+			TokenType::Star => "Star",
+			TokenType::Slash => "Slash",
+			TokenType::Dot => "Dot",
+			TokenType::Comma => "Comma",
+			TokenType::Semicolon => "Semicolon",
+			TokenType::LeftParen => "LeftParen",
+			TokenType::RightParen => "RightParen",
+			TokenType::LeftBrace => "LeftBrace",
+			TokenType::RightBrace => "RightBrace",
+			TokenType::Bang => "Bang",
+			TokenType::BangEqual => "BangEqual",
+			TokenType::Equal => "Equal",
+			TokenType::EqualEqual => "EqualEqual",
+			TokenType::Greater => "Greater",
+			TokenType::GreaterEqual => "GreaterEqual",
+			TokenType::Less => "Less",
+			TokenType::LessEqual => "LessEqual",
+			TokenType::DoubleAmpersand => "DoubleAmpersand",
+			TokenType::DoublePipe => "DoublePipe",
+			TokenType::Int => "Int",
+			TokenType::Number => "Number",
+			TokenType::Char => "Char",
+			TokenType::String => "String",
+			TokenType::Identifier => "Identifier",
+			TokenType::If => "If",
+			TokenType::Else => "Else",
+			TokenType::For => "For",
+			TokenType::While => "While",
+			TokenType::Loop => "Loop",
+			TokenType::Return => "Return",
+			TokenType::Break => "Break",
+			TokenType::Continue => "Continue",
+			TokenType::False => "False",
+			TokenType::True => "True",
+			TokenType::Fn => "Fn",
+			TokenType::Const => "Const",
+			TokenType::Mut => "Mut",
+			TokenType::Struct => "Struct",
+			TokenType::Self_ => "Self",
+			TokenType::Eof => "Eof",
+		})
+	}
 }
 
 pub const KEYWORDS: &[(&str, TokenType)] = &[

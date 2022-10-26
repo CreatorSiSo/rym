@@ -4,12 +4,20 @@ use ast::{SpannedToken, Stmt, TokenType};
 
 use colored::Colorize;
 
-pub(crate) fn title(title: &str, success: bool) {
-	if success {
-		print!("\n{0} {1} {0}\n", "---".green(), title.green().bold())
-	} else {
-		print!("\n{0} {1} {0}\n", "---".red(), title.red().bold())
-	};
+// TODO Improve the print block api and add a properly colored `│` character infront of each line
+pub(crate) fn block<F>(title: &str, f: F)
+where
+	F: Fn() -> bool,
+{
+	println!("\n{} {}", "╭──".bright_blue(), title.bright_blue().bold());
+	println!(
+		"{}",
+		if f() {
+			"╰── ✓".green()
+		} else {
+			"╰── ✗".red()
+		}
+	);
 }
 
 pub(crate) fn tokens(tokens: &[SpannedToken]) {
@@ -24,6 +32,10 @@ pub(crate) fn tokens(tokens: &[SpannedToken]) {
 
 pub(crate) fn ast(ast: &[Stmt]) {
 	for stmt in ast {
+		#[cfg(feature = "expand")]
+		println!("{stmt:#?}");
+
+		#[cfg(not(feature = "expand"))]
 		println!("{stmt:?}");
 	}
 }
@@ -32,7 +44,7 @@ pub(crate) fn errors<E>(errors: &[E])
 where
 	E: Display,
 {
-	for err in errors {
-		println!("{err}");
+	for error in errors {
+		print!("\n{error}");
 	}
 }

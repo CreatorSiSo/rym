@@ -11,25 +11,32 @@ pub fn exec<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
 
 	let (tokens, errors) = Lexer::lex(&source);
 	let lex_success = errors.is_empty();
-	log::title("Lexer", lex_success);
-	log::tokens(&tokens);
-	log::errors(&errors);
+	log::block("Lexer", || {
+		log::tokens(&tokens);
+		log::errors(&errors);
+		lex_success
+	});
 
 	let (ast, errors) = Parser::parse(tokens);
 	let parse_success = errors.is_empty();
-	log::title("Parser", parse_success);
-	log::ast(&ast);
-	log::errors(&errors);
+	log::block("Parser", || {
+		log::ast(&ast);
+		log::errors(&errors);
+		parse_success
+	});
 
 	if !lex_success | !parse_success {
 		exit(65 /* Data format error */)
 	}
 
-	log::title("Interpreter", true);
-	if let Err(error) = Interpreter::default().eval(&ast) {
-		println!("{error:?}");
-		exit(1 /* Failure */)
-	}
+	log::block("Interpreter", || {
+		if let Err(error) = Interpreter::default().eval(&ast) {
+			println!("{error:?}");
+			exit(1 /* Failure */)
+		} else {
+			true
+		}
+	});
 
 	Ok(())
 }

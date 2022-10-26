@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 use crate::Lexer;
 use std::fmt::Display;
 use std::num::{ParseFloatError, ParseIntError};
@@ -49,17 +51,19 @@ impl LexerError {
 
 impl Display for LexerError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let err = "Error:".red().bold();
+
 		match self {
 			LexerError::InvalidChar { msg, line, col } => {
-				writeln!(f, "Error: {msg}")?;
+				writeln!(f, "{err} {msg}")?;
 				writeln!(f, "       {line}:{col}")
 			}
 			LexerError::ParseInt { msg, line, col } => {
-				writeln!(f, "Error: Could not parse integer {msg}")?;
+				writeln!(f, "{err} Could not parse integer {msg}")?;
 				writeln!(f, "       {line}:{col}")
 			}
 			LexerError::ParseFloat { msg, line, col } => {
-				writeln!(f, "Error: Could not parse float {msg}")?;
+				writeln!(f, "{err} Could not parse float {msg}")?;
 				writeln!(f, "       {line}:{col}")
 			}
 		}

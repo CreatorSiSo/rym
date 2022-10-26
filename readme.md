@@ -79,4 +79,5 @@ fn main() -> Io, Result<(), Error> {
   - [ ] construct error location from `Span` and source (file)
   - [ ] use annotations lib to display errors
   - [ ] implement error recovery to safe expr/stmt
+  - [ ] use error codes that link to a more detailed explanation (https://github.com/rust-lang/rust/tree/master/compiler/rustc_error_codes)
 - [ ] types

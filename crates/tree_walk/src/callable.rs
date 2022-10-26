@@ -5,7 +5,7 @@ use crate::{error::RuntimeError, Inter, Interpreter, Value};
 pub(crate) type Arity = Option<usize>;
 pub(crate) type CallableFn = fn(&mut Interpreter, &[Value]) -> Result<Value, RuntimeError>;
 
-pub(crate) trait Callable {
+pub trait Callable {
 	fn arity(&self) -> Option<usize>;
 	fn call(&self, interpreter: &mut Interpreter, args: &[Value]) -> Result<Value, RuntimeError>;
 }

@@ -2,7 +2,8 @@ mod error;
 
 use ast::*;
 use error::ParseError;
-type ParseResult<T> = Result<T, ParseError>;
+
+pub type ParseResult<T> = Result<T, ParseError>;
 
 pub struct Parser {
 	tokens: Vec<SpannedToken>,
@@ -447,10 +448,7 @@ impl Parser {
 	}
 
 	fn is_at_end(&self) -> bool {
-		match self.peek(0) {
-			None => true,
-			_ => false,
-		}
+		matches!(self.peek(0), None)
 	}
 
 	fn peek_eq(&mut self, dist: usize, typ: TokenType) -> bool {

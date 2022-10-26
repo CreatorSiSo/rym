@@ -5,6 +5,9 @@ version = 3
 [[package]]
 name = "ast"
 version = "0.0.0"
+dependencies = [
+ "stability",
+]
 
 [[package]]
 name = "atty"
@@ -331,6 +334,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
 
 [[package]]
+name = "stability"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ebd1b177894da2a2d9120208c3386066af06a488255caabc5de8ddca22dbc3ce"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "str-buf"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -345,6 +358,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "tests"
+version = "0.1.0"
+dependencies = [
+ "ast",
+ "lex",
+ "parse",
+ "tree_walk",
 ]
 
 [[package]]

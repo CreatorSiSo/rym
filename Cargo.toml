@@ -13,4 +13,7 @@ members = [
 
 	# Cli
 	"crates/rymx",
+
+	# Integration Tests
+	"crates/tests",
 ]

@@ -1,7 +1,7 @@
 use crate::{Type, Value};
 use ast::UnaryOp;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum RuntimeError {
 	ForbiddenType(String),
 	ForbiddenInter(String),

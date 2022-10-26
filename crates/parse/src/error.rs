@@ -3,7 +3,7 @@ use std::fmt::Display;
 use ast::{Spanned, SpannedToken};
 use colored::Colorize;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ParseError {
 	TokenMismatch(SpannedToken, String),
 	InvalidAssignmentTarget(SpannedToken),

@@ -3,8 +3,10 @@ use std::str::CharIndices;
 mod error;
 mod unescape;
 use ast::{Identifier, Literal, Spanned, SpannedToken, Token, TokenType, KEYWORDS};
-pub use error::LexerError;
+pub use error::LexError;
 use unescape::unescape;
+
+pub type LexResult<T> = Result<T, LexError>;
 
 pub struct Lexer<'src> {
 	source: &'src str,
@@ -19,7 +21,7 @@ pub struct Lexer<'src> {
 }
 
 impl<'src> Lexer<'src> {
-	pub fn lex(source: &'src str) -> (Vec<SpannedToken>, Vec<LexerError>) {
+	pub fn lex(source: &'src str) -> (Vec<SpannedToken>, Vec<LexError>) {
 		let mut tokens = Vec::new();
 		let mut errors = Vec::new();
 
@@ -51,7 +53,7 @@ impl<'src> Lexer<'src> {
 		}
 	}
 
-	pub fn next_token(&mut self) -> Result<SpannedToken, LexerError> {
+	fn next_token(&mut self) -> LexResult<SpannedToken> {
 		let token_value = loop {
 			self.advance();
 			if self.is_at_end() {
@@ -96,7 +98,7 @@ impl<'src> Lexer<'src> {
 				'"' => return self.string(),
 
 				c if c.is_alphabetic() || c == '_' => return self.identifier(),
-				_ => return LexerError::invalid_char(self),
+				_ => return LexError::invalid_char(self),
 			};
 		};
 
@@ -122,7 +124,7 @@ impl<'src> Lexer<'src> {
 		self.advance();
 	}
 
-	fn number(&mut self) -> Result<SpannedToken, LexerError> {
+	fn number(&mut self) -> LexResult<SpannedToken> {
 		self.consume_while(|c| c.is_ascii_digit());
 
 		if self.peek(1) == '.' && self.peek(2).is_ascii_digit() {
@@ -133,7 +135,7 @@ impl<'src> Lexer<'src> {
 		let text = &self.source[self.start..=self.current];
 		let value = match text.parse::<f64>() {
 			Ok(number) => number,
-			Err(err) => return LexerError::parse_float(self, err),
+			Err(err) => return LexError::parse_float(self, err),
 		};
 
 		Ok(Spanned(
@@ -142,7 +144,7 @@ impl<'src> Lexer<'src> {
 		))
 	}
 
-	fn string(&mut self) -> Result<SpannedToken, LexerError> {
+	fn string(&mut self) -> LexResult<SpannedToken> {
 		while !self.is_at_end() {
 			if self.c == '\\' && self.matches('"') {
 				self.advance();
@@ -162,7 +164,7 @@ impl<'src> Lexer<'src> {
 		))
 	}
 
-	fn identifier(&mut self) -> Result<SpannedToken, LexerError> {
+	fn identifier(&mut self) -> LexResult<SpannedToken> {
 		self.consume_while(|c| c.is_alphanumeric() || c == '_');
 
 		let name = String::from(&self.source[self.start..=self.current]);
@@ -233,7 +235,7 @@ impl<'src> Lexer<'src> {
 }
 
 impl<'src> Iterator for Lexer<'src> {
-	type Item = Result<SpannedToken, LexerError>;
+	type Item = LexResult<SpannedToken>;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		if self.is_at_end() {

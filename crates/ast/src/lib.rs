@@ -45,9 +45,9 @@ pub enum Expr {
 	/// A tuple `(a, b, c, d)`
 	Tuple(Vec<Expr>),
 
-	/// An `if` block, with an optional `else` block.
+	/// A `if` expression, an optional `else` block.
 	///
-	/// `if expr { block } else { block }`
+	/// `if expr { then_block } else { else_block }`
 	If(Box<Expr>, Block, Option<Block>),
 
 	/// A while loop `while expr { block }`
@@ -122,6 +122,12 @@ impl Debug for Identifier {
 #[derive(Clone, PartialEq)]
 pub struct Block {
 	pub stmts: Vec<Stmt>,
+}
+
+impl Block {
+	pub fn new(stmts: Vec<Stmt>) -> Self {
+		Self { stmts }
+	}
 }
 
 impl Debug for Block {

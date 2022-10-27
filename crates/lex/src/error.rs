@@ -34,7 +34,7 @@ impl LexError {
 
 	pub fn parse_int<T>(lexer: &Lexer, err: ParseIntError) -> Result<T, Self> {
 		Err(Self::ParseInt {
-			msg: format!("{} -> {err:?}", &lexer.source[lexer.start..lexer.current]),
+			msg: format!("{} -> {err:?}", &lexer.src[lexer.start..lexer.current]),
 			line: lexer.line,
 			col: lexer.col,
 		})
@@ -42,7 +42,7 @@ impl LexError {
 
 	pub fn parse_float<T>(lexer: &Lexer, err: ParseFloatError) -> Result<T, Self> {
 		Err(Self::ParseFloat {
-			msg: format!("{} -> {err:?}", &lexer.source[lexer.start..lexer.current]),
+			msg: format!("{} -> {err:?}", &lexer.src[lexer.start..lexer.current]),
 			line: lexer.line,
 			col: lexer.col,
 		})

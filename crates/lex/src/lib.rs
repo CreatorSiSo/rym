@@ -9,7 +9,7 @@ use unescape::unescape;
 pub type LexResult<T> = Result<T, LexError>;
 
 pub struct Lexer<'src> {
-	source: &'src str,
+	src: &'src str,
 	iter: CharIndices<'src>,
 
 	c: char,
@@ -39,10 +39,10 @@ impl<'src> Lexer<'src> {
 		(tokens, errors)
 	}
 
-	pub fn new(source: &'src str) -> Self {
+	pub fn new(src: &'src str) -> Self {
 		Self {
-			source,
-			iter: source.char_indices(),
+			src,
+			iter: src.char_indices(),
 
 			c: '\0',
 			start: 0,
@@ -132,7 +132,7 @@ impl<'src> Lexer<'src> {
 			self.consume_while(|c| c.is_ascii_digit());
 		}
 
-		let text = &self.source[self.start..=self.current];
+		let text = &self.src[self.start..=self.current];
 		let value = match text.parse::<f64>() {
 			Ok(number) => number,
 			Err(err) => return LexError::parse_float(self, err),
@@ -158,7 +158,7 @@ impl<'src> Lexer<'src> {
 		Ok(Spanned(
 			Token::literal(
 				TokenType::String,
-				Literal::String(unescape(&self.source[self.start + 1..self.current])),
+				Literal::String(unescape(&self.src[self.start + 1..self.current])),
 			),
 			self.start..self.current,
 		))
@@ -167,7 +167,7 @@ impl<'src> Lexer<'src> {
 	fn identifier(&mut self) -> LexResult<SpannedToken> {
 		self.consume_while(|c| c.is_alphanumeric() || c == '_');
 
-		let name = String::from(&self.source[self.start..=self.current]);
+		let name = String::from(&self.src[self.start..=self.current]);
 		let typ = match KEYWORDS.iter().find(|(key, _)| key == &name) {
 			Some((_, token_type)) => token_type.clone(),
 			None => TokenType::Identifier,
@@ -211,7 +211,7 @@ impl<'src> Lexer<'src> {
 			self.current = i;
 			self.c = c;
 		} else {
-			self.current = self.source.len();
+			self.current = self.src.len();
 			self.c = '\0'
 		}
 
@@ -230,7 +230,7 @@ impl<'src> Lexer<'src> {
 	}
 
 	fn is_at_end(&self) -> bool {
-		self.current >= self.source.len()
+		self.current >= self.src.len()
 	}
 }
 

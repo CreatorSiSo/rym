@@ -1,8 +1,8 @@
 mod error;
 
 use ast::*;
-use error::ParseError;
 
+pub use error::ParseError;
 pub type ParseResult<T> = Result<T, ParseError>;
 
 pub struct Parser {

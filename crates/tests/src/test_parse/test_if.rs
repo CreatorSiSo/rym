@@ -1,4 +1,13 @@
 use super::*;
+use macros::statements;
+
+// #[test]
+fn ast_macro() {
+	let _ast = statements![(), (Expr), (Const "test"), (Mut), (Fn)];
+	for stmt in _ast {
+		println!("{stmt:?}")
+	}
+}
 
 #[test]
 fn parse_if_else_true() {

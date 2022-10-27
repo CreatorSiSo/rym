@@ -10,3 +10,4 @@ ast = { path = "../ast" }
 lex = { path = "../lex" }
 parse = { path = "../parse" }
 tree_walk = { path = "../tree_walk" }
+macros = { path = "../macros" }

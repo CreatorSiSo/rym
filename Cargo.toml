@@ -15,5 +15,6 @@ members = [
 	"crates/rymx",
 
 	# Integration Tests
+	"crates/macros",
 	"crates/tests",
 ]

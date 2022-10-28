@@ -1,12 +1,14 @@
 extern crate proc_macro;
 
-use proc_macro2::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenTree};
+use std::fmt::Display;
+
+use proc_macro2::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
 use quote::{quote, quote_spanned, ToTokens, TokenStreamExt};
 
 #[proc_macro]
 pub fn make_ast(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-	let input = proc_macro2::TokenStream::from(input).into_iter();
-	let mut output = proc_macro2::TokenStream::new();
+	let mut input = TokenStream::from(input).into_iter();
+	let mut output = TokenStream::new();
 
 	// let ___v: Vec<Stmt>;
 	output.append_all(quote!(let ___v: Vec<Stmt>;));
@@ -16,7 +18,7 @@ pub fn make_ast(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 	output.append(Punct::new('=', Spacing::Alone));
 	output.append(Ident::new("vec", Span::call_site()));
 	output.append(Punct::new('!', Spacing::Joint));
-	output.append(Group::new(Delimiter::Bracket, stmts(input)));
+	output.append(Group::new(Delimiter::Bracket, stmts(&mut input)));
 	output.append(Punct::new(';', Spacing::Joint));
 
 	// __v
@@ -28,90 +30,195 @@ pub fn make_ast(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 		.into()
 }
 
-fn stmts<T: Iterator<Item = TokenTree>>(mut input: T) -> proc_macro2::TokenStream {
-	let mut stmts: Vec<proc_macro2::TokenStream> = Vec::new();
-	let mut push = |stream: proc_macro2::TokenStream| stmts.push(stream);
+fn stmts<T: Iterator<Item = TokenTree>>(input: &mut T) -> TokenStream {
+	let mut stmts: Vec<TokenStream> = Vec::new();
+	let mut push = |stream: TokenStream| stmts.push(stream);
 
 	while let Some(token) = input.next() {
-		match token {
-			TokenTree::Group(group) => {
-				let mut tokens = group.stream().into_iter();
-				match tokens.next() {
-					Some(tt) => match tt.to_string().as_str() {
-						"Expr" => push(expr(&mut tokens)),
-						typ @ ("Const" | "Mut" | "Fn") => push(decl(typ, &mut tokens)),
-						str => push(error(
-							&tt,
-							&format!("Expected `Const | Mut | Fn | Expr` got `{str}`"),
-						)),
-					},
-					None => push(quote!(Stmt::Empty)),
-				}
-			}
-			token => push(error(&token, &format!("Expected `( .. )` got {token}"))),
+		match token.to_string().as_str() {
+			"Empty" => push(quote!(Stmt::Empty)),
+			"Expr" => push(expr(&token, input)), // TODO Make the Expr statement work properly
+			"Decl" => push(decl(token, input)),
+			_ => push(make_error("Expected `Empty | Expr | Decl`", Show(&token))),
 		};
 
-		comma(&mut input);
+		// TODO Make commas work
+		// comma(&mut input);
 	}
 
-	let mut output = proc_macro2::TokenStream::new();
+	let mut output = TokenStream::new();
 	output.append_separated(stmts.into_iter(), Punct::new(',', Spacing::Alone));
 	output
 }
 
-fn comma<T: Iterator<Item = TokenTree>>(tokens: &mut T) {
+/*
+fn comma<T: Iterator<Item = TokenTree>>(tokens: &mut T) -> TokenStream {
 	match tokens.next() {
 		Some(token) => match token {
-			TokenTree::Punct(punct) => match punct.as_char() {
-				',' => {}
-				char => panic!("Expected `,` got `{char}`"),
-			},
-			tt => panic!("Expected `,` got `{tt}`"),
+			TokenTree::Punct(punct) => {
+				if punct.as_char() != ',' {
+					return make_error(&punct, &format!("Expected `,` got `{punct}`"));
+				}
+			}
+			tt => return make_error(&tt, &format!("Expected `,` got `{tt}`")),
 		},
 		None => {
 			if let Some(tt) = tokens.next() {
-				panic!("Expected `,` got {tt}")
+				return make_error(&tt, &format!("Expected `,` got `{tt}`"));
 			}
+		}
+	};
+	TokenStream::new()
+}
+*/
+
+fn decl<T: Iterator<Item = TokenTree>>(previous: TokenTree, input: &mut T) -> TokenStream {
+	// TODO Transform this to look like in expr()
+
+	// => something
+	// != nothing
+	if let Some(tt) = input.next() {
+		// => ()
+		// != other stuff
+		if let TokenTree::Group(group) = &tt {
+			let mut group = group.stream().into_iter();
+			match group.next() {
+				// => something
+				// != nothing
+				Some(decl_type) => match decl_type.to_string().as_str() {
+					// => Const | Mut | Fn
+					// != other stuff
+					"Const" | "Mut" | "Fn" => match group.next() {
+						Some(name) => {
+							let name_span = name.span();
+							if name.to_string().starts_with('"') {
+								let mut output = TokenStream::new();
+								// Stmt::Decl(Decl::Const("name".into(), todo!()))
+								// Stmt::Decl
+								output.append_all(quote_spanned!(name_span => Stmt::Decl));
+								// // ( .. )
+								output.append_all(make_group(Delimiter::Parenthesis, |ts| {
+									// 	// Decl::(Const | Mut | Fn)
+									ts.append_all(quote_spanned!(name_span => Decl::#decl_type));
+									// 	// ( .. )
+									ts.append_all(make_group(Delimiter::Parenthesis, |ts| {
+										// "name".into(),
+										ts.append(name.clone());
+										ts.append_all(quote_spanned!(name_span => .into(),));
+
+										// Fn => todo!()
+										// __Expr__
+										if &decl_type.to_string() == "Fn" {
+											ts.append_all(quote_spanned!(name_span => todo!(),))
+										}
+										ts.append_all(expr(&name, &mut group));
+									}))
+								}));
+								output
+							} else {
+								make_error("Expected string literal", Show(&name))
+							}
+						}
+						None => make_error(
+							&format!("Expected name as string literal after `{decl_type}`"),
+							Hide(&decl_type),
+						),
+					},
+					_ => make_error("Expected `Const | Mut | Fn`", Show(&decl_type)),
+				},
+				None => make_error("Expected `Const | Mut | Fn` inside of ( .. )", Hide(&tt)),
+			}
+		} else {
+			make_error("Expected ( .. ) after `Decl`", Show(&tt))
+		}
+	} else {
+		make_error("Expected ( .. ) after `Decl`", Hide(&previous))
+	}
+}
+
+fn expr<T: Iterator<Item = TokenTree>>(previous: &TokenTree, input: &mut T) -> TokenStream {
+	// => Expr
+	// != other stuff
+	// != nothing
+	let previous = match input.next() {
+		Some(TokenTree::Ident(ident)) if &ident.to_string() == "Expr" => ident,
+		Some(other) => return make_error("Expected `Expr`", Show(&other)),
+		None => {
+			return make_error(
+				&format!("Expected `Expr` after `{previous}`"),
+				Hide(previous),
+			)
+		}
+	};
+
+	// => ( .. )
+	// != other stuff
+	// != nothing
+	match input.next() {
+		Some(TokenTree::Group(group)) => (),
+		Some(other) => return make_error("Expected ( .. )", Show(&other)),
+		None => {
+			return make_error(
+				&format!("Expected ( .. ) after `{previous}`"),
+				Hide(&previous),
+			)
+		}
+	};
+
+	quote!(todo!())
+
+	// Some(TokenTree::Group(group)) => todo!(),
+	// Some(other) => make_error(&format!("Expected ( .. ) after `{other}`"), Show(&other)),
+}
+
+fn make_group<F>(delimiter: Delimiter, f: F) -> TokenStream
+where
+	F: FnOnce(&mut TokenStream),
+{
+	Group::new(delimiter, {
+		let mut ts = TokenStream::new();
+		f(&mut ts);
+		ts
+	})
+	.to_token_stream()
+}
+
+use Visibility::{Hide, Show};
+enum Visibility<T> {
+	Show(T),
+	Hide(T),
+}
+
+impl<T> Visibility<T> {
+	fn inner(self) -> T {
+		match self {
+			Visibility::Show(inner) | Visibility::Hide(inner) => inner,
 		}
 	}
 }
 
-fn decl<T: Iterator<Item = TokenTree>>(typ: &str, tokens: &mut T) -> proc_macro2::TokenStream {
-	match typ {
-		"Const" => match tokens.next().expect("Expected name after `Decl Const`") {
-			TokenTree::Literal(lit) => {
-				let name = lit.to_string();
-				if name.starts_with('"') && name.ends_with('"') {
-					let mut source = String::from("Stmt::Decl(Decl::Const(");
-					source += &name;
-					source += ".into(), todo!()))";
-					source
-				} else {
-					panic!("Expected string literal got `{lit}`")
-				}
-			}
-			tt => panic!("Expected string literal got `{tt}`"),
-		},
-		"Mut" => stringify!(Stmt::Decl(Decl::Mut("__todo__".into(), todo!()))).into(),
-		"Fn" => stringify!(Stmt::Decl(Decl::Fn("__todo__".into(), vec![], todo!()))).into(),
-		_ => unreachable!(),
+fn make_error<S>(msg: &str, to_span: Visibility<&S>) -> TokenStream
+where
+	S: ToSpan + Display,
+{
+	let msg = match to_span {
+		Show(to_span) => format!("{msg} got `{to_span}`"),
+		Hide(_) => msg.into(),
 	};
-	proc_macro2::TokenStream::new()
-}
-
-fn expr<T: Iterator<Item = TokenTree>>(tokens: &mut T) -> proc_macro2::TokenStream {
-	proc_macro2::TokenStream::new()
-}
-
-fn error<S: ToSpan>(to_span: &S, msg: &str) -> proc_macro2::TokenStream {
 	quote_spanned! {
-		to_span.span().into() =>
+		to_span.inner().span().into() =>
 		compile_error!(#msg)
 	}
 }
 
 trait ToSpan {
 	fn span(&self) -> Span;
+}
+
+impl ToSpan for Span {
+	fn span(&self) -> Span {
+		self.clone()
+	}
 }
 
 impl ToSpan for TokenTree {

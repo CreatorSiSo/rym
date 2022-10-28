@@ -3,9 +3,13 @@ use macros::make_ast;
 
 #[test]
 fn ast_macro() {
-	let _ast = make_ast![()];
-	// let _ast = make_ast![(), (Const "ask"), ()];
-	// let _ast = make_ast![(), (Expr), (Const "test"), (Mut), (Fn)];
+	let _ast = make_ast![
+		Empty
+		Decl(Const "name" Expr())
+		Decl(Mut "name" Expr())
+		Decl(Fn "name" Expr())
+	];
+	// let _ast = make_ast![() (Expr) (Const "test") (Mut) (Fn)];
 	for stmt in _ast {
 		println!("{stmt:?}")
 	}

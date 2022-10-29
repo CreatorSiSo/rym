@@ -38,7 +38,7 @@ fn stmts<T: Iterator<Item = TokenTree>>(input: &mut T) -> TokenStream {
 		match token.to_string().as_str() {
 			"Empty" => push(quote!(Stmt::Empty)),
 			"Expr" => push(expr(&token, input)), // TODO Make the Expr statement work properly
-			"Decl" => push(decl(token, input)),
+			"Decl" => push(decl(&token, input)),
 			_ => push(make_error("Expected `Empty | Expr | Decl`", Show(&token))),
 		};
 
@@ -72,74 +72,60 @@ fn comma<T: Iterator<Item = TokenTree>>(tokens: &mut T) -> TokenStream {
 }
 */
 
-fn decl<T: Iterator<Item = TokenTree>>(previous: TokenTree, input: &mut T) -> TokenStream {
-	// TODO Transform this to look like in expr()
+fn decl<T: Iterator<Item = TokenTree>>(previous: &TokenTree, input: &mut T) -> TokenStream {
+	let group = match input.next() {
+		Some(TokenTree::Group(group)) => group,
+		Some(other) => return make_error("Expected ( .. )", Show(&other)),
+		None => return make_error("Expected ( .. ) after `Decl`", Hide(previous)),
+	};
+	let mut group_stream = group.stream().into_iter();
 
-	// => something
-	// != nothing
-	if let Some(tt) = input.next() {
-		// => ()
-		// != other stuff
-		if let TokenTree::Group(group) = &tt {
-			let mut group = group.stream().into_iter();
-			match group.next() {
-				// => something
-				// != nothing
-				Some(decl_type) => match decl_type.to_string().as_str() {
-					// => Const | Mut | Fn
-					// != other stuff
-					"Const" | "Mut" | "Fn" => match group.next() {
-						Some(name) => {
-							let name_span = name.span();
-							if name.to_string().starts_with('"') {
-								let mut output = TokenStream::new();
-								// Stmt::Decl(Decl::Const("name".into(), todo!()))
-								// Stmt::Decl
-								output.append_all(quote_spanned!(name_span => Stmt::Decl));
-								// // ( .. )
-								output.append_all(make_group(Delimiter::Parenthesis, |ts| {
-									// 	// Decl::(Const | Mut | Fn)
-									ts.append_all(quote_spanned!(name_span => Decl::#decl_type));
-									// 	// ( .. )
-									ts.append_all(make_group(Delimiter::Parenthesis, |ts| {
-										// "name".into(),
-										ts.append(name.clone());
-										ts.append_all(quote_spanned!(name_span => .into(),));
+	let decl_type = match group_stream.next() {
+		Some(decl_type) => match decl_type.to_string().as_str() {
+			"Const" | "Mut" | "Fn" => decl_type,
+			_ => return make_error("Expected `Const | Mut | Fn`", Show(&decl_type)),
+		},
+		None => return make_error("Expected `Const | Mut | Fn` inside of ( .. )", Hide(&group)),
+	};
 
-										// Fn => todo!()
-										// __Expr__
-										if &decl_type.to_string() == "Fn" {
-											ts.append_all(quote_spanned!(name_span => todo!(),))
-										}
-										ts.append_all(expr(&name, &mut group));
-									}))
-								}));
-								output
-							} else {
-								make_error("Expected string literal", Show(&name))
-							}
-						}
-						None => make_error(
-							&format!("Expected name as string literal after `{decl_type}`"),
-							Hide(&decl_type),
-						),
-					},
-					_ => make_error("Expected `Const | Mut | Fn`", Show(&decl_type)),
-				},
-				None => make_error("Expected `Const | Mut | Fn` inside of ( .. )", Hide(&tt)),
-			}
-		} else {
-			make_error("Expected ( .. ) after `Decl`", Show(&tt))
+	let name = match group_stream.next() {
+		Some(name) if name.to_string().starts_with('"') => name,
+		Some(other) => return make_error("Expected string literal", Show(&other)),
+		None => {
+			return make_error(
+				&format!("Expected name as string literal after `{decl_type}`"),
+				Hide(&decl_type),
+			)
 		}
-	} else {
-		make_error("Expected ( .. ) after `Decl`", Hide(&previous))
-	}
+	};
+
+	let name_span = name.span();
+	let mut output = TokenStream::new();
+	// Stmt::Decl(Decl::Const("name".into(), todo!()))
+	// Stmt::Decl
+	output.append_all(quote_spanned!(name_span => Stmt::Decl));
+	// // ( .. )
+	output.append_all(make_group(Delimiter::Parenthesis, |ts| {
+		// 	// Decl::(Const | Mut | Fn)
+		ts.append_all(quote_spanned!(name_span => Decl::#decl_type));
+		// 	// ( .. )
+		ts.append_all(make_group(Delimiter::Parenthesis, |ts| {
+			// "name".into(),
+			ts.append(name.clone());
+			ts.append_all(quote_spanned!(name_span => .into(),));
+
+			// Fn => todo!()
+			// __Expr__
+			if &decl_type.to_string() == "Fn" {
+				ts.append_all(quote_spanned!(name_span => todo!(),))
+			}
+			ts.append_all(expr(&name, &mut group_stream));
+		}))
+	}));
+	output
 }
 
 fn expr<T: Iterator<Item = TokenTree>>(previous: &TokenTree, input: &mut T) -> TokenStream {
-	// => Expr
-	// != other stuff
-	// != nothing
 	let previous = match input.next() {
 		Some(TokenTree::Ident(ident)) if &ident.to_string() == "Expr" => ident,
 		Some(other) => return make_error("Expected `Expr`", Show(&other)),
@@ -151,9 +137,6 @@ fn expr<T: Iterator<Item = TokenTree>>(previous: &TokenTree, input: &mut T) -> T
 		}
 	};
 
-	// => ( .. )
-	// != other stuff
-	// != nothing
 	match input.next() {
 		Some(TokenTree::Group(group)) => (),
 		Some(other) => return make_error("Expected ( .. )", Show(&other)),

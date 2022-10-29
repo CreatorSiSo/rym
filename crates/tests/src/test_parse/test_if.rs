@@ -5,6 +5,7 @@ use macros::make_ast;
 fn ast_macro() {
 	let _ast = make_ast![
 		Empty
+		// Expr()
 		Decl(Const "name" Expr())
 		Decl(Mut "name" Expr())
 		Decl(Fn "name" Expr())

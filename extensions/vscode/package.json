@@ -24,6 +24,10 @@
 				"extensions": [
 					".rym"
 				],
+				"icon": {
+					"dark": "./icons/file-icon-dark.svg",
+					"light": "./icons/file-icon-light.svg"
+				},
 				"configuration": "./language-configuration.json"
 			}
 		],

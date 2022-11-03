@@ -81,3 +81,25 @@ fn main() -> Io, Result<(), Error> {
   - [ ] implement error recovery to safe expr/stmt
   - [ ] use error codes that link to a more detailed explanation (https://github.com/rust-lang/rust/tree/master/compiler/rustc_error_codes)
 - [ ] types
+
+  - [ ] type functions
+
+  ```rust
+  type SizeString = fn (value: string) -> Result<(), TypeError> {
+  	if value.ends_with("px") {
+  		Ok(())
+  	} else {
+  		Err(TypeError::Mismatch("Expected `px` at the end of a WidthString."))
+  	}
+  }
+
+  type fn SizeString(value: string) -> Result<(), TypeError> {
+  	if value.ends_with("px") {
+  		Ok(())
+  	} else {
+  		Err(TypeError::Mismatch("Expected `px` at the end of a WidthString."))
+  	}
+  }
+  ```
+
+  - number, string, char, bool, ...

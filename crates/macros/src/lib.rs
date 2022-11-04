@@ -1,6 +1,8 @@
 extern crate proc_macro;
 
+use ast::Expr;
 use std::fmt::Display;
+use stringx::Join;
 
 use proc_macro2::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
 use quote::{quote, quote_spanned, ToTokens, TokenStreamExt};
@@ -36,7 +38,7 @@ fn stmts<T: Iterator<Item = TokenTree>>(input: &mut T) -> TokenStream {
 
 	while let Some(token) = input.next() {
 		match token.to_string().as_str() {
-			"Empty" => push(quote!(Stmt::Empty)),
+			"Empty" => push(quote!(ast::Stmt::Empty)),
 			"Expr" => push(expr(&token, input)), // TODO Make the Expr statement work properly
 			"Decl" => push(decl(&token, input)),
 			_ => push(make_error("Expected `Empty | Expr | Decl`", Show(&token))),
@@ -101,13 +103,13 @@ fn decl<T: Iterator<Item = TokenTree>>(previous: &TokenTree, input: &mut T) -> T
 
 	let name_span = name.span();
 	let mut output = TokenStream::new();
-	// Stmt::Decl(Decl::Const("name".into(), todo!()))
-	// Stmt::Decl
-	output.append_all(quote_spanned!(name_span => Stmt::Decl));
+	// ast::Stmt::Decl(ast::Decl::Const("name".into(), todo!()))
+	// ast::Stmt::Decl
+	output.append_all(quote_spanned!(name_span => ast::Stmt::Decl));
 	// // ( .. )
 	output.append_all(make_group(Delimiter::Parenthesis, |ts| {
-		// 	// Decl::(Const | Mut | Fn)
-		ts.append_all(quote_spanned!(name_span => Decl::#decl_type));
+		// 	// ast::Decl::(Const | Mut | Fn)
+		ts.append_all(quote_spanned!(name_span => ast::Decl::#decl_type));
 		// 	// ( .. )
 		ts.append_all(make_group(Delimiter::Parenthesis, |ts| {
 			// "name".into(),
@@ -137,8 +139,8 @@ fn expr<T: Iterator<Item = TokenTree>>(previous: &TokenTree, input: &mut T) -> T
 		}
 	};
 
-	match input.next() {
-		Some(TokenTree::Group(group)) => (),
+	let group = match input.next() {
+		Some(TokenTree::Group(group)) => group,
 		Some(other) => return make_error("Expected ( .. )", Show(&other)),
 		None => {
 			return make_error(
@@ -147,6 +149,27 @@ fn expr<T: Iterator<Item = TokenTree>>(previous: &TokenTree, input: &mut T) -> T
 			)
 		}
 	};
+	let mut group_stream = group.stream().into_iter();
+	let expr_variants_string = Expr::variants().iter().join(" | ");
+
+	let expr_variant = match group_stream.next() {
+		Some(TokenTree::Ident(expr_type)) => expr_type,
+		Some(other) => return make_error("Expected identifier", Show(&other)),
+		None => {
+			return make_error(
+				&format!("Expected `{expr_variants_string}` inside of ( .. )"),
+				Hide(&group),
+			)
+		}
+	};
+
+	if Expr::variants().contains(&expr_variant.to_string().as_str()) {
+	} else {
+		return make_error(
+			&format!("Expected `{expr_variants_string}`"),
+			Show(&expr_variant),
+		);
+	}
 
 	quote!(todo!())
 

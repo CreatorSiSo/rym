@@ -95,6 +95,30 @@ pub enum Expr {
 	Identifier(Identifier),
 }
 
+impl Expr {
+	pub const fn variants() -> [&'static str; 17] {
+		[
+			"Array",
+			"Tuple",
+			"If",
+			"While",
+			"Loop",
+			"Block",
+			"Break",
+			"Continue",
+			"Return",
+			"Assign",
+			"Logical",
+			"Binary",
+			"Unary",
+			"Call",
+			"Group",
+			"Literal",
+			"Identifier",
+		]
+	}
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct Identifier {
 	pub name: String,

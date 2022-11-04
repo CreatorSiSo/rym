@@ -194,8 +194,10 @@ dependencies = [
 name = "macros"
 version = "0.1.0"
 dependencies = [
+ "ast",
  "proc-macro2",
  "quote",
+ "stringx",
 ]
 
 [[package]]
@@ -356,6 +358,12 @@ name = "str-buf"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e08d8363704e6c71fc928674353e6b7c23dcea9d82d7012c8faf2a3a025f8d0"
+
+[[package]]
+name = "stringx"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "483636176e6066a639ee524a204d091eee944a53115e9b1de4a1c5518d6bbfa0"
 
 [[package]]
 name = "syn"

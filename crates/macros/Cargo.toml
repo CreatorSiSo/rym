@@ -7,5 +7,7 @@ edition = "2021"
 proc_macro = true
 
 [dependencies]
+ast = { path = "../ast" }
 proc-macro2 = "1.0.47"
 quote = "1.0.21"
+stringx = "0.1.1"

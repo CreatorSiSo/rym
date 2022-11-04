@@ -1,7 +1,7 @@
 # Rym Lang
 
 ```rust
-fn main() -> Io, Result<(), Error> {
+fn main() -> Io; Result<(), Error> {
 	const msg = "Hello World";
 	println(msg);
 

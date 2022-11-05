@@ -49,7 +49,7 @@ fn many_args_call() {
 
 #[test]
 fn chained_calls() {
-	let (tokens, errors) = tokens_from_src(r#"returns_fn(println)("Hello World!")"#);
+	let (tokens, errors) = tokens_from_src(r#"returns_fn(println)("Hello World!")()()"#);
 	assert!(errors.is_empty());
 	let (ast, errors) = ast_from_src(tokens);
 	assert!(errors.is_empty());
@@ -57,10 +57,16 @@ fn chained_calls() {
 		ast,
 		vec![stmt!(expr!(Call(
 			boxed!(expr!(Call(
-				boxed!(expr!(ident!("returns_fn"))),
-				vec![expr!(ident!("println")),]
+				boxed!(expr!(Call(
+					boxed!(expr!(Call(
+						boxed!(expr!(ident!("returns_fn"))),
+						vec![expr!(ident!("println")),]
+					))),
+					vec![expr!(lit!("Hello World!"))]
+				))),
+				vec![]
 			))),
-			vec![expr!(lit!("Hello World!"))]
+			vec![]
 		)))]
 	)
 }

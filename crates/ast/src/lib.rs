@@ -25,6 +25,18 @@ pub enum Stmt {
 	Empty,
 }
 
+impl From<Decl> for Stmt {
+	fn from(val: Decl) -> Self {
+		Stmt::Decl(val)
+	}
+}
+
+impl From<Expr> for Stmt {
+	fn from(val: Expr) -> Self {
+		Stmt::Expr(val)
+	}
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
 	/// A function declaration `fn name(param_1, param_2) { .. }`
@@ -95,6 +107,18 @@ pub enum Expr {
 	Identifier(Identifier),
 }
 
+impl From<Literal> for Expr {
+	fn from(val: Literal) -> Self {
+		Expr::Literal(val)
+	}
+}
+
+impl From<Identifier> for Expr {
+	fn from(val: Identifier) -> Self {
+		Expr::Identifier(val)
+	}
+}
+
 impl Expr {
 	pub const fn variants() -> [&'static str; 17] {
 		[
@@ -122,18 +146,11 @@ impl Expr {
 #[derive(Clone, PartialEq, Eq)]
 pub struct Identifier {
 	pub name: String,
-	// TODO Replace line, col with Spanned<T>
-	pub line: usize,
-	pub col: usize,
 }
 
-impl Identifier {
-	pub fn new(name: &str, line: usize, col: usize) -> Self {
-		Self {
-			name: name.into(),
-			line,
-			col,
-		}
+impl From<&str> for Identifier {
+	fn from(val: &str) -> Self {
+		Identifier { name: val.into() }
 	}
 }
 
@@ -210,6 +227,30 @@ pub enum Literal {
 	Bool(bool),
 	Number(f64),
 	String(String),
+}
+
+impl From<()> for Literal {
+	fn from(_: ()) -> Self {
+		Literal::Unit
+	}
+}
+
+impl From<bool> for Literal {
+	fn from(val: bool) -> Self {
+		Literal::Bool(val)
+	}
+}
+
+impl From<f64> for Literal {
+	fn from(val: f64) -> Self {
+		Literal::Number(val)
+	}
+}
+
+impl From<&str> for Literal {
+	fn from(val: &str) -> Self {
+		Literal::String(val.into())
+	}
 }
 
 impl Display for Literal {

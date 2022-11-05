@@ -16,6 +16,7 @@ pub struct Lexer<'src> {
 	start: usize,
 	current: usize,
 
+	// TODO: Are these still being used?
 	line: usize,
 	col: usize,
 }
@@ -173,14 +174,7 @@ impl<'src> Lexer<'src> {
 			None => TokenType::Identifier,
 		};
 		Ok(Spanned(
-			Token::ident(
-				typ,
-				Identifier {
-					name,
-					line: self.line,
-					col: self.col,
-				},
-			),
+			Token::ident(typ, Identifier { name }),
 			self.start..self.current,
 		))
 	}

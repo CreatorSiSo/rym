@@ -163,13 +163,14 @@ fn expr<T: Iterator<Item = TokenTree>>(previous: &TokenTree, input: &mut T) -> T
 		}
 	};
 
-	if Expr::variants().contains(&expr_variant.to_string().as_str()) {
-	} else {
+	if !Expr::variants().contains(&expr_variant.to_string().as_str()) {
 		return make_error(
 			&format!("Expected `{expr_variants_string}`"),
 			Show(&expr_variant),
 		);
-	}
+	};
+
+	// TODO: Finish this macro!
 
 	quote!(todo!())
 

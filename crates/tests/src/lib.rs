@@ -27,6 +27,51 @@ fn ast_from_src(tokens: Vec<SpannedToken>) -> (Vec<Stmt>, Vec<ParseError>) {
 	results
 }
 
+macro_rules! boxed {
+	($inner:expr) => {
+		Box::new($inner)
+	};
+}
+
+macro_rules! stmt {
+	() => {
+		Stmt::Empty
+	};
+	($inner:expr) => {
+		Stmt::from($inner)
+	};
+}
+
+macro_rules! expr {
+	($variant:ident ($($inner:expr),+ $(,)?)) => {
+		Expr::$variant($($inner),+)
+	};
+	($inner:expr) => {
+		Expr::from($inner)
+	};
+}
+
+macro_rules! lit {
+	($inner:expr) => {
+		Literal::from($inner)
+	};
+}
+
+macro_rules! ident {
+	($inner:expr) => {
+		Identifier::from($inner)
+	};
+}
+
+macro_rules! block {
+	() => {
+		Block::new(vec![])
+	};
+	($($stmts:expr),+ $(,)?) => {
+		Block::new(vec![$($stmts),+])
+	};
+}
+
 mod test_empty_file;
 mod test_lex;
 mod test_parse;

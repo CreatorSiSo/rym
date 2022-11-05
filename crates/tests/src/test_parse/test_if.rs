@@ -1,20 +1,19 @@
 use super::*;
-use macros::make_ast;
 
 #[test]
-fn ast_macro() {
-	// let _ast = make_ast![Decl(Const "name" Expr(Array))];
-	let _ast = make_ast![
-		Empty
-		// Expr()
-		Decl(Const "name" Expr(Loop))
-		Decl(Mut "name" Expr(If))
-		Decl(Fn "name" Expr(While))
-	];
-	// let _ast = make_ast![() (Expr) (Const "test") (Mut) (Fn)];
-	for stmt in _ast {
-		println!("{stmt:?}")
-	}
+fn parse_if_int() {
+	let (tokens, errors) = tokens_from_src("if true { 2 }");
+	assert!(errors.is_empty());
+	let (ast, errors) = ast_from_src(tokens);
+	assert!(errors.is_empty());
+	assert_eq!(
+		ast,
+		vec![stmt!(expr!(If(
+			boxed!(expr!(lit!(true))),
+			block![stmt!(expr!(lit!(2.0)))],
+			None
+		)))]
+	)
 }
 
 #[test]
@@ -25,13 +24,11 @@ fn parse_if_else_true() {
 	assert!(errors.is_empty());
 	assert_eq!(
 		ast,
-		vec![Stmt::Expr(Expr::If(
-			Box::new(Expr::Literal(Literal::Bool(true))),
-			Block::new(vec![Stmt::Expr(Expr::Literal(Literal::Number(2.)))]),
-			Some(Block::new(vec![Stmt::Expr(Expr::Literal(
-				Literal::Number(1.)
-			))])),
-		))]
+		vec![stmt!(expr!(If(
+			boxed!(expr!(lit!(true))),
+			block![stmt!(expr!(lit!(2.0)))],
+			Some(block![stmt!(expr!(lit!(1.0)))]),
+		)))]
 	)
 }
 
@@ -43,16 +40,14 @@ fn parse_if_else_int() {
 	assert!(errors.is_empty());
 	assert_eq!(
 		ast,
-		vec![Stmt::Expr(Expr::If(
-			Box::new(Expr::Binary(
-				Box::new(Expr::Literal(Literal::Number(0.))),
+		vec![stmt!(expr!(If(
+			boxed!(expr!(Binary(
+				boxed!(expr!(lit!(0.0))),
 				BinaryOp::Eq,
-				Box::new(Expr::Literal(Literal::Number(0.))),
-			)),
-			Block::new(vec![Stmt::Expr(Expr::Literal(Literal::Number(2.)))]),
-			Some(Block::new(vec![Stmt::Expr(Expr::Literal(
-				Literal::Number(1.)
-			))])),
-		))]
+				boxed!(expr!(lit!(0.0))),
+			))),
+			block![stmt!(expr!(lit!(2.0)))],
+			Some(block![stmt!(expr!(lit!(1.0)))]),
+		)))]
 	)
 }

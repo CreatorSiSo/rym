@@ -299,11 +299,11 @@ impl Parser {
 		self.call()
 	}
 
-	/// call => primary "(" arguments? ")"
+	/// call => primary ("(" arguments? ")")*
 	fn call(&mut self) -> ParseResult<Expr> {
-		let expr = self.primary()?;
+		let mut expr = self.primary()?;
 
-		if self.matches(TokenType::LeftParen) {
+		while self.matches(TokenType::LeftParen) {
 			let args = if self.matches(TokenType::RightParen) {
 				Vec::new()
 			} else {
@@ -314,7 +314,7 @@ impl Parser {
 				)?;
 				args
 			};
-			return Ok(Expr::Call(Box::new(expr), args));
+			expr = Expr::Call(Box::new(expr), args);
 		}
 
 		Ok(expr)

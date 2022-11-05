@@ -66,9 +66,9 @@ fn main() -> Io; Result<(), Error> {
   	/rymx
   ```
 
-- [ ] functions
+- [x] functions
   - [x] add parsing for declarations
-  - [ ] fix nested calls eg. `name()()()`
+  - [x] fix nested calls eg. `name()()()`
 - [ ] add benchmarking capabilities
   - [ ] cargo alias eg. `cargo bench`
 - [ ] use arena allocator for scopes

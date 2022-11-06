@@ -4,11 +4,14 @@ use super::*;
 fn empty_call() {
 	let (tokens, errors) = tokens_from_src("call_me()");
 	assert!(errors.is_empty());
-	let (ast, errors) = ast_from_src(tokens);
+	let (ast, errors) = spanned_ast_from_src(tokens);
 	assert!(errors.is_empty());
 	assert_eq!(
 		ast,
-		vec![stmt!(expr!(Call(boxed!(expr!(ident!("call_me"))), vec![])))]
+		vec![Spanned(
+			stmt!(expr!(Call(boxed!(expr!(ident!("call_me"))), vec![]))),
+			0..8
+		)]
 	)
 }
 

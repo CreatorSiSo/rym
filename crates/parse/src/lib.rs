@@ -34,13 +34,19 @@ impl Parser {
 		Self { tokens, pos: 0 }
 	}
 
-	pub fn stmt(&mut self) -> ParseResult<Stmt> {
-		if let Some(_) = self.matches_which(&[TokenType::Semicolon, TokenType::Newline]) {
-			return Ok(Stmt::Empty);
+	// TODO: Refactor entire stmt function (maybe split it up)
+	pub fn stmt(&mut self) -> ParseResult<Spanned<Stmt>> {
+		if let Some(Spanned(_, newline_span)) =
+			self.matches_which(&[TokenType::Semicolon, TokenType::Newline])
+		{
+			return Ok(Spanned(Stmt::Empty, newline_span.clone()));
 		}
+		let stmt_start_pos = self.pos;
 
-		if let Some(token) = self.matches_which(&[TokenType::Const, TokenType::Mut]) {
-			let mutable = token.0.typ == TokenType::Mut;
+		if let Some(Spanned(token, var_start_span)) =
+			self.matches_which(&[TokenType::Const, TokenType::Mut])
+		{
+			let mutable = token.typ == TokenType::Mut;
 
 			self.expect(TokenType::Identifier, "Expected identifier")?;
 			let name = self
@@ -54,28 +60,26 @@ impl Parser {
 			self.expect(TokenType::Equal, "Expected `=`")?;
 
 			let expr = self.expr()?;
-			if !self.is_at_end() {
-				self.expect_any(
-					&[TokenType::Semicolon, TokenType::Newline],
-					"Expected Semicolon or Newline",
-				)?;
-			}
-			return Ok(Stmt::Decl(if mutable {
-				Decl::Mut(name, expr)
-			} else {
-				Decl::Const(name, expr)
-			}));
+			let Spanned(_, var_end_span) = self.expect_any(
+				&[TokenType::Semicolon, TokenType::Newline],
+				"Expected Semicolon or Newline",
+			)?;
+
+			return Ok(Spanned(
+				if mutable {
+					Stmt::Decl(Decl::Mut(name, expr))
+				} else {
+					Stmt::Decl(Decl::Const(name, expr))
+				},
+				var_start_span.start..var_end_span.end,
+			));
 		}
 
-		// TODO: Refactor
 		// fn => "fn" identifier()
 		if self.matches(TokenType::Fn) {
-			let name = match self
-				.expect(TokenType::Identifier, "Expected function name")?
-				.0
-				.ident
-				.clone()
-			{
+			let Spanned(fn_token, fn_start_span) =
+				self.expect(TokenType::Identifier, "Expected function name")?;
+			let name = match fn_token.ident {
 				Some(ident) => ident.name,
 				_ => unreachable!("Internal Error: Identifier Token has no value!"),
 			};
@@ -110,13 +114,19 @@ impl Parser {
 					)?;
 					params
 				};
-				return Ok(Stmt::Decl(Decl::Fn(name, params, self.expr()?)));
+				return Ok(Spanned(
+					Stmt::Decl(Decl::Fn(name, params, self.expr()?)),
+					fn_start_span.start..self.previous().1.end,
+				));
 			}
 		}
 
 		let expr = self.expr()?;
 		self.matches_any(&[TokenType::Semicolon, TokenType::Newline]);
-		Ok(Stmt::Expr(expr))
+		Ok(Spanned(
+			Stmt::Expr(expr),
+			stmt_start_pos..self.previous().1.end,
+		))
 	}
 
 	fn expr(&mut self) -> ParseResult<Expr> {
@@ -126,6 +136,7 @@ impl Parser {
 	fn interrupts(&mut self) -> ParseResult<Expr> {
 		// return => "return" expr?;
 		if self.matches(TokenType::Return) {
+			// TODO: Should this also match Newline here?
 			if self.matches(TokenType::Semicolon) {
 				return Ok(Expr::Break(Box::new(None)));
 			}
@@ -399,7 +410,7 @@ impl Parser {
 			if self.is_at_end() {
 				break false;
 			}
-			let stmt = self.stmt()?;
+			let Spanned(stmt, _) = self.stmt()?;
 			stmts.push(stmt);
 		};
 
@@ -412,7 +423,7 @@ impl Parser {
 }
 
 impl Parser {
-	fn expect_any(&mut self, types: &[TokenType], error_msg: &str) -> ParseResult<&Spanned<Token>> {
+	fn expect_any(&mut self, types: &[TokenType], error_msg: &str) -> ParseResult<Spanned<Token>> {
 		for typ in types {
 			if self.matches(typ.clone()) {
 				return Ok(self.previous());
@@ -421,7 +432,7 @@ impl Parser {
 		ParseError::token_mismatch(self.advance(), error_msg)
 	}
 
-	fn expect(&mut self, typ: TokenType, error_msg: &str) -> ParseResult<&Spanned<Token>> {
+	fn expect(&mut self, typ: TokenType, error_msg: &str) -> ParseResult<Spanned<Token>> {
 		if self.matches(typ) {
 			return Ok(self.previous());
 		}
@@ -439,7 +450,7 @@ impl Parser {
 		false
 	}
 
-	fn matches_which(&mut self, types: &[TokenType]) -> Option<&Spanned<Token>> {
+	fn matches_which(&mut self, types: &[TokenType]) -> Option<Spanned<Token>> {
 		for typ in types {
 			if self.matches(typ.clone()) {
 				return Some(self.previous());
@@ -457,15 +468,17 @@ impl Parser {
 		false
 	}
 
-	fn advance(&mut self) -> &Spanned<Token> {
+	fn advance(&mut self) -> Spanned<Token> {
 		if !self.is_at_end() {
 			self.pos += 1;
 		}
 		self.previous()
 	}
 
-	fn previous(&self) -> &Spanned<Token> {
-		&self.tokens[self.pos - 1]
+	fn previous(&self) -> Spanned<Token> {
+		// TODO: Is it possible to avoid cloning here and tell rust that this cant be a mutable borrow
+		// (but is currently without this clone seen as one when you have nested mutable calls to eg. advance or matches)
+		self.tokens[self.pos - 1].clone()
 	}
 
 	fn is_at_end(&self) -> bool {
@@ -497,10 +510,7 @@ impl Iterator for Parser {
 			return None;
 		}
 		match self.stmt() {
-			Ok(stmt) => Some(Ok(Spanned(
-				stmt,
-				/* TODO: Use correct Span here */ 0..0,
-			))),
+			Ok(stmt) => Some(Ok(stmt)),
 			Err(err) => Some(Err(err)),
 		}
 	}

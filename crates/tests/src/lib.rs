@@ -27,6 +27,17 @@ fn ast_from_src(tokens: Vec<Spanned<Token>>) -> (Vec<Stmt>, Vec<ParseError>) {
 	results
 }
 
+fn spanned_ast_from_src(tokens: Vec<Spanned<Token>>) -> (Vec<Spanned<Stmt>>, Vec<ParseError>) {
+	let mut results = (Vec::new(), Vec::new());
+	for result in Parser::new(tokens) {
+		match result {
+			Ok(stmt) => results.0.push(stmt),
+			Err(err) => results.1.push(err),
+		}
+	}
+	results
+}
+
 macro_rules! boxed {
 	($inner:expr) => {
 		Box::new($inner)

@@ -337,14 +337,18 @@ impl Parser {
 		Ok(args)
 	}
 
-	/// primary => "(" expr ")", block, identifier, number | string | "true" | "false"
+	/// primary => "(" expr? ")", block, identifier, number | string | "true" | "false"
 	fn primary(&mut self) -> ParseResult<Expr> {
 		if self.peek_eq(0, TokenType::LeftBrace) {
 			return self.block().map(Expr::Block);
 		}
 
 		if self.matches(TokenType::LeftParen) {
-			let expr = Box::new(self.expr()?);
+			let expr = if self.peek_eq(0, TokenType::RightParen) {
+				Box::new(Expr::Literal(Literal::Unit))
+			} else {
+				Box::new(self.expr()?)
+			};
 			self.expect(TokenType::RightParen, "Expected closing `)`")?;
 			return Ok(Expr::Group(expr));
 		}

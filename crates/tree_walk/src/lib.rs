@@ -10,7 +10,7 @@ mod value;
 use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, Identifier, LogicalOp, Spanned, Stmt, UnaryOp};
 use callable::{Callable, NativeFunction, RymFunction};
 use env::Env;
-use error::RuntimeError;
+pub use error::RuntimeError;
 use value::{Type, Value};
 
 pub enum Inter {
@@ -278,7 +278,7 @@ impl AstVisitor for Interpreter {
 		let return_value = loop {
 			let stmt = match stmts.next() {
 				Some(stmt) => stmt,
-				None => unreachable!(),
+				None => break Inter::None(Value::Unit),
 			};
 
 			let inter = self.walk_stmt(&Spanned(stmt, /* TODO: Use proper span */ 0..0))?;
@@ -286,17 +286,11 @@ impl AstVisitor for Interpreter {
 				Inter::Return(val) => break Inter::Return(val),
 				Inter::Break(val) => break Inter::Break(val),
 				Inter::Continue => break Inter::Continue,
-				Inter::None(val) => {
-					if stmts.len() == 0 {
-						break Inter::None(val);
-					}
-					continue;
-				}
+				Inter::None(_) => continue,
 			}
 		};
 
 		self.env.pop_scope();
-		// dbg!(&self.env);
 
 		Ok(return_value)
 	}

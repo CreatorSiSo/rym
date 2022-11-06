@@ -1,4 +1,4 @@
-use ast::{AstVisitor, Expr};
+use ast::{AstVisitor, Expr, Spanned};
 
 use crate::{error::RuntimeError, Inter, Interpreter, Value};
 
@@ -87,7 +87,7 @@ impl Callable for RymFunction {
 			for (idx, param) in self.params.iter().enumerate() {
 				interpreter.env.declare(param, args[idx].clone(), true)
 			}
-			interpreter.walk_expr(&self.body)
+			interpreter.walk_expr(&Spanned(&self.body, /* TODO: Use proper span */ 0..0))
 		};
 		interpreter.env.pop_scope();
 

@@ -8,7 +8,7 @@ fn lex_empty_file() {
 
 #[test]
 fn parse_empty_file() {
-	let ast: Vec<ParseResult<Stmt>> = parse::Parser::new(vec![]).collect();
+	let ast: Vec<ParseResult<Spanned<Stmt>>> = parse::Parser::new(vec![]).collect();
 	assert_eq!(ast, vec![])
 }
 

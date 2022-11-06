@@ -3,6 +3,7 @@ mod error;
 use ast::*;
 
 pub use error::ParseError;
+// TODO: `ParseResult<T> = Result<T, ParseError>` should become `ParseResult<T> = Result<Spanned<T>, ParseError>` once this is possible
 pub type ParseResult<T> = Result<T, ParseError>;
 
 pub struct Parser {
@@ -11,7 +12,7 @@ pub struct Parser {
 }
 
 impl Parser {
-	pub fn parse(tokens: Vec<SpannedToken>) -> (Vec<Stmt>, Vec<ParseError>) {
+	pub fn parse(tokens: Vec<SpannedToken>) -> (Vec<Spanned<Stmt>>, Vec<ParseError>) {
 		let mut stmts = Vec::new();
 		let mut errors = Vec::new();
 
@@ -469,14 +470,17 @@ impl Parser {
 }
 
 impl Iterator for Parser {
-	type Item = ParseResult<Stmt>;
+	type Item = ParseResult<Spanned<Stmt>>;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		if self.tokens.is_empty() || self.is_at_end() {
 			return None;
 		}
 		match self.stmt() {
-			Ok(stmt) => Some(Ok(stmt)),
+			Ok(stmt) => Some(Ok(Spanned(
+				stmt,
+				/* TODO: Use correct Span here */ 0..0,
+			))),
 			Err(err) => Some(Err(err)),
 		}
 	}

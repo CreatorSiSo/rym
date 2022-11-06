@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use ast::{SpannedToken, Stmt, TokenType};
+use ast::{Spanned, SpannedToken, Stmt, TokenType};
 
 use colored::Colorize;
 
@@ -30,7 +30,7 @@ pub(crate) fn tokens(tokens: &[SpannedToken]) {
 	println!()
 }
 
-pub(crate) fn ast(ast: &[Stmt]) {
+pub(crate) fn ast(ast: &[Spanned<Stmt>]) {
 	for stmt in ast {
 		#[cfg(feature = "expand")]
 		println!("{stmt:#?}");

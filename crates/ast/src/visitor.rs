@@ -1,21 +1,22 @@
-use crate::{BinaryOp, Block, Decl, Expr, Identifier, Literal, LogicalOp, Stmt, UnaryOp};
+use crate::{BinaryOp, Block, Decl, Expr, Identifier, Literal, LogicalOp, Spanned, Stmt, UnaryOp};
 
 pub trait AstVisitor {
 	type Result;
 
-	fn walk_stmt(&mut self, stmt: &Stmt) -> Self::Result {
+	fn walk_stmt(&mut self, Spanned(stmt, span): &Spanned<&Stmt>) -> Self::Result {
 		match stmt {
+			// TODO: Give Span to visit_empty
 			Stmt::Empty => self.visit_empty(),
-			Stmt::Decl(decl) => self.visit_decl(decl),
-			Stmt::Expr(expr) => self.walk_expr(expr),
+			Stmt::Decl(decl) => self.visit_decl(&Spanned(decl, span.clone())),
+			Stmt::Expr(expr) => self.walk_expr(&Spanned(expr, span.clone())),
 		}
 	}
 
 	fn visit_empty(&mut self) -> Self::Result;
 
-	fn visit_decl(&mut self, decl: &Decl) -> Self::Result;
+	fn visit_decl(&mut self, decl: &Spanned<&Decl>) -> Self::Result;
 
-	fn walk_expr(&mut self, expr: &Expr) -> Self::Result {
+	fn walk_expr(&mut self, Spanned(expr, span): &Spanned<&Expr>) -> Self::Result {
 		match expr {
 			Expr::Identifier(ident) => self.visit_ident(ident),
 			Expr::Literal(lit) => self.visit_lit(lit),
@@ -26,7 +27,7 @@ pub trait AstVisitor {
 			Expr::Logical(expr_l, op, expr_r) => self.visit_logical(expr_l, op, expr_r),
 			Expr::Binary(expr_l, op, expr_r) => self.visit_binary(expr_l, op, expr_r),
 
-			Expr::Group(expr) => self.walk_expr(expr),
+			Expr::Group(expr) => self.walk_expr(&Spanned(expr, span.clone())),
 			Expr::Block(block) => self.visit_block(block),
 			Expr::Loop(block) => self.visit_loop(block),
 			Expr::If(expr, then_block, else_block) => self.visit_if(expr, then_block, else_block),

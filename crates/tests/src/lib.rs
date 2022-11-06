@@ -20,7 +20,7 @@ fn ast_from_src(tokens: Vec<SpannedToken>) -> (Vec<Stmt>, Vec<ParseError>) {
 	let mut results = (Vec::new(), Vec::new());
 	for result in Parser::new(tokens) {
 		match result {
-			Ok(tok) => results.0.push(tok),
+			Ok(Spanned(stmt, ..)) => results.0.push(stmt),
 			Err(err) => results.1.push(err),
 		}
 	}

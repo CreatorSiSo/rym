@@ -1,22 +1,6 @@
 # Rym Lang
+![Screenshot from 2022-11-06 04-48-30](https://user-images.githubusercontent.com/64036709/200153194-31819cec-809c-4fa7-b7db-feda44a1fa9b.png)
 
-```rust
-fn main() -> Io; Result<(), Error> {
-	const msg = "Hello World";
-	println(msg);
-
-	mut num = 2 / 4 * (10 - 1);
-	println("Number:\t", num);
-
-	const msg = msg + "!";
-	println("Combined:\t", msg, " ", num);
-
-	might_return_error()?;
-	const maybe_value = do_stuff(testing).even_more(false);
-
-	Ok(())
-}
-```
 
 ## Content
 

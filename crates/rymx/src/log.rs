@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use ast::{Spanned, SpannedToken, Stmt, TokenType};
+use ast::{Spanned, Stmt, Token, TokenType};
 
 use colored::Colorize;
 
@@ -20,7 +20,7 @@ where
 	);
 }
 
-pub(crate) fn tokens(tokens: &[SpannedToken]) {
+pub(crate) fn tokens(tokens: &[Spanned<Token>]) {
 	for token in tokens {
 		match &token.0.typ {
 			TokenType::Semicolon => println!("Semicolon"),

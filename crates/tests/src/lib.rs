@@ -5,7 +5,7 @@ use lex::*;
 use parse::*;
 use tree_walk::*;
 
-fn tokens_from_src(src: &str) -> (Vec<SpannedToken>, Vec<LexError>) {
+fn tokens_from_src(src: &str) -> (Vec<Spanned<Token>>, Vec<LexError>) {
 	let mut results = (Vec::new(), Vec::new());
 	for result in Lexer::new(src) {
 		match result {
@@ -16,7 +16,7 @@ fn tokens_from_src(src: &str) -> (Vec<SpannedToken>, Vec<LexError>) {
 	results
 }
 
-fn ast_from_src(tokens: Vec<SpannedToken>) -> (Vec<Stmt>, Vec<ParseError>) {
+fn ast_from_src(tokens: Vec<Spanned<Token>>) -> (Vec<Stmt>, Vec<ParseError>) {
 	let mut results = (Vec::new(), Vec::new());
 	for result in Parser::new(tokens) {
 		match result {

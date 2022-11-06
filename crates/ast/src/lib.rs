@@ -5,7 +5,6 @@ mod token;
 mod visitor;
 
 pub type Span = Range<usize>;
-pub type SpannedToken = Spanned<Token>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Spanned<T>(pub T, pub Span);

@@ -13,8 +13,8 @@
 // t = (rZ * rZ * h) / (rS * rS * vS)
 
 fn t_filled(d1 /* m */, h /* m */, d2 /* cm */, vS /* m/s */) {
-	const rZ = d1 / 2
-	const rS = d2 / 200
+	const rZ = d1 / 2;
+	const rS = d2 / 200;
 
 	(rZ * rZ * h) / (rS * rS * vS)
 }

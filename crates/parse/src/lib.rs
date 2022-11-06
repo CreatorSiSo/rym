@@ -7,12 +7,12 @@ pub use error::ParseError;
 pub type ParseResult<T> = Result<T, ParseError>;
 
 pub struct Parser {
-	tokens: Vec<SpannedToken>,
+	tokens: Vec<Spanned<Token>>,
 	pos: usize,
 }
 
 impl Parser {
-	pub fn parse(tokens: Vec<SpannedToken>) -> (Vec<Spanned<Stmt>>, Vec<ParseError>) {
+	pub fn parse(tokens: Vec<Spanned<Token>>) -> (Vec<Spanned<Stmt>>, Vec<ParseError>) {
 		let mut stmts = Vec::new();
 		let mut errors = Vec::new();
 
@@ -30,7 +30,7 @@ impl Parser {
 		(stmts, errors)
 	}
 
-	pub fn new(tokens: Vec<SpannedToken>) -> Self {
+	pub fn new(tokens: Vec<Spanned<Token>>) -> Self {
 		Self { tokens, pos: 0 }
 	}
 
@@ -403,7 +403,7 @@ impl Parser {
 }
 
 impl Parser {
-	fn expect(&mut self, typ: TokenType, error_msg: &str) -> ParseResult<&SpannedToken> {
+	fn expect(&mut self, typ: TokenType, error_msg: &str) -> ParseResult<&Spanned<Token>> {
 		if self.matches(typ) {
 			return Ok(self.previous());
 		}
@@ -421,7 +421,7 @@ impl Parser {
 		false
 	}
 
-	fn matches_which(&mut self, types: &[TokenType]) -> Option<&SpannedToken> {
+	fn matches_which(&mut self, types: &[TokenType]) -> Option<&Spanned<Token>> {
 		for typ in types {
 			if self.matches(typ.clone()) {
 				return Some(self.previous());
@@ -439,12 +439,12 @@ impl Parser {
 		false
 	}
 
-	fn advance(&mut self) -> &SpannedToken {
+	fn advance(&mut self) -> &Spanned<Token> {
 		self.pos += 1;
 		self.previous()
 	}
 
-	fn previous(&self) -> &SpannedToken {
+	fn previous(&self) -> &Spanned<Token> {
 		&self.tokens[self.pos - 1]
 	}
 
@@ -464,7 +464,7 @@ impl Parser {
 		}
 	}
 
-	fn peek(&self, dist: usize) -> Option<&SpannedToken> {
+	fn peek(&self, dist: usize) -> Option<&Spanned<Token>> {
 		self.tokens.get(self.pos + dist)
 	}
 }

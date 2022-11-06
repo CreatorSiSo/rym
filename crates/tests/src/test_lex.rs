@@ -89,7 +89,7 @@ fn special_chars() {
 fn strings() {
 	let source = r#" "str€ng" "#;
 	let lexer = Lexer::new(source);
-	let tokens: Vec<SpannedToken> = lexer.map(|token| token.unwrap()).collect();
+	let tokens: Vec<Spanned<Token>> = lexer.map(|token| token.unwrap()).collect();
 	assert_eq!(
 		tokens,
 		vec![Spanned(
@@ -103,7 +103,7 @@ fn strings() {
 fn number() {
 	let source = r#" 9 0.23042 "#;
 	let lexer = Lexer::new(source);
-	let tokens: Vec<SpannedToken> = lexer.map(|token| token.unwrap()).collect();
+	let tokens: Vec<Spanned<Token>> = lexer.map(|token| token.unwrap()).collect();
 	assert_eq!(
 		tokens,
 		vec![

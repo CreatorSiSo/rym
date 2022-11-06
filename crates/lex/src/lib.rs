@@ -2,7 +2,7 @@ use std::str::CharIndices;
 
 mod error;
 mod unescape;
-use ast::{Identifier, Literal, Spanned, SpannedToken, Token, TokenType, KEYWORDS};
+use ast::{Identifier, Literal, Spanned, Token, TokenType, KEYWORDS};
 pub use error::LexError;
 use unescape::unescape;
 
@@ -22,7 +22,7 @@ pub struct Lexer<'src> {
 }
 
 impl<'src> Lexer<'src> {
-	pub fn lex(source: &'src str) -> (Vec<SpannedToken>, Vec<LexError>) {
+	pub fn lex(source: &'src str) -> (Vec<Spanned<Token>>, Vec<LexError>) {
 		let mut tokens = Vec::new();
 		let mut errors = Vec::new();
 
@@ -54,7 +54,7 @@ impl<'src> Lexer<'src> {
 		}
 	}
 
-	fn next_token(&mut self) -> LexResult<SpannedToken> {
+	fn next_token(&mut self) -> LexResult<Spanned<Token>> {
 		let token_value = loop {
 			self.advance();
 			if self.is_at_end() {
@@ -125,7 +125,7 @@ impl<'src> Lexer<'src> {
 		self.advance();
 	}
 
-	fn number(&mut self) -> LexResult<SpannedToken> {
+	fn number(&mut self) -> LexResult<Spanned<Token>> {
 		self.consume_while(|c| c.is_ascii_digit());
 
 		if self.peek(1) == '.' && self.peek(2).is_ascii_digit() {
@@ -145,7 +145,7 @@ impl<'src> Lexer<'src> {
 		))
 	}
 
-	fn string(&mut self) -> LexResult<SpannedToken> {
+	fn string(&mut self) -> LexResult<Spanned<Token>> {
 		while !self.is_at_end() {
 			if self.c == '\\' && self.matches('"') {
 				self.advance();
@@ -165,7 +165,7 @@ impl<'src> Lexer<'src> {
 		))
 	}
 
-	fn identifier(&mut self) -> LexResult<SpannedToken> {
+	fn identifier(&mut self) -> LexResult<Spanned<Token>> {
 		self.consume_while(|c| c.is_alphanumeric() || c == '_');
 
 		let name = String::from(&self.src[self.start..=self.current]);
@@ -229,7 +229,7 @@ impl<'src> Lexer<'src> {
 }
 
 impl<'src> Iterator for Lexer<'src> {
-	type Item = LexResult<SpannedToken>;
+	type Item = LexResult<Spanned<Token>>;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		if self.is_at_end() {

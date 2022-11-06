@@ -1,3 +1,4 @@
+// TODO: Something is not right here, check out what it is
 fn returns_fn(value, info) /* -> Fn */ {
 	println("called outer with value: `", value, "`")
 	println("\t", info)

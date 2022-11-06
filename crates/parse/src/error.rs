@@ -1,16 +1,16 @@
 use std::fmt::Display;
 
-use ast::{Spanned, SpannedToken};
+use ast::{Spanned, Token};
 use colored::Colorize;
 
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
-	TokenMismatch(SpannedToken, String),
-	InvalidAssignmentTarget(SpannedToken),
+	TokenMismatch(Spanned<Token>, String),
+	InvalidAssignmentTarget(Spanned<Token>),
 }
 
 impl ParseError {
-	pub(super) fn token_mismatch<T>(token: &SpannedToken, msg: &str) -> Result<T, Self> {
+	pub(super) fn token_mismatch<T>(token: &Spanned<Token>, msg: &str) -> Result<T, Self> {
 		Err(ParseError::TokenMismatch(token.clone(), msg.into()))
 	}
 }

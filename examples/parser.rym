@@ -51,19 +51,17 @@ true != false // true
 	// err
 -true
 --false
-!20;
+!20
 
-// TODO: Add and handle NewLine token
-// so these semicolons wont be required anymore
 // Groups
-(20 - 900) * 10;
-(false == "") + "_suffix";
+(20 - 900) * 10
+(false == "") + "_suffix"
 
 // Blocks
 {
-	"outer";
-	{ "inner1"; } + "\n";
-	({ "inner2" } + "\n");
+	"outer"
+	{ "inner1" } + "\n"
+	({ "inner2" } + "\n")
 }
 {}
 

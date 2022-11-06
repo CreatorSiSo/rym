@@ -35,7 +35,7 @@ impl Parser {
 	}
 
 	pub fn stmt(&mut self) -> ParseResult<Stmt> {
-		if self.matches(TokenType::Semicolon) {
+		if let Some(_) = self.matches_which(&[TokenType::Semicolon, TokenType::Newline]) {
 			return Ok(Stmt::Empty);
 		}
 
@@ -54,7 +54,12 @@ impl Parser {
 			self.expect(TokenType::Equal, "Expected `=`")?;
 
 			let expr = self.expr()?;
-			self.matches(TokenType::Semicolon);
+			if !self.is_at_end() {
+				self.expect_any(
+					&[TokenType::Semicolon, TokenType::Newline],
+					"Expected Semicolon or Newline",
+				)?;
+			}
 			return Ok(Stmt::Decl(if mutable {
 				Decl::Mut(name, expr)
 			} else {
@@ -110,7 +115,7 @@ impl Parser {
 		}
 
 		let expr = self.expr()?;
-		self.matches(TokenType::Semicolon);
+		self.matches_any(&[TokenType::Semicolon, TokenType::Newline]);
 		Ok(Stmt::Expr(expr))
 	}
 
@@ -403,6 +408,15 @@ impl Parser {
 }
 
 impl Parser {
+	fn expect_any(&mut self, types: &[TokenType], error_msg: &str) -> ParseResult<&Spanned<Token>> {
+		for typ in types {
+			if self.matches(typ.clone()) {
+				return Ok(self.previous());
+			}
+		}
+		ParseError::token_mismatch(self.advance(), error_msg)
+	}
+
 	fn expect(&mut self, typ: TokenType, error_msg: &str) -> ParseResult<&Spanned<Token>> {
 		if self.matches(typ) {
 			return Ok(self.previous());
@@ -440,7 +454,9 @@ impl Parser {
 	}
 
 	fn advance(&mut self) -> &Spanned<Token> {
-		self.pos += 1;
+		if !self.is_at_end() {
+			self.pos += 1;
+		}
 		self.previous()
 	}
 

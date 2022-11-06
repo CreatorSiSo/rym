@@ -64,7 +64,8 @@ impl<'src> Lexer<'src> {
 			let c = self.c;
 			self.start = self.current;
 			match c {
-				' ' | '\t' | '\n' | '\r' => continue,
+				' ' | '\t' | '\r' => continue,
+				'\n' => break TokenType::Newline,
 
 				// TODO: Comments
 				'/' if self.matches('/') => self.consume_while(|c| c != '\n'),

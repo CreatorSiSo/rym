@@ -20,6 +20,7 @@ pub enum Stmt {
 	/// Expr with trailing semicolon or newline
 	Expr(Expr),
 
+	// TODO: Is this really needed?
 	/// Just a trailing semicolon
 	Empty,
 }

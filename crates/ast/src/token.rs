@@ -55,6 +55,7 @@ pub enum TokenType {
 	Struct,
 	Self_,
 
+	Newline,
 	/// Do not use outside of `lex` crate!
 	Eof,
 }
@@ -103,6 +104,7 @@ impl Display for TokenType {
 			TokenType::Mut => "Mut",
 			TokenType::Struct => "Struct",
 			TokenType::Self_ => "Self",
+			TokenType::Newline => "Newline",
 			TokenType::Eof => "Eof",
 		})
 	}

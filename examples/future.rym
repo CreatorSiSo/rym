@@ -1,0 +1,15 @@
+fn main() -> Io; Result<(), Error> {
+	const msg = "Hello World"
+	println(msg)
+
+	mut num = 2 / 4 * (10 - 1)
+	println("Number:\t", num)
+
+	const msg = msg + "!"
+	println("Combined:\t", msg, " ", num)
+
+	might_return_error()?
+	const maybe_value = do_stuff(testing).even_more(false)
+
+	Ok(())
+}

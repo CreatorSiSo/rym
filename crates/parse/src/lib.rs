@@ -146,7 +146,9 @@ impl Parser {
 		// break => "break" expr?
 		if self.matches(TokenType::Break) {
 			return Ok(Expr::Break(Box::new(
-				if self.matches_any(&[TokenType::Semicolon, TokenType::Newline]) {
+				if self.matches_any(&[TokenType::Semicolon, TokenType::Newline])
+					|| self.peek_eq(0, TokenType::RightBrace)
+				{
 					None
 				} else {
 					Some(self.expr()?)

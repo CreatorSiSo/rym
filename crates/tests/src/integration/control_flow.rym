@@ -1,0 +1,38 @@
+//!
+
+const say_hello = false
+
+if say_hello {
+	println("Hello World!")
+} else {
+	println("Bye World!")
+}
+
+if !say_hello {
+	println("`say_hello` is not `true`")
+}
+
+if true {
+
+} else if false {
+	println("testing")
+} else {
+	println("nope")
+}
+
+mut x = 0
+loop {
+	println("Round: ", x)
+	x = x + 1
+	if x > 99 { break }
+
+	mut y = 0
+	loop {
+		print(y)
+		y = y + 1
+		if y >= 99 {
+			println()
+			break
+		}
+	}
+}

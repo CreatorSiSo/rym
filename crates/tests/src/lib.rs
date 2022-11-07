@@ -83,6 +83,7 @@ macro_rules! block {
 	};
 }
 
+mod integration;
 mod test_empty_file;
 mod test_lex;
 mod test_parse;

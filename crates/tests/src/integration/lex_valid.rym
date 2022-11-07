@@ -1,4 +1,6 @@
-ident	$	ifier
+//! fail parse exec
+
+ident	ifier
 
 - + / *
 . , ; ( ) { }

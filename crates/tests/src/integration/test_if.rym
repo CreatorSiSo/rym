@@ -1,0 +1,11 @@
+if true {
+	println("test")
+} else {
+	panic()
+}
+
+if false {
+	panic()
+} else {
+	println("test")
+}

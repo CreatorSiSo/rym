@@ -1,12 +1,14 @@
 # Rym Lang
-![Screenshot from 2022-11-06 04-48-30](https://user-images.githubusercontent.com/64036709/200153194-31819cec-809c-4fa7-b7db-feda44a1fa9b.png)
 
+![Screenshot from 2022-11-06 04-48-30](https://user-images.githubusercontent.com/64036709/200153194-31819cec-809c-4fa7-b7db-feda44a1fa9b.png)
 
 ## Content
 
 - [Rym Lang](#rym-lang)
 	- [Content](#content)
 	- [Name](#name)
+	- [Setup](#setup)
+		- [Tests](#tests)
 	- [Goals](#goals)
 	- [Todos](#todos)
 
@@ -17,6 +19,12 @@
 - **R**ust**y** ⇒ Heavily borrows 🙃 from Rust
 - **M**ulti-paradigm ⇒ Mix of object oriented, procedural and functional programming
 - Programming **Lang**uage ⇒ because thats what it is
+
+## Setup
+
+### Tests
+
+Run `cargo r --bin gen -- /home/simon/dev/rym/crates/tests/src/integration` after creating or modifying a test.
 
 ## Goals
 

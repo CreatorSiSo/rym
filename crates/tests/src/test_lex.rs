@@ -1,20 +1,6 @@
 use super::*;
 
 #[test]
-fn file() {
-	let source = include_str!("./lex.rym");
-	let mut lexer = Lexer::new(source);
-	while let Some(result) = lexer.next() {
-		match result {
-			Ok(token) => {
-				println!("{token:?}");
-			}
-			Err(err) => println!("{err:?}"),
-		}
-	}
-}
-
-#[test]
 fn lex_keywords() {
 	let source = "if else for while loop return break false true fn const mut struct self";
 	let lexer = Lexer::new(source);

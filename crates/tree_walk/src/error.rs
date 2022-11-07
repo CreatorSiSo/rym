@@ -10,6 +10,7 @@ pub enum RuntimeError {
 	Assignment(String),
 	NumArgsMismatch(String),
 	DivideByZero,
+	Panic,
 }
 
 // TODO: Print line number as well
@@ -51,7 +52,7 @@ impl RuntimeError {
 		)))
 	}
 
-	pub(crate) fn expected<T>(expected: Type, got: Type) -> Result<T, Self> {
+	pub fn expected<T>(expected: Type, got: Type) -> Result<T, Self> {
 		Err(Self::TypeMismatch(format!(
 			"Expected `{expected}` got {got}",
 		)))

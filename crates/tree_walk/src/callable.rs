@@ -1,9 +1,10 @@
-use ast::{AstVisitor, Expr, Spanned};
-
-use crate::{error::RuntimeError, Inter, Interpreter, Value};
+use std::rc::Rc;
 
 pub(crate) type Arity = Option<usize>;
-pub(crate) type CallableFn = fn(&mut Interpreter, &[Value]) -> Result<Value, RuntimeError>;
+pub(crate) type CallableFn = dyn Fn(&mut Interpreter, &[Value]) -> Result<Value, RuntimeError>;
+
+use crate::{error::RuntimeError, Inter, Interpreter, Value};
+use ast::{AstVisitor, Expr, Spanned};
 
 pub trait Callable {
 	fn arity(&self) -> Option<usize>;
@@ -13,11 +14,11 @@ pub trait Callable {
 #[derive(Clone)]
 pub struct NativeFunction {
 	arity: Arity,
-	callable: CallableFn,
+	callable: Rc<CallableFn>,
 }
 
 impl NativeFunction {
-	pub(crate) fn new(arity: Arity, callable: CallableFn) -> Self {
+	pub fn new(arity: Arity, callable: Rc<CallableFn>) -> Self {
 		Self { arity, callable }
 	}
 }

@@ -1,17 +1,19 @@
 #![allow(clippy::new_without_default)]
 
-use std::io::Write;
+use std::{io::Write, rc::Rc};
 
 mod callable;
 mod env;
 mod error;
 mod value;
 
-use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, Identifier, LogicalOp, Spanned, Stmt, UnaryOp};
-use callable::{Callable, NativeFunction, RymFunction};
-use env::Env;
+pub use callable::NativeFunction;
 pub use error::RuntimeError;
-use value::{Type, Value};
+pub use value::{Type, Value};
+
+use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, Identifier, LogicalOp, Spanned, Stmt, UnaryOp};
+use callable::{Callable, RymFunction};
+use env::Env;
 
 pub enum Inter {
 	Return(Value),
@@ -20,50 +22,80 @@ pub enum Inter {
 	None(Value),
 }
 
+pub struct NativeValues {
+	print: NativeFunction,
+	println: NativeFunction,
+	floor: NativeFunction,
+	panic: NativeFunction,
+}
+
+impl Default for NativeValues {
+	fn default() -> Self {
+		Self {
+			print: NativeFunction::new(
+				None,
+				Rc::new(|_: _, args: &[Value]| {
+					let mut string = String::new();
+					for arg in args {
+						string.push_str(&arg.to_string())
+					}
+					// TODO fix print() for repl
+					print!("{string}");
+					std::io::stdout()
+						.flush()
+						.expect("Internal Error: Could not flush stout");
+					Ok(Value::Unit)
+				}),
+			),
+			println: NativeFunction::new(
+				None,
+				Rc::new(|_: _, args: &[Value]| {
+					let mut string = String::new();
+					for arg in args {
+						string.push_str(&arg.to_string())
+					}
+					println!("{string}");
+					Ok(Value::Unit)
+				}),
+			),
+			floor: NativeFunction::new(
+				Some(1),
+				Rc::new(|_: _, args: &[Value]| {
+					let val = &args[0];
+					if let Value::Number(num) = val {
+						Ok(Value::Number(num.floor()))
+					} else {
+						RuntimeError::expected(Type::Number, val.clone().into())
+					}
+				}),
+			),
+			panic: NativeFunction::new(None, Rc::new(|_: _, _: _| Err(RuntimeError::Panic))),
+		}
+	}
+}
+
+impl NativeValues {
+	pub fn as_vec<'a>(self) -> Vec<(&'a str, Value)> {
+		vec![
+			("print", self.print.into()),
+			("println", self.println.into()),
+			("panic", self.panic.into()),
+			("floor", self.floor.into()),
+			("PI", std::f64::consts::PI.into()),
+			("TAU", std::f64::consts::TAU.into()),
+			("E", std::f64::consts::E.into()),
+			("SQRT_2", std::f64::consts::SQRT_2.into()),
+		]
+	}
+}
+
 pub struct Interpreter {
 	env: Env,
 }
 
 impl Default for Interpreter {
 	fn default() -> Self {
-		let print_fn = NativeFunction::new(None, |_: _, args: &[Value]| {
-			let mut string = String::new();
-			for arg in args {
-				string.push_str(&arg.to_string())
-			}
-			// TODO fix print() for repl
-			print!("{string}");
-			std::io::stdout()
-				.flush()
-				.expect("Internal Error: Could not flush stout");
-			Ok(Value::Unit)
-		});
-		let println_fn = NativeFunction::new(None, |_: _, args: &[Value]| {
-			let mut string = String::new();
-			for arg in args {
-				string.push_str(&arg.to_string())
-			}
-			println!("{string}");
-			Ok(Value::Unit)
-		});
-		let floor_fn = NativeFunction::new(Some(1), |_: _, args: &[Value]| {
-			let val = &args[0];
-			if let Value::Number(num) = val {
-				Ok(Value::Number(num.floor()))
-			} else {
-				RuntimeError::expected(Type::Number, val.clone().into())
-			}
-		});
-
-		Self::with_globals(vec![
-			("print", print_fn.into()),
-			("println", println_fn.into()),
-			("floor", floor_fn.into()),
-			("PI", std::f64::consts::PI.into()),
-			("TAU", std::f64::consts::TAU.into()),
-			("E", std::f64::consts::E.into()),
-			("SQRT_2", std::f64::consts::SQRT_2.into()),
-		])
+		Self::with_globals(NativeValues::default().as_vec())
 	}
 }
 

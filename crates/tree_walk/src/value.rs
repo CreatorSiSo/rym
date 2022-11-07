@@ -3,7 +3,7 @@ use ast::Literal;
 use crate::callable::{NativeFunction, RymFunction};
 use crate::Inter;
 
-pub(crate) enum Type {
+pub enum Type {
 	Unit,
 	Bool,
 	Number,

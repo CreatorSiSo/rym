@@ -286,7 +286,12 @@ impl AstVisitor for Interpreter {
 				Inter::Return(val) => break Inter::Return(val),
 				Inter::Break(val) => break Inter::Break(val),
 				Inter::Continue => break Inter::Continue,
-				Inter::None(_) => continue,
+				Inter::None(val) => {
+					if stmts.len() == 0 {
+						break Inter::None(val);
+					};
+					continue;
+				}
 			}
 		};
 

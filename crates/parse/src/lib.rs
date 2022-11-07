@@ -143,9 +143,15 @@ impl Parser {
 
 			return Ok(Expr::Return(Box::new(self.expr()?)));
 		}
-		// break => "break" TODO: expr?
+		// break => "break" expr?
 		if self.matches(TokenType::Break) {
-			return Ok(Expr::Break(Box::new(None)));
+			return Ok(Expr::Break(Box::new(
+				if self.matches_any(&[TokenType::Semicolon, TokenType::Newline]) {
+					None
+				} else {
+					Some(self.expr()?)
+				},
+			)));
 		}
 		// continue => "continue"
 		if self.matches(TokenType::Continue) {

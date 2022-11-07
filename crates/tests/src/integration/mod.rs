@@ -24,8 +24,8 @@ impl Should {
 #[test]
 fn exec() {
 	for (path, src) in sources::SOURCES {
-		let path = dbg!(path);
-		let should = if dbg!(src.starts_with("//! fail")) {
+		let path = path;
+		let should = if src.starts_with("//! fail") {
 			let flags: Vec<&str> = src[8..]
 				.lines()
 				.next()
@@ -75,7 +75,7 @@ fn exec() {
 		})
 		.eval(&ast);
 
-		match dbg!(should) {
+		match should {
 			Should {
 				fail_lex,
 				fail_parse,

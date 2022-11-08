@@ -11,7 +11,7 @@ pub use callable::NativeFunction;
 pub use error::RuntimeError;
 pub use value::{Type, Value};
 
-use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, Identifier, LogicalOp, Spanned, Stmt, UnaryOp};
+use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, LogicalOp, Spanned, Stmt, UnaryOp};
 use callable::{Callable, RymFunction};
 use env::Env;
 
@@ -172,8 +172,8 @@ impl AstVisitor for Interpreter {
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn visit_ident(&mut self, ident: &Identifier) -> Self::Result {
-		Ok(Inter::None(self.env.get(&ident.name)?.clone()))
+	fn visit_ident(&mut self, ident: &str) -> Self::Result {
+		Ok(Inter::None(self.env.get(&ident)?.clone()))
 	}
 
 	fn visit_lit(&mut self, lit: &ast::Literal) -> Self::Result {
@@ -182,7 +182,7 @@ impl AstVisitor for Interpreter {
 
 	fn visit_assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Self::Result {
 		let name = match expr_l {
-			Expr::Identifier(Identifier { name, .. }) => name,
+			Expr::Identifier(name) => name,
 			_ => {
 				return RuntimeError::expected(
 					Type::Identifier,

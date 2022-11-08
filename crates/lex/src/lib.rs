@@ -2,7 +2,7 @@ use std::str::CharIndices;
 
 mod error;
 mod unescape;
-use ast::{Identifier, Literal, Spanned, Token, TokenType, KEYWORDS};
+use ast::{Literal, Spanned, Token, TokenType, KEYWORDS};
 pub use error::LexError;
 use unescape::unescape;
 
@@ -174,10 +174,7 @@ impl<'src> Lexer<'src> {
 			Some((_, token_type)) => token_type.clone(),
 			None => TokenType::Identifier,
 		};
-		Ok(Spanned(
-			Token::ident(typ, Identifier { name }),
-			self.start..self.current,
-		))
+		Ok(Spanned(Token::ident(typ, name), self.start..self.current))
 	}
 }
 

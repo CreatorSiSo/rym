@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{Identifier, Literal};
+use crate::Literal;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[non_exhaustive]
@@ -110,6 +110,13 @@ impl Display for TokenType {
 	}
 }
 
+pub const LIT_TOKEN_TYPES: [TokenType; 4] = [
+	TokenType::String,
+	TokenType::Number,
+	TokenType::True,
+	TokenType::False,
+];
+
 pub const KEYWORDS: &[(&str, TokenType)] = &[
 	("if", TokenType::If),
 	("else", TokenType::Else),
@@ -133,32 +140,71 @@ pub const KEYWORDS: &[(&str, TokenType)] = &[
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
 	pub typ: TokenType,
-	pub literal: Option<Literal>,
-	pub ident: Option<Identifier>,
+	pub data: TokenData,
 }
 
 impl Token {
 	pub fn new(typ: TokenType) -> Self {
 		Self {
 			typ,
-			literal: None,
-			ident: None,
+			data: TokenData::None,
 		}
 	}
 
 	pub fn literal(typ: TokenType, literal: Literal) -> Self {
 		Self {
 			typ,
-			literal: Some(literal),
-			ident: None,
+			data: TokenData::Literal(literal),
 		}
 	}
 
-	pub fn ident(typ: TokenType, ident: Identifier) -> Self {
+	pub fn ident(typ: TokenType, ident: String) -> Self {
 		Self {
 			typ,
-			literal: None,
-			ident: Some(ident),
+			data: TokenData::Identifier(ident),
+		}
+	}
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TokenData {
+	None,
+	Literal(Literal),
+	Identifier(String),
+}
+
+impl TokenData {
+	pub fn lit(self, typ: TokenType) -> Literal {
+		if LIT_TOKEN_TYPES.contains(&typ) {
+			match self {
+				TokenData::Literal(lit) => lit,
+				TokenData::Identifier(ident) => {
+					panic!(
+						"Internal Error: Literal token should have data got `TokenData::Identifier({ident:?})`"
+					)
+				}
+				TokenData::None => {
+					panic!("Internal Error: Literal token should have data got `TokenData::None`")
+				}
+			}
+		} else {
+			panic!("Internal Error: Expected literal token got {self:?}")
+		}
+	}
+
+	pub fn ident(self, typ: TokenType) -> String {
+		if typ == TokenType::Identifier {
+			match self {
+				TokenData::Identifier(ident) => ident,
+				TokenData::Literal(lit) => panic!(
+					"Internal Error: Identifier token should have data got `TokenData::Literal({lit:?})`"
+				),
+				TokenData::None => {
+					panic!("Internal Error: Identifier token should have data got `TokenData::None`")
+				}
+			}
+		} else {
+			panic!("Internal Error: Expected identifier token got {self:?}")
 		}
 	}
 }

@@ -3,14 +3,13 @@ use std::ops::Range;
 
 mod token;
 mod visitor;
+pub use token::{Token, TokenData, TokenType, KEYWORDS};
+pub use visitor::AstVisitor;
 
 pub type Span = Range<usize>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Spanned<T>(pub T, pub Span);
-
-pub use token::{Token, TokenType, KEYWORDS};
-pub use visitor::AstVisitor;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Stmt {
@@ -104,7 +103,7 @@ pub enum Expr {
 	Literal(Literal),
 
 	/// A literal `true`, `2`, `"Hello"`
-	Identifier(Identifier),
+	Identifier(String),
 }
 
 impl From<Literal> for Expr {
@@ -113,8 +112,8 @@ impl From<Literal> for Expr {
 	}
 }
 
-impl From<Identifier> for Expr {
-	fn from(val: Identifier) -> Self {
+impl From<String> for Expr {
+	fn from(val: String) -> Self {
 		Expr::Identifier(val)
 	}
 }
@@ -140,23 +139,6 @@ impl Expr {
 			"Literal",
 			"Identifier",
 		]
-	}
-}
-
-#[derive(Clone, PartialEq, Eq)]
-pub struct Identifier {
-	pub name: String,
-}
-
-impl From<&str> for Identifier {
-	fn from(val: &str) -> Self {
-		Identifier { name: val.into() }
-	}
-}
-
-impl Debug for Identifier {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_tuple("Identifier").field(&self.name).finish()
 	}
 }
 

@@ -48,14 +48,8 @@ impl Parser {
 		{
 			let mutable = token.typ == TokenType::Mut;
 
-			self.expect(TokenType::Identifier, "Expected identifier")?;
-			let name = self
-				.previous()
-				.0
-				.ident
-				.clone()
-				.expect("Internal Error: Identifier token has no name!")
-				.name;
+			let Spanned(name_token, _) = self.expect(TokenType::Identifier, "Expected identifier")?;
+			let name = name_token.data.ident(TokenType::Identifier);
 
 			self.expect(TokenType::Equal, "Expected `=`")?;
 
@@ -79,8 +73,8 @@ impl Parser {
 		if self.matches(TokenType::Fn) {
 			let Spanned(fn_token, fn_start_span) =
 				self.expect(TokenType::Identifier, "Expected function name")?;
-			let name = match fn_token.ident {
-				Some(ident) => ident.name,
+			let name = match fn_token.data {
+				TokenData::Identifier(ident) => ident,
 				_ => unreachable!("Internal Error: Identifier Token has no value!"),
 			};
 
@@ -89,29 +83,22 @@ impl Parser {
 					Vec::new()
 				} else {
 					let mut params = Vec::new();
-					params.push(
-						self
-							.expect(TokenType::Identifier, "Expected function parameter")?
-							.0
-							.ident
-							.clone()
-							.expect("Internal Error: Identifier Token has no value!")
-							.name,
-					);
+
+					let Spanned(first_param, _) =
+						self.expect(TokenType::Identifier, "Expected function parameter")?;
+					params.push(first_param.data.ident(TokenType::Identifier));
+
 					while self.matches(TokenType::Comma) {
-						let string = self
-							.expect(TokenType::Identifier, "Expected function parameter")?
-							.0
-							.ident
-							.clone()
-							.expect("Internal Error: Identifier Token has no value!")
-							.name;
-						params.push(string);
+						let Spanned(other_param, _) =
+							self.expect(TokenType::Identifier, "Expected function parameter")?;
+						params.push(other_param.data.ident(TokenType::Identifier));
 					}
+
 					self.expect(
 						TokenType::RightParen,
 						"Expected closing `)` after parameters",
 					)?;
+
 					params
 				};
 				return Ok(Spanned(
@@ -379,27 +366,11 @@ impl Parser {
 			TokenType::String,
 			TokenType::Identifier,
 		]) {
-			Some(Spanned(
-				Token {
-					typ,
-					literal,
-					ident,
-					..
-				},
-				_,
-			)) => Ok(match typ {
+			Some(Spanned(Token { typ, data }, _)) => Ok(match typ {
 				TokenType::False => Expr::Literal(Literal::Bool(false)),
 				TokenType::True => Expr::Literal(Literal::Bool(true)),
-				TokenType::Number | TokenType::String => Expr::Literal(
-					literal
-						.clone()
-						.expect("Internal Error: Literal token should have a value!"),
-				),
-				TokenType::Identifier => Expr::Identifier(
-					ident
-						.clone()
-						.expect("Internal Error: Identifier token should have a value!"),
-				),
+				TokenType::Number | TokenType::String => Expr::Literal(data.lit(typ)),
+				TokenType::Identifier => Expr::Identifier(data.ident(typ)),
 				_ => unreachable!(),
 			}),
 			None => ParseError::token_mismatch(self.advance(), "Expected Literal"),

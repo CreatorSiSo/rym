@@ -70,7 +70,7 @@ macro_rules! lit {
 
 macro_rules! ident {
 	($inner:expr) => {
-		Identifier::from($inner)
+		String::from($inner)
 	};
 }
 

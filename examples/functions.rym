@@ -1,4 +1,3 @@
-// TODO: Something is not right here, check out what it is
 fn returns_fn(value, info) /* -> Fn */ {
 	println("called outer with value: `", value, "`")
 	println("\t", info)
@@ -16,8 +15,9 @@ fn returns_fn(value, info) /* -> Fn */ {
 const fn_ = returns_fn(1, "test")
 println(" ---")
 
-// TODO: Remove () once that works
-const called_fn_1 = (returns_fn(false, "Functions are currently closures..."))(true)
+// TODO: Make function envs separate from the main one
+const info = {}
+const called_fn_1 = returns_fn(false, "Functions are currently closures...")(true)
 println(" ---")
 
 const called_fn_1 = { const test = returns_fn; test(32, "Blocky") }(64)

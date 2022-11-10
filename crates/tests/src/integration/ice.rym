@@ -1,6 +1,6 @@
-fn max(a, b) { if a > b { a } else { b } }
-
 fn print_ice_value(numIce, ateWhiteIce) {
+	fn max(a, b) { if a > b { a } else { b } }
+
 	const numWhiteIce = floor(max(numIce * 0.45 - ateWhiteIce, 0))
 	const numDarkIce = floor(max(numIce * 0.55 - 2 * ateWhiteIce, 0))
 

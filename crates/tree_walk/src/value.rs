@@ -13,8 +13,8 @@ pub enum Type {
 	RymFunction,
 }
 
-impl From<Value> for Type {
-	fn from(val: Value) -> Self {
+impl From<&Value> for Type {
+	fn from(val: &Value) -> Self {
 		match val {
 			Value::Unit => Type::Unit,
 			Value::Bool(_) => Type::Bool,
@@ -28,7 +28,7 @@ impl From<Value> for Type {
 
 impl From<Inter> for Type {
 	fn from(inter: Inter) -> Self {
-		Value::from(inter).into()
+		Type::from(&Value::from(inter))
 	}
 }
 

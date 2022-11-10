@@ -53,25 +53,15 @@ fn exec() {
 					}
 					Ok(Value::Unit)
 				}
-				val => RuntimeError::expected(Type::Bool, val.clone().into()),
-			}),
-		);
-		let assert_eq_fn = NativeFunction::new(
-			Some(2),
-			Rc::new(|_: _, args: &[Value]| {
-				assert_eq!(args[0], args[1]);
-				Ok(Value::Unit)
+				val => RuntimeError::expected(Type::Bool, Type::from(&val)),
 			}),
 		);
 
 		let exec_result = Interpreter::with_globals({
-			vec![
-				("assert", assert_fn.into()),
-				("assert_eq", assert_eq_fn.into()),
-			]
-			.into_iter()
-			.chain(tree_walk::NativeValues::default().as_vec().into_iter())
-			.collect()
+			vec![("assert", assert_fn.into())]
+				.into_iter()
+				.chain(global_values().into_iter())
+				.collect()
 		})
 		.eval(&ast);
 
@@ -101,7 +91,7 @@ fn exec() {
 				}
 				if fail_exec {
 					if let Ok(()) = exec_result {
-						panic!("Expected runtime errors got `()`, {path}");
+						panic!("Expected runtime error got nothing, {path}");
 					}
 				} else {
 					if let Err(err) = exec_result {

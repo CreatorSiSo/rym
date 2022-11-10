@@ -10,7 +10,7 @@ pub enum RuntimeError {
 	Assignment(String),
 	NumArgsMismatch(String),
 	DivideByZero,
-	Panic,
+	Panic(String),
 }
 
 // TODO: Print line number as well

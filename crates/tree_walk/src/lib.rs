@@ -13,7 +13,7 @@ pub use value::{Type, Value};
 
 use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, LogicalOp, Spanned, Stmt, UnaryOp};
 use callable::{Callable, RymFunction};
-use env::Env;
+use env::GlobalEnv;
 
 pub enum Inter {
 	Return(Value),
@@ -22,80 +22,100 @@ pub enum Inter {
 	None(Value),
 }
 
-pub struct NativeValues {
-	print: NativeFunction,
-	println: NativeFunction,
-	floor: NativeFunction,
-	panic: NativeFunction,
-}
+pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
+	let print_fn = NativeFunction::new(
+		None,
+		Rc::new(|_: _, args: &[Value]| {
+			let mut string = String::new();
+			for arg in args {
+				string.push_str(&arg.to_string())
+			}
+			// TODO fix print() for repl
+			print!("{string}");
+			std::io::stdout()
+				.flush()
+				.expect("Internal Error: Could not flush stout");
+			Ok(Value::Unit)
+		}),
+	);
 
-impl Default for NativeValues {
-	fn default() -> Self {
-		Self {
-			print: NativeFunction::new(
-				None,
-				Rc::new(|_: _, args: &[Value]| {
-					let mut string = String::new();
-					for arg in args {
-						string.push_str(&arg.to_string())
-					}
-					// TODO fix print() for repl
-					print!("{string}");
-					std::io::stdout()
-						.flush()
-						.expect("Internal Error: Could not flush stout");
-					Ok(Value::Unit)
-				}),
-			),
-			println: NativeFunction::new(
-				None,
-				Rc::new(|_: _, args: &[Value]| {
-					let mut string = String::new();
-					for arg in args {
-						string.push_str(&arg.to_string())
-					}
-					println!("{string}");
-					Ok(Value::Unit)
-				}),
-			),
-			floor: NativeFunction::new(
-				Some(1),
-				Rc::new(|_: _, args: &[Value]| {
-					let val = &args[0];
-					if let Value::Number(num) = val {
-						Ok(Value::Number(num.floor()))
-					} else {
-						RuntimeError::expected(Type::Number, val.clone().into())
-					}
-				}),
-			),
-			panic: NativeFunction::new(None, Rc::new(|_: _, _: _| Err(RuntimeError::Panic))),
-		}
-	}
-}
+	let println_fn = NativeFunction::new(
+		None,
+		Rc::new(|_: _, args: &[Value]| {
+			let mut string = String::new();
+			for arg in args {
+				string.push_str(&arg.to_string())
+			}
+			println!("{string}");
+			Ok(Value::Unit)
+		}),
+	);
 
-impl NativeValues {
-	pub fn as_vec<'a>(self) -> Vec<(&'a str, Value)> {
-		vec![
-			("print", self.print.into()),
-			("println", self.println.into()),
-			("panic", self.panic.into()),
-			("floor", self.floor.into()),
-			("PI", std::f64::consts::PI.into()),
-			("TAU", std::f64::consts::TAU.into()),
-			("E", std::f64::consts::E.into()),
-			("SQRT_2", std::f64::consts::SQRT_2.into()),
-		]
-	}
+	let panic_fn = NativeFunction::new(
+		None,
+		Rc::new(|_: _, args: &[Value]| {
+			Err(RuntimeError::Panic(
+				args
+					.iter()
+					.fold(String::new(), |accum, arg| accum + &arg.to_string()),
+			))
+		}),
+	);
+
+	// TODO: Gracefully shut down interpreter on a failed assert
+	let assert_fn = NativeFunction::new(
+		Some(1),
+		Rc::new(move |_: _, args: &[Value]| match args[0].clone() {
+			Value::Bool(val) => {
+				assert!(val);
+				Ok(Value::Unit)
+			}
+			val => RuntimeError::expected(Type::Bool, Type::from(&val)),
+		}),
+	);
+
+	// TODO: Gracefully shut down interpreter on a failed assert_eq
+	let assert_eq_fn = NativeFunction::new(
+		Some(2),
+		Rc::new(|_: _, args: &[Value]| {
+			assert_eq!(args[0], args[1]);
+			Ok(Value::Unit)
+		}),
+	);
+
+	let floor_fn = NativeFunction::new(
+		Some(1),
+		Rc::new(|_: _, args: &[Value]| {
+			let val = &args[0];
+			if let Value::Number(num) = val {
+				Ok(Value::Number(num.floor()))
+			} else {
+				RuntimeError::expected(Type::Number, Type::from(val))
+			}
+		}),
+	);
+
+	vec![
+		("print", print_fn.into()),
+		("println", println_fn.into()),
+		("panic", panic_fn.into()),
+		("assert", assert_fn.into()),
+		("assert_eq", assert_eq_fn.into()),
+		("floor", floor_fn.into()),
+		("PI", std::f64::consts::PI.into()),
+		("TAU", std::f64::consts::TAU.into()),
+		("E", std::f64::consts::E.into()),
+		("SQRT_2", std::f64::consts::SQRT_2.into()),
+	]
 }
 
 pub struct Interpreter {
-	env: Env,
+	env: GlobalEnv,
 }
 
 impl Default for Interpreter {
 	fn default() -> Self {
-		Self::with_globals(NativeValues::default().as_vec())
+		Self::with_globals(global_values())
 	}
 }
 
@@ -104,9 +124,9 @@ impl Interpreter {
 		Self {
 			env: globals
 				.into_iter()
-				.fold(Env::new(), |mut env, (name, val)| {
-					env.declare(name, val, true);
-					env
+				.fold(GlobalEnv::new(), |mut global_env, (name, val)| {
+					global_env.env.declare(name, val, true);
+					global_env
 				}),
 		}
 	}
@@ -140,9 +160,9 @@ impl Interpreter {
 				if let Value::Bool(bool_r) = val_r {
 					return Ok(Value::Bool(f(bool_l, bool_r)));
 				}
-				RuntimeError::expected(Type::Bool, val_r.into())
+				RuntimeError::expected(Type::Bool, Type::from(&val_r))
 			}
-			_ => RuntimeError::expected(Type::Bool, val_l.into()),
+			_ => RuntimeError::expected(Type::Bool, Type::from(&val_l)),
 		}
 	}
 }
@@ -219,7 +239,7 @@ impl AstVisitor for Interpreter {
 		let f: Box<dyn Callable> = match callee {
 			Value::NativeFunction(f) => Box::new(f),
 			Value::RymFunction(f) => Box::new(f),
-			val => return RuntimeError::call(val.into()),
+			val => return RuntimeError::call(Type::from(&val)),
 		};
 
 		if let Some(arity) = f.arity() {
@@ -239,7 +259,7 @@ impl AstVisitor for Interpreter {
 		Ok(Inter::None(match (op, val) {
 			(UnaryOp::Not, Value::Bool(val)) => Value::Bool(!val),
 			(UnaryOp::Neg, Value::Number(val)) => Value::Number(-val),
-			(op, val) => return RuntimeError::unary(op, val.into()),
+			(op, val) => return RuntimeError::unary(op, Type::from(&val)),
 		}))
 	}
 
@@ -273,7 +293,7 @@ impl AstVisitor for Interpreter {
 					return Ok(Value::from(f(val_l, val_r)));
 				}
 			}
-			RuntimeError::comparison(val_l.into(), val_r.into())
+			RuntimeError::comparison(Type::from(&val_l), Type::from(&val_r))
 		}
 
 		Ok(Inter::None(match op {
@@ -298,7 +318,7 @@ impl AstVisitor for Interpreter {
 				(Value::String(l), Value::Number(r)) => (l + &r.to_string()).into(),
 				(Value::String(l), Value::Bool(r)) => (l + &r.to_string()).into(),
 
-				(val_l, val_r) => return RuntimeError::addition(val_l.into(), val_r.into()),
+				(val_l, val_r) => return RuntimeError::addition(Type::from(&val_l), Type::from(&val_r)),
 			},
 		}))
 	}
@@ -353,7 +373,7 @@ impl AstVisitor for Interpreter {
 			.into()
 		{
 			Value::Bool(bool) => bool,
-			val => return RuntimeError::expected(Type::Bool, val.into()),
+			val => return RuntimeError::expected(Type::Bool, Type::from(&val)),
 		};
 
 		if bool {

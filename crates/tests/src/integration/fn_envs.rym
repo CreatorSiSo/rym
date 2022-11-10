@@ -1,0 +1,17 @@
+//! fail exec
+
+fn returns_fn(value, info) /* -> Fn */ {
+	println("called outer with value: `", value, "`")
+	println("\t", info)
+
+	fn inner(value) /* -> () */ {
+		println("called inner with value: `", value, "`")
+		println("\t", info)
+	}
+
+	inner
+}
+
+const info = ()
+returns_fn(1, "This should work")
+returns_fn(0, "This should not work")(false)

@@ -1,6 +1,6 @@
 #[rustfmt::skip]
-pub const SOURCES: [(&'static str, &'static str); 15] = [(r#"crates/tests/src/integration/test_hello_world.rym"#, r#"println("Hello World!")
-"#), (r#"crates/tests/src/integration/test_if.rym"#, r#"if true {
+pub const SOURCES: [(&'static str, &'static str); 16] = [(r#"/home/simon/dev/rym/crates/tests/src/integration/test_hello_world.rym"#, r#"println("Hello World!")
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/test_if.rym"#, r#"if true {
 	println("test")
 } else {
 	panic()
@@ -11,7 +11,7 @@ if false {
 } else {
 	println("test")
 }
-"#), (r#"crates/tests/src/integration/lex_valid.rym"#, r#"//! fail parse exec
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/lex_valid.rym"#, r#"//! fail parse exec
 
 ident	ifier
 
@@ -46,7 +46,7 @@ fn const mut
 struct self
 
 testing(arg1,, arg2)
-"#), (r#"crates/tests/src/integration/lex_invalid.rym"#, r#"//! fail lex
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/lex_invalid.rym"#, r#"//! fail lex
 
 if ³ true {
 
@@ -55,7 +55,7 @@ if ³ true {
 }
 
 ~@€½³²
-"#), (r#"crates/tests/src/integration/expr_results.rym"#, r#"//!
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/expr_results.rym"#, r#"//!
 
 const expr_example_1 = {
 	mut index = 0
@@ -76,7 +76,7 @@ const expr_example_2 = if expr_example_1 < 1000 {
 	expr_example_1 + " ist größer als 1000"
 }
 println(expr_example_2)
-"#), (r#"crates/tests/src/integration/control_flow.rym"#, r#"//!
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/control_flow.rym"#, r#"//!
 
 const say_hello = false
 
@@ -114,7 +114,7 @@ loop {
 		}
 	}
 }
-"#), (r#"crates/tests/src/integration/cylinder.rym"#, r#"// Ein zylinderförmiger Behälter vom Durchmesser d1(m) und der Höhe h(m) wird durch einen Schlauch mit dem Durchmesser d2(cm) mit Wein gefüllt.
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/cylinder.rym"#, r#"// Ein zylinderförmiger Behälter vom Durchmesser d1(m) und der Höhe h(m) wird durch einen Schlauch mit dem Durchmesser d2(cm) mit Wein gefüllt.
 // Die Durchflussgeschwindigkeit ist v (m/s).
 // Durch ein Programm soll die Zeit ermittelt werden, die zum vollständigen Füllen des Behälters benötigt wird.
 
@@ -136,7 +136,7 @@ fn t_filled(d1 /* m */, h /* m */, d2 /* cm */, vS /* m/s */) {
 }
 
 println("Time: ", t_filled(0.8, 1, 2, 1), "s")
-"#), (r#"crates/tests/src/integration/parse_if.rym"#, r#"//! fail parse exec
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/parse_if.rym"#, r#"//! fail parse exec
 
 // TODO Add proper error recovery for parsing
 // eg. this should either ignore the whole if expression or
@@ -146,7 +146,7 @@ if mut test = 0 {
 } else {
 	println("Hää?")
 }
-"#), (r#"crates/tests/src/integration/variables.rym"#, r#"const test = "Hello World"
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/variables.rym"#, r#"const test = "Hello World"
 mut two = 2 / 4 * (10 - 1)
 println("test:\t", test)
 
@@ -156,7 +156,7 @@ println("both:\t", test, " " + two)
 println("two:\t", two)
 two = 0
 println("two:\t", two)
-"#), (r#"crates/tests/src/integration/string.rym"#, r#""
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/string.rym"#, r#""
 \ndgopg\ns\ndgopg\ns2354
 pg\npg\n234
 \tfisdj		\n\tfisdj		\n
@@ -349,7 +349,7 @@ Magna quis eu sint non consectetur quiaute amet nostrud proident in eu.Exercitat
 "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n";
 "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n";
 "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n"; "\t\t\t\n@ŧ€ŋÜsüfÖg§fdfä€€ſ«\n";
-"#), (r#"crates/tests/src/integration/scope.rym"#, r#"mut value = 20
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/scope.rym"#, r#"mut value = 20
 {
 	const value = 0
 	println(value)
@@ -365,18 +365,13 @@ const c = "\t\tglobal c"
 {
   const a = "\touter a"
   const b = "\touter b"
-  fn inner() {
-    const a = "inner a"
-    println(a); println(b); println(c)
-  }
-	inner()
   println(a); println(b); println(c)
 }
 println(a); println(b); println(c)
-"#), (r#"crates/tests/src/integration/print.rym"#, r#"println(true)
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/print.rym"#, r#"println(true)
 println(2 + 1)
 println("one")
-"#), (r#"crates/tests/src/integration/parser.rym"#, r#"//! fail exec
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/parser.rym"#, r#"//! fail exec
 
 // Literals
 false
@@ -462,9 +457,9 @@ true != false // true
 
 // Should not result in an endless loop
 // {
-"#), (r#"crates/tests/src/integration/ice.rym"#, r#"fn max(a, b) { if a > b { a } else { b } }
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/ice.rym"#, r#"fn print_ice_value(numIce, ateWhiteIce) {
+	fn max(a, b) { if a > b { a } else { b } }
 
-fn print_ice_value(numIce, ateWhiteIce) {
 	const numWhiteIce = floor(max(numIce * 0.45 - ateWhiteIce, 0))
 	const numDarkIce = floor(max(numIce * 0.55 - 2 * ateWhiteIce, 0))
 
@@ -474,7 +469,7 @@ fn print_ice_value(numIce, ateWhiteIce) {
 
 print_ice_value(10, 2)
 print_ice_value(80, 15)
-"#), (r#"crates/tests/src/integration/expression.rym"#, r#"(true != !false) // false => correct
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/expression.rym"#, r#"(true != !false) // false => correct
 (0769570 + 34907 * 569034) < 9 // false => correct
 (0769570 + 34907 * 569034) < 9 == (true != !false) // false == false => true => correct
 (0769570 + (34907 * 569034 - (34897534889 / 55)))
@@ -483,4 +478,21 @@ print_ice_value(80, 15)
 println(1 + 2)
 println(1 / 0)
 println(200 * 23406)
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/fn_envs.rym"#, r#"//! fail exec
+
+fn returns_fn(value, info) /* -> Fn */ {
+	println("called outer with value: `", value, "`")
+	println("\t", info)
+
+	fn inner(value) /* -> () */ {
+		println("called inner with value: `", value, "`")
+		println("\t", info)
+	}
+
+	inner
+}
+
+const info = ()
+returns_fn(1, "This should work")
+returns_fn(0, "This should not work")(false)
 "#), ];

@@ -1,13 +1,14 @@
 use std::fmt::Display;
 
-use ast::{Spanned, Stmt, Token, TokenType};
-
 use colored::Colorize;
+use stringx::Join;
+
+use ast::{Spanned, Stmt, Token};
 
 // TODO Improve the print block api and add a properly colored `│` character infront of each line
-pub(crate) fn block<F>(title: &str, f: F)
+pub(crate) fn block<F>(title: &str, mut f: F)
 where
-	F: Fn() -> bool,
+	F: FnMut() -> bool,
 {
 	println!("\n{} {}", "╭──".bright_blue(), title.bright_blue().bold());
 	println!(
@@ -21,13 +22,12 @@ where
 }
 
 pub(crate) fn tokens(tokens: &[Spanned<Token>]) {
-	for token in tokens {
-		match &token.0.typ {
-			TokenType::Semicolon => println!("Semicolon"),
-			value => print!("{value:?} "),
-		}
-	}
-	println!()
+	println!(
+		"{}",
+		tokens
+			.iter()
+			.join_format(" ", |token| { token.0.typ.to_string() })
+	)
 }
 
 pub(crate) fn ast(ast: &[Spanned<Stmt>]) {

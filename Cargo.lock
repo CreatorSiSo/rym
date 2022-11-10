@@ -328,6 +328,7 @@ dependencies = [
  "lex",
  "parse",
  "rustyline",
+ "stringx",
  "tree_walk",
 ]
 

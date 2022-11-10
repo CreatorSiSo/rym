@@ -12,7 +12,7 @@ pub fn exec() -> rustyline::Result<()> {
 }
 
 struct Repl {
-	// interpreter: todo,
+	interpreter: Interpreter,
 	editor: Editor<()>,
 }
 
@@ -22,7 +22,10 @@ impl Repl {
 		if editor.load_history(".history").is_err() {
 			println!("No previous history.");
 		}
-		Ok(Self { editor })
+		Ok(Self {
+			interpreter: Interpreter::default(),
+			editor,
+		})
 	}
 
 	fn watch(mut self) {
@@ -71,7 +74,7 @@ impl Repl {
 		}
 
 		log::block("Interpreter", || {
-			if let Err(error) = Interpreter::default().eval(&ast) {
+			if let Err(error) = self.interpreter.eval(&ast) {
 				println!("{error:?}");
 				false
 			} else {

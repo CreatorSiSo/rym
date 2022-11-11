@@ -61,9 +61,9 @@ impl Parser {
 
 			return Ok(Spanned(
 				if mutable {
-					Stmt::Decl(Decl::Mut(name, expr))
+					Stmt::Decl(Decl::Mut(name, expr.0))
 				} else {
-					Stmt::Decl(Decl::Const(name, expr))
+					Stmt::Decl(Decl::Const(name, expr.0))
 				},
 				var_start_span.start..var_end_span.end,
 			));
@@ -102,7 +102,7 @@ impl Parser {
 					params
 				};
 				return Ok(Spanned(
-					Stmt::Decl(Decl::Fn(name, params, self.expr()?)),
+					Stmt::Decl(Decl::Fn(name, params, self.expr()?.0)),
 					fn_start_span.start..self.previous().1.end,
 				));
 			}
@@ -111,43 +111,51 @@ impl Parser {
 		let expr = self.expr()?;
 		self.matches_any(&[TokenType::Semicolon, TokenType::Newline]);
 		Ok(Spanned(
-			Stmt::Expr(expr),
+			Stmt::Expr(expr.0),
 			stmt_start_pos..self.previous().1.end,
 		))
 	}
 
-	fn expr(&mut self) -> ParseResult<Expr> {
+	fn expr(&mut self) -> ParseResult<Spanned<Expr>> {
 		self.interrupts()
 	}
 
-	fn interrupts(&mut self) -> ParseResult<Expr> {
+	fn interrupts(&mut self) -> ParseResult<Spanned<Expr>> {
 		// return => "return" expr?;
 		if self.matches(TokenType::Return) {
 			// TODO: Should this also match Newline here?
 			if self.matches(TokenType::Semicolon) {
-				return Ok(Expr::Break(Box::new(None)));
+				return Ok(Spanned(Expr::Break(Box::new(None)), self.previous().1));
 			}
 
-			return Ok(Expr::Return(Box::new(self.expr()?)));
+			return Ok(Spanned(
+				Expr::Return(Box::new(self.expr()?.0)),
+				self.previous().1,
+			));
 		}
 		// break => "break" expr?
 		if self.matches(TokenType::Break) {
-			return Ok(Expr::Break(Box::new(
-				if self.matches_any(&[TokenType::Semicolon, TokenType::Newline])
-					|| self.peek_eq(0, TokenType::RightBrace)
-				{
-					None
+			return Ok(
+				if let Some(token) = self.matches_which(&[TokenType::Semicolon, TokenType::Newline]) {
+					Spanned(Expr::Break(Box::new(None)), token.1)
 				} else {
-					Some(self.expr()?)
+					if self.peek_eq(0, TokenType::RightBrace) {
+						Spanned(Expr::Break(Box::new(None)), self.previous().1)
+					} else {
+						Spanned(
+							Expr::Break(Box::new(Some(self.expr()?.0))),
+							self.previous().1,
+						)
+					}
 				},
-			)));
+			);
 		}
 		// continue => "continue"
 		if self.matches(TokenType::Continue) {
-			return Ok(Expr::Continue);
+			return Ok(Spanned(Expr::Continue, self.previous().1));
 		}
 
-		self.assignment()
+		self.assignment().map(|val| Spanned(val, 0..0))
 	}
 
 	/// assignment => identifier "=" expr
@@ -155,7 +163,7 @@ impl Parser {
 		if self.peek_eq(1, TokenType::Equal) {
 			let expr_l = Box::new(self.primary()?);
 			self.advance();
-			let expr_r = Box::new(self.expr()?);
+			let expr_r = Box::new(self.expr()?.0);
 
 			return Ok(Expr::Assign(expr_l, expr_r));
 		}
@@ -166,7 +174,7 @@ impl Parser {
 	/// if => "if" expression block ("else" (if | block))?
 	fn if_(&mut self) -> ParseResult<Expr> {
 		if self.matches(TokenType::If) {
-			let expr = Box::new(self.expr()?);
+			let expr = Box::new(self.expr()?.0);
 			let then_block = self.block()?;
 			let else_block = if self.matches(TokenType::Else) {
 				if self.peek_eq(0, TokenType::If) {
@@ -301,11 +309,11 @@ impl Parser {
 	/// unary => ("!" | "-") (unary | call)
 	fn unary(&mut self) -> ParseResult<Expr> {
 		if self.matches(TokenType::Bang) {
-			let expr = Box::new(self.expr()?);
+			let expr = Box::new(self.expr()?.0);
 			return Ok(Expr::Unary(UnaryOp::Not, expr));
 		}
 		if self.matches(TokenType::Minus) {
-			let expr = Box::new(self.expr()?);
+			let expr = Box::new(self.expr()?.0);
 			return Ok(Expr::Unary(UnaryOp::Neg, expr));
 		}
 		self.call()
@@ -333,7 +341,7 @@ impl Parser {
 	}
 
 	/// expr ("," expr)*
-	fn arguments(&mut self) -> ParseResult<Vec<Expr>> {
+	fn arguments(&mut self) -> ParseResult<Vec<Spanned<Expr>>> {
 		let mut args = Vec::new();
 		args.push(self.expr()?);
 		while self.matches(TokenType::Comma) {
@@ -353,7 +361,7 @@ impl Parser {
 			let expr = if self.peek_eq(0, TokenType::RightParen) {
 				Box::new(Expr::Literal(Literal::Unit))
 			} else {
-				Box::new(self.expr()?)
+				Box::new(self.expr()?.0)
 			};
 			self.expect(TokenType::RightParen, "Expected closing `)`")?;
 			return Ok(Expr::Group(expr));

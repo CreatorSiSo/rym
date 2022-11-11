@@ -53,6 +53,7 @@ macro_rules! stmt {
 	};
 }
 
+// TODO: accept (.. ; Range) to return a Spanned<Expr>
 macro_rules! expr {
 	($variant:ident ($($inner:expr),+ $(,)?)) => {
 		Expr::$variant($($inner),+)

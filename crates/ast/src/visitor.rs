@@ -44,7 +44,7 @@ pub trait AstVisitor {
 	fn visit_lit(&mut self, lit: &Literal) -> Self::Result;
 
 	fn visit_assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Self::Result;
-	fn visit_call(&mut self, callee: &Expr, args: &[Expr]) -> Self::Result;
+	fn visit_call(&mut self, callee: &Expr, args: &[Spanned<Expr>]) -> Self::Result;
 	fn visit_unary(&mut self, op: &UnaryOp, expr: &Expr) -> Self::Result;
 	fn visit_logical(&mut self, expr_l: &Expr, op: &LogicalOp, expr_r: &Expr) -> Self::Result;
 	fn visit_binary(&mut self, expr_l: &Expr, op: &BinaryOp, expr_r: &Expr) -> Self::Result;

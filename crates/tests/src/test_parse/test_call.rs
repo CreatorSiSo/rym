@@ -25,7 +25,7 @@ fn one_arg_call() {
 		ast,
 		vec![stmt!(expr!(Call(
 			boxed!(expr!(ident!("println"))),
-			vec![expr!(lit!("Hello World!"))]
+			vec![Spanned(expr!(lit!("Hello World!")), 0..0)]
 		)))]
 	)
 }
@@ -41,10 +41,10 @@ fn many_args_call() {
 		vec![stmt!(expr!(Call(
 			boxed!(expr!(ident!("println"))),
 			vec![
-				expr!(lit!("Coords: ")),
-				expr!(lit!(1.324)),
-				expr!(lit!(0.43)),
-				expr!(lit!(5.02))
+				Spanned(expr!(lit!("Coords: ")), 0..0),
+				Spanned(expr!(lit!(1.324)), 0..0),
+				Spanned(expr!(lit!(0.43)), 0..0),
+				Spanned(expr!(lit!(5.02)), 0..0)
 			]
 		)))]
 	)
@@ -63,9 +63,9 @@ fn chained_calls() {
 				boxed!(expr!(Call(
 					boxed!(expr!(Call(
 						boxed!(expr!(ident!("returns_fn"))),
-						vec![expr!(ident!("println")),]
+						vec![Spanned(expr!(ident!("println")), 0..0)]
 					))),
-					vec![expr!(lit!("Hello World!"))]
+					vec![Spanned(expr!(lit!("Hello World!")), 0..0)]
 				))),
 				vec![]
 			))),

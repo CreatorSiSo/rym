@@ -220,7 +220,7 @@ impl AstVisitor for Interpreter {
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn visit_call(&mut self, callee: &Expr, args: &[Expr]) -> Self::Result {
+	fn visit_call(&mut self, callee: &Expr, args: &[Spanned<Expr>]) -> Self::Result {
 		let callee: Value = self
 			.walk_expr(&Spanned(callee, /* TODO: Use proper span */ 0..0))?
 			.into();
@@ -229,7 +229,7 @@ impl AstVisitor for Interpreter {
 			for arg in args {
 				vec.push(
 					self
-						.walk_expr(&Spanned(arg, /* TODO: Use proper span */ 0..0))?
+						.walk_expr(&Spanned(&arg.0, /* TODO: Use proper span */ 0..0))?
 						.into(),
 				)
 			}

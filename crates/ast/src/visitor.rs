@@ -19,7 +19,7 @@ pub trait AstVisitor {
 	fn walk_expr(&mut self, Spanned(expr, span): &Spanned<&Expr>) -> Self::Result {
 		match expr {
 			Expr::Identifier(ident) => self.visit_ident(ident, span),
-			Expr::Literal(lit) => self.visit_lit(lit),
+			Expr::Literal(lit) => self.visit_lit(lit, span),
 			Expr::Assign(expr_l, expr_r) => self.visit_assign(expr_l, expr_r),
 			Expr::Call(callee, args) => self.visit_call(callee, args),
 
@@ -33,7 +33,7 @@ pub trait AstVisitor {
 			Expr::If(expr, then_block, else_block) => self.visit_if(expr, then_block, else_block),
 
 			Expr::Return(expr) => self.visit_return(&**expr),
-			Expr::Break(expr) => self.visit_break(&**expr),
+			Expr::Break(expr) => self.visit_break(expr.as_deref().map(|expr| expr.as_ref())),
 			Expr::Continue => self.visit_continue(),
 
 			_ => panic!("Not yet implemented: {:?}", expr),
@@ -41,7 +41,7 @@ pub trait AstVisitor {
 	}
 
 	fn visit_ident(&mut self, ident: &str, span: &Span) -> Self::Result;
-	fn visit_lit(&mut self, lit: &Literal) -> Self::Result;
+	fn visit_lit(&mut self, lit: &Literal, span: &Span) -> Self::Result;
 
 	fn visit_assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Self::Result;
 	fn visit_call(&mut self, callee: &Expr, args: &[Spanned<Expr>]) -> Self::Result;
@@ -59,6 +59,6 @@ pub trait AstVisitor {
 	) -> Self::Result;
 
 	fn visit_return(&mut self, expr: &Expr) -> Self::Result;
-	fn visit_break(&mut self, expr: &Option<Expr>) -> Self::Result;
+	fn visit_break(&mut self, expr: Option<Spanned<&Expr>>) -> Self::Result;
 	fn visit_continue(&mut self) -> Self::Result;
 }

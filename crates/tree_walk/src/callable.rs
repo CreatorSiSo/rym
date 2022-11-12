@@ -61,15 +61,15 @@ impl PartialEq for NativeFunction {
 pub struct RymFunction {
 	arity: Arity,
 	params: Vec<String>,
-	body: Expr,
+	body: Spanned<Expr>,
 }
 
 impl RymFunction {
-	pub fn new(arity: Arity, params: Vec<String>, body: &Expr) -> Self {
+	pub const fn new(arity: Arity, params: Vec<String>, body: Spanned<Expr>) -> Self {
 		Self {
 			arity,
 			params,
-			body: body.clone(),
+			body,
 		}
 	}
 }
@@ -95,7 +95,7 @@ impl Callable for RymFunction {
 			for (idx, param) in self.params.iter().enumerate() {
 				interpreter.env.declare(param, args[idx].clone(), true)
 			}
-			interpreter.walk_expr(&Spanned(&self.body, /* TODO: Use proper span */ 0..0))
+			interpreter.walk_expr(&self.body.as_ref())
 		};
 		interpreter.env.pop_env();
 
@@ -103,12 +103,12 @@ impl Callable for RymFunction {
 			Ok(inter) => match inter {
 				Inter::Return(val) | Inter::None(val) => Ok(val),
 				Inter::Break(_) => spanned_err(
-					LogicError::ForbiddenInter("Using `break` outside of a loop is not allowed.".into()),
-					0..0,
+					LogicError::ForbiddenInter("Using `break` outside of a loop is not allowed".into()),
+					self.body.1.clone(),
 				),
 				Inter::Continue => spanned_err(
-					LogicError::ForbiddenInter("Using `continue` outside of a loop is not allowed.".into()),
-					0..0,
+					LogicError::ForbiddenInter("Using `continue` outside of a loop is not allowed".into()),
+					self.body.1.clone(),
 				),
 			},
 			Err(err) => Err(err.into()),

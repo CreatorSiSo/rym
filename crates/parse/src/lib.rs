@@ -102,7 +102,11 @@ impl Parser {
 					params
 				};
 				return Ok(Spanned(
-					Stmt::Decl(Decl::Fn(name, params, self.expr()?.0)),
+					Stmt::Decl(Decl::Fn {
+						name,
+						params,
+						body: self.expr()?,
+					}),
 					fn_start_span.start..self.previous().1.end,
 				));
 			}
@@ -125,7 +129,7 @@ impl Parser {
 		if self.matches(TokenType::Return) {
 			// TODO: Should this also match Newline here?
 			if self.matches(TokenType::Semicolon) {
-				return Ok(Spanned(Expr::Break(Box::new(None)), self.previous().1));
+				return Ok(self.previous().map(|_| Expr::Break(None)));
 			}
 
 			return Ok(Spanned(
@@ -137,22 +141,20 @@ impl Parser {
 		if self.matches(TokenType::Break) {
 			return Ok(
 				if let Some(token) = self.matches_which(&[TokenType::Semicolon, TokenType::Newline]) {
-					Spanned(Expr::Break(Box::new(None)), token.1)
+					token.map(|_| Expr::Break(None))
 				} else {
 					if self.peek_eq(0, TokenType::RightBrace) {
-						Spanned(Expr::Break(Box::new(None)), self.previous().1)
+						self.previous().map(|_| Expr::Break(None))
 					} else {
-						Spanned(
-							Expr::Break(Box::new(Some(self.expr()?.0))),
-							self.previous().1,
-						)
+						let expr = Box::new(self.expr()?);
+						self.previous().map(|_| Expr::Break(Some(expr)))
 					}
 				},
 			);
 		}
 		// continue => "continue"
 		if self.matches(TokenType::Continue) {
-			return Ok(Spanned(Expr::Continue, self.previous().1));
+			return Ok(self.previous().map(|_| Expr::Continue));
 		}
 
 		self.assignment().map(|val| Spanned(val, 0..0))

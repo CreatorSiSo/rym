@@ -11,6 +11,19 @@ pub type Span = Range<usize>;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Spanned<T>(pub T, pub Span);
 
+impl<T> Spanned<T> {
+	pub fn map<F, R>(self, f: F) -> Spanned<R>
+	where
+		F: FnOnce(T) -> R,
+	{
+		Spanned(f(self.0), self.1)
+	}
+
+	pub fn as_ref(&self) -> Spanned<&T> {
+		Spanned(&self.0, self.1.clone())
+	}
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Stmt {
 	/// Variable or function declaration
@@ -39,7 +52,11 @@ impl From<Expr> for Stmt {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Decl {
 	/// A function declaration `fn name(param_1, param_2) { .. }`
-	Fn(String, Vec<String>, Expr),
+	Fn {
+		name: String,
+		params: Vec<String>,
+		body: Spanned<Expr>,
+	},
 
 	/// A constant binding `const a = 0`
 	Const(String, Expr),
@@ -73,7 +90,7 @@ pub enum Expr {
 	Block(Block),
 
 	/// A `break`, with an optional expression
-	Break(Box<Option<Expr>>),
+	Break(Option<Box<Spanned<Expr>>>),
 
 	/// A `continue`
 	Continue,

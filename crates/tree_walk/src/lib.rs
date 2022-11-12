@@ -180,8 +180,8 @@ impl AstVisitor for Interpreter {
 
 	fn visit_decl(&mut self, Spanned(decl, span): &Spanned<&ast::Decl>) -> Self::Result {
 		match decl {
-			Decl::Fn(name, params, body) => {
-				let val = RymFunction::new(Some(params.len()), params.clone(), body);
+			Decl::Fn { name, params, body } => {
+				let val = RymFunction::new(Some(params.len()), params.clone(), dbg!(body.clone()));
 				self.env.declare(name, val.into(), true);
 			}
 			Decl::Const(name, init) => {
@@ -203,7 +203,7 @@ impl AstVisitor for Interpreter {
 		}
 	}
 
-	fn visit_lit(&mut self, lit: &ast::Literal) -> Self::Result {
+	fn visit_lit(&mut self, lit: &ast::Literal, span: &Span) -> Self::Result {
 		Ok(Inter::None(lit.clone().into()))
 	}
 
@@ -442,12 +442,10 @@ impl AstVisitor for Interpreter {
 		))
 	}
 
-	fn visit_break(&mut self, expr: &Option<Expr>) -> Self::Result {
+	fn visit_break(&mut self, expr: Option<Spanned<&Expr>>) -> Self::Result {
 		Ok(Inter::Break(match expr {
 			// TODO: Do loops work inside of break expr?
-			Some(expr) => self
-				.walk_expr(&Spanned(expr, /* TODO: Use proper span */ 0..0))?
-				.into(),
+			Some(expr) => self.walk_expr(&expr)?.into(),
 			None => Value::Unit,
 		}))
 	}

@@ -32,7 +32,7 @@ pub trait AstVisitor {
 			Expr::Loop(block) => self.visit_loop(block),
 			Expr::If(expr, then_block, else_block) => self.visit_if(expr, then_block, else_block),
 
-			Expr::Return(expr) => self.visit_return(&**expr),
+			Expr::Return(expr) => self.visit_return(expr),
 			Expr::Break(expr) => self.visit_break(expr.as_deref().map(|expr| expr.as_ref())),
 			Expr::Continue => self.visit_continue(),
 

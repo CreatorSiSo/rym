@@ -3,7 +3,7 @@ use ast::Literal;
 use crate::callable::{NativeFunction, RymFunction};
 use crate::Inter;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Type {
 	Unit,
 	Bool,

@@ -37,14 +37,15 @@ impl GlobalEnv {
 	}
 
 	pub(crate) fn get(&self, name: &str) -> Result<&Value, EnvError> {
-		self.current_env().get(name).or(self.env.get(name))
+		self.current_env().get(name).or_else(|_| self.env.get(name))
 	}
 
 	pub(crate) fn set(&mut self, name: &str, value: Value) -> Result<(), EnvError> {
 		self
 			.current_env_mut()
 			.set(name, value.clone())
-			.or(self.env.set(name, value))
+			// TODO: Does this make sense?
+			.or_else(|_| self.env.set(name, value))
 	}
 
 	pub(crate) fn declare(&mut self, name: &str, value: Value, is_const: bool) {

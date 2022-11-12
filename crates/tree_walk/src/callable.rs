@@ -111,7 +111,7 @@ impl Callable for RymFunction {
 					self.body.1.clone(),
 				),
 			},
-			Err(err) => Err(err.into()),
+			Err(err) => Err(err),
 		}
 	}
 }

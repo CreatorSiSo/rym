@@ -25,7 +25,7 @@ fn main() -> Result<(), GenError> {
 		match read_dir_result {
 			Ok(entry) => {
 				let file_path = entry.path();
-				if file_path.is_file() && (file_path.extension() == Some(&OsStr::new("rym"))) {
+				if file_path.is_file() && (file_path.extension() == Some(OsStr::new("rym"))) {
 					println!("Reading: {:?}", entry.path());
 
 					match read_to_string(&file_path) {
@@ -56,6 +56,5 @@ fn main() -> Result<(), GenError> {
 	}
 	generated.push_str("];");
 
-	std::fs::write(Path::new(&dir_path).join("sources.rs"), generated)
-		.map_err(|err| GenError::Io(err))
+	std::fs::write(Path::new(&dir_path).join("sources.rs"), generated).map_err(GenError::Io)
 }

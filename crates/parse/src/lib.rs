@@ -39,7 +39,7 @@ impl Parser {
 		if let Some(Spanned(_, newline_span)) =
 			self.matches_which(&[TokenType::Semicolon, TokenType::Newline])
 		{
-			return Ok(Spanned(Stmt::Empty, newline_span.clone()));
+			return Ok(Spanned(Stmt::Empty, newline_span));
 		}
 		let stmt_start_pos = self.pos;
 
@@ -142,13 +142,11 @@ impl Parser {
 			return Ok(
 				if let Some(token) = self.matches_which(&[TokenType::Semicolon, TokenType::Newline]) {
 					token.map(|_| Expr::Break(None))
+				} else if self.peek_eq(0, TokenType::RightBrace) {
+					self.previous().map(|_| Expr::Break(None))
 				} else {
-					if self.peek_eq(0, TokenType::RightBrace) {
-						self.previous().map(|_| Expr::Break(None))
-					} else {
-						let expr = Box::new(self.expr()?);
-						self.previous().map(|_| Expr::Break(Some(expr)))
-					}
+					let expr = Box::new(self.expr()?);
+					self.previous().map(|_| Expr::Break(Some(expr)))
 				},
 			);
 		}

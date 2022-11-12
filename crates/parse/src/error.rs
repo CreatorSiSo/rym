@@ -11,7 +11,7 @@ pub enum ParseError {
 
 impl ParseError {
 	pub(super) fn token_mismatch<T>(token: Spanned<Token>, msg: &str) -> Result<T, Self> {
-		Err(ParseError::TokenMismatch(token.clone(), msg.into()))
+		Err(ParseError::TokenMismatch(token, msg.into()))
 	}
 }
 

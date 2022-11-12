@@ -179,7 +179,7 @@ impl AstVisitor for Interpreter {
 	}
 
 	fn visit_ident(&mut self, ident: &str, span: &Span) -> Self::Result {
-		match self.env.get(&ident) {
+		match self.env.get(ident) {
 			Ok(val) => Ok(Inter::None(val.clone())),
 			Err(err) => spanned_err(err, span.clone()),
 		}

@@ -213,7 +213,7 @@ where
 		Hide(_) => msg.into(),
 	};
 	quote_spanned! {
-		to_span.inner().span().into() =>
+		to_span.inner().span() =>
 		compile_error!(#msg)
 	}
 }
@@ -224,7 +224,7 @@ trait ToSpan {
 
 impl ToSpan for Span {
 	fn span(&self) -> Span {
-		self.clone()
+		*self
 	}
 }
 

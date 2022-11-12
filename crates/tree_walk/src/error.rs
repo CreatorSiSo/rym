@@ -17,7 +17,7 @@ pub fn spanned_err<T, E: Error + 'static>(err: E, span: Span) -> Result<T, Spann
 	Err(SpannedError(Box::new(err), span))
 }
 
-#[derive(thiserror::Error, Debug, PartialEq)]
+#[derive(thiserror::Error, Debug, PartialEq, Eq)]
 pub enum LogicError {
 	#[error("Expected `{expected}` argument(s) but got `{got}`")]
 	NumArgsMismatch { expected: usize, got: usize },
@@ -30,7 +30,7 @@ pub enum LogicError {
 	Panic(String),
 }
 
-#[derive(thiserror::Error, Debug, PartialEq)]
+#[derive(thiserror::Error, Debug, PartialEq, Eq)]
 pub enum TypeError {
 	#[error("Expected `{0}` got `{1}`")]
 	Expected(Type, Type),

@@ -144,7 +144,7 @@ pub struct Token {
 }
 
 impl Token {
-	pub fn new(typ: TokenType) -> Self {
+	pub const fn new(typ: TokenType) -> Self {
 		Self {
 			typ,
 			data: TokenData::None,

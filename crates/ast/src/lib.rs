@@ -165,7 +165,7 @@ pub struct Block {
 }
 
 impl Block {
-	pub fn new(stmts: Vec<Stmt>) -> Self {
+	pub const fn new(stmts: Vec<Stmt>) -> Self {
 		Self { stmts }
 	}
 }
@@ -273,12 +273,12 @@ impl Display for Literal {
 }
 
 impl Literal {
-	pub fn to_type_string(&self) -> String {
+	pub const fn to_type_string(&self) -> &str {
 		match self {
-			Literal::Unit => "()".into(),
-			Literal::Bool(_) => "bool".into(),
-			Literal::Number(_) => "number".into(),
-			Literal::String(_) => "string".into(),
+			Literal::Unit => "()",
+			Literal::Bool(_) => "bool",
+			Literal::Number(_) => "number",
+			Literal::String(_) => "string",
 		}
 	}
 }

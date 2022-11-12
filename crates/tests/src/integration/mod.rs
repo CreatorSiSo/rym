@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use super::*;
 
 mod sources;
@@ -44,26 +42,7 @@ fn exec() {
 		let (tokens, lex_errors) = tokens_from_src(&src);
 		let (ast, parse_errors) = spanned_ast_from_src(tokens);
 
-		let assert_fn = NativeFunction::new(
-			Some(1),
-			Rc::new(move |_: _, args: &[Value]| match args[0].clone() {
-				Value::Bool(val) => {
-					if !val {
-						panic!("Assertion failed, {path}")
-					}
-					Ok(Value::Unit)
-				}
-				val => spanned_err(TypeError::Expected(Type::Bool, val.typ()), 0..0),
-			}),
-		);
-
-		let exec_result = Interpreter::with_globals({
-			vec![("assert", assert_fn.into())]
-				.into_iter()
-				.chain(global_values().into_iter())
-				.collect()
-		})
-		.eval(&ast);
+		let exec_result = Interpreter::default().eval(&ast);
 
 		match should {
 			Should {

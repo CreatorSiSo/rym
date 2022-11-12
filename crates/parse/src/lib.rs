@@ -30,7 +30,7 @@ impl Parser {
 		(stmts, errors)
 	}
 
-	pub fn new(tokens: Vec<Spanned<Token>>) -> Self {
+	pub const fn new(tokens: Vec<Spanned<Token>>) -> Self {
 		Self { tokens, pos: 0 }
 	}
 

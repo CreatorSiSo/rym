@@ -1,11 +1,11 @@
-use std::{fmt::Debug, rc::Rc};
+use std::fmt::Debug;
 
 use crate::error::{spanned_err, LogicError, SpannedError};
 use crate::{Inter, Interpreter, Value};
 use ast::{AstVisitor, Expr, Spanned};
 
 type Arity = Option<usize>;
-type CallableFn = dyn Fn(&mut Interpreter, &[Value]) -> Result<Value, SpannedError>;
+pub type CallableFn = dyn Fn(&mut Interpreter, &[Value]) -> Result<Value, SpannedError>;
 
 pub trait Callable {
 	/// None => infinite arguments
@@ -19,11 +19,11 @@ pub trait Callable {
 #[derive(Clone)]
 pub struct NativeFunction {
 	arity: Arity,
-	callable: Rc<CallableFn>,
+	callable: &'static CallableFn,
 }
 
 impl NativeFunction {
-	pub fn new(arity: Arity, callable: Rc<CallableFn>) -> Self {
+	pub fn new(arity: Arity, callable: &'static CallableFn) -> Self {
 		Self { arity, callable }
 	}
 }
@@ -53,7 +53,7 @@ impl Callable for NativeFunction {
 
 impl PartialEq for NativeFunction {
 	fn eq(&self, other: &Self) -> bool {
-		self.arity == other.arity && Rc::ptr_eq(&self.callable, &other.callable)
+		self.arity == other.arity && std::ptr::eq(&self.callable, &other.callable)
 	}
 }
 

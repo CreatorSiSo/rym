@@ -55,9 +55,7 @@ if ³ true {
 }
 
 ~@€½³²
-"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/expr_results.rym"#, r#"//!
-
-const expr_example_1 = {
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/expr_results.rym"#, r#"const result_1 = {
 	mut index = 0
 	mut sum = 0
 	loop {
@@ -68,14 +66,14 @@ const expr_example_1 = {
 		index = index + 1
 	}
 }
-println(expr_example_1)
+assert_eq(result_1, 1275)
 
-const expr_example_2 = if expr_example_1 < 1000 {
-	expr_example_1 + " ist kleiner als 1000"
+const result_2 = if result_1 < 1000 {
+	result_1 + " ist kleiner als 1000"
 } else {
-	expr_example_1 + " ist größer als 1000"
+	result_1 + " ist größer als 1000"
 }
-println(expr_example_2)
+assert_eq(result_2, "1275 ist größer als 1000")
 "#), (r#"/home/simon/dev/rym/crates/tests/src/integration/control_flow.rym"#, r#"//!
 
 const say_hello = false

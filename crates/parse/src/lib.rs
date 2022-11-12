@@ -157,20 +157,24 @@ impl Parser {
 			return Ok(self.previous().map(|_| Expr::Continue));
 		}
 
-		self.assignment().map(|val| Spanned(val, 0..0))
+		self.assignment()
 	}
 
 	/// assignment => identifier "=" expr
-	fn assignment(&mut self) -> ParseResult<Expr> {
+	fn assignment(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.peek_eq(1, TokenType::Equal) {
+			let start = self.tokens[self.pos].1.start;
 			let expr_l = Box::new(self.primary()?);
 			self.advance();
 			let expr_r = Box::new(self.expr()?.0);
 
-			return Ok(Expr::Assign(expr_l, expr_r));
+			return Ok(Spanned(
+				Expr::Assign(expr_l, expr_r),
+				start..self.previous().1.end,
+			));
 		}
 
-		self.if_()
+		self.if_().map(|expr| Spanned(expr, 0..0))
 	}
 
 	/// if => "if" expression block ("else" (if | block))?

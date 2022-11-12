@@ -2,14 +2,6 @@ use crate::value::Value;
 
 use std::collections::HashMap;
 
-#[derive(thiserror::Error, Debug, PartialEq)]
-pub enum EnvError {
-	#[error("Variable `{name}` has not been declared")]
-	UndeclaredVar { name: String },
-	#[error("Assignment of `{value}` to constant `{name}` is forbidden")]
-	ConstAssign { name: String, value: Value },
-}
-
 #[derive(Debug, Clone)]
 pub(crate) struct Variable {
 	value: Value,
@@ -166,4 +158,12 @@ impl Env {
 			.last_mut()
 			.expect("Internal Error: Scopes stack should never be empty")
 	}
+}
+
+#[derive(thiserror::Error, Debug, PartialEq)]
+pub enum EnvError {
+	#[error("Variable `{name}` has not been declared")]
+	UndeclaredVar { name: String },
+	#[error("Assignment of `{value}` to constant `{name}` is forbidden")]
+	ConstAssign { name: String, value: Value },
 }

@@ -1,10 +1,11 @@
 use std::{fmt::Debug, rc::Rc};
 
-use crate::{error::RuntimeError, Inter, Interpreter, Value};
+use crate::error::{spanned_err, LogicError, SpannedError};
+use crate::{Inter, Interpreter, Value};
 use ast::{AstVisitor, Expr, Spanned};
 
 type Arity = Option<usize>;
-type CallableFn = dyn Fn(&mut Interpreter, &[Value]) -> Result<Value, RuntimeError>;
+type CallableFn = dyn Fn(&mut Interpreter, &[Value]) -> Result<Value, SpannedError>;
 
 pub trait Callable {
 	/// None => infinite arguments
@@ -12,7 +13,7 @@ pub trait Callable {
 	/// Some(num) => num arguments
 	fn arity(&self) -> Option<usize>;
 
-	fn call(&self, interpreter: &mut Interpreter, args: &[Value]) -> Result<Value, RuntimeError>;
+	fn call(&self, interpreter: &mut Interpreter, args: &[Value]) -> Result<Value, SpannedError>;
 }
 
 #[derive(Clone)]
@@ -45,7 +46,7 @@ impl Callable for NativeFunction {
 		&self,
 		interpreter: &mut Interpreter,
 		args: &[Value],
-	) -> Result<Value, RuntimeError> {
+	) -> Result<Value, SpannedError> {
 		(self.callable)(interpreter, args)
 	}
 }
@@ -82,7 +83,7 @@ impl Callable for RymFunction {
 		&self,
 		interpreter: &mut Interpreter,
 		args: &[Value],
-	) -> Result<Value, RuntimeError> {
+	) -> Result<Value, SpannedError> {
 		debug_assert_eq!(
 			self.params.len(),
 			args.len(),
@@ -101,14 +102,16 @@ impl Callable for RymFunction {
 		match return_val {
 			Ok(inter) => match inter {
 				Inter::Return(val) | Inter::None(val) => Ok(val),
-				Inter::Break(_) => Err(RuntimeError::ForbiddenInter(
-					"Using `break` outside of a loop is not allowed.".into(),
-				)),
-				Inter::Continue => Err(RuntimeError::ForbiddenInter(
-					"Using `continue` outside of a loop is not allowed.".into(),
-				)),
+				Inter::Break(_) => spanned_err(
+					LogicError::ForbiddenInter("Using `break` outside of a loop is not allowed.".into()),
+					0..0,
+				),
+				Inter::Continue => spanned_err(
+					LogicError::ForbiddenInter("Using `continue` outside of a loop is not allowed.".into()),
+					0..0,
+				),
 			},
-			Err(err) => Err(err),
+			Err(err) => Err(err.into()),
 		}
 	}
 }

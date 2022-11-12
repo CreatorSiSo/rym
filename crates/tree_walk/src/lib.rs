@@ -8,10 +8,10 @@ mod error;
 mod value;
 
 pub use callable::NativeFunction;
-pub use error::{RuntimeError, TypeError};
+pub use error::{spanned_err, LogicError, SpannedError, TypeError};
 pub use value::{Type, Value};
 
-use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, LogicalOp, Spanned, Stmt, UnaryOp};
+use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, LogicalOp, Span, Spanned, Stmt, UnaryOp};
 use callable::{Callable, RymFunction};
 use env::GlobalEnv;
 
@@ -54,11 +54,14 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 	let panic_fn = NativeFunction::new(
 		None,
 		Rc::new(|_: _, args: &[Value]| {
-			Err(RuntimeError::Panic(
-				args
-					.iter()
-					.fold(String::new(), |accum, arg| accum + &arg.to_string()),
-			))
+			spanned_err(
+				LogicError::Panic(
+					args
+						.iter()
+						.fold(String::new(), |accum, arg| accum + &arg.to_string()),
+				),
+				0..0,
+			)
 		}),
 	);
 
@@ -70,7 +73,7 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 				assert!(val);
 				Ok(Value::Unit)
 			}
-			val => Err(TypeError::Expected(Type::Bool, val.typ()).into()),
+			val => spanned_err(TypeError::Expected(Type::Bool, val.typ()), 0..0),
 		}),
 	);
 
@@ -85,12 +88,12 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 
 	let floor_fn = NativeFunction::new(
 		Some(1),
-		Rc::new(|_: _, args: &[Value]| {
+		Rc::new(|_: _, args: &[/* Spanned< */ Value /* > */]| {
 			let val = &args[0];
 			if let Value::Number(num) = val {
 				Ok(Value::Number(num.floor()))
 			} else {
-				Err(TypeError::Expected(Type::Number, val.typ()).into())
+				spanned_err(TypeError::Expected(Type::Number, val.typ()), 0..0)
 			}
 		}),
 	);
@@ -131,7 +134,7 @@ impl Interpreter {
 		}
 	}
 
-	pub fn eval(&mut self, ast: &[Spanned<Stmt>]) -> Result<(), RuntimeError> {
+	pub fn eval(&mut self, ast: &[Spanned<Stmt>]) -> Result<(), SpannedError> {
 		for Spanned(stmt, span) in ast {
 			// TODO: Figure out who should own the spans and if they should be cloned here
 			self.walk_stmt(&Spanned(stmt, span.clone()))?;
@@ -145,13 +148,14 @@ impl Interpreter {
 		expr_r: &Expr,
 		f: F,
 		short_circuit_if: bool,
-	) -> Result<Value, RuntimeError>
+	) -> Result<Value, SpannedError>
 	where
 		F: Fn(bool, bool) -> bool,
 	{
+		// TODO Clean this up
 		match val_l {
 			Value::Bool(bool_l) => {
-				if bool_l == short_circuit_if {
+				if short_circuit_if == bool_l {
 					return Ok(Value::Bool(short_circuit_if));
 				}
 				let val_r = self
@@ -160,15 +164,15 @@ impl Interpreter {
 				if let Value::Bool(bool_r) = val_r {
 					return Ok(Value::Bool(f(bool_l, bool_r)));
 				}
-				Err(TypeError::Expected(Type::Bool, val_r.typ()).into())
+				spanned_err(TypeError::Expected(Type::Bool, val_r.typ()), 0..0)
 			}
-			_ => Err(TypeError::Expected(Type::Bool, val_l.typ()).into()),
+			_ => spanned_err(TypeError::Expected(Type::Bool, val_l.typ()), 0..0),
 		}
 	}
 }
 
 impl AstVisitor for Interpreter {
-	type Result = Result<Inter, RuntimeError>;
+	type Result = Result<Inter, SpannedError>;
 
 	fn visit_empty(&mut self) -> Self::Result {
 		Ok(Inter::None(Value::Unit))
@@ -192,10 +196,10 @@ impl AstVisitor for Interpreter {
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn visit_ident(&mut self, ident: &str /* TODO span: &Span */) -> Self::Result {
+	fn visit_ident(&mut self, ident: &str, span: &Span) -> Self::Result {
 		match self.env.get(&ident) {
 			Ok(val) => Ok(Inter::None(val.clone())),
-			Err(err) => Err(RuntimeError::EnvError(err)),
+			Err(err) => spanned_err(err, span.clone()),
 		}
 	}
 
@@ -207,21 +211,23 @@ impl AstVisitor for Interpreter {
 		let name = match expr_l {
 			Expr::Identifier(name) => name,
 			_ => {
-				return Err(
+				return spanned_err(
 					TypeError::Expected(
 						Type::Identifier,
 						self
 							.walk_expr(&Spanned(expr_l, /* TODO: Use proper span */ 0..0))?
 							.into(),
-					)
-					.into(),
+					),
+					0..0,
 				);
 			}
 		};
 		let value = self
 			.walk_expr(&Spanned(expr_r, /* TODO: Use proper span */ 0..0))?
 			.into();
-		self.env.set(name, value)?;
+		if let Err(err) = self.env.set(name, value) {
+			return spanned_err(err, 0..0);
+		}
 
 		Ok(Inter::None(Value::Unit))
 	}
@@ -245,12 +251,18 @@ impl AstVisitor for Interpreter {
 		let f: Box<dyn Callable> = match callee {
 			Value::NativeFunction(f) => Box::new(f),
 			Value::RymFunction(f) => Box::new(f),
-			val => return Err(TypeError::Call(val.typ()).into()),
+			val => spanned_err(TypeError::Call(val.typ()), 0..0)?,
 		};
 
 		if let Some(arity) = f.arity() {
 			if arity != args.len() {
-				return RuntimeError::num_args_mismatch(arity, args.len());
+				return spanned_err(
+					LogicError::NumArgsMismatch {
+						expected: arity,
+						got: args.len(),
+					},
+					0..0,
+				);
 			}
 		}
 
@@ -265,7 +277,7 @@ impl AstVisitor for Interpreter {
 		match (op, val) {
 			(UnaryOp::Not, Value::Bool(val)) => Ok(Inter::None(Value::Bool(!val))),
 			(UnaryOp::Neg, Value::Number(val)) => Ok(Inter::None(Value::Number(-val))),
-			(op, val) => Err(TypeError::Unary(*op, val.typ()).into()),
+			(op, val) => spanned_err(TypeError::Unary(*op, val.typ()), 0..0),
 		}
 	}
 
@@ -290,11 +302,11 @@ impl AstVisitor for Interpreter {
 			.into();
 
 		fn apply_num_fn<F, R>(
-			maybe_err: Option<RuntimeError>,
+			maybe_err: Option<TypeError>,
 			val_l: Value,
 			val_r: Value,
 			f: F,
-		) -> Result<Value, RuntimeError>
+		) -> Result<Value, SpannedError>
 		where
 			Value: From<R>,
 			F: Fn(f64, f64) -> R,
@@ -304,10 +316,13 @@ impl AstVisitor for Interpreter {
 					return Ok(Value::from(f(val_l, val_r)));
 				}
 			}
-			Err(match maybe_err {
-				Some(err) => err,
-				None => TypeError::Compare(val_l.typ(), val_r.typ()).into(),
-			})
+			spanned_err(
+				match maybe_err {
+					Some(err) => err,
+					None => TypeError::Compare(val_l.typ(), val_r.typ()),
+				},
+				0..0,
+			)
 		}
 
 		Ok(Inter::None(match op {
@@ -318,25 +333,25 @@ impl AstVisitor for Interpreter {
 			BinaryOp::Lt => apply_num_fn(None, val_l, val_r, |val_l, val_r| val_l < val_r)?,
 			BinaryOp::Le => apply_num_fn(None, val_l, val_r, |val_l, val_r| val_l <= val_r)?,
 			BinaryOp::Mul => apply_num_fn(
-				Some(TypeError::Multiply(val_l.typ(), val_r.typ()).into()),
+				Some(TypeError::Multiply(val_l.typ(), val_r.typ())),
 				val_l,
 				val_r,
 				|val_l, val_r| val_l * val_r,
 			)?,
 			BinaryOp::Div => apply_num_fn(
-				Some(TypeError::Divide(val_l.typ(), val_r.typ()).into()),
+				Some(TypeError::Divide(val_l.typ(), val_r.typ())),
 				val_l,
 				val_r,
 				|val_l, val_r| val_l / val_r,
 			)?,
 			BinaryOp::Mod => apply_num_fn(
-				Some(TypeError::Modulate(val_l.typ(), val_r.typ()).into()),
+				Some(TypeError::Modulate(val_l.typ(), val_r.typ())),
 				val_l,
 				val_r,
 				|val_l, val_r| val_l % val_r,
 			)?,
 			BinaryOp::Sub => apply_num_fn(
-				Some(TypeError::Substract(val_l.typ(), val_r.typ()).into()),
+				Some(TypeError::Substract(val_l.typ(), val_r.typ())),
 				val_l,
 				val_r,
 				|val_l, val_r| val_l - val_r,
@@ -352,7 +367,7 @@ impl AstVisitor for Interpreter {
 				(Value::String(l), Value::Number(r)) => (l + &r.to_string()).into(),
 				(Value::String(l), Value::Bool(r)) => (l + &r.to_string()).into(),
 
-				(val_l, val_r) => return Err(TypeError::Add(val_l.typ(), val_r.typ()).into()),
+				(val_l, val_r) => return spanned_err(TypeError::Add(val_l.typ(), val_r.typ()), 0..0),
 			},
 		}))
 	}
@@ -407,7 +422,7 @@ impl AstVisitor for Interpreter {
 			.into()
 		{
 			Value::Bool(bool) => bool,
-			val => return Err(TypeError::Expected(Type::Bool, val.typ()).into()),
+			val => return spanned_err(TypeError::Expected(Type::Bool, val.typ()), 0..0),
 		};
 
 		if bool {

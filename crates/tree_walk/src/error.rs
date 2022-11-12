@@ -1,41 +1,33 @@
-use crate::{env::EnvError, Type};
-use ast::UnaryOp;
+use std::error::Error;
+
+use crate::Type;
+use ast::{Span, UnaryOp};
+
+#[derive(thiserror::Error, Debug)]
+#[error("{0:?}: {0}")]
+pub struct SpannedError(Box<dyn Error + 'static>, Span);
+
+impl PartialEq for SpannedError {
+	fn eq(&self, other: &Self) -> bool {
+		self.0.to_string() == other.0.to_string() && self.1 == other.1
+	}
+}
+
+pub fn spanned_err<T, E: Error + 'static>(err: E, span: Span) -> Result<T, SpannedError> {
+	Err(SpannedError(Box::new(err), span))
+}
 
 #[derive(thiserror::Error, Debug, PartialEq)]
-pub enum RuntimeError {
+pub enum LogicError {
 	#[error("Expected `{expected}` argument(s) but got `{got}`")]
 	NumArgsMismatch { expected: usize, got: usize },
 	#[error("{0}")]
 	ForbiddenInter(String),
+	// TODO Use DivideByZero error
 	#[error("Cannot divide by zero")]
 	DivideByZero,
-
 	#[error("Panic: {0}")]
 	Panic(String),
-
-	#[error("{0}")]
-	TypeError(#[source] TypeError),
-	#[error("{0}")]
-	EnvError(#[source] EnvError),
-}
-
-impl From<TypeError> for RuntimeError {
-	fn from(err: TypeError) -> Self {
-		RuntimeError::TypeError(err)
-	}
-}
-
-impl From<EnvError> for RuntimeError {
-	fn from(err: EnvError) -> Self {
-		RuntimeError::EnvError(err)
-	}
-}
-
-// TODO: Print line number as well
-impl RuntimeError {
-	pub(crate) fn num_args_mismatch<T>(expected: usize, got: usize) -> Result<T, Self> {
-		Err(Self::NumArgsMismatch { expected, got })
-	}
 }
 
 #[derive(thiserror::Error, Debug, PartialEq)]

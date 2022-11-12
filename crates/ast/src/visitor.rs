@@ -1,4 +1,4 @@
-use crate::{BinaryOp, Block, Decl, Expr, Literal, LogicalOp, Spanned, Stmt, UnaryOp};
+use crate::{BinaryOp, Block, Decl, Expr, Literal, LogicalOp, Span, Spanned, Stmt, UnaryOp};
 
 pub trait AstVisitor {
 	type Result;
@@ -18,7 +18,7 @@ pub trait AstVisitor {
 
 	fn walk_expr(&mut self, Spanned(expr, span): &Spanned<&Expr>) -> Self::Result {
 		match expr {
-			Expr::Identifier(ident) => self.visit_ident(ident),
+			Expr::Identifier(ident) => self.visit_ident(ident, span),
 			Expr::Literal(lit) => self.visit_lit(lit),
 			Expr::Assign(expr_l, expr_r) => self.visit_assign(expr_l, expr_r),
 			Expr::Call(callee, args) => self.visit_call(callee, args),
@@ -40,7 +40,7 @@ pub trait AstVisitor {
 		}
 	}
 
-	fn visit_ident(&mut self, ident: &str /* TODO , span: &Span */) -> Self::Result;
+	fn visit_ident(&mut self, ident: &str, span: &Span) -> Self::Result;
 	fn visit_lit(&mut self, lit: &Literal) -> Self::Result;
 
 	fn visit_assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Self::Result;

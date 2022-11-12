@@ -53,7 +53,7 @@ fn exec() {
 					}
 					Ok(Value::Unit)
 				}
-				val => Err(TypeError::Expected(Type::Bool, val.typ()).into()),
+				val => spanned_err(TypeError::Expected(Type::Bool, val.typ()), 0..0),
 			}),
 		);
 

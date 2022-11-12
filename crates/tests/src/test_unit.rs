@@ -15,10 +15,5 @@ fn integration_unit() {
 	let mut ast = Vec::new();
 	Parser::new(tokens).for_each(|result| ast.push(result.unwrap()));
 	let result = Interpreter::default().eval(&ast);
-	assert_eq!(
-		result,
-		Err(RuntimeError::TypeMismatch(
-			"Cannot add `()` to `number`".into()
-		))
-	);
+	assert_eq!(result, Err(TypeError::Add(Type::Unit, Type::Number).into()));
 }

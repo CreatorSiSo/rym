@@ -3,6 +3,7 @@ use ast::Literal;
 use crate::callable::{NativeFunction, RymFunction};
 use crate::Inter;
 
+#[derive(Debug, PartialEq)]
 pub enum Type {
 	Unit,
 	Bool,
@@ -60,6 +61,19 @@ pub enum Value {
 	Bool(bool),
 	NativeFunction(NativeFunction),
 	RymFunction(RymFunction),
+}
+
+impl Value {
+	pub fn typ(&self) -> Type {
+		match self {
+			Value::Unit => Type::Unit,
+			Value::Number(_) => Type::Number,
+			Value::String(_) => Type::String,
+			Value::Bool(_) => Type::Bool,
+			Value::NativeFunction(_) => Type::NativeFunction,
+			Value::RymFunction(_) => Type::RymFunction,
+		}
+	}
 }
 
 impl core::fmt::Display for Value {

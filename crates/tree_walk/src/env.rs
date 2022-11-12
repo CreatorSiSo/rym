@@ -1,7 +1,14 @@
 use crate::value::Value;
 
-use super::error::RuntimeError;
 use std::collections::HashMap;
+
+#[derive(thiserror::Error, Debug, PartialEq)]
+pub enum EnvError {
+	#[error("Variable `{name}` has not been declared")]
+	UndeclaredVar { name: String },
+	#[error("Assignment of `{value}` to constant `{name}` is forbidden")]
+	ConstAssign { name: String, value: Value },
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct Variable {
@@ -37,11 +44,11 @@ impl GlobalEnv {
 		}
 	}
 
-	pub(crate) fn get(&self, name: &str) -> Result<&Value, RuntimeError> {
+	pub(crate) fn get(&self, name: &str) -> Result<&Value, EnvError> {
 		self.current_env().get(name).or(self.env.get(name))
 	}
 
-	pub(crate) fn set(&mut self, name: &str, value: Value) -> Result<(), RuntimeError> {
+	pub(crate) fn set(&mut self, name: &str, value: Value) -> Result<(), EnvError> {
 		self
 			.current_env_mut()
 			.set(name, value.clone())
@@ -107,28 +114,31 @@ impl Env {
 }
 
 impl Env {
-	pub(crate) fn get(&self, name: &str) -> Result<&Value, RuntimeError> {
+	pub(crate) fn get(&self, name: &str) -> Result<&Value, EnvError> {
 		for scope in self.iter_scopes() {
 			if let Some(var) = scope.0.get(name) {
 				return Ok(&var.value);
 			}
 			continue;
 		}
-		RuntimeError::undeclared_var(name)
+		Err(EnvError::UndeclaredVar { name: name.into() })
 	}
 
-	pub(crate) fn set(&mut self, name: &str, value: Value) -> Result<(), RuntimeError> {
+	pub(crate) fn set(&mut self, name: &str, value: Value) -> Result<(), EnvError> {
 		for scope in self.iter_scopes_mut() {
 			if let Some(variable) = scope.0.get_mut(name) {
 				if variable.is_const {
-					return RuntimeError::const_assign(name, value);
+					return Err(EnvError::ConstAssign {
+						name: name.into(),
+						value,
+					});
 				}
 				variable.value = value;
 				return Ok(());
 			}
 			continue;
 		}
-		RuntimeError::undeclared_var(name)
+		Err(EnvError::UndeclaredVar { name: name.into() })
 	}
 
 	pub(crate) fn declare(&mut self, name: &str, value: Value, is_const: bool) {

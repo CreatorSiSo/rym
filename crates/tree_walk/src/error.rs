@@ -1,98 +1,73 @@
-use crate::{Type, Value};
+use crate::{env::EnvError, Type};
 use ast::UnaryOp;
 
-#[derive(Debug, PartialEq)]
+#[derive(thiserror::Error, Debug, PartialEq)]
 pub enum RuntimeError {
-	ForbiddenType(String),
+	#[error("Expected `{expected}` argument(s) but got `{got}`")]
+	NumArgsMismatch { expected: usize, got: usize },
+	#[error("{0}")]
 	ForbiddenInter(String),
-	TypeMismatch(String),
-	UndeclaredVar(String),
-	Assignment(String),
-	NumArgsMismatch(String),
+	#[error("Cannot divide by zero")]
 	DivideByZero,
+
+	#[error("Panic: {0}")]
 	Panic(String),
+
+	#[error("{0}")]
+	TypeError(#[source] TypeError),
+	#[error("{0}")]
+	EnvError(#[source] EnvError),
+}
+
+impl From<TypeError> for RuntimeError {
+	fn from(err: TypeError) -> Self {
+		RuntimeError::TypeError(err)
+	}
+}
+
+impl From<EnvError> for RuntimeError {
+	fn from(err: EnvError) -> Self {
+		RuntimeError::EnvError(err)
+	}
 }
 
 // TODO: Print line number as well
 impl RuntimeError {
 	pub(crate) fn num_args_mismatch<T>(expected: usize, got: usize) -> Result<T, Self> {
-		Err(Self::NumArgsMismatch(format!(
-			"Expected `{expected}` argument(s) but got `{got}`"
-		)))
+		Err(Self::NumArgsMismatch { expected, got })
 	}
+}
 
-	pub(crate) fn const_assign<T>(name: &str, value: Value) -> Result<T, Self> {
-		Err(Self::Assignment(format!(
-			"Assignment of `{value}` to constant `{name}` is forbidden"
-		)))
-	}
+#[derive(thiserror::Error, Debug, PartialEq)]
+pub enum TypeError {
+	#[error("Expected `{0}` got `{1}`")]
+	Expected(Type, Type),
 
-	pub(crate) fn undeclared_var<T>(name: &str) -> Result<T, Self> {
-		Err(Self::UndeclaredVar(format!(
-			"Variable `{name}` has not been declared"
-		)))
-	}
+	#[error("Cannot apply unary operator `{0}` to `{1}`")]
+	Unary(UnaryOp, Type),
 
-	pub(crate) fn unary<T>(op: &UnaryOp, right: Type) -> Result<T, Self> {
-		Err(Self::ForbiddenType(format!(
-			"Cannot apply unary operator `{}` to `{}`",
-			match op {
-				UnaryOp::Neg => "-",
-				UnaryOp::Not => "!",
-			},
-			right,
-		)))
-	}
+	#[error("Cannot compare `{0}` with `{1}`")]
+	Compare(Type, Type),
 
-	pub(crate) fn call<T>(typ: Type) -> Result<T, Self> {
-		Err(Self::TypeMismatch(format!(
-			"Cannot call `{typ}`, expected `{}` or `{}`",
-			Type::RymFunction,
-			Type::NativeFunction
-		)))
-	}
+	#[error("Cannot add `{0}` to `{1}`")]
+	Add(Type, Type),
 
-	pub fn expected<T>(expected: Type, got: Type) -> Result<T, Self> {
-		Err(Self::TypeMismatch(format!(
-			"Expected `{expected}` got {got}",
-		)))
-	}
+	#[error("Cannot substract `{1}` from `{0}`")]
+	Substract(Type, Type),
 
-	pub(crate) fn comparison<T>(left: Type, right: Type) -> Result<T, Self> {
-		Err(Self::TypeMismatch(format!(
-			"Cannot compare `{}` with `{}`",
-			left, right,
-		)))
-	}
+	#[error("Cannot multiply `{0}` with `{1}`")]
+	Multiply(Type, Type),
 
-	pub(crate) fn addition<T>(left: Type, right: Type) -> Result<T, Self> {
-		Err(Self::TypeMismatch(format!(
-			"Cannot add `{}` to `{}`",
-			left, right,
-		)))
-	}
+	#[error("Cannot divide `{0}` by `{1}`")]
+	Divide(Type, Type),
 
-	// TODO: Use this error
-	pub(crate) fn _substraction<T>(left: Type, right: Type) -> Result<T, Self> {
-		Err(Self::TypeMismatch(format!(
-			"Cannot substract `{}` from `{}`",
-			right, left,
-		)))
-	}
+	#[error("Cannot modulate `{0}` by `{1}`")]
+	Modulate(Type, Type),
 
-	// TODO: Use this error
-	pub(crate) fn _multiplication<T>(left: Type, right: Type) -> Result<T, Self> {
-		Err(Self::TypeMismatch(format!(
-			"Cannot multiply `{}` by `{}`",
-			left, right,
-		)))
-	}
-
-	// TODO: Use this error
-	pub(crate) fn _division<T>(left: Type, right: Type) -> Result<T, Self> {
-		Err(Self::TypeMismatch(format!(
-			"Cannot divide `{}` by `{}`",
-			left, right,
-		)))
-	}
+	#[error(
+		"Cannot call `{0}` expected `{}` or `{}`",
+		Type::RymFunction,
+		Type::NativeFunction
+	)]
+	Call(Type),
 }

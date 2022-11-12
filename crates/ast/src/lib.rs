@@ -195,12 +195,21 @@ pub enum LogicalOp {
 	Or,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UnaryOp {
 	/// The `!` operator (not)
 	Not,
 	/// The `-` operator (negate)
 	Neg,
+}
+
+impl Display for UnaryOp {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			UnaryOp::Not => f.write_str("!"),
+			UnaryOp::Neg => f.write_str("-"),
+		}
+	}
 }
 
 #[derive(Debug, Clone, PartialEq)]

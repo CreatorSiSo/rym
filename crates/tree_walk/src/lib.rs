@@ -8,7 +8,7 @@ mod error;
 mod value;
 
 pub use callable::NativeFunction;
-pub use error::RuntimeError;
+pub use error::{RuntimeError, TypeError};
 pub use value::{Type, Value};
 
 use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, LogicalOp, Spanned, Stmt, UnaryOp};
@@ -70,7 +70,7 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 				assert!(val);
 				Ok(Value::Unit)
 			}
-			val => RuntimeError::expected(Type::Bool, Type::from(&val)),
+			val => Err(TypeError::Expected(Type::Bool, val.typ()).into()),
 		}),
 	);
 
@@ -90,7 +90,7 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 			if let Value::Number(num) = val {
 				Ok(Value::Number(num.floor()))
 			} else {
-				RuntimeError::expected(Type::Number, Type::from(val))
+				Err(TypeError::Expected(Type::Number, val.typ()).into())
 			}
 		}),
 	);
@@ -160,9 +160,9 @@ impl Interpreter {
 				if let Value::Bool(bool_r) = val_r {
 					return Ok(Value::Bool(f(bool_l, bool_r)));
 				}
-				RuntimeError::expected(Type::Bool, Type::from(&val_r))
+				Err(TypeError::Expected(Type::Bool, val_r.typ()).into())
 			}
-			_ => RuntimeError::expected(Type::Bool, Type::from(&val_l)),
+			_ => Err(TypeError::Expected(Type::Bool, val_l.typ()).into()),
 		}
 	}
 }
@@ -192,8 +192,11 @@ impl AstVisitor for Interpreter {
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn visit_ident(&mut self, ident: &str) -> Self::Result {
-		Ok(Inter::None(self.env.get(&ident)?.clone()))
+	fn visit_ident(&mut self, ident: &str /* TODO span: &Span */) -> Self::Result {
+		match self.env.get(&ident) {
+			Ok(val) => Ok(Inter::None(val.clone())),
+			Err(err) => Err(RuntimeError::EnvError(err)),
+		}
 	}
 
 	fn visit_lit(&mut self, lit: &ast::Literal) -> Self::Result {
@@ -204,11 +207,14 @@ impl AstVisitor for Interpreter {
 		let name = match expr_l {
 			Expr::Identifier(name) => name,
 			_ => {
-				return RuntimeError::expected(
-					Type::Identifier,
-					self
-						.walk_expr(&Spanned(expr_l, /* TODO: Use proper span */ 0..0))?
-						.into(),
+				return Err(
+					TypeError::Expected(
+						Type::Identifier,
+						self
+							.walk_expr(&Spanned(expr_l, /* TODO: Use proper span */ 0..0))?
+							.into(),
+					)
+					.into(),
 				);
 			}
 		};
@@ -239,7 +245,7 @@ impl AstVisitor for Interpreter {
 		let f: Box<dyn Callable> = match callee {
 			Value::NativeFunction(f) => Box::new(f),
 			Value::RymFunction(f) => Box::new(f),
-			val => return RuntimeError::call(Type::from(&val)),
+			val => return Err(TypeError::Call(val.typ()).into()),
 		};
 
 		if let Some(arity) = f.arity() {
@@ -256,11 +262,11 @@ impl AstVisitor for Interpreter {
 			.walk_expr(&Spanned(expr, /* TODO: Use proper span */ 0..0))?
 			.into();
 
-		Ok(Inter::None(match (op, val) {
-			(UnaryOp::Not, Value::Bool(val)) => Value::Bool(!val),
-			(UnaryOp::Neg, Value::Number(val)) => Value::Number(-val),
-			(op, val) => return RuntimeError::unary(op, Type::from(&val)),
-		}))
+		match (op, val) {
+			(UnaryOp::Not, Value::Bool(val)) => Ok(Inter::None(Value::Bool(!val))),
+			(UnaryOp::Neg, Value::Number(val)) => Ok(Inter::None(Value::Number(-val))),
+			(op, val) => Err(TypeError::Unary(*op, val.typ()).into()),
+		}
 	}
 
 	fn visit_logical(&mut self, expr_l: &Expr, op: &LogicalOp, expr_r: &Expr) -> Self::Result {
@@ -283,33 +289,61 @@ impl AstVisitor for Interpreter {
 			.walk_expr(&Spanned(expr_r, /* TODO: Use proper span */ 0..0))?
 			.into();
 
-		fn apply_num_fn<F, R>(val_l: Value, val_r: Value, f: F) -> Result<Value, RuntimeError>
+		fn apply_num_fn<F, R>(
+			maybe_err: Option<RuntimeError>,
+			val_l: Value,
+			val_r: Value,
+			f: F,
+		) -> Result<Value, RuntimeError>
 		where
-			F: Fn(f64, f64) -> R,
 			Value: From<R>,
+			F: Fn(f64, f64) -> R,
 		{
 			if let Value::Number(val_l) = val_l {
 				if let Value::Number(val_r) = val_r {
 					return Ok(Value::from(f(val_l, val_r)));
 				}
 			}
-			RuntimeError::comparison(Type::from(&val_l), Type::from(&val_r))
+			Err(match maybe_err {
+				Some(err) => err,
+				None => TypeError::Compare(val_l.typ(), val_r.typ()).into(),
+			})
 		}
 
 		Ok(Inter::None(match op {
 			BinaryOp::Eq => Value::from(val_l == val_r),
 			BinaryOp::Ne => Value::from(val_l != val_r),
-			BinaryOp::Gt => apply_num_fn(val_l, val_r, |val_l, val_r| val_l > val_r)?,
-			BinaryOp::Ge => apply_num_fn(val_l, val_r, |val_l, val_r| val_l >= val_r)?,
-			BinaryOp::Lt => apply_num_fn(val_l, val_r, |val_l, val_r| val_l < val_r)?,
-			BinaryOp::Le => apply_num_fn(val_l, val_r, |val_l, val_r| val_l <= val_r)?,
-			BinaryOp::Mul => apply_num_fn(val_l, val_r, |val_l, val_r| val_l * val_r)?,
-			BinaryOp::Div => apply_num_fn(val_l, val_r, |val_l, val_r| val_l / val_r)?,
-			BinaryOp::Mod => apply_num_fn(val_l, val_r, |val_l, val_r| val_l % val_r)?,
-			BinaryOp::Sub => apply_num_fn(val_l, val_r, |val_l, val_r| val_l - val_r)?,
+			BinaryOp::Gt => apply_num_fn(None, val_l, val_r, |val_l, val_r| val_l > val_r)?,
+			BinaryOp::Ge => apply_num_fn(None, val_l, val_r, |val_l, val_r| val_l >= val_r)?,
+			BinaryOp::Lt => apply_num_fn(None, val_l, val_r, |val_l, val_r| val_l < val_r)?,
+			BinaryOp::Le => apply_num_fn(None, val_l, val_r, |val_l, val_r| val_l <= val_r)?,
+			BinaryOp::Mul => apply_num_fn(
+				Some(TypeError::Multiply(val_l.typ(), val_r.typ()).into()),
+				val_l,
+				val_r,
+				|val_l, val_r| val_l * val_r,
+			)?,
+			BinaryOp::Div => apply_num_fn(
+				Some(TypeError::Divide(val_l.typ(), val_r.typ()).into()),
+				val_l,
+				val_r,
+				|val_l, val_r| val_l / val_r,
+			)?,
+			BinaryOp::Mod => apply_num_fn(
+				Some(TypeError::Modulate(val_l.typ(), val_r.typ()).into()),
+				val_l,
+				val_r,
+				|val_l, val_r| val_l % val_r,
+			)?,
+			BinaryOp::Sub => apply_num_fn(
+				Some(TypeError::Substract(val_l.typ(), val_r.typ()).into()),
+				val_l,
+				val_r,
+				|val_l, val_r| val_l - val_r,
+			)?,
 			BinaryOp::Add => match (val_l, val_r) {
 				(val_l @ Value::Number(_), val_r @ Value::Number(_)) => {
-					apply_num_fn(val_l, val_r, |val_l, val_r| val_l + val_r)?
+					apply_num_fn(None, val_l, val_r, |val_l, val_r| val_l + val_r)?
 				}
 
 				(Value::String(l), Value::String(r)) => (l + &r).into(),
@@ -318,7 +352,7 @@ impl AstVisitor for Interpreter {
 				(Value::String(l), Value::Number(r)) => (l + &r.to_string()).into(),
 				(Value::String(l), Value::Bool(r)) => (l + &r.to_string()).into(),
 
-				(val_l, val_r) => return RuntimeError::addition(Type::from(&val_l), Type::from(&val_r)),
+				(val_l, val_r) => return Err(TypeError::Add(val_l.typ(), val_r.typ()).into()),
 			},
 		}))
 	}
@@ -373,7 +407,7 @@ impl AstVisitor for Interpreter {
 			.into()
 		{
 			Value::Bool(bool) => bool,
-			val => return RuntimeError::expected(Type::Bool, Type::from(&val)),
+			val => return Err(TypeError::Expected(Type::Bool, val.typ()).into()),
 		};
 
 		if bool {

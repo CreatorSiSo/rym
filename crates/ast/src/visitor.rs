@@ -40,7 +40,7 @@ pub trait AstVisitor {
 		}
 	}
 
-	fn visit_ident(&mut self, ident: &str) -> Self::Result;
+	fn visit_ident(&mut self, ident: &str /* TODO , span: &Span */) -> Self::Result;
 	fn visit_lit(&mut self, lit: &Literal) -> Self::Result;
 
 	fn visit_assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Self::Result;

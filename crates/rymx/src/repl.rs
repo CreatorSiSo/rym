@@ -1,4 +1,5 @@
 use crate::log;
+use colored::Colorize;
 use lex::Lexer;
 use parse::Parser;
 use tree_walk::Interpreter;
@@ -75,7 +76,7 @@ impl Repl {
 
 		log::block("Interpreter", || {
 			if let Err(error) = self.interpreter.eval(&ast) {
-				println!("{error:?}");
+				println!("{} {error:?}", "Error:".red().bold());
 				false
 			} else {
 				true

@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 ast = { path = "../ast" }
 parse = { path = "../parse" }
+thiserror = "1.0.37"

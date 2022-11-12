@@ -364,7 +364,7 @@ impl AstVisitor for Interpreter {
 				None => break Inter::None(Value::Unit),
 			};
 
-			let inter = self.walk_stmt(Spanned(stmt, /* TODO: Use proper span */ 0..0))?;
+			let inter = self.walk_stmt(stmt.as_ref())?;
 			match inter {
 				Inter::Return(val) => break Inter::Return(val),
 				Inter::Break(val) => break Inter::Break(val),

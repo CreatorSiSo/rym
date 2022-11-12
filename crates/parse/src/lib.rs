@@ -174,12 +174,13 @@ impl Parser {
 			));
 		}
 
-		self.if_().map(|expr| Spanned(expr, 0..0))
+		self.if_()
 	}
 
 	/// if => "if" expression block ("else" (if | block))?
-	fn if_(&mut self) -> ParseResult<Expr> {
+	fn if_(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.matches(TokenType::If) {
+			let start = self.previous().1.start;
 			let expr = Box::new(self.expr()?.0);
 			let then_block = self.block()?;
 			let else_block = if self.matches(TokenType::Else) {
@@ -191,19 +192,24 @@ impl Parser {
 				None
 			};
 
-			return Ok(Expr::If(expr, then_block, else_block));
+			return Ok(Spanned(
+				Expr::If(expr, then_block, else_block),
+				start..self.previous().1.end,
+			));
 		}
 
 		self.loop_()
 	}
 
 	/// loop => "loop" block
-	fn loop_(&mut self) -> ParseResult<Expr> {
+	fn loop_(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.matches(TokenType::Loop) {
-			return Ok(Expr::Loop(self.block()?));
+			let start = self.previous().1.start;
+			let block = self.block()?;
+			return Ok(Spanned(Expr::Loop(block), start..self.previous().1.end));
 		}
 
-		self.logic_or()
+		self.logic_or().map(|expr| Spanned(expr, 0..0))
 	}
 
 	/// logic_or => logic_and ("&&" logic_and)*
@@ -403,8 +409,7 @@ impl Parser {
 			if self.is_at_end() {
 				break false;
 			}
-			let Spanned(stmt, _) = self.stmt()?;
-			stmts.push(stmt);
+			stmts.push(self.stmt()?);
 		};
 
 		if closed {

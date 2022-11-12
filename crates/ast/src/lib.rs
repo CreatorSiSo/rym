@@ -161,11 +161,11 @@ impl Expr {
 
 #[derive(Clone, PartialEq)]
 pub struct Block {
-	pub stmts: Vec<Stmt>,
+	pub stmts: Vec<Spanned<Stmt>>,
 }
 
 impl Block {
-	pub const fn new(stmts: Vec<Stmt>) -> Self {
+	pub const fn new(stmts: Vec<Spanned<Stmt>>) -> Self {
 		Self { stmts }
 	}
 }

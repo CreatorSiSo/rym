@@ -40,7 +40,7 @@ fn exec() {
 		};
 
 		let (tokens, lex_errors) = tokens_from_src(&src);
-		let (ast, parse_errors) = spanned_ast_from_src(tokens);
+		let (ast, parse_errors) = ast_from_src(tokens);
 
 		let exec_result = Interpreter::default().eval(&ast);
 

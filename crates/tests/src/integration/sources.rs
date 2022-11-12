@@ -469,15 +469,21 @@ true != false // true
 
 print_ice_value(10, 2)
 print_ice_value(80, 15)
-"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/expression.rym"#, r#"(true != !false) // false => correct
-(0769570 + 34907 * 569034) < 9 // false => correct
-(0769570 + 34907 * 569034) < 9 == (true != !false) // false == false => true => correct
-(0769570 + (34907 * 569034 - (34897534889 / 55)))
-(0769570 + (34907 * 569034 - ((((((34897534889 / 55)))))))) < 9 == (true != !false)
+"#), (r#"/home/simon/dev/rym/crates/tests/src/integration/expression.rym"#, r#"assert_eq(1 + 2, 3)
+assert_eq(1 - 2, -1)
+assert_eq(200 * 23406, 4681200)
+assert_eq(200 / 23406, 0.00854481756814492)
+// TODO: How to handle divide by zero? Currently 1/0 => inf
 
-println(1 + 2)
-println(1 / 0)
-println(200 * 23406)
+// TODO Make newlines in side arguments list work
+assert_eq(true != !false,	false)
+assert_eq((0769570 + 34907 * 569034) < 9,	false)
+assert_eq((0769570 + 34907 * 569034) < 9 == (true != !false),	true)
+assert_eq(0769570 + (34907 * 569034 - (34897534889 / 55)),	19229538773.654545455)
+assert_eq((0769570 + (34907 * 569034 - ((((((34897534889 / 55)))))))) < 9 == (true != !false),	true)
+
+assert_eq(-2 + " some string", "-2 some string")
+assert_eq(!true + " other string", "false other string")
 "#), (r#"/home/simon/dev/rym/crates/tests/src/integration/fn_envs.rym"#, r#"//! fail exec
 
 fn returns_fn(value, info) /* -> Fn */ {

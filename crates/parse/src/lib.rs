@@ -309,11 +309,11 @@ impl Parser {
 	/// unary => ("!" | "-") (unary | call)
 	fn unary(&mut self) -> ParseResult<Expr> {
 		if self.matches(TokenType::Bang) {
-			let expr = Box::new(self.expr()?.0);
+			let expr = Box::new(self.unary()?);
 			return Ok(Expr::Unary(UnaryOp::Not, expr));
 		}
 		if self.matches(TokenType::Minus) {
-			let expr = Box::new(self.expr()?.0);
+			let expr = Box::new(self.unary()?);
 			return Ok(Expr::Unary(UnaryOp::Neg, expr));
 		}
 		self.call()
@@ -379,7 +379,7 @@ impl Parser {
 				TokenType::True => Expr::Literal(Literal::Bool(true)),
 				TokenType::Number | TokenType::String => Expr::Literal(data.lit(typ)),
 				TokenType::Identifier => Expr::Identifier(data.ident(typ)),
-				_ => unreachable!(),
+				got => unreachable!("{got}"),
 			}),
 			None => ParseError::token_mismatch(self.advance(), "Expected Literal"),
 		}

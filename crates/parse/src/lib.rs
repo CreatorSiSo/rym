@@ -126,30 +126,32 @@ impl Parser {
 
 	fn interrupts(&mut self) -> ParseResult<Spanned<Expr>> {
 		// return => "return" expr?;
-		if self.matches(TokenType::Return) {
-			// TODO: Should this also match Newline here?
-			if self.matches(TokenType::Semicolon) {
-				return Ok(self.previous().map(|_| Expr::Break(None)));
+		// break => "break" expr?;
+		if let Some(Spanned(Token { typ, .. }, span)) =
+			self.matches_which(&[TokenType::Break, TokenType::Return])
+		{
+			let is_return = typ == TokenType::Return;
+			if self.matches_any(&[TokenType::Semicolon, TokenType::Newline])
+				|| self.peek_eq(0, TokenType::RightBrace)
+			{
+				return if is_return {
+					ParseError::token_mismatch(self.previous(), "Expected expression after `return`")
+				} else {
+					Ok(Spanned(Expr::Break(None), span))
+				};
 			}
-
+			let expr = Box::new(self.expr()?);
+			let full_span = span.start..expr.1.end;
 			return Ok(Spanned(
-				Expr::Return(Box::new(self.expr()?.0)),
-				self.previous().1,
+				if is_return {
+					Expr::Return(expr)
+				} else {
+					Expr::Break(Some(expr))
+				},
+				full_span,
 			));
 		}
-		// break => "break" expr?
-		if self.matches(TokenType::Break) {
-			return Ok(
-				if let Some(token) = self.matches_which(&[TokenType::Semicolon, TokenType::Newline]) {
-					token.map(|_| Expr::Break(None))
-				} else if self.peek_eq(0, TokenType::RightBrace) {
-					self.previous().map(|_| Expr::Break(None))
-				} else {
-					let expr = Box::new(self.expr()?);
-					self.previous().map(|_| Expr::Break(Some(expr)))
-				},
-			);
-		}
+
 		// continue => "continue"
 		if self.matches(TokenType::Continue) {
 			return Ok(self.previous().map(|_| Expr::Continue));

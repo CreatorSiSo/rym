@@ -105,7 +105,7 @@ pub enum Expr {
 	Logical(Box<Spanned<Expr>>, LogicalOp, Box<Spanned<Expr>>),
 
 	/// A binary operation `a + b`, `a * b`
-	Binary(Box<Expr>, BinaryOp, Box<Expr>),
+	Binary(Box<Spanned<Expr>>, BinaryOp, Box<Spanned<Expr>>),
 
 	/// A unary operation `!x`, `*x`
 	Unary(UnaryOp, Box<Expr>),

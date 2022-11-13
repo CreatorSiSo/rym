@@ -294,12 +294,17 @@ impl AstVisitor for Interpreter {
 		})
 	}
 
-	fn visit_binary(&mut self, expr_l: &Expr, op: &BinaryOp, expr_r: &Expr) -> Self::Result {
-		let val_l = match self.walk_expr(Spanned(expr_l, /* TODO: Use proper span */ 0..0))? {
+	fn visit_binary(
+		&mut self,
+		expr_l: Spanned<&Expr>,
+		op: &BinaryOp,
+		expr_r: Spanned<&Expr>,
+	) -> Self::Result {
+		let val_l = match self.walk_expr(expr_l)? {
 			Inter::None(val) => val,
 			inter => return Ok(inter),
 		};
-		let val_r = match self.walk_expr(Spanned(expr_r, /* TODO: Use proper span */ 0..0))? {
+		let val_r = match self.walk_expr(expr_r)? {
 			Inter::None(val) => val,
 			inter => return Ok(inter),
 		};

@@ -27,7 +27,9 @@ pub trait AstVisitor {
 			Expr::Logical(expr_l, op, expr_r) => {
 				self.visit_logical((**expr_l).as_ref(), op, (**expr_r).as_ref())
 			}
-			Expr::Binary(expr_l, op, expr_r) => self.visit_binary(expr_l, op, expr_r),
+			Expr::Binary(expr_l, op, expr_r) => {
+				self.visit_binary((**expr_l).as_ref(), op, (**expr_r).as_ref())
+			}
 
 			Expr::Group(expr) => self.walk_expr(Spanned(expr, span)),
 			Expr::Block(block) => self.visit_block(block),
@@ -54,7 +56,12 @@ pub trait AstVisitor {
 		op: &LogicalOp,
 		expr_r: Spanned<&Expr>,
 	) -> Self::Result;
-	fn visit_binary(&mut self, expr_l: &Expr, op: &BinaryOp, expr_r: &Expr) -> Self::Result;
+	fn visit_binary(
+		&mut self,
+		expr_l: Spanned<&Expr>,
+		op: &BinaryOp,
+		expr_r: Spanned<&Expr>,
+	) -> Self::Result;
 
 	fn visit_block(&mut self, block: &Block) -> Self::Result;
 	fn visit_loop(&mut self, block: &Block) -> Self::Result;

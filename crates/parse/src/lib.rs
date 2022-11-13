@@ -223,10 +223,10 @@ impl Parser {
 
 	/// logic_and => equality ("&&" equality)*
 	fn parse_logic_and(&mut self) -> ParseResult<Spanned<Expr>> {
-		let mut left = Spanned(self.parse_equality()?, 0..0);
+		let mut left = self.parse_equality()?;
 
 		while self.matches(TokenType::DoubleAmpersand) {
-			let right = Box::new(Spanned(self.parse_equality()?, 0..0));
+			let right = Box::new(self.parse_equality()?);
 			left.0 = Expr::Logical(Box::new(left.clone()), LogicalOp::And, right);
 			left.1.end = self.previous_span().end;
 		}
@@ -235,25 +235,26 @@ impl Parser {
 	}
 
 	/// equality => comparison (("==" | "!=") comparison)*
-	fn parse_equality(&mut self) -> ParseResult<Expr> {
+	fn parse_equality(&mut self) -> ParseResult<Spanned<Expr>> {
 		let mut left = self.parse_comparison()?;
 
 		while self.matches_any(&[TokenType::EqualEqual, TokenType::BangEqual]) {
 			let typ = self.previous().0.typ.clone();
 			let right = Box::new(self.parse_comparison()?);
 
-			left = if typ == TokenType::EqualEqual {
-				Expr::Binary(Box::new(left), BinaryOp::Eq, right)
+			left.0 = if typ == TokenType::EqualEqual {
+				Expr::Binary(Box::new(left.clone()), BinaryOp::Eq, right)
 			} else {
-				Expr::Binary(Box::new(left), BinaryOp::Ne, right)
-			}
+				Expr::Binary(Box::new(left.clone()), BinaryOp::Ne, right)
+			};
+			left.1.end = self.previous_span().end;
 		}
 
 		Ok(left)
 	}
 
 	/// comparison => term ((">" | ">=" | "<" | "<=") term)*
-	fn parse_comparison(&mut self) -> ParseResult<Expr> {
+	fn parse_comparison(&mut self) -> ParseResult<Spanned<Expr>> {
 		let mut left = self.parse_term()?;
 
 		while self.matches_any(&[
@@ -265,8 +266,8 @@ impl Parser {
 			let typ = self.previous().0.typ.clone();
 			let right = Box::new(self.parse_term()?);
 
-			left = Expr::Binary(
-				Box::new(left),
+			left.0 = Expr::Binary(
+				Box::new(left.clone()),
 				match typ {
 					TokenType::Greater => BinaryOp::Gt,
 					TokenType::GreaterEqual => BinaryOp::Ge,
@@ -275,42 +276,45 @@ impl Parser {
 				},
 				right,
 			);
+			left.1.end = self.previous_span().end;
 		}
 
 		Ok(left)
 	}
 
 	/// term => factor (("+" | "-") factor)*
-	fn parse_term(&mut self) -> ParseResult<Expr> {
+	fn parse_term(&mut self) -> ParseResult<Spanned<Expr>> {
 		let mut left = self.parse_factor()?;
 
 		while self.matches_any(&[TokenType::Plus, TokenType::Minus]) {
 			let typ = self.previous().0.typ.clone();
 			let right = Box::new(self.parse_factor()?);
 
-			left = if typ == TokenType::Plus {
-				Expr::Binary(Box::new(left), BinaryOp::Add, right)
+			left.0 = if typ == TokenType::Plus {
+				Expr::Binary(Box::new(left.clone()), BinaryOp::Add, right)
 			} else {
-				Expr::Binary(Box::new(left), BinaryOp::Sub, right)
-			}
+				Expr::Binary(Box::new(left.clone()), BinaryOp::Sub, right)
+			};
+			left.1.end = self.previous_span().end;
 		}
 
 		Ok(left)
 	}
 
 	/// factor => unary (("/" | "*") unary)*
-	fn parse_factor(&mut self) -> ParseResult<Expr> {
-		let mut left = self.parse_unary()?;
+	fn parse_factor(&mut self) -> ParseResult<Spanned<Expr>> {
+		let mut left = Spanned(self.parse_unary()?, 0..0);
 
 		while self.matches_any(&[TokenType::Star, TokenType::Slash]) {
 			let typ = self.previous().0.typ.clone();
-			let right = Box::new(self.parse_unary()?);
+			let right = Box::new(Spanned(self.parse_unary()?, 0..0));
 
-			left = if typ == TokenType::Star {
-				Expr::Binary(Box::new(left), BinaryOp::Mul, right)
+			left.0 = if typ == TokenType::Star {
+				Expr::Binary(Box::new(left.clone()), BinaryOp::Mul, right)
 			} else {
-				Expr::Binary(Box::new(left), BinaryOp::Div, right)
+				Expr::Binary(Box::new(left.clone()), BinaryOp::Div, right)
 			};
+			left.1.end = self.previous_span().end;
 		}
 
 		Ok(left)

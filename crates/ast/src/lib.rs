@@ -108,13 +108,13 @@ pub enum Expr {
 	Binary(Box<Spanned<Expr>>, BinaryOp, Box<Spanned<Expr>>),
 
 	/// A unary operation `!x`, `*x`
-	Unary(UnaryOp, Box<Expr>),
+	Unary(UnaryOp, Box<Spanned<Expr>>),
 
 	/// A function call `test_fn(0, "hello")`
-	Call(Box<Expr>, Vec<Spanned<Expr>>),
+	Call(Box<Spanned<Expr>>, Vec<Spanned<Expr>>),
 
 	/// `(9 - 2) * 4`
-	Group(Box<Expr>),
+	Group(Box<Spanned<Expr>>),
 
 	/// A literal `true`, `2`, `"Hello"`
 	Literal(Literal),

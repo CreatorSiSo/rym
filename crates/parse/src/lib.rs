@@ -303,11 +303,11 @@ impl Parser {
 
 	/// factor => unary (("/" | "*") unary)*
 	fn parse_factor(&mut self) -> ParseResult<Spanned<Expr>> {
-		let mut left = Spanned(self.parse_unary()?, 0..0);
+		let mut left = self.parse_unary()?;
 
 		while self.matches_any(&[TokenType::Star, TokenType::Slash]) {
 			let typ = self.previous().0.typ.clone();
-			let right = Box::new(Spanned(self.parse_unary()?, 0..0));
+			let right = Box::new(self.parse_unary()?);
 
 			left.0 = if typ == TokenType::Star {
 				Expr::Binary(Box::new(left.clone()), BinaryOp::Mul, right)
@@ -321,21 +321,29 @@ impl Parser {
 	}
 
 	/// unary => ("!" | "-") (unary | call)
-	fn parse_unary(&mut self) -> ParseResult<Expr> {
+	fn parse_unary(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.matches(TokenType::Bang) {
+			let start = self.previous_span().start;
 			let expr = Box::new(self.parse_unary()?);
-			return Ok(Expr::Unary(UnaryOp::Not, expr));
+			return Ok(Spanned(
+				Expr::Unary(UnaryOp::Not, expr.clone()),
+				start..expr.1.end,
+			));
 		}
 		if self.matches(TokenType::Minus) {
+			let start = self.previous_span().start;
 			let expr = Box::new(self.parse_unary()?);
-			return Ok(Expr::Unary(UnaryOp::Neg, expr));
+			return Ok(Spanned(
+				Expr::Unary(UnaryOp::Neg, expr.clone()),
+				start..expr.1.end,
+			));
 		}
 		self.parse_call()
 	}
 
 	/// call => primary ("(" arguments? ")")*
-	fn parse_call(&mut self) -> ParseResult<Expr> {
-		let mut expr = self.parse_primary()?;
+	fn parse_call(&mut self) -> ParseResult<Spanned<Expr>> {
+		let mut expr = Spanned(self.parse_primary()?, 0..0);
 
 		while self.matches(TokenType::LeftParen) {
 			let args = if self.matches(TokenType::RightParen) {
@@ -348,7 +356,10 @@ impl Parser {
 				)?;
 				args
 			};
-			expr = Expr::Call(Box::new(expr), args);
+			expr = Spanned(
+				Expr::Call(Box::new(expr.clone()), args),
+				expr.1.start..self.previous_span().end,
+			);
 		}
 
 		Ok(expr)
@@ -373,12 +384,12 @@ impl Parser {
 
 		if self.matches(TokenType::LeftParen) {
 			let expr = if self.peek_eq(0, TokenType::RightParen) {
-				Box::new(Expr::Literal(Literal::Unit))
+				Expr::Literal(Literal::Unit)
 			} else {
-				Box::new(self.parse_expr()?.0)
+				self.parse_expr()?.0
 			};
 			self.expect(TokenType::RightParen, "Expected closing `)`")?;
-			return Ok(Expr::Group(expr));
+			return Ok(Expr::Group(Box::new(Spanned(expr, 0..0))));
 		}
 
 		match self.matches_which(&[

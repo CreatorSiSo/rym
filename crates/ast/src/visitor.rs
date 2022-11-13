@@ -7,8 +7,8 @@ pub trait AstVisitor {
 		match stmt {
 			// TODO: Give Span to visit_empty
 			Stmt::Empty => self.visit_empty(),
-			Stmt::Decl(decl) => self.visit_decl(Spanned(decl, span)),
-			Stmt::Expr(expr) => self.walk_expr(Spanned(expr, span)),
+			Stmt::Decl(decl) => self.visit_decl(Spanned(&decl, span)),
+			Stmt::Expr(expr) => self.walk_expr(&Spanned(&expr, span)),
 		}
 	}
 
@@ -16,14 +16,15 @@ pub trait AstVisitor {
 
 	fn visit_decl(&mut self, decl: Spanned<&Decl>) -> Self::Result;
 
-	fn walk_expr(&mut self, Spanned(expr, span): Spanned<&Expr>) -> Self::Result {
+	fn walk_expr(&mut self, boxed_expr: &Spanned<&Expr>) -> Self::Result {
+		let Spanned(expr, span) = (*boxed_expr).as_ref();
 		match expr {
 			Expr::Identifier(ident) => self.visit_ident(ident, span),
 			Expr::Literal(lit) => self.visit_lit(lit, span),
 			Expr::Assign(expr_l, expr_r) => self.visit_assign(expr_l, expr_r),
-			Expr::Call(callee, args) => self.visit_call(callee, args),
+			Expr::Call(callee, args) => self.visit_call((**callee).as_ref(), args),
 
-			Expr::Unary(op, expr) => self.visit_unary(op, expr),
+			Expr::Unary(op, expr) => self.visit_unary(op, (**expr).as_ref()),
 			Expr::Logical(expr_l, op, expr_r) => {
 				self.visit_logical((**expr_l).as_ref(), op, (**expr_r).as_ref())
 			}
@@ -31,7 +32,7 @@ pub trait AstVisitor {
 				self.visit_binary((**expr_l).as_ref(), op, (**expr_r).as_ref())
 			}
 
-			Expr::Group(expr) => self.walk_expr(Spanned(expr, span)),
+			Expr::Group(expr) => self.walk_expr(&expr.as_ref().as_ref()),
 			Expr::Block(block) => self.visit_block(block),
 			Expr::Loop(block) => self.visit_loop(block),
 			Expr::If(expr, then_block, else_block) => self.visit_if(expr, then_block, else_block),
@@ -48,8 +49,8 @@ pub trait AstVisitor {
 	fn visit_lit(&mut self, lit: &Literal, span: Span) -> Self::Result;
 
 	fn visit_assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Self::Result;
-	fn visit_call(&mut self, callee: &Expr, args: &[Spanned<Expr>]) -> Self::Result;
-	fn visit_unary(&mut self, op: &UnaryOp, expr: &Expr) -> Self::Result;
+	fn visit_call(&mut self, callee: Spanned<&Expr>, args: &[Spanned<Expr>]) -> Self::Result;
+	fn visit_unary(&mut self, op: &UnaryOp, expr: Spanned<&Expr>) -> Self::Result;
 	fn visit_logical(
 		&mut self,
 		expr_l: Spanned<&Expr>,

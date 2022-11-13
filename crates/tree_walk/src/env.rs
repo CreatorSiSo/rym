@@ -23,6 +23,7 @@ impl Scope {
 	}
 }
 
+#[derive(Debug)]
 pub(crate) struct GlobalEnv {
 	pub env: Env,
 	envs: Vec<Env>,

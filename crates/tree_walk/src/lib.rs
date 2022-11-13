@@ -142,7 +142,7 @@ impl Interpreter {
 		if short_circuit_if == bool_l {
 			return Ok(Inter::None(Value::Bool(short_circuit_if)));
 		}
-		let bool_r = match self.walk_expr(expr_r.clone())? {
+		let bool_r = match self.walk_expr(&expr_r)? {
 			Inter::None(val) => match val {
 				Value::Bool(bool_r) => bool_r,
 				val_r => return spanned_err(TypeError::Expected(Type::Bool, val_r.typ()), expr_r.1),
@@ -163,18 +163,18 @@ impl AstVisitor for Interpreter {
 	fn visit_decl(&mut self, Spanned(decl, span): Spanned<&ast::Decl>) -> Self::Result {
 		match decl {
 			Decl::Fn { name, params, body } => {
-				let val = RymFunction::new(Some(params.len()), params.clone(), dbg!(body.clone()));
+				let val = RymFunction::new(Some(params.len()), params.clone(), body.clone());
 				self.env.declare(name, val.into(), true);
 			}
 			Decl::Const(name, init) => {
-				let val: Value = match self.walk_expr(Spanned(init, span))? {
+				let val: Value = match self.walk_expr(&Spanned(init, span))? {
 					Inter::None(val) => val,
 					inter => return Ok(inter),
 				};
 				self.env.declare(name, val, true);
 			}
 			Decl::Mut(name, init) => {
-				let val: Value = match self.walk_expr(Spanned(init, span))? {
+				let val: Value = match self.walk_expr(&Spanned(init, span))? {
 					Inter::None(val) => val,
 					inter => return Ok(inter),
 				};
@@ -202,7 +202,7 @@ impl AstVisitor for Interpreter {
 				return spanned_err(
 					TypeError::Expected(
 						Type::Identifier,
-						match self.walk_expr(Spanned(expr_l, /* TODO: Use proper span */ 0..0))? {
+						match self.walk_expr(&Spanned(expr_l, /* TODO: Use proper span */ 0..0))? {
 							Inter::None(val) => val.typ(),
 							inter => return Ok(inter),
 						},
@@ -212,7 +212,7 @@ impl AstVisitor for Interpreter {
 			}
 		};
 
-		let value = match self.walk_expr(Spanned(expr_r, /* TODO: Use proper span */ 0..0))? {
+		let value = match self.walk_expr(&Spanned(expr_r, /* TODO: Use proper span */ 0..0))? {
 			Inter::None(val) => val,
 			inter => return Ok(inter),
 		};
@@ -223,17 +223,16 @@ impl AstVisitor for Interpreter {
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn visit_call(&mut self, callee: &Expr, args: &[Spanned<Expr>]) -> Self::Result {
-		let callee: Value =
-			match self.walk_expr(Spanned(callee, /* TODO: Use proper span */ 0..0))? {
-				Inter::None(val) => val,
-				inter => return Ok(inter),
-			};
+	fn visit_call(&mut self, callee: Spanned<&Expr>, args: &[Spanned<Expr>]) -> Self::Result {
+		let callee: Value = match self.walk_expr(&callee)? {
+			Inter::None(val) => val,
+			inter => return Ok(inter),
+		};
 		let args: Vec<Value> = {
 			let mut vec = Vec::new();
 			for arg in args {
 				vec.push(
-					match self.walk_expr(Spanned(&arg.0, /* TODO: Use proper span */ 0..0))? {
+					match self.walk_expr(&Spanned(&arg.0, /* TODO: Use proper span */ 0..0))? {
 						Inter::None(val) => val,
 						inter => return Ok(inter),
 					},
@@ -263,8 +262,8 @@ impl AstVisitor for Interpreter {
 		Ok(Inter::None(f.call(self, &args)?))
 	}
 
-	fn visit_unary(&mut self, op: &UnaryOp, expr: &Expr) -> Self::Result {
-		let val = match self.walk_expr(Spanned(expr, /* TODO: Use proper span */ 0..0))? {
+	fn visit_unary(&mut self, op: &UnaryOp, expr: Spanned<&Expr>) -> Self::Result {
+		let val = match self.walk_expr(&expr)? {
 			Inter::None(val) => val,
 			inter => return Ok(inter),
 		};
@@ -282,7 +281,7 @@ impl AstVisitor for Interpreter {
 		op: &LogicalOp,
 		expr_r: Spanned<&Expr>,
 	) -> Self::Result {
-		let val_l = match self.walk_expr(expr_l) {
+		let val_l = match self.walk_expr(&expr_l) {
 			Ok(Inter::None(val_l)) => val_l,
 			other => return other,
 		};
@@ -300,11 +299,11 @@ impl AstVisitor for Interpreter {
 		op: &BinaryOp,
 		expr_r: Spanned<&Expr>,
 	) -> Self::Result {
-		let val_l = match self.walk_expr(expr_l)? {
+		let val_l = match self.walk_expr(&expr_l)? {
 			Inter::None(val) => val,
 			inter => return Ok(inter),
 		};
-		let val_r = match self.walk_expr(expr_r)? {
+		let val_r = match self.walk_expr(&expr_r)? {
 			Inter::None(val) => val,
 			inter => return Ok(inter),
 		};
@@ -426,7 +425,7 @@ impl AstVisitor for Interpreter {
 		then_block: &Block,
 		else_block: &Option<Block>,
 	) -> Self::Result {
-		let bool = match self.walk_expr(Spanned(expr, /* TODO: Use proper span */ 0..0))? {
+		let bool = match self.walk_expr(&Spanned(expr, /* TODO: Use proper span */ 0..0))? {
 			Inter::None(val) => match val {
 				Value::Bool(bool) => bool,
 				val => return spanned_err(TypeError::Expected(Type::Bool, val.typ()), 0..0),
@@ -444,7 +443,7 @@ impl AstVisitor for Interpreter {
 	}
 
 	fn visit_return(&mut self, expr: Spanned<&Expr>) -> Self::Result {
-		match self.walk_expr(expr)? {
+		match self.walk_expr(&expr)? {
 			Inter::None(val) => Ok(Inter::Return(val)),
 			inter => Ok(inter),
 		}
@@ -453,7 +452,7 @@ impl AstVisitor for Interpreter {
 	fn visit_break(&mut self, expr: Option<Spanned<&Expr>>) -> Self::Result {
 		Ok(Inter::Break(match expr {
 			// TODO: Do loops work inside of break expr?
-			Some(expr) => match self.walk_expr(expr)? {
+			Some(expr) => match self.walk_expr(&expr)? {
 				Inter::None(val) => val,
 				inter => return Ok(inter),
 			},

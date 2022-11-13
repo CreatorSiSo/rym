@@ -95,7 +95,7 @@ impl Callable for RymFunction {
 			for (idx, param) in self.params.iter().enumerate() {
 				interpreter.env.declare(param, args[idx].clone(), true)
 			}
-			interpreter.walk_expr(self.body.as_ref())
+			interpreter.walk_expr(&self.body.as_ref())
 		};
 		interpreter.env.pop_env();
 

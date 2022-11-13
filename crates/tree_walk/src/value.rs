@@ -1,7 +1,6 @@
 use ast::Literal;
 
 use crate::callable::{NativeFunction, RymFunction};
-use crate::Inter;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Type {
@@ -24,12 +23,6 @@ impl From<&Value> for Type {
 			Value::NativeFunction(_) => Type::NativeFunction,
 			Value::RymFunction(_) => Type::RymFunction,
 		}
-	}
-}
-
-impl From<Inter> for Type {
-	fn from(inter: Inter) -> Self {
-		Type::from(&Value::from(inter))
 	}
 }
 
@@ -96,15 +89,6 @@ impl From<Literal> for Value {
 			Literal::Bool(bool) => Self::Bool(bool),
 			Literal::Number(num) => Self::Number(num),
 			Literal::String(str) => Self::String(str),
-		}
-	}
-}
-
-impl From<Inter> for Value {
-	fn from(inter: Inter) -> Self {
-		match inter {
-			Inter::Break(val) | Inter::None(val) => val,
-			_ => Value::Unit,
 		}
 	}
 }

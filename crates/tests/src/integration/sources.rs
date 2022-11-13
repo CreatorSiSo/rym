@@ -112,6 +112,15 @@ loop {
 		}
 	}
 }
+
+mut i = 0
+loop {
+	i = i + 1
+	if i < 1 {
+		true && (break return continue)
+	}
+	break
+}
 "#), (r#"/home/simon/dev/rym/crates/tests/src/integration/cylinder.rym"#, r#"// Ein zylinderförmiger Behälter vom Durchmesser d1(m) und der Höhe h(m) wird durch einen Schlauch mit dem Durchmesser d2(cm) mit Wein gefüllt.
 // Die Durchflussgeschwindigkeit ist v (m/s).
 // Durch ein Programm soll die Zeit ermittelt werden, die zum vollständigen Füllen des Behälters benötigt wird.

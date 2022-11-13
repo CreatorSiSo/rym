@@ -195,14 +195,14 @@ impl AstVisitor for Interpreter {
 		Ok(Inter::None(lit.clone().into()))
 	}
 
-	fn visit_assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Self::Result {
+	fn visit_assign(&mut self, expr_l: Spanned<&Expr>, expr_r: Spanned<&Expr>) -> Self::Result {
 		let name = match expr_l {
-			Expr::Identifier(name) => name,
+			Spanned(Expr::Identifier(name), _) => name,
 			_ => {
 				return spanned_err(
 					TypeError::Expected(
 						Type::Identifier,
-						match self.walk_expr(&Spanned(expr_l, /* TODO: Use proper span */ 0..0))? {
+						match self.walk_expr(&expr_l)? {
 							Inter::None(val) => val.typ(),
 							inter => return Ok(inter),
 						},
@@ -212,7 +212,7 @@ impl AstVisitor for Interpreter {
 			}
 		};
 
-		let value = match self.walk_expr(&Spanned(expr_r, /* TODO: Use proper span */ 0..0))? {
+		let value = match self.walk_expr(&expr_r)? {
 			Inter::None(val) => val,
 			inter => return Ok(inter),
 		};
@@ -379,10 +379,10 @@ impl AstVisitor for Interpreter {
 		}))
 	}
 
-	fn visit_block(&mut self, block: &Block) -> Self::Result {
+	fn visit_block(&mut self, Spanned(stmts, span): &Spanned<&Block>) -> Self::Result {
 		self.env.push_scope();
 
-		let mut stmts = block.stmts.iter();
+		let mut stmts = stmts.iter();
 		let return_value = loop {
 			let stmt = match stmts.next() {
 				Some(stmt) => stmt,
@@ -409,9 +409,9 @@ impl AstVisitor for Interpreter {
 	}
 
 	// TODO: Implement break, continue and return
-	fn visit_loop(&mut self, block: &Block) -> Self::Result {
+	fn visit_loop(&mut self, block: Spanned<&Block>) -> Self::Result {
 		loop {
-			match self.visit_block(block)? {
+			match self.visit_block(&block)? {
 				Inter::Continue | Inter::None(_) => continue,
 				Inter::Break(val) => break Ok(Inter::None(val)),
 				inter_return => return Ok(inter_return),
@@ -421,11 +421,11 @@ impl AstVisitor for Interpreter {
 
 	fn visit_if(
 		&mut self,
-		expr: &Expr,
-		then_block: &Block,
-		else_block: &Option<Block>,
+		expr: Spanned<&Expr>,
+		then_block: Spanned<&Block>,
+		else_block: &Option<Spanned<Block>>,
 	) -> Self::Result {
-		let bool = match self.walk_expr(&Spanned(expr, /* TODO: Use proper span */ 0..0))? {
+		let bool = match self.walk_expr(&expr)? {
 			Inter::None(val) => match val {
 				Value::Bool(bool) => bool,
 				val => return spanned_err(TypeError::Expected(Type::Bool, val.typ()), 0..0),
@@ -434,9 +434,9 @@ impl AstVisitor for Interpreter {
 		};
 
 		if bool {
-			self.visit_block(then_block)
+			self.visit_block(&then_block)
 		} else if let Some(block) = else_block {
-			self.visit_block(block)
+			self.visit_block(&block.as_ref())
 		} else {
 			Ok(Inter::None(Value::Unit))
 		}

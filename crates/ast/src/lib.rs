@@ -30,7 +30,7 @@ pub enum Stmt {
 	Decl(Decl),
 
 	/// Expr with trailing semicolon or newline
-	Expr(Expr),
+	Expr(Spanned<Expr>),
 
 	// TODO: Is this really needed?
 	/// Just a trailing semicolon
@@ -43,8 +43,8 @@ impl From<Decl> for Stmt {
 	}
 }
 
-impl From<Expr> for Stmt {
-	fn from(val: Expr) -> Self {
+impl From<Spanned<Expr>> for Stmt {
+	fn from(val: Spanned<Expr>) -> Self {
 		Stmt::Expr(val)
 	}
 }
@@ -65,6 +65,8 @@ pub enum Decl {
 	Mut(String, Expr),
 }
 
+pub type Block = Vec<Spanned<Stmt>>;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
 	/// An array `[a, b, c, d]`
@@ -76,7 +78,7 @@ pub enum Expr {
 	/// A `if` expression, an optional `else` block.
 	///
 	/// `if expr { then_block } else { else_block }`
-	If(Box<Expr>, Block, Option<Block>),
+	If(Box<Spanned<Expr>>, Spanned<Block>, Option<Spanned<Block>>),
 
 	/// A while loop `while expr { block }`
 	While(Box<Expr>, Block),
@@ -84,10 +86,10 @@ pub enum Expr {
 	/// Conditionless loop (can be exited with `break`, `continue`, or `return`)
 	///
 	/// `loop { block }`
-	Loop(Block),
+	Loop(Spanned<Block>),
 
 	/// A block `{ .. }`
-	Block(Block),
+	Block(Spanned<Block>),
 
 	/// A `break`, with an optional expression
 	Break(Option<Box<Spanned<Expr>>>),
@@ -99,7 +101,7 @@ pub enum Expr {
 	Return(Box<Spanned<Expr>>),
 
 	/// An assignment `a = 20`
-	Assign(Box<Expr>, Box<Expr>),
+	Assign(Box<Spanned<Expr>>, Box<Spanned<Expr>>),
 
 	/// A logical operation `true && false`, `a || b`
 	Logical(Box<Spanned<Expr>>, LogicalOp, Box<Spanned<Expr>>),
@@ -156,24 +158,6 @@ impl Expr {
 			"Literal",
 			"Identifier",
 		]
-	}
-}
-
-#[derive(Clone, PartialEq)]
-pub struct Block {
-	pub stmts: Vec<Spanned<Stmt>>,
-}
-
-impl Block {
-	pub const fn new(stmts: Vec<Spanned<Stmt>>) -> Self {
-		Self { stmts }
-	}
-}
-
-impl Debug for Block {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.write_str("Block")?;
-		f.debug_list().entries(self.stmts.iter()).finish()
 	}
 }
 

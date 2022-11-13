@@ -24,7 +24,9 @@ pub trait AstVisitor {
 			Expr::Call(callee, args) => self.visit_call(callee, args),
 
 			Expr::Unary(op, expr) => self.visit_unary(op, expr),
-			Expr::Logical(expr_l, op, expr_r) => self.visit_logical(expr_l, op, expr_r),
+			Expr::Logical(expr_l, op, expr_r) => {
+				self.visit_logical((**expr_l).as_ref(), op, (**expr_r).as_ref())
+			}
 			Expr::Binary(expr_l, op, expr_r) => self.visit_binary(expr_l, op, expr_r),
 
 			Expr::Group(expr) => self.walk_expr(Spanned(expr, span)),
@@ -46,7 +48,12 @@ pub trait AstVisitor {
 	fn visit_assign(&mut self, expr_l: &Expr, expr_r: &Expr) -> Self::Result;
 	fn visit_call(&mut self, callee: &Expr, args: &[Spanned<Expr>]) -> Self::Result;
 	fn visit_unary(&mut self, op: &UnaryOp, expr: &Expr) -> Self::Result;
-	fn visit_logical(&mut self, expr_l: &Expr, op: &LogicalOp, expr_r: &Expr) -> Self::Result;
+	fn visit_logical(
+		&mut self,
+		expr_l: Spanned<&Expr>,
+		op: &LogicalOp,
+		expr_r: Spanned<&Expr>,
+	) -> Self::Result;
 	fn visit_binary(&mut self, expr_l: &Expr, op: &BinaryOp, expr_r: &Expr) -> Self::Result;
 
 	fn visit_block(&mut self, block: &Block) -> Self::Result;

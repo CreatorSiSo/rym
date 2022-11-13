@@ -107,7 +107,7 @@ impl Parser {
 						params,
 						body: self.expr()?,
 					}),
-					fn_start_span.start..self.previous().1.end,
+					fn_start_span.start..self.previous_span().end,
 				));
 			}
 		}
@@ -116,7 +116,7 @@ impl Parser {
 		self.matches_any(&[TokenType::Semicolon, TokenType::Newline]);
 		Ok(Spanned(
 			Stmt::Expr(expr.0),
-			stmt_start_pos..self.previous().1.end,
+			stmt_start_pos..self.previous_span().end,
 		))
 	}
 
@@ -170,7 +170,7 @@ impl Parser {
 
 			return Ok(Spanned(
 				Expr::Assign(expr_l, expr_r),
-				start..self.previous().1.end,
+				start..self.previous_span().end,
 			));
 		}
 
@@ -180,7 +180,7 @@ impl Parser {
 	/// if => "if" expression block ("else" (if | block))?
 	fn if_(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.matches(TokenType::If) {
-			let start = self.previous().1.start;
+			let start = self.previous_span().start;
 			let expr = Box::new(self.expr()?.0);
 			let then_block = self.block()?;
 			let else_block = if self.matches(TokenType::Else) {
@@ -194,7 +194,7 @@ impl Parser {
 
 			return Ok(Spanned(
 				Expr::If(expr, then_block, else_block),
-				start..self.previous().1.end,
+				start..self.previous_span().end,
 			));
 		}
 
@@ -204,33 +204,35 @@ impl Parser {
 	/// loop => "loop" block
 	fn loop_(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.matches(TokenType::Loop) {
-			let start = self.previous().1.start;
+			let start = self.previous_span().start;
 			let block = self.block()?;
-			return Ok(Spanned(Expr::Loop(block), start..self.previous().1.end));
+			return Ok(Spanned(Expr::Loop(block), start..self.previous_span().end));
 		}
 
-		self.logic_or().map(|expr| Spanned(expr, 0..0))
+		self.logic_or()
 	}
 
-	/// logic_or => logic_and ("&&" logic_and)*
-	fn logic_or(&mut self) -> ParseResult<Expr> {
+	/// logic_or => logic_and ("||" logic_and)*
+	fn logic_or(&mut self) -> ParseResult<Spanned<Expr>> {
 		let mut left = self.logic_and()?;
 
 		while self.matches(TokenType::DoublePipe) {
 			let right = Box::new(self.logic_and()?);
-			left = Expr::Logical(Box::new(left), LogicalOp::Or, right)
+			left.0 = Expr::Logical(Box::new(left.clone()), LogicalOp::Or, right);
+			left.1.end = self.previous_span().end;
 		}
 
 		Ok(left)
 	}
 
 	/// logic_and => equality ("&&" equality)*
-	fn logic_and(&mut self) -> ParseResult<Expr> {
-		let mut left = self.equality()?;
+	fn logic_and(&mut self) -> ParseResult<Spanned<Expr>> {
+		let mut left = Spanned(self.equality()?, 0..0);
 
 		while self.matches(TokenType::DoubleAmpersand) {
-			let right = Box::new(self.equality()?);
-			left = Expr::Logical(Box::new(left), LogicalOp::And, right)
+			let right = Box::new(Spanned(self.equality()?, 0..0));
+			left.0 = Expr::Logical(Box::new(left.clone()), LogicalOp::And, right);
+			left.1.end = self.previous_span().end;
 		}
 
 		Ok(left)
@@ -471,6 +473,10 @@ impl Parser {
 			self.pos += 1;
 		}
 		self.previous()
+	}
+
+	fn previous_span(&self) -> &Span {
+		&self.tokens[self.pos - 1].1
 	}
 
 	fn previous(&self) -> Spanned<Token> {

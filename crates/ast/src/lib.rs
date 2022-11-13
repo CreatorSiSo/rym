@@ -102,7 +102,7 @@ pub enum Expr {
 	Assign(Box<Expr>, Box<Expr>),
 
 	/// A logical operation `true && false`, `a || b`
-	Logical(Box<Expr>, LogicalOp, Box<Expr>),
+	Logical(Box<Spanned<Expr>>, LogicalOp, Box<Spanned<Expr>>),
 
 	/// A binary operation `a + b`, `a * b`
 	Binary(Box<Expr>, BinaryOp, Box<Expr>),

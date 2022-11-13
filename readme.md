@@ -8,7 +8,7 @@
 	- [Content](#content)
 	- [Name](#name)
 	- [Setup](#setup)
-		- [Tests](#tests)
+	- [Tests](#tests)
 	- [Goals](#goals)
 	- [Todos](#todos)
 
@@ -22,7 +22,7 @@
 
 ## Setup
 
-__TODO__
+**TODO**
 
 ## Tests
 
@@ -97,3 +97,6 @@ Run `cargo r --bin gen -- ./crates/tests/src/integration` after creating or modi
   ```
 
   - number, string, char, bool, ...
+
+- `true && (break)` currently only returns `Error: Expected Literal got RightParen, Span: 14..14`
+  - it should also say something along the lines of: `Tip: insert expression or semicolon after break`

@@ -15,6 +15,7 @@ use ast::{AstVisitor, BinaryOp, Block, Decl, Expr, LogicalOp, Span, Spanned, Stm
 use callable::{Callable, RymFunction};
 use env::GlobalEnv;
 
+#[derive(Debug)]
 pub enum Inter {
 	Return(Value),
 	Break(Value),
@@ -127,29 +128,28 @@ impl Interpreter {
 	fn cmp_bool<F>(
 		&mut self,
 		val_l: Value,
-		expr_r: &Expr,
+		expr_r: Spanned<&Expr>,
 		f: F,
 		short_circuit_if: bool,
-	) -> Result<Value, SpannedError>
+	) -> Result<Inter, SpannedError>
 	where
 		F: Fn(bool, bool) -> bool,
 	{
-		// TODO Clean this up
-		match val_l {
-			Value::Bool(bool_l) => {
-				if short_circuit_if == bool_l {
-					return Ok(Value::Bool(short_circuit_if));
-				}
-				let val_r = self
-					.walk_expr(Spanned(expr_r, /* TODO: Use proper span */ 0..0))?
-					.into();
-				if let Value::Bool(bool_r) = val_r {
-					return Ok(Value::Bool(f(bool_l, bool_r)));
-				}
-				spanned_err(TypeError::Expected(Type::Bool, val_r.typ()), 0..0)
-			}
-			_ => spanned_err(TypeError::Expected(Type::Bool, val_l.typ()), 0..0),
+		let bool_l = match val_l {
+			Value::Bool(bool_l) => bool_l,
+			_ => return spanned_err(TypeError::Expected(Type::Bool, val_l.typ()), 0..0),
+		};
+		if short_circuit_if == bool_l {
+			return Ok(Inter::None(Value::Bool(short_circuit_if)));
 		}
+		let bool_r = match self.walk_expr(expr_r.clone())? {
+			Inter::None(val) => match val {
+				Value::Bool(bool_r) => bool_r,
+				val_r => return spanned_err(TypeError::Expected(Type::Bool, val_r.typ()), expr_r.1),
+			},
+			inter => return Ok(inter),
+		};
+		Ok(Inter::None(Value::Bool(f(bool_l, bool_r))))
 	}
 }
 
@@ -263,16 +263,22 @@ impl AstVisitor for Interpreter {
 		}
 	}
 
-	fn visit_logical(&mut self, expr_l: &Expr, op: &LogicalOp, expr_r: &Expr) -> Self::Result {
-		let val_l = self
-			.walk_expr(Spanned(expr_l, /* TODO: Use proper span */ 0..0))?
-			.into();
+	fn visit_logical(
+		&mut self,
+		expr_l: Spanned<&Expr>,
+		op: &LogicalOp,
+		expr_r: Spanned<&Expr>,
+	) -> Self::Result {
+		let val_l = match self.walk_expr(expr_l) {
+			Ok(Inter::None(val_l)) => val_l,
+			other => return other,
+		};
 
-		Ok(Inter::None(if op == &LogicalOp::And {
+		Ok(if op == &LogicalOp::And {
 			self.cmp_bool(val_l, expr_r, |val_l, val_r| val_l && val_r, false)?
 		} else {
 			self.cmp_bool(val_l, expr_r, |val_l, val_r| val_l || val_r, true)?
-		}))
+		})
 	}
 
 	fn visit_binary(&mut self, expr_l: &Expr, op: &BinaryOp, expr_r: &Expr) -> Self::Result {
@@ -387,8 +393,9 @@ impl AstVisitor for Interpreter {
 	fn visit_loop(&mut self, block: &Block) -> Self::Result {
 		loop {
 			match self.visit_block(block)? {
+				Inter::Continue | Inter::None(_) => continue,
 				Inter::Break(val) => break Ok(Inter::None(val)),
-				_ => continue,
+				inter_return => return Ok(inter_return),
 			}
 		}
 	}

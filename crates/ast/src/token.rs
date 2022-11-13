@@ -125,6 +125,7 @@ pub const KEYWORDS: &[(&str, TokenType)] = &[
 	("loop", TokenType::Loop),
 	("return", TokenType::Return),
 	("break", TokenType::Break),
+	("continue", TokenType::Continue),
 	//
 	("false", TokenType::False),
 	("true", TokenType::True),

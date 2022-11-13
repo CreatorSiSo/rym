@@ -53,7 +53,7 @@ impl Parser {
 
 			self.expect(TokenType::Equal, "Expected `=`")?;
 
-			let expr = self.expr()?;
+			let expr = self.parse_expr()?;
 			let Spanned(_, var_end_span) = self.expect_any(
 				&[TokenType::Semicolon, TokenType::Newline],
 				"Expected Semicolon or Newline",
@@ -105,14 +105,14 @@ impl Parser {
 					Stmt::Decl(Decl::Fn {
 						name,
 						params,
-						body: self.expr()?,
+						body: self.parse_expr()?,
 					}),
 					fn_start_span.start..self.previous_span().end,
 				));
 			}
 		}
 
-		let expr = self.expr()?;
+		let expr = self.parse_expr()?;
 		self.matches_any(&[TokenType::Semicolon, TokenType::Newline]);
 		Ok(Spanned(
 			Stmt::Expr(expr.0),
@@ -120,11 +120,7 @@ impl Parser {
 		))
 	}
 
-	fn expr(&mut self) -> ParseResult<Spanned<Expr>> {
-		self.interrupts()
-	}
-
-	fn interrupts(&mut self) -> ParseResult<Spanned<Expr>> {
+	fn parse_expr(&mut self) -> ParseResult<Spanned<Expr>> {
 		// return => "return" expr?;
 		// break => "break" expr?;
 		if let Some(Spanned(Token { typ, .. }, span)) =
@@ -140,7 +136,7 @@ impl Parser {
 					Ok(Spanned(Expr::Break(None), span))
 				};
 			}
-			let expr = Box::new(self.expr()?);
+			let expr = Box::new(self.parse_expr()?);
 			let full_span = span.start..expr.1.end;
 			return Ok(Spanned(
 				if is_return {
@@ -157,16 +153,16 @@ impl Parser {
 			return Ok(self.previous().map(|_| Expr::Continue));
 		}
 
-		self.assignment()
+		self.parse_assignment()
 	}
 
 	/// assignment => identifier "=" expr
-	fn assignment(&mut self) -> ParseResult<Spanned<Expr>> {
+	fn parse_assignment(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.peek_eq(1, TokenType::Equal) {
 			let start = self.tokens[self.pos].1.start;
-			let expr_l = Box::new(self.primary()?);
+			let expr_l = Box::new(self.parse_primary()?);
 			self.advance();
-			let expr_r = Box::new(self.expr()?.0);
+			let expr_r = Box::new(self.parse_expr()?.0);
 
 			return Ok(Spanned(
 				Expr::Assign(expr_l, expr_r),
@@ -174,20 +170,20 @@ impl Parser {
 			));
 		}
 
-		self.if_()
+		self.parse_if()
 	}
 
 	/// if => "if" expression block ("else" (if | block))?
-	fn if_(&mut self) -> ParseResult<Spanned<Expr>> {
+	fn parse_if(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.matches(TokenType::If) {
 			let start = self.previous_span().start;
-			let expr = Box::new(self.expr()?.0);
-			let then_block = self.block()?;
+			let expr = Box::new(self.parse_expr()?.0);
+			let then_block = self.parse_block()?;
 			let else_block = if self.matches(TokenType::Else) {
 				if self.peek_eq(0, TokenType::If) {
-					return self.if_();
+					return self.parse_if();
 				}
-				Some(self.block()?)
+				Some(self.parse_block()?)
 			} else {
 				None
 			};
@@ -198,26 +194,26 @@ impl Parser {
 			));
 		}
 
-		self.loop_()
+		self.parse_loop()
 	}
 
 	/// loop => "loop" block
-	fn loop_(&mut self) -> ParseResult<Spanned<Expr>> {
+	fn parse_loop(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.matches(TokenType::Loop) {
 			let start = self.previous_span().start;
-			let block = self.block()?;
+			let block = self.parse_block()?;
 			return Ok(Spanned(Expr::Loop(block), start..self.previous_span().end));
 		}
 
-		self.logic_or()
+		self.parse_logic_or()
 	}
 
 	/// logic_or => logic_and ("||" logic_and)*
-	fn logic_or(&mut self) -> ParseResult<Spanned<Expr>> {
-		let mut left = self.logic_and()?;
+	fn parse_logic_or(&mut self) -> ParseResult<Spanned<Expr>> {
+		let mut left = self.parse_logic_and()?;
 
 		while self.matches(TokenType::DoublePipe) {
-			let right = Box::new(self.logic_and()?);
+			let right = Box::new(self.parse_logic_and()?);
 			left.0 = Expr::Logical(Box::new(left.clone()), LogicalOp::Or, right);
 			left.1.end = self.previous_span().end;
 		}
@@ -226,11 +222,11 @@ impl Parser {
 	}
 
 	/// logic_and => equality ("&&" equality)*
-	fn logic_and(&mut self) -> ParseResult<Spanned<Expr>> {
-		let mut left = Spanned(self.equality()?, 0..0);
+	fn parse_logic_and(&mut self) -> ParseResult<Spanned<Expr>> {
+		let mut left = Spanned(self.parse_equality()?, 0..0);
 
 		while self.matches(TokenType::DoubleAmpersand) {
-			let right = Box::new(Spanned(self.equality()?, 0..0));
+			let right = Box::new(Spanned(self.parse_equality()?, 0..0));
 			left.0 = Expr::Logical(Box::new(left.clone()), LogicalOp::And, right);
 			left.1.end = self.previous_span().end;
 		}
@@ -239,12 +235,12 @@ impl Parser {
 	}
 
 	/// equality => comparison (("==" | "!=") comparison)*
-	fn equality(&mut self) -> ParseResult<Expr> {
-		let mut left = self.comparison()?;
+	fn parse_equality(&mut self) -> ParseResult<Expr> {
+		let mut left = self.parse_comparison()?;
 
 		while self.matches_any(&[TokenType::EqualEqual, TokenType::BangEqual]) {
 			let typ = self.previous().0.typ.clone();
-			let right = Box::new(self.comparison()?);
+			let right = Box::new(self.parse_comparison()?);
 
 			left = if typ == TokenType::EqualEqual {
 				Expr::Binary(Box::new(left), BinaryOp::Eq, right)
@@ -257,8 +253,8 @@ impl Parser {
 	}
 
 	/// comparison => term ((">" | ">=" | "<" | "<=") term)*
-	fn comparison(&mut self) -> ParseResult<Expr> {
-		let mut left = self.term()?;
+	fn parse_comparison(&mut self) -> ParseResult<Expr> {
+		let mut left = self.parse_term()?;
 
 		while self.matches_any(&[
 			TokenType::Greater,
@@ -267,7 +263,7 @@ impl Parser {
 			TokenType::LessEqual,
 		]) {
 			let typ = self.previous().0.typ.clone();
-			let right = Box::new(self.term()?);
+			let right = Box::new(self.parse_term()?);
 
 			left = Expr::Binary(
 				Box::new(left),
@@ -285,12 +281,12 @@ impl Parser {
 	}
 
 	/// term => factor (("+" | "-") factor)*
-	fn term(&mut self) -> ParseResult<Expr> {
-		let mut left = self.factor()?;
+	fn parse_term(&mut self) -> ParseResult<Expr> {
+		let mut left = self.parse_factor()?;
 
 		while self.matches_any(&[TokenType::Plus, TokenType::Minus]) {
 			let typ = self.previous().0.typ.clone();
-			let right = Box::new(self.factor()?);
+			let right = Box::new(self.parse_factor()?);
 
 			left = if typ == TokenType::Plus {
 				Expr::Binary(Box::new(left), BinaryOp::Add, right)
@@ -303,12 +299,12 @@ impl Parser {
 	}
 
 	/// factor => unary (("/" | "*") unary)*
-	fn factor(&mut self) -> ParseResult<Expr> {
-		let mut left = self.unary()?;
+	fn parse_factor(&mut self) -> ParseResult<Expr> {
+		let mut left = self.parse_unary()?;
 
 		while self.matches_any(&[TokenType::Star, TokenType::Slash]) {
 			let typ = self.previous().0.typ.clone();
-			let right = Box::new(self.unary()?);
+			let right = Box::new(self.parse_unary()?);
 
 			left = if typ == TokenType::Star {
 				Expr::Binary(Box::new(left), BinaryOp::Mul, right)
@@ -321,27 +317,27 @@ impl Parser {
 	}
 
 	/// unary => ("!" | "-") (unary | call)
-	fn unary(&mut self) -> ParseResult<Expr> {
+	fn parse_unary(&mut self) -> ParseResult<Expr> {
 		if self.matches(TokenType::Bang) {
-			let expr = Box::new(self.unary()?);
+			let expr = Box::new(self.parse_unary()?);
 			return Ok(Expr::Unary(UnaryOp::Not, expr));
 		}
 		if self.matches(TokenType::Minus) {
-			let expr = Box::new(self.unary()?);
+			let expr = Box::new(self.parse_unary()?);
 			return Ok(Expr::Unary(UnaryOp::Neg, expr));
 		}
-		self.call()
+		self.parse_call()
 	}
 
 	/// call => primary ("(" arguments? ")")*
-	fn call(&mut self) -> ParseResult<Expr> {
-		let mut expr = self.primary()?;
+	fn parse_call(&mut self) -> ParseResult<Expr> {
+		let mut expr = self.parse_primary()?;
 
 		while self.matches(TokenType::LeftParen) {
 			let args = if self.matches(TokenType::RightParen) {
 				Vec::new()
 			} else {
-				let args = self.arguments()?;
+				let args = self.parse_arguments()?;
 				self.expect(
 					TokenType::RightParen,
 					"Expected closing `)` after arguments",
@@ -355,27 +351,27 @@ impl Parser {
 	}
 
 	/// expr ("," expr)*
-	fn arguments(&mut self) -> ParseResult<Vec<Spanned<Expr>>> {
+	fn parse_arguments(&mut self) -> ParseResult<Vec<Spanned<Expr>>> {
 		let mut args = Vec::new();
-		args.push(self.expr()?);
+		args.push(self.parse_expr()?);
 		while self.matches(TokenType::Comma) {
-			let expr = self.expr()?;
+			let expr = self.parse_expr()?;
 			args.push(expr);
 		}
 		Ok(args)
 	}
 
 	/// primary => "(" expr? ")", block, identifier, number | string | "true" | "false"
-	fn primary(&mut self) -> ParseResult<Expr> {
+	fn parse_primary(&mut self) -> ParseResult<Expr> {
 		if self.peek_eq(0, TokenType::LeftBrace) {
-			return self.block().map(Expr::Block);
+			return self.parse_block().map(Expr::Block);
 		}
 
 		if self.matches(TokenType::LeftParen) {
 			let expr = if self.peek_eq(0, TokenType::RightParen) {
 				Box::new(Expr::Literal(Literal::Unit))
 			} else {
-				Box::new(self.expr()?.0)
+				Box::new(self.parse_expr()?.0)
 			};
 			self.expect(TokenType::RightParen, "Expected closing `)`")?;
 			return Ok(Expr::Group(expr));
@@ -400,7 +396,7 @@ impl Parser {
 	}
 
 	/// block => "{" stmt* "}"
-	fn block(&mut self) -> ParseResult<Block> {
+	fn parse_block(&mut self) -> ParseResult<Block> {
 		self.expect(TokenType::LeftBrace, "Expected `{`")?;
 
 		let mut stmts = Vec::new();
@@ -506,16 +502,29 @@ impl Parser {
 	}
 }
 
-impl Iterator for Parser {
+pub struct AstIter {
+	parser: Parser,
+}
+
+impl Iterator for AstIter {
 	type Item = ParseResult<Spanned<Stmt>>;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		if self.tokens.is_empty() || self.is_at_end() {
+		if self.parser.tokens.is_empty() || self.parser.is_at_end() {
 			return None;
 		}
-		match self.stmt() {
+		match self.parser.stmt() {
 			Ok(stmt) => Some(Ok(stmt)),
 			Err(err) => Some(Err(err)),
 		}
+	}
+}
+
+impl IntoIterator for Parser {
+	type Item = ParseResult<Spanned<Stmt>>;
+	type IntoIter = AstIter;
+
+	fn into_iter(self) -> Self::IntoIter {
+		AstIter { parser: self }
 	}
 }

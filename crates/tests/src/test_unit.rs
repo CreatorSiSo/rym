@@ -13,7 +13,9 @@ fn integration_unit() {
 	let mut tokens = Vec::new();
 	Lexer::new(src).for_each(|result| tokens.push(result.unwrap()));
 	let mut ast = Vec::new();
-	Parser::new(tokens).for_each(|result| ast.push(result.unwrap()));
+	for result in Parser::new(tokens) {
+		ast.push(result.unwrap())
+	}
 	let result = Interpreter::default().eval(&ast);
 	assert_eq!(
 		result,

@@ -18,3 +18,8 @@ members = [
 	"crates/macros",
 	"crates/tests",
 ]
+
+[profile.dist]
+inherits = "release"
+lto = "fat"
+panic = "abort"

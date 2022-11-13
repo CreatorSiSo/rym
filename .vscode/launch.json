@@ -32,7 +32,9 @@
 					"kind": "bin"
 				}
 			},
-			"args": ["${workspaceFolder}/examples/${input:pickExample}.rym"],
+			"args": [
+				"${workspaceFolder}/crates/tests/src/integration/${input:pickExample}.rym"
+			],
 			"cwd": "${workspaceFolder}"
 		},
 		{

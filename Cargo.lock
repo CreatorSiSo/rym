@@ -195,16 +195,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "macros"
-version = "0.1.0"
-dependencies = [
- "ast",
- "proc-macro2",
- "quote",
- "stringx",
-]
-
-[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -387,7 +377,6 @@ version = "0.1.0"
 dependencies = [
  "ast",
  "lex",
- "macros",
  "parse",
  "tree_walk",
 ]

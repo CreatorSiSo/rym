@@ -18,7 +18,7 @@
 
 ### Name
 
-**Rym Lang** or **rym-lang**
+**Rym Lang** or just **Rym**
 
 - **R**ust**y** ⇒ Heavily borrows 🙃 from Rust
 - **M**ulti-paradigm ⇒ Mix of object oriented, procedural and functional programming

@@ -19,6 +19,6 @@ fn integration_unit() {
 	let result = Interpreter::default().eval(&ast);
 	assert_eq!(
 		result,
-		spanned_err(TypeError::Add(Type::Unit, Type::Number), 0..0)
+		spanned_err(TypeError::Add(Type::Unit, Type::Number), 155..162)
 	);
 }

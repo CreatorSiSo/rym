@@ -113,7 +113,10 @@ pub enum Expr {
 	Unary(UnaryOp, Box<Spanned<Expr>>),
 
 	/// A function call `test_fn(0, "hello")`
-	Call(Box<Spanned<Expr>>, Vec<Spanned<Expr>>),
+	Call {
+		callee: Box<Spanned<Expr>>,
+		args: Vec<Spanned<Expr>>,
+	},
 
 	/// `(9 - 2) * 4`
 	Group(Box<Spanned<Expr>>),

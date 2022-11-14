@@ -45,7 +45,6 @@ impl Parser {
 			self.matches_which(&[TokenType::Const, TokenType::Mut])
 		{
 			let mutable = token.typ == TokenType::Mut;
-			let start = self.previous_span().start;
 
 			let Spanned(name_token, _) = self.expect(TokenType::Identifier, "Expected identifier")?;
 			let name = name_token.data.ident(TokenType::Identifier);
@@ -354,7 +353,10 @@ impl Parser {
 				args
 			};
 			expr = Spanned(
-				Expr::Call(Box::new(expr.clone()), args),
+				Expr::Call {
+					callee: Box::new(expr.clone()),
+					args,
+				},
 				expr.1.start..self.previous_span().end,
 			);
 		}

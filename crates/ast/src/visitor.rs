@@ -22,7 +22,7 @@ pub trait AstVisitor {
 			Expr::Identifier(ident) => self.visit_ident(ident, span),
 			Expr::Literal(lit) => self.visit_lit(lit, span),
 			Expr::Assign(expr_l, expr_r) => self.visit_assign((**expr_l).as_ref(), (**expr_r).as_ref()),
-			Expr::Call(callee, args) => self.visit_call((**callee).as_ref(), args),
+			Expr::Call { callee, args } => self.visit_call((**callee).as_ref(), args),
 
 			Expr::Unary(op, expr) => self.visit_unary(op, (**expr).as_ref()),
 			Expr::Logical(expr_l, op, expr_r) => {

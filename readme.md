@@ -6,13 +6,17 @@
 
 - [Rym Lang](#rym-lang)
 	- [Content](#content)
-	- [Name](#name)
-	- [Setup](#setup)
-	- [Tests](#tests)
-	- [Goals](#goals)
-	- [Todos](#todos)
+	- [About Rym](#about-rym)
+		- [Name](#name)
+		- [Goals](#goals)
+	- [How to install](#how-to-install)
+	- [Project Structure](#project-structure)
+		- [Tests](#tests)
+- [Todos](#todos)
 
-## Name
+## About Rym
+
+### Name
 
 **Rym Lang** or **rym-lang**
 
@@ -20,49 +24,51 @@
 - **M**ulti-paradigm ⇒ Mix of object oriented, procedural and functional programming
 - Programming **Lang**uage ⇒ because thats what it is
 
-## Setup
+### Goals
+
+- Enjoyable DX (Development Experience)
+  - Informative errors and warnings
+  - Built in tools
+- Safe programming language
+  - No `null` `nil` `undefined`
+  - Static but inferred types
+- Should work as a scripting language
+- Great interoperabilty with Rust
+  - Should just work out of the box
+- Ui and apps programming
+
+## How to install
 
 **TODO**
 
-## Tests
+## Project Structure
 
-Run `cargo r --bin gen -- ./crates/tests/src/integration` after creating or modifying a test.
+The project is split into many crates that are part of one Cargo workspace:
 
-## Goals
+`crates/ast` ⇒ Ast Types: Spanned<T>, AstVisitor<T>, Token, ...
+`crates/lex` ⇒ produce Tokens from source
+`crates/parse` ⇒ produce ast from tokens
+`crates/code_gen` ⇒ generate optimized code (dead code analysis, ...) or give warnings
+`crates/tree_walk` ⇒ evaluate ast
+`crates/tests` ⇒ integration tests
+`crates/rymx` ⇒ command line tool for executing `.rym` files
 
-- Works well for scripting and serious projects
-- Great interoperabilty with Rust
-  - Easy to use (simple)
-  - Fast to write Bindings
-- ~~Ui Structure and Functionality coding~~ (Maybe later)
+And some other scripts located in the root directory:
 
-## Todos
+`bench.sh` ⇒ builds and runs various benchmarks
+`test.py` ⇒ updates and runs all tests
 
-- [x] `Spanned<T>`
-  - [x] contains start index and length or `Range<usize>`
-- [x] `AstVisitor<R>` trait
-  - [x] takes in some ast and produces `R`
+### Tests
+
+Run `python test.py` to update and execute all tests.
+
+This internally runs `cargo r --bin gen -- ./crates/tests/src/integration` which includes the source code for all tests into `crates/tests/src/integration/mod.rs`.
+
+# Todos
+
 - [ ] Interpreter
   - [x] add custom constructor to define globals `with_globals(&[(String, Into<Value>)])`?
   - [ ] add method for defining variable on interpreter directly
-- [x] change lib internal file structure
-
-  ```
-  crates
-  	/ast        ⇒         Ast Types:  Spanned<T>, AstVisitor<T>, Token, ...
-  	? /interpret  ⇒ Interpreter Types:  Value, Interpreter, ...
-
-  	/tokenize   ⇒ API to produce Token
-  	/parse      ⇒ API to produce some ast
-  	/lint       ⇒ API to visit and generate warnings (dead code, ...) for ast
-  	/tree_walk  ⇒ API to visit and evaluate ast
-
-  	/rymx
-  ```
-
-- [x] functions
-  - [x] add parsing for declarations
-  - [x] fix nested calls eg. `name()()()`
 - [ ] add benchmarking capabilities
   - [ ] cargo alias eg. `cargo bench`
 - [ ] use arena allocator for scopes
@@ -74,29 +80,11 @@ Run `cargo r --bin gen -- ./crates/tests/src/integration` after creating or modi
   - [ ] use annotations lib to display errors
   - [ ] implement error recovery to safe expr/stmt
   - [ ] use error codes that link to a more detailed explanation (https://github.com/rust-lang/rust/tree/master/compiler/rustc_error_codes)
+  - [ ] `true && (break)` currently only returns `Error: Expected Literal got RightParen, Span: 14..14`, it should also say something along the lines of: `Tip: insert expression or semicolon after break`
 - [ ] types
-
-  - [ ] type functions
-
-  ```rust
-  type SizeString = fn (value: string) -> Result<(), TypeError> {
-  	if value.ends_with("px") {
-  		Ok(())
-  	} else {
-  		Err(TypeError::Mismatch("Expected `px` at the end of a WidthString."))
-  	}
-  }
-
-  type fn SizeString(value: string) -> Result<(), TypeError> {
-  	if value.ends_with("px") {
-  		Ok(())
-  	} else {
-  		Err(TypeError::Mismatch("Expected `px` at the end of a WidthString."))
-  	}
-  }
-  ```
-
-  - number, string, char, bool, ...
-
-- `true && (break)` currently only returns `Error: Expected Literal got RightParen, Span: 14..14`
-  - it should also say something along the lines of: `Tip: insert expression or semicolon after break`
+  - [ ] `Number`, `String`, `Char`, `Bool`
+  - [ ] (literal) values that come from source code directly:
+    - [ ] `LiteralNumber`, `LiteralString`, `LiteralChar`, `LiteralBool`
+    - [ ] `1`, `2.2`, `"Hello World!"`, `'\n'`, `false`
+  - [ ] type unions: `0 | 1 | Bool`
+  - [ ] type functions [docs/functions.md](docs/functions.md#type_functions)

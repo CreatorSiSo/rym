@@ -43,3 +43,23 @@ pr main() -> Io, Result<(), Error> {
 ```rust
 const add = |a: int, b: int| a + b
 ```
+
+## Type functions
+
+```rust
+  type SizeString = fn (value: string) -> Result<(), TypeError> {
+  	if value.ends_with("px") {
+  		Ok(())
+  	} else {
+  		Err(TypeError::Mismatch("Expected `px` at the end of a WidthString."))
+  	}
+  }
+
+  type fn SizeString(value: string) -> Result<(), TypeError> {
+  	if value.ends_with("px") {
+  		Ok(())
+  	} else {
+  		Err(TypeError::Mismatch("Expected `px` at the end of a WidthString."))
+  	}
+  }
+```

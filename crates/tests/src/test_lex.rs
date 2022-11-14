@@ -4,7 +4,7 @@ use super::*;
 fn lex_keywords() {
 	let source = "if else for while loop return break false true fn const mut struct self";
 	let lexer = Lexer::new(source);
-	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().1.typ).collect();
+	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().typ).collect();
 	assert_eq!(
 		tokens,
 		vec![
@@ -30,7 +30,7 @@ fn lex_keywords() {
 fn operators() {
 	let source = "- + / * ! != = == > >= < <=	&& ||";
 	let lexer = Lexer::new(source);
-	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().1.typ).collect();
+	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().typ).collect();
 	assert_eq!(
 		tokens,
 		vec![
@@ -56,7 +56,7 @@ fn operators() {
 fn special_chars() {
 	let source = ". , ; ( ) { }";
 	let lexer = Lexer::new(source);
-	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().1.typ).collect();
+	let tokens: Vec<TokenType> = lexer.map(|token| token.unwrap().typ).collect();
 	assert_eq!(
 		tokens,
 		vec![
@@ -75,13 +75,14 @@ fn special_chars() {
 fn strings() {
 	let source = r#" "str€ng" "#;
 	let lexer = Lexer::new(source);
-	let tokens: Vec<Spanned<Token>> = lexer.map(|token| token.unwrap()).collect();
+	let tokens: Vec<Token> = lexer.map(|token| token.unwrap()).collect();
 	assert_eq!(
 		tokens,
-		vec![Spanned(
-			1..10,
-			Token::literal(TokenType::String, Literal::String("str€ng".into())),
-		)]
+		vec![Token::literal(
+			TokenType::String,
+			Literal::String("str€ng".into()),
+			1..10
+		),]
 	)
 }
 
@@ -89,18 +90,12 @@ fn strings() {
 fn number() {
 	let source = r#" 9 0.23042 "#;
 	let lexer = Lexer::new(source);
-	let tokens: Vec<Spanned<Token>> = lexer.map(|token| token.unwrap()).collect();
+	let tokens: Vec<Token> = lexer.map(|token| token.unwrap()).collect();
 	assert_eq!(
 		tokens,
 		vec![
-			Spanned(
-				1..1,
-				Token::literal(TokenType::Number, Literal::Number(9.0)),
-			),
-			Spanned(
-				3..9,
-				Token::literal(TokenType::Number, Literal::Number(0.23042)),
-			)
+			Token::literal(TokenType::Number, Literal::Number(9.0), 1..1),
+			Token::literal(TokenType::Number, Literal::Number(0.23042), 3..9,),
 		]
 	)
 }

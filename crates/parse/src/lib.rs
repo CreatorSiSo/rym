@@ -7,12 +7,12 @@ pub use error::ParseError;
 pub type ParseResult<T> = Result<T, ParseError>;
 
 pub struct Parser {
-	tokens: Vec<Spanned<Token>>,
+	tokens: Vec<Token>,
 	pos: usize,
 }
 
 impl Parser {
-	pub fn parse(tokens: Vec<Spanned<Token>>) -> (Vec<Spanned<Stmt>>, Vec<ParseError>) {
+	pub fn parse(tokens: Vec<Token>) -> (Vec<Spanned<Stmt>>, Vec<ParseError>) {
 		let mut stmts = Vec::new();
 		let mut errors = Vec::new();
 
@@ -30,35 +30,32 @@ impl Parser {
 		(stmts, errors)
 	}
 
-	pub const fn new(tokens: Vec<Spanned<Token>>) -> Self {
+	pub const fn new(tokens: Vec<Token>) -> Self {
 		Self { tokens, pos: 0 }
 	}
 
 	// TODO: Refactor entire stmt function (maybe split it up)
 	pub fn stmt(&mut self) -> ParseResult<Spanned<Stmt>> {
-		if let Some(Spanned(span, _)) = self.matches_which(&[TokenType::Semicolon, TokenType::Newline])
-		{
-			return Ok(Spanned(span, Stmt::Empty));
+		if let Some(token) = self.matches_which(&[TokenType::Semicolon, TokenType::Newline]) {
+			return Ok(Spanned(token.span, Stmt::Empty));
 		}
 
-		if let Some(Spanned(var_start_span, token)) =
-			self.matches_which(&[TokenType::Const, TokenType::Mut])
-		{
+		if let Some(token) = self.matches_which(&[TokenType::Const, TokenType::Mut]) {
 			let mutable = token.typ == TokenType::Mut;
 
-			let Spanned(_, name_token) = self.expect(TokenType::Identifier, "Expected identifier")?;
+			let name_token = self.expect(TokenType::Identifier, "Expected identifier")?;
 			let name = name_token.data.ident(TokenType::Identifier);
 
 			self.expect(TokenType::Equal, "Expected `=`")?;
 
 			let expr = self.parse_expr()?;
-			let Spanned(var_end_span, _) = self.expect_any(
+			let var_end = self.expect_any(
 				&[TokenType::Semicolon, TokenType::Newline],
 				"Expected Semicolon or Newline",
 			)?;
 
 			return Ok(Spanned(
-				var_start_span.start..var_end_span.end,
+				token.span.start..var_end.span.end,
 				if mutable {
 					Stmt::Decl(Decl::Mut(name, expr.1))
 				} else {
@@ -69,8 +66,7 @@ impl Parser {
 
 		// fn => "fn" identifier()
 		if self.matches(TokenType::Fn) {
-			let Spanned(fn_start_span, fn_token) =
-				self.expect(TokenType::Identifier, "Expected function name")?;
+			let fn_token = self.expect(TokenType::Identifier, "Expected function name")?;
 			let name = match fn_token.data {
 				TokenData::Identifier(ident) => ident,
 				_ => unreachable!("Internal Error: Identifier Token has no value!"),
@@ -82,13 +78,11 @@ impl Parser {
 				} else {
 					let mut params = Vec::new();
 
-					let Spanned(_, first_param) =
-						self.expect(TokenType::Identifier, "Expected function parameter")?;
+					let first_param = self.expect(TokenType::Identifier, "Expected function parameter")?;
 					params.push(first_param.data.ident(TokenType::Identifier));
 
 					while self.matches(TokenType::Comma) {
-						let Spanned(_, other_param) =
-							self.expect(TokenType::Identifier, "Expected function parameter")?;
+						let other_param = self.expect(TokenType::Identifier, "Expected function parameter")?;
 						params.push(other_param.data.ident(TokenType::Identifier));
 					}
 
@@ -100,7 +94,7 @@ impl Parser {
 					params
 				};
 				return Ok(Spanned(
-					fn_start_span.start..self.previous_span().end,
+					fn_token.span.start..self.previous().span.end,
 					Stmt::Decl(Decl::Fn {
 						name,
 						params,
@@ -113,13 +107,13 @@ impl Parser {
 		let expr = self.parse_expr()?;
 		let start = expr.0.start;
 		self.matches_any(&[TokenType::Semicolon, TokenType::Newline]);
-		Ok(Spanned(start..self.previous_span().end, Stmt::Expr(expr)))
+		Ok(Spanned(start..self.previous().span.end, Stmt::Expr(expr)))
 	}
 
 	fn parse_expr(&mut self) -> ParseResult<Spanned<Expr>> {
 		// return => "return" expr?;
 		// break => "break" expr?;
-		if let Some(Spanned(span, Token { typ, .. })) =
+		if let Some(Token { typ, span, .. }) =
 			self.matches_which(&[TokenType::Break, TokenType::Return])
 		{
 			let is_return = typ == TokenType::Return;
@@ -146,7 +140,7 @@ impl Parser {
 
 		// continue => "continue"
 		if self.matches(TokenType::Continue) {
-			return Ok(self.previous().map(|_| Expr::Continue));
+			return Ok(Spanned(self.previous().span, Expr::Continue));
 		}
 
 		self.parse_assignment()
@@ -155,13 +149,13 @@ impl Parser {
 	/// assignment => identifier "=" expr
 	fn parse_assignment(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.peek_eq(1, TokenType::Equal) {
-			let start = self.tokens[self.pos].0.start;
+			let start = self.tokens[self.pos].span.start;
 			let expr_l = Box::new(self.parse_primary()?);
 			self.advance();
 			let expr_r = Box::new(self.parse_expr()?);
 
 			return Ok(Spanned(
-				start..self.previous_span().end,
+				start..self.previous().span.end,
 				Expr::Assign(expr_l, expr_r),
 			));
 		}
@@ -172,7 +166,7 @@ impl Parser {
 	/// if => "if" expression block ("else" (if | block))?
 	fn parse_if(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.matches(TokenType::If) {
-			let start = self.previous_span().start;
+			let start = self.previous().span.start;
 			let expr = Box::new(self.parse_expr()?);
 			let then_block = self.parse_block()?;
 			let else_block = if self.matches(TokenType::Else) {
@@ -185,7 +179,7 @@ impl Parser {
 			};
 
 			return Ok(Spanned(
-				start..self.previous_span().end,
+				start..self.previous().span.end,
 				Expr::If(expr, then_block, else_block),
 			));
 		}
@@ -196,9 +190,9 @@ impl Parser {
 	/// loop => "loop" block
 	fn parse_loop(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.matches(TokenType::Loop) {
-			let start = self.previous_span().start;
+			let start = self.previous().span.start;
 			let block = self.parse_block()?;
-			return Ok(Spanned(start..self.previous_span().end, Expr::Loop(block)));
+			return Ok(Spanned(start..self.previous().span.end, Expr::Loop(block)));
 		}
 
 		self.parse_logic_or()
@@ -211,7 +205,7 @@ impl Parser {
 		while self.matches(TokenType::DoublePipe) {
 			let right = Box::new(self.parse_logic_and()?);
 			left.1 = Expr::Logical(Box::new(left.clone()), LogicalOp::Or, right);
-			left.0.end = self.previous_span().end;
+			left.0.end = self.previous().span.end;
 		}
 
 		Ok(left)
@@ -224,7 +218,7 @@ impl Parser {
 		while self.matches(TokenType::DoubleAmpersand) {
 			let right = Box::new(self.parse_equality()?);
 			left.1 = Expr::Logical(Box::new(left.clone()), LogicalOp::And, right);
-			left.0.end = self.previous_span().end;
+			left.0.end = self.previous().span.end;
 		}
 
 		Ok(left)
@@ -235,7 +229,7 @@ impl Parser {
 		let mut left = self.parse_comparison()?;
 
 		while self.matches_any(&[TokenType::EqualEqual, TokenType::BangEqual]) {
-			let typ = self.previous().1.typ.clone();
+			let typ = self.previous().typ.clone();
 			let right = Box::new(self.parse_comparison()?);
 
 			left.1 = if typ == TokenType::EqualEqual {
@@ -243,7 +237,7 @@ impl Parser {
 			} else {
 				Expr::Binary(Box::new(left.clone()), BinaryOp::Ne, right)
 			};
-			left.0.end = self.previous_span().end;
+			left.0.end = self.previous().span.end;
 		}
 
 		Ok(left)
@@ -259,7 +253,7 @@ impl Parser {
 			TokenType::Less,
 			TokenType::LessEqual,
 		]) {
-			let typ = self.previous().1.typ.clone();
+			let typ = self.previous().typ.clone();
 			let right = Box::new(self.parse_term()?);
 
 			left.1 = Expr::Binary(
@@ -272,7 +266,7 @@ impl Parser {
 				},
 				right,
 			);
-			left.0.end = self.previous_span().end;
+			left.0.end = self.previous().span.end;
 		}
 
 		Ok(left)
@@ -283,7 +277,7 @@ impl Parser {
 		let mut left = self.parse_factor()?;
 
 		while self.matches_any(&[TokenType::Plus, TokenType::Minus]) {
-			let typ = self.previous().1.typ.clone();
+			let typ = self.previous().typ.clone();
 			let right = Box::new(self.parse_factor()?);
 
 			left.1 = if typ == TokenType::Plus {
@@ -291,7 +285,7 @@ impl Parser {
 			} else {
 				Expr::Binary(Box::new(left.clone()), BinaryOp::Sub, right)
 			};
-			left.0.end = self.previous_span().end;
+			left.0.end = self.previous().span.end;
 		}
 
 		Ok(left)
@@ -302,7 +296,7 @@ impl Parser {
 		let mut left = self.parse_unary()?;
 
 		while self.matches_any(&[TokenType::Star, TokenType::Slash]) {
-			let typ = self.previous().1.typ.clone();
+			let typ = self.previous().typ.clone();
 			let right = Box::new(self.parse_unary()?);
 
 			left.1 = if typ == TokenType::Star {
@@ -310,7 +304,7 @@ impl Parser {
 			} else {
 				Expr::Binary(Box::new(left.clone()), BinaryOp::Div, right)
 			};
-			left.0.end = self.previous_span().end;
+			left.0.end = self.previous().span.end;
 		}
 
 		Ok(left)
@@ -319,12 +313,12 @@ impl Parser {
 	/// unary => ("!" | "-") (unary | call)
 	fn parse_unary(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.matches(TokenType::Bang) {
-			let start = self.previous_span().start;
+			let start = self.previous().span.start;
 			let expr = Box::new(self.parse_unary()?);
 			return Ok(Spanned(start..expr.0.end, Expr::Unary(UnaryOp::Not, expr)));
 		}
 		if self.matches(TokenType::Minus) {
-			let start = self.previous_span().start;
+			let start = self.previous().span.start;
 			let expr = Box::new(self.parse_unary()?);
 			return Ok(Spanned(start..expr.0.end, Expr::Unary(UnaryOp::Neg, expr)));
 		}
@@ -347,7 +341,7 @@ impl Parser {
 				args
 			};
 			expr = Spanned(
-				expr.0.start..self.previous_span().end,
+				expr.0.start..self.previous().span.end,
 				Expr::Call {
 					callee: Box::new(expr.clone()),
 					args,
@@ -372,18 +366,18 @@ impl Parser {
 	/// primary => "(" expr? ")", block, identifier, number | string | "true" | "false"
 	fn parse_primary(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.peek_eq(0, TokenType::LeftBrace) {
-			let start = self.previous_span().start;
+			let start = self.previous().span.start;
 			return Ok(Spanned(
-				start..self.previous_span().end,
+				start..self.previous().span.end,
 				Expr::Block(self.parse_block()?),
 			));
 		}
 
 		if self.matches(TokenType::LeftParen) {
-			let start = self.previous_span().start;
+			let start = self.previous().span.start;
 			let expr = if self.peek_eq(0, TokenType::RightParen) {
 				Spanned(
-					start..self.previous_span().end,
+					start..self.previous().span.end,
 					Expr::Literal(Literal::Unit),
 				)
 			} else {
@@ -391,12 +385,12 @@ impl Parser {
 			};
 			self.expect(TokenType::RightParen, "Expected closing `)`")?;
 			return Ok(Spanned(
-				start..self.previous_span().end,
+				start..self.previous().span.end,
 				Expr::Group(Box::new(expr)),
 			));
 		}
 
-		if let Some(Spanned(span, Token { typ, data })) = self.matches_which(&[
+		if let Some(Token { typ, data, span }) = self.matches_which(&[
 			TokenType::False,
 			TokenType::True,
 			TokenType::Number,
@@ -421,7 +415,7 @@ impl Parser {
 	/// block => "{" stmt* "}"
 	fn parse_block(&mut self) -> ParseResult<Spanned<Block>> {
 		self.expect(TokenType::LeftBrace, "Expected `{`")?;
-		let start = self.previous_span().start;
+		let start = self.previous().span.start;
 
 		let mut stmts = Vec::new();
 		let closed = loop {
@@ -435,7 +429,7 @@ impl Parser {
 		};
 
 		if closed {
-			Ok(Spanned(start..self.previous_span().end, stmts))
+			Ok(Spanned(start..self.previous().span.end, stmts))
 		} else {
 			ParseError::token_mismatch(self.previous(), "Unclosed block, expected `}`")
 		}
@@ -443,7 +437,7 @@ impl Parser {
 }
 
 impl Parser {
-	fn expect_any(&mut self, types: &[TokenType], error_msg: &str) -> ParseResult<Spanned<Token>> {
+	fn expect_any(&mut self, types: &[TokenType], error_msg: &str) -> ParseResult<Token> {
 		for typ in types {
 			if self.matches(typ.clone()) {
 				return Ok(self.previous());
@@ -452,7 +446,7 @@ impl Parser {
 		ParseError::token_mismatch(self.advance(), error_msg)
 	}
 
-	fn expect(&mut self, typ: TokenType, error_msg: &str) -> ParseResult<Spanned<Token>> {
+	fn expect(&mut self, typ: TokenType, error_msg: &str) -> ParseResult<Token> {
 		if self.matches(typ) {
 			return Ok(self.previous());
 		}
@@ -470,7 +464,7 @@ impl Parser {
 		false
 	}
 
-	fn matches_which(&mut self, types: &[TokenType]) -> Option<Spanned<Token>> {
+	fn matches_which(&mut self, types: &[TokenType]) -> Option<Token> {
 		for typ in types {
 			if self.matches(typ.clone()) {
 				return Some(self.previous());
@@ -488,18 +482,14 @@ impl Parser {
 		false
 	}
 
-	fn advance(&mut self) -> Spanned<Token> {
+	fn advance(&mut self) -> Token {
 		if !self.is_at_end() {
 			self.pos += 1;
 		}
 		self.previous()
 	}
 
-	fn previous_span(&self) -> &Span {
-		&self.tokens[self.pos - 1].0
-	}
-
-	fn previous(&self) -> Spanned<Token> {
+	fn previous(&self) -> Token {
 		// TODO: Is it possible to avoid cloning here and tell rust that this cant be a mutable borrow
 		// (but is currently without this clone seen as one when you have nested mutable calls to eg. advance or matches)
 		self.tokens[self.pos - 1].clone()
@@ -511,17 +501,14 @@ impl Parser {
 
 	fn peek_eq(&mut self, dist: usize, typ: TokenType) -> bool {
 		match self.peek(dist) {
-			Some(Spanned(
-				_,
-				Token {
-					typ: peeked_typ, ..
-				},
-			)) => peeked_typ == &typ,
+			Some(Token {
+				typ: peeked_typ, ..
+			}) => peeked_typ == &typ,
 			None => false,
 		}
 	}
 
-	fn peek(&self, dist: usize) -> Option<&Spanned<Token>> {
+	fn peek(&self, dist: usize) -> Option<&Token> {
 		self.tokens.get(self.pos + dist)
 	}
 }

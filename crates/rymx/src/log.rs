@@ -21,12 +21,12 @@ where
 	);
 }
 
-pub(crate) fn tokens(tokens: &[Spanned<Token>]) {
+pub(crate) fn tokens(tokens: &[Token]) {
 	println!(
 		"{}",
 		tokens
 			.iter()
-			.join_format(" ", |token| { token.1.typ.to_string() })
+			.join_format(" ", |token| { token.typ.to_string() })
 	)
 }
 

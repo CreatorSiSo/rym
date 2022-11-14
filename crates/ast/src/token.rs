@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::Literal;
+use crate::{Literal, Span};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[non_exhaustive]
@@ -142,27 +142,31 @@ pub const KEYWORDS: &[(&str, TokenType)] = &[
 pub struct Token {
 	pub typ: TokenType,
 	pub data: TokenData,
+	pub span: Span,
 }
 
 impl Token {
-	pub const fn new(typ: TokenType) -> Self {
+	pub const fn new(typ: TokenType, span: Span) -> Self {
 		Self {
 			typ,
 			data: TokenData::None,
+			span,
 		}
 	}
 
-	pub fn literal(typ: TokenType, literal: Literal) -> Self {
+	pub fn literal(typ: TokenType, literal: Literal, span: Span) -> Self {
 		Self {
 			typ,
 			data: TokenData::Literal(literal),
+			span,
 		}
 	}
 
-	pub fn ident(typ: TokenType, ident: String) -> Self {
+	pub fn ident(typ: TokenType, ident: String, span: Span) -> Self {
 		Self {
 			typ,
 			data: TokenData::Identifier(ident),
+			span,
 		}
 	}
 }

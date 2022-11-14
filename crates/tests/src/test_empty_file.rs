@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn lex_empty_file() {
-	let tokens: Vec<LexResult<Spanned<Token>>> = Lexer::new("").collect();
+	let tokens: Vec<LexResult<Token>> = Lexer::new("").collect();
 	assert_eq!(tokens, vec![]);
 }
 

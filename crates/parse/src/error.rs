@@ -1,16 +1,16 @@
 use std::fmt::Display;
 
-use ast::{Spanned, Token};
+use ast::Token;
 use colored::Colorize;
 
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
-	TokenMismatch(Spanned<Token>, String),
-	InvalidAssignmentTarget(Spanned<Token>),
+	TokenMismatch(Token, String),
+	InvalidAssignmentTarget(Token),
 }
 
 impl ParseError {
-	pub(super) fn token_mismatch<T>(token: Spanned<Token>, msg: &str) -> Result<T, Self> {
+	pub(super) fn token_mismatch<T>(token: Token, msg: &str) -> Result<T, Self> {
 		Err(ParseError::TokenMismatch(token, msg.into()))
 	}
 }
@@ -21,13 +21,13 @@ impl Display for ParseError {
 		let err = "Error:".red().bold();
 
 		match self {
-			ParseError::TokenMismatch(Spanned(span, token), msg) => {
+			ParseError::TokenMismatch(token, msg) => {
 				writeln!(f, "{err}	{msg} got `{:?}`", token.typ)?;
-				writeln!(f, "Span:	{:?}", span)
+				writeln!(f, "Span:	{:?}", token.span)
 			}
-			ParseError::InvalidAssignmentTarget(Spanned(span, token)) => {
+			ParseError::InvalidAssignmentTarget(token) => {
 				writeln!(f, "{err}	Invalid assignment target `{:?}`", token.typ)?;
-				writeln!(f, "Span:	{:?}", span)
+				writeln!(f, "Span:	{:?}", token.span)
 			}
 		}
 	}

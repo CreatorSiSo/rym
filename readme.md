@@ -52,7 +52,7 @@ Run `cargo r --bin gen -- ./crates/tests/src/integration` after creating or modi
   	/ast        ⇒         Ast Types:  Spanned<T>, AstVisitor<T>, Token, ...
   	? /interpret  ⇒ Interpreter Types:  Value, Interpreter, ...
 
-  	/tokenize   ⇒ API to produce Spanned<Token>
+  	/tokenize   ⇒ API to produce Token
   	/parse      ⇒ API to produce some ast
   	/lint       ⇒ API to visit and generate warnings (dead code, ...) for ast
   	/tree_walk  ⇒ API to visit and evaluate ast

@@ -26,7 +26,7 @@ pub(crate) fn tokens(tokens: &[Spanned<Token>]) {
 		"{}",
 		tokens
 			.iter()
-			.join_format(" ", |token| { token.0.typ.to_string() })
+			.join_format(" ", |token| { token.1.typ.to_string() })
 	)
 }
 

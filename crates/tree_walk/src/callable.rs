@@ -104,11 +104,11 @@ impl Callable for RymFunction {
 				Inter::Return(val) | Inter::None(val) => Ok(val),
 				Inter::Break(_) => spanned_err(
 					LogicError::ForbiddenInter("Using `break` outside of a loop is not allowed".into()),
-					self.body.1.clone(),
+					self.body.0.clone(),
 				),
 				Inter::Continue => spanned_err(
 					LogicError::ForbiddenInter("Using `continue` outside of a loop is not allowed".into()),
-					self.body.1.clone(),
+					self.body.0.clone(),
 				),
 			},
 			Err(err) => Err(err),

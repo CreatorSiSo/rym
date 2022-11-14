@@ -118,16 +118,15 @@ impl Interpreter {
 	}
 
 	pub fn eval(&mut self, ast: &[Spanned<Stmt>]) -> Result<(), SpannedError> {
-		for Spanned(stmt, span) in ast {
-			// TODO: Figure out who should own the spans and if they should be cloned here
-			self.walk_stmt(Spanned(stmt, span.clone()))?;
+		for stmt in ast {
+			self.walk_stmt(stmt.as_ref())?;
 		}
 		Ok(())
 	}
 
 	fn cmp_bool<F>(
 		&mut self,
-		Spanned(val_l, span_l): Spanned<Value>,
+		Spanned(span_l, val_l): Spanned<Value>,
 		expr_r: Spanned<&Expr>,
 		f: F,
 		short_circuit_if: bool,
@@ -145,7 +144,7 @@ impl Interpreter {
 		let bool_r = match self.walk_expr(&expr_r)? {
 			Inter::None(val) => match val {
 				Value::Bool(bool_r) => bool_r,
-				val_r => return spanned_err(TypeError::Expected(Type::Bool, val_r.typ()), expr_r.1),
+				val_r => return spanned_err(TypeError::Expected(Type::Bool, val_r.typ()), expr_r.0),
 			},
 			inter => return Ok(inter),
 		};
@@ -160,21 +159,21 @@ impl AstVisitor for Interpreter {
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn visit_decl(&mut self, Spanned(decl, span): Spanned<&ast::Decl>) -> Self::Result {
+	fn visit_decl(&mut self, Spanned(span, decl): Spanned<&ast::Decl>) -> Self::Result {
 		match decl {
 			Decl::Fn { name, params, body } => {
 				let val = RymFunction::new(Some(params.len()), params.clone(), body.clone());
 				self.env.declare(name, val.into(), true);
 			}
 			Decl::Const(name, init) => {
-				let val: Value = match self.walk_expr(&Spanned(init, span))? {
+				let val: Value = match self.walk_expr(&Spanned(span, init))? {
 					Inter::None(val) => val,
 					inter => return Ok(inter),
 				};
 				self.env.declare(name, val, true);
 			}
 			Decl::Mut(name, init) => {
-				let val: Value = match self.walk_expr(&Spanned(init, span))? {
+				let val: Value = match self.walk_expr(&Spanned(span, init))? {
 					Inter::None(val) => val,
 					inter => return Ok(inter),
 				};
@@ -197,7 +196,7 @@ impl AstVisitor for Interpreter {
 
 	fn visit_assign(&mut self, expr_l: Spanned<&Expr>, expr_r: Spanned<&Expr>) -> Self::Result {
 		let name = match expr_l {
-			Spanned(Expr::Identifier(name), _) => name,
+			Spanned(_, Expr::Identifier(name)) => name,
 			_ => {
 				return spanned_err(
 					TypeError::Expected(
@@ -207,7 +206,7 @@ impl AstVisitor for Interpreter {
 							inter => return Ok(inter),
 						},
 					),
-					expr_l.1,
+					expr_l.0,
 				);
 			}
 		};
@@ -217,7 +216,7 @@ impl AstVisitor for Interpreter {
 			inter => return Ok(inter),
 		};
 		if let Err(err) = self.env.set(name, value) {
-			return spanned_err(err, expr_r.1);
+			return spanned_err(err, expr_r.0);
 		}
 
 		Ok(Inter::None(Value::Unit))
@@ -242,7 +241,7 @@ impl AstVisitor for Interpreter {
 		let f: Box<dyn Callable> = match callee {
 			Value::NativeFunction(f) => Box::new(f),
 			Value::RymFunction(f) => Box::new(f),
-			val => spanned_err(TypeError::Call(val.typ()), callee_expr.1)?,
+			val => spanned_err(TypeError::Call(val.typ()), callee_expr.0)?,
 		};
 
 		if let Some(arity) = f.arity() {
@@ -315,7 +314,7 @@ impl AstVisitor for Interpreter {
 			Inter::None(val) => val,
 			inter => return Ok(inter),
 		};
-		let span = expr_l.1.start..expr_r.1.end;
+		let span = expr_l.0.start..expr_r.0.end;
 
 		fn apply_num_fn<F, R>(
 			maybe_err: Option<TypeError>,
@@ -386,7 +385,7 @@ impl AstVisitor for Interpreter {
 		}))
 	}
 
-	fn visit_block(&mut self, Spanned(stmts, _): &Spanned<&Block>) -> Self::Result {
+	fn visit_block(&mut self, Spanned(_, stmts): &Spanned<&Block>) -> Self::Result {
 		self.env.push_scope();
 
 		let mut stmts = stmts.iter();
@@ -435,7 +434,7 @@ impl AstVisitor for Interpreter {
 		let bool = match self.walk_expr(&expr)? {
 			Inter::None(val) => match val {
 				Value::Bool(bool) => bool,
-				val => return spanned_err(TypeError::Expected(Type::Bool, val.typ()), expr.1),
+				val => return spanned_err(TypeError::Expected(Type::Bool, val.typ()), expr.0),
 			},
 			inter => return Ok(inter),
 		};

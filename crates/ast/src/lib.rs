@@ -9,18 +9,18 @@ pub use visitor::AstVisitor;
 pub type Span = Range<usize>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Spanned<T>(pub T, pub Span);
+pub struct Spanned<T>(pub Span, pub T);
 
 impl<T> Spanned<T> {
 	pub fn map<F, R>(self, f: F) -> Spanned<R>
 	where
 		F: FnOnce(T) -> R,
 	{
-		Spanned(f(self.0), self.1)
+		Spanned(self.0, f(self.1))
 	}
 
 	pub fn as_ref(&self) -> Spanned<&T> {
-		Spanned(&self.0, self.1.clone())
+		Spanned(self.0.clone(), &self.1)
 	}
 }
 
@@ -35,12 +35,6 @@ pub enum Stmt {
 	// TODO: Is this really needed?
 	/// Just a trailing semicolon
 	Empty,
-}
-
-impl From<Decl> for Stmt {
-	fn from(val: Decl) -> Self {
-		Stmt::Decl(val)
-	}
 }
 
 impl From<Spanned<Expr>> for Stmt {

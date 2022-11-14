@@ -104,7 +104,7 @@ impl<'src> Lexer<'src> {
 			};
 		};
 
-		Ok(Spanned(Token::new(token_value), self.start..self.current))
+		Ok(Spanned(self.start..self.current, Token::new(token_value)))
 	}
 
 	fn multiline_comment(&mut self) {
@@ -141,8 +141,8 @@ impl<'src> Lexer<'src> {
 		};
 
 		Ok(Spanned(
-			Token::literal(TokenType::Number, Literal::Number(value)),
 			self.start..self.current,
+			Token::literal(TokenType::Number, Literal::Number(value)),
 		))
 	}
 
@@ -158,11 +158,11 @@ impl<'src> Lexer<'src> {
 		}
 
 		Ok(Spanned(
+			self.start..self.current,
 			Token::literal(
 				TokenType::String,
 				Literal::String(unescape(&self.src[self.start + 1..self.current])),
 			),
-			self.start..self.current,
 		))
 	}
 
@@ -174,7 +174,7 @@ impl<'src> Lexer<'src> {
 			Some((_, token_type)) => token_type.clone(),
 			None => TokenType::Identifier,
 		};
-		Ok(Spanned(Token::ident(typ, name), self.start..self.current))
+		Ok(Spanned(self.start..self.current, Token::ident(typ, name)))
 	}
 }
 
@@ -234,7 +234,7 @@ impl<'src> Iterator for Lexer<'src> {
 			None
 		} else {
 			let next = self.next_token();
-			if let Ok(Spanned(tok, _)) = &next {
+			if let Ok(Spanned(_, tok)) = &next {
 				if tok.typ == TokenType::Eof {
 					return None;
 				}

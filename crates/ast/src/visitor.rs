@@ -3,11 +3,11 @@ use crate::{BinaryOp, Block, Decl, Expr, Literal, LogicalOp, Span, Spanned, Stmt
 pub trait AstVisitor {
 	type Result;
 
-	fn walk_stmt(&mut self, Spanned(stmt, span): Spanned<&Stmt>) -> Self::Result {
+	fn walk_stmt(&mut self, Spanned(span, stmt): Spanned<&Stmt>) -> Self::Result {
 		match stmt {
 			// TODO: Give Span to visit_empty
 			Stmt::Empty => self.visit_empty(),
-			Stmt::Decl(decl) => self.visit_decl(Spanned(decl, span)),
+			Stmt::Decl(decl) => self.visit_decl(Spanned(span, decl)),
 			Stmt::Expr(expr) => self.walk_expr(&expr.as_ref()),
 		}
 	}
@@ -17,7 +17,7 @@ pub trait AstVisitor {
 	fn visit_decl(&mut self, decl: Spanned<&Decl>) -> Self::Result;
 
 	fn walk_expr(&mut self, boxed_expr: &Spanned<&Expr>) -> Self::Result {
-		let Spanned(expr, span) = (*boxed_expr).as_ref();
+		let Spanned(span, expr) = (*boxed_expr).as_ref();
 		match expr {
 			Expr::Identifier(ident) => self.visit_ident(ident, span),
 			Expr::Literal(lit) => self.visit_lit(lit, span),

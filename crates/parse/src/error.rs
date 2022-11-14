@@ -21,11 +21,11 @@ impl Display for ParseError {
 		let err = "Error:".red().bold();
 
 		match self {
-			ParseError::TokenMismatch(Spanned(token, span), msg) => {
+			ParseError::TokenMismatch(Spanned(span, token), msg) => {
 				writeln!(f, "{err}	{msg} got `{:?}`", token.typ)?;
 				writeln!(f, "Span:	{:?}", span)
 			}
-			ParseError::InvalidAssignmentTarget(Spanned(token, span)) => {
+			ParseError::InvalidAssignmentTarget(Spanned(span, token)) => {
 				writeln!(f, "{err}	Invalid assignment target `{:?}`", token.typ)?;
 				writeln!(f, "Span:	{:?}", span)
 			}

@@ -87,14 +87,14 @@ pub enum TokenKind {
 	Ident,
 
 	Literal {
-		kind: LiteralKind,
+		kind: LitKind,
 	},
 
 	Unkown,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum LiteralKind {
+pub enum LitKind {
 	/// `783256`, `100_000_000`
 	Integer,
 	/// `1.2358`, `999_999.999`

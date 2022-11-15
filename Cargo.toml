@@ -4,10 +4,12 @@
 
 members = [
 	# Abstract Syntax Tree representation
+	"crates/rym_span",
 	"crates/ast",
 
 	# Parsing
 	"crates/rym_lexer",
+	"crates/rym_tt",
 	"crates/lex",
 	"crates/parse",
 
@@ -25,3 +27,6 @@ members = [
 inherits = "release"
 lto = "fat"
 panic = "abort"
+
+# [profile.dev.package]
+# smol_str.opt-level = 3

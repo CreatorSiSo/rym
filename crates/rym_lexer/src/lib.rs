@@ -1,7 +1,7 @@
 mod cursor;
 mod token;
 pub use cursor::Cursor;
-pub use token::{LiteralKind, Token, TokenKind};
+pub use token::{LitKind, Token, TokenKind};
 
 /// Creates an iterator that produces tokens from the input string.
 pub fn tokenize(input: &str) -> impl Iterator<Item = Token> + '_ {
@@ -41,18 +41,14 @@ impl Cursor<'_> {
 					};
 					c.is_numeric() || matches!(c, '_' | '.')
 				});
-				TokenKind::Literal { kind: if is_int { LiteralKind::Integer } else { LiteralKind::Float } }
+				TokenKind::Literal { kind: if is_int { LitKind::Integer } else { LitKind::Float } }
 			}
 
 			// String literal.
-			'"' => {
-				TokenKind::Literal { kind: LiteralKind::String { terminated: self.eat_string_literal() } }
-			}
+			'"' => TokenKind::Literal { kind: LitKind::String { terminated: self.eat_string_literal() } },
 
 			// Character literal.
-			'\'' => {
-				TokenKind::Literal { kind: LiteralKind::Char { terminated: self.eat_char_literal() } }
-			}
+			'\'' => TokenKind::Literal { kind: LitKind::Char { terminated: self.eat_char_literal() } },
 
 			// Indetifier token.
 			c if is_ident_start(c) => {
@@ -201,7 +197,7 @@ pub fn is_ident_continue(c: char) -> bool {
 
 #[cfg(test)]
 mod test {
-	use super::{LiteralKind::*, TokenKind::*, *};
+	use super::{LitKind::*, TokenKind::*, *};
 
 	fn assert_tokens(input: &str, expect: &[Token]) {
 		let tokens: Vec<Token> = tokenize(input).collect();

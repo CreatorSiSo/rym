@@ -314,6 +314,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "rym_lexer"
+version = "0.1.0"
+dependencies = [
+ "unicode-ident",
+]
+
+[[package]]
 name = "rymx"
 version = "0.1.0"
 dependencies = [

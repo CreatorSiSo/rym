@@ -3,12 +3,15 @@
 [workspace]
 
 members = [
-	# Internal abstraction
+	# Abstract Syntax Tree representation
 	"crates/ast",
 
-	# Abstraction implementations
+	# Parsing
+	"crates/rym_lexer",
 	"crates/lex",
 	"crates/parse",
+
+	# Evaluation
 	"crates/tree_walk",
 
 	# Cli

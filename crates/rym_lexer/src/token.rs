@@ -15,7 +15,9 @@ pub enum TokenKind {
 	/// `// comment`
 	LineComment,
 	/// `/* comment */`
-	BlockComment,
+	BlockComment {
+		terminated: bool,
+	},
 
 	/// Any whitespace character sequence.
 	Whitespace,

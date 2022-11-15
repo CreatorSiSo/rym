@@ -27,10 +27,10 @@ impl Cursor<'_> {
 			// Slash, line or block comment.
 			'/' => match self.peek_1() {
 				'/' => {
-					self.eat_while(|c| c == '\n');
+					self.eat_while(|c| c != '\n');
 					TokenKind::LineComment
 				}
-				'*' => TokenKind::BlockComment,
+				'*' => self.eat_block_comment(),
 				_ => TokenKind::Slash,
 			},
 
@@ -103,6 +103,27 @@ impl Cursor<'_> {
 		self.reset_len_consumed();
 		result
 	}
+
+	pub fn eat_block_comment(&mut self) -> TokenKind {
+		let mut depth: usize = 1;
+		while let Some(c) = self.bump() {
+			match c {
+				'/' if self.peek_1() == '*' => {
+					self.bump();
+					depth += 1;
+				}
+				'*' if self.peek_1() == '/' => {
+					self.bump();
+					depth -= 1;
+					if depth == 0 {
+						break;
+					}
+				}
+				_ => continue,
+			}
+		}
+		TokenKind::BlockComment { terminated: depth == 0 }
+	}
 }
 
 /// True if `c` is a character that has the Pattern_White_Space Unicode property.
@@ -158,6 +179,35 @@ mod test {
 	#[test]
 	fn empty() {
 		assert_tokens("", &[])
+	}
+
+	#[test]
+	fn line_comment() {
+		assert_tokens("// ² $ line @ comment", &[Token::new(TokenKind::LineComment, 22)]);
+	}
+
+	#[test]
+	fn block_comment() {
+		assert_tokens(
+			r#"/* € testing */ /*
+			sdasd³
+			/* 832³7 */
+			testing
+			*/"#,
+			&[
+				Token::new(TokenKind::BlockComment { terminated: true }, 17),
+				Token::new(TokenKind::Whitespace, 1),
+				Token::new(TokenKind::BlockComment { terminated: true }, 46),
+			],
+		);
+		assert_tokens(
+			r#"/* testing *_ /*
+			sdasd
+			/* 8327 */
+			testing
+			*/"#,
+			&[Token::new(TokenKind::BlockComment { terminated: false }, 56)],
+		)
 	}
 
 	#[test]

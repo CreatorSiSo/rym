@@ -20,7 +20,7 @@ pub struct Group {
 	pub spam: DelimSpan,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Delimiter {
 	/// `( .. )`
 	Paren,
@@ -30,23 +30,23 @@ pub enum Delimiter {
 	Bracket,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct DelimSpan {
 	pub open: Span,
 	pub close: Span,
 	pub entire: Span,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Punct {
 	pub char: char,
 	pub joint: bool,
 	pub span: Span,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Ident {
-	pub name: String,
+	pub name: SmolStr,
 	pub span: Span,
 }
 
@@ -62,9 +62,4 @@ pub enum LitKind {
 	Float(f64),
 	Char(char),
 	String(SmolStr),
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
 }

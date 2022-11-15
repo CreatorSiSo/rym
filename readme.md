@@ -45,6 +45,10 @@
 
 The project is split into many crates that are part of one Cargo workspace:
 
+`crates/rym_span` ⇒ Span
+`crates/rym_tt` ⇒ TokenTree, TokenStream
+`crates/rym_lexer` ⇒ Isolated initial lexer
+
 `crates/ast` ⇒ Ast Types: Spanned<T>, AstVisitor<T>, Token, ...
 `crates/lex` ⇒ produce Tokens from source
 `crates/parse` ⇒ produce ast from tokens

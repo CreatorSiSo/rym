@@ -1,31 +1,24 @@
 mod cursor;
 mod token;
-use cursor::Cursor;
-use token::{LiteralKind, Token, TokenKind};
+pub use cursor::Cursor;
+pub use token::{LiteralKind, Token, TokenKind};
 
 /// Creates an iterator that produces tokens from the input string.
 pub fn tokenize(input: &str) -> impl Iterator<Item = Token> + '_ {
 	let mut cursor = Cursor::new(input);
-	std::iter::from_fn(move || {
-		let token = cursor.advance_token();
-		if token.kind != TokenKind::Eof {
-			Some(token)
-		} else {
-			None
-		}
-	})
+	std::iter::from_fn(move || cursor.advance_token())
 }
 
 impl Cursor<'_> {
-	pub fn advance_token(&mut self) -> Token {
+	pub fn advance_token(&mut self) -> Option<Token> {
 		let first_char = match self.bump() {
 			Some(char) => char,
-			None => return Token::new(TokenKind::Eof, 0),
+			None => return None,
 		};
 
 		let token_kind = match first_char {
 			// Slash, line or block comment.
-			'/' => match self.peek_1() {
+			'/' => match self.peek() {
 				'/' => {
 					self.eat_while(|c| c != '\n');
 					TokenKind::LineComment
@@ -41,21 +34,24 @@ impl Cursor<'_> {
 
 			// Number literal.
 			'0'..='9' => {
-				self.eat_while(|c| c.is_numeric() || matches!(c, '_' | '.'));
-				TokenKind::Literal { kind: LiteralKind::Number }
+				let mut is_int = true;
+				self.eat_while(|c| {
+					if c == '.' {
+						is_int = false;
+					};
+					c.is_numeric() || matches!(c, '_' | '.')
+				});
+				TokenKind::Literal { kind: if is_int { LiteralKind::Integer } else { LiteralKind::Float } }
 			}
 
 			// String literal.
 			'"' => {
-				self.eat_while(|c| c == '"');
-				// TODO
-				TokenKind::Literal { kind: LiteralKind::String { terminated: true } }
+				TokenKind::Literal { kind: LiteralKind::String { terminated: self.eat_string_literal() } }
 			}
 
 			// Character literal.
 			'\'' => {
-				self.eat_while(|c| c == '\'');
-				TokenKind::Literal { kind: LiteralKind::Char { terminated: true } }
+				TokenKind::Literal { kind: LiteralKind::Char { terminated: self.eat_char_literal() } }
 			}
 
 			// Indetifier token.
@@ -81,6 +77,8 @@ impl Cursor<'_> {
 			'!' => TokenKind::Bang,
 
 			// Currently unused one character tokens.
+			'~' => TokenKind::Tilde,
+			'?' => TokenKind::Question,
 			'@' => TokenKind::At,
 			'^' => TokenKind::Caret,
 			'$' => TokenKind::Dollar,
@@ -101,18 +99,18 @@ impl Cursor<'_> {
 
 		let result = Token::new(token_kind, self.len_consumed());
 		self.reset_len_consumed();
-		result
+		Some(result)
 	}
 
-	pub fn eat_block_comment(&mut self) -> TokenKind {
+	fn eat_block_comment(&mut self) -> TokenKind {
 		let mut depth: usize = 1;
 		while let Some(c) = self.bump() {
 			match c {
-				'/' if self.peek_1() == '*' => {
+				'/' if self.peek() == '*' => {
 					self.bump();
 					depth += 1;
 				}
-				'*' if self.peek_1() == '/' => {
+				'*' if self.peek() == '/' => {
 					self.bump();
 					depth -= 1;
 					if depth == 0 {
@@ -123,6 +121,40 @@ impl Cursor<'_> {
 			}
 		}
 		TokenKind::BlockComment { terminated: depth == 0 }
+	}
+
+	fn eat_string_literal(&mut self) -> bool {
+		while let Some(c) = self.bump() {
+			match c {
+				// Escaped quote or backslash, ignore them.
+				'\\' if self.peek() == '"' || self.peek() == '\\' => {
+					self.bump();
+					continue;
+				}
+				// Final quote, stop eating.
+				'"' => return true,
+				_ => continue,
+			}
+		}
+		false
+	}
+
+	fn eat_char_literal(&mut self) -> bool {
+		while let Some(c) = self.bump() {
+			match c {
+				// Newline, stop eating.
+				'\n' => return false,
+				// Final quote, stop eating.
+				'\'' => return true,
+				// Escaped quote or backslash, ignore them.
+				'\\' if self.peek() == '\'' || self.peek() == '\\' => {
+					self.bump();
+					continue;
+				}
+				_ => continue,
+			}
+		}
+		false
 	}
 }
 
@@ -158,18 +190,18 @@ pub fn is_whitespace(c: char) -> bool {
 }
 
 /// True if `c` is valid as a first character of an identifier.
-fn is_ident_start(c: char) -> bool {
+pub fn is_ident_start(c: char) -> bool {
 	c == '_' || unicode_ident::is_xid_start(c)
 }
 
 /// True if `c` is valid as a non-first character of an identifier.
-fn is_ident_continue(c: char) -> bool {
+pub fn is_ident_continue(c: char) -> bool {
 	unicode_ident::is_xid_continue(c)
 }
 
 #[cfg(test)]
 mod test {
-	use super::*;
+	use super::{LiteralKind::*, TokenKind::*, *};
 
 	fn assert_tokens(input: &str, expect: &[Token]) {
 		let tokens: Vec<Token> = tokenize(input).collect();
@@ -183,7 +215,7 @@ mod test {
 
 	#[test]
 	fn line_comment() {
-		assert_tokens("// ² $ line @ comment", &[Token::new(TokenKind::LineComment, 22)]);
+		assert_tokens("// ² $ line @ comment", &[Token::new(LineComment, 22)]);
 	}
 
 	#[test]
@@ -195,9 +227,9 @@ mod test {
 			testing
 			*/"#,
 			&[
-				Token::new(TokenKind::BlockComment { terminated: true }, 17),
-				Token::new(TokenKind::Whitespace, 1),
-				Token::new(TokenKind::BlockComment { terminated: true }, 46),
+				Token::new(BlockComment { terminated: true }, 17),
+				Token::new(Whitespace, 1),
+				Token::new(BlockComment { terminated: true }, 46),
 			],
 		);
 		assert_tokens(
@@ -206,7 +238,7 @@ mod test {
 			/* 8327 */
 			testing
 			*/"#,
-			&[Token::new(TokenKind::BlockComment { terminated: false }, 56)],
+			&[Token::new(BlockComment { terminated: false }, 56)],
 		)
 	}
 
@@ -215,66 +247,183 @@ mod test {
 		assert_tokens(
 			"π _tst__ing stµff",
 			&[
-				Token::new(TokenKind::Ident, 2),
-				Token::new(TokenKind::Whitespace, 1),
-				Token::new(TokenKind::Ident, 9),
-				Token::new(TokenKind::Whitespace, 1),
-				Token::new(TokenKind::Ident, 6),
+				Token::new(Ident, 2),
+				Token::new(Whitespace, 1),
+				Token::new(Ident, 9),
+				Token::new(Whitespace, 1),
+				Token::new(Ident, 6),
 			],
 		)
 	}
 
 	#[test]
 	fn line_end() {
-		assert_tokens(
-			" ;\n",
-			&[
-				Token::new(TokenKind::Whitespace, 1),
-				Token::new(TokenKind::Semi, 1),
-				Token::new(TokenKind::Whitespace, 1),
-			],
-		)
+		assert_tokens("\n", &[Token::new(Whitespace, 1)]);
+		assert_tokens("\r\n", &[Token::new(Whitespace, 2)]);
+		assert_tokens(";\n", &[Token::new(Semi, 1), Token::new(Whitespace, 1)])
 	}
 
 	#[test]
 	fn one_char() {
 		assert_tokens(
-			"\n \t \r;:,. |&+-*/%=! @^$# <>(){}[]",
+			"\n \t \r;:,. |&+-*/%=! ~?@^$# <>(){}[]",
 			&[
 				// Whitespace
-				Token::new(TokenKind::Whitespace, 5),
+				Token::new(Whitespace, 5),
 				// Punctuation
-				Token::new(TokenKind::Semi, 1),
-				Token::new(TokenKind::Colon, 1),
-				Token::new(TokenKind::Comma, 1),
-				Token::new(TokenKind::Dot, 1),
-				Token::new(TokenKind::Whitespace, 1),
+				Token::new(Semi, 1),
+				Token::new(Colon, 1),
+				Token::new(Comma, 1),
+				Token::new(Dot, 1),
+				Token::new(Whitespace, 1),
 				// Used
-				Token::new(TokenKind::Or, 1),
-				Token::new(TokenKind::And, 1),
-				Token::new(TokenKind::Plus, 1),
-				Token::new(TokenKind::Minus, 1),
-				Token::new(TokenKind::Star, 1),
-				Token::new(TokenKind::Slash, 1),
-				Token::new(TokenKind::Percent, 1),
-				Token::new(TokenKind::Eq, 1),
-				Token::new(TokenKind::Bang, 1),
-				Token::new(TokenKind::Whitespace, 1),
+				Token::new(Or, 1),
+				Token::new(And, 1),
+				Token::new(Plus, 1),
+				Token::new(Minus, 1),
+				Token::new(Star, 1),
+				Token::new(Slash, 1),
+				Token::new(Percent, 1),
+				Token::new(Eq, 1),
+				Token::new(Bang, 1),
+				Token::new(Whitespace, 1),
 				// Unused
-				Token::new(TokenKind::At, 1),
-				Token::new(TokenKind::Caret, 1),
-				Token::new(TokenKind::Dollar, 1),
-				Token::new(TokenKind::Pound, 1),
-				Token::new(TokenKind::Whitespace, 1),
+				Token::new(Tilde, 1),
+				Token::new(Question, 1),
+				Token::new(At, 1),
+				Token::new(Caret, 1),
+				Token::new(Dollar, 1),
+				Token::new(Pound, 1),
+				Token::new(Whitespace, 1),
 				// Delimiter
-				Token::new(TokenKind::LessThan, 1),
-				Token::new(TokenKind::GreaterThan, 1),
-				Token::new(TokenKind::OpenParen, 1),
-				Token::new(TokenKind::CloseParen, 1),
-				Token::new(TokenKind::OpenBrace, 1),
-				Token::new(TokenKind::CloseBrace, 1),
-				Token::new(TokenKind::OpenBracket, 1),
-				Token::new(TokenKind::CloseBracket, 1),
+				Token::new(LessThan, 1),
+				Token::new(GreaterThan, 1),
+				Token::new(OpenParen, 1),
+				Token::new(CloseParen, 1),
+				Token::new(OpenBrace, 1),
+				Token::new(CloseBrace, 1),
+				Token::new(OpenBracket, 1),
+				Token::new(CloseBracket, 1),
+			],
+		)
+	}
+
+	#[test]
+	fn integer() {
+		assert_tokens(
+			"0 1 2 42739387324 0000234236932 999_999_999_999",
+			&[
+				Token::new(Literal { kind: Integer }, 1),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: Integer }, 1),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: Integer }, 1),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: Integer }, 11),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: Integer }, 13),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: Integer }, 15),
+			],
+		)
+	}
+
+	#[test]
+	fn float() {
+		assert_tokens(
+			"0. 123. 2.222 4273.9387324 0000.234236932 999_999_999.999",
+			&[
+				Token::new(Literal { kind: Float }, 2),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: Float }, 4),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: Float }, 5),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: Float }, 12),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: Float }, 14),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: Float }, 15),
+			],
+		)
+	}
+
+	#[test]
+	fn string() {
+		assert_tokens(
+			r#"
+				""
+				"test"
+				"
+					Hello
+					World!
+				"
+				"\n@²³§½ÄÖÜ\\"
+				"\""
+			"#,
+			&[
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: String { terminated: true } }, 2),
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: String { terminated: true } }, 6),
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: String { terminated: true } }, 30),
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: String { terminated: true } }, 21),
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: String { terminated: true } }, 4),
+				Token::new(Whitespace, 4),
+			],
+		);
+		assert_tokens(
+			r#" "\\" "\" "#,
+			&[
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: String { terminated: true } }, 4),
+				Token::new(Whitespace, 1),
+				Token::new(Literal { kind: String { terminated: false } }, 4),
+			],
+		)
+	}
+
+	#[test]
+	fn char() {
+		assert_tokens(
+			r#"
+				''
+				't'
+				'\n@²³§½ÄÖÜ\\'
+				'"'
+				'\''
+			"#,
+			&[
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: Char { terminated: true } }, 2),
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: Char { terminated: true } }, 3),
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: Char { terminated: true } }, 21),
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: Char { terminated: true } }, 3),
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: Char { terminated: true } }, 4),
+				Token::new(Whitespace, 4),
+			],
+		);
+		assert_tokens(
+			r#"
+				'
+				'\\'
+				'\'
+			"#,
+			&[
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: Char { terminated: false } }, 2),
+				Token::new(Whitespace, 4),
+				Token::new(Literal { kind: Char { terminated: true } }, 4),
+				Token::new(Whitespace, 5),
+				Token::new(Literal { kind: Char { terminated: false } }, 4),
+				Token::new(Whitespace, 3),
 			],
 		)
 	}

@@ -20,23 +20,15 @@ impl<'a> Cursor<'a> {
 
 	/// Eats chars while predicate returns true or until the end of file is reached.
 	pub(crate) fn eat_while(&mut self, mut predicate: impl FnMut(char) -> bool) {
-		while predicate(self.peek_1()) && !self.is_eof() {
+		while predicate(self.peek()) && !self.is_eof() {
 			self.bump();
 		}
 	}
 
 	/// Peeks the next symbol from the input stream without consuming it.
 	/// Returns `'\0'` if the requested position doesn't exist.
-	pub(crate) fn peek_1(&self) -> char {
+	pub(crate) fn peek(&self) -> char {
 		self.chars.clone().next().unwrap_or('\0')
-	}
-
-	/// Peeks the second next symbol from the input stream without consuming it.
-	/// Returns `'\0'` if the requested position doesn't exist.
-	pub(crate) fn peek_2(&self) -> char {
-		let mut chars = self.chars.clone();
-		chars.next();
-		chars.next().unwrap_or('\0')
 	}
 
 	/// Returns amount of already consumed symbols.

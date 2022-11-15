@@ -53,6 +53,10 @@ pub enum TokenKind {
 	Bang,
 
 	// Currently unused one character tokens.
+	/// `~`
+	Tilde,
+	/// `?`
+	Question,
 	/// `@`
 	At,
 	/// `^`
@@ -87,13 +91,16 @@ pub enum TokenKind {
 	},
 
 	Unkown,
-
-	Eof,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum LiteralKind {
+	/// `783256`, `100_000_000`
+	Integer,
+	/// `1.2358`, `999_999.999`
+	Float,
+	/// `"Hello World!"`
 	String { terminated: bool },
+	/// `'c'`, `'\\'`, `'\n'`
 	Char { terminated: bool },
-	Number,
 }

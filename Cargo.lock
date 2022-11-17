@@ -321,6 +321,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "rym_parser"
+version = "0.0.0"
+dependencies = [
+ "rym_lexer",
+ "rym_span",
+ "rym_tt",
+ "rym_unescape",
+ "smol_str",
+]
+
+[[package]]
 name = "rym_span"
 version = "0.0.0"
 
@@ -331,6 +342,14 @@ dependencies = [
  "rym_lexer",
  "rym_span",
  "smol_str",
+]
+
+[[package]]
+name = "rym_unescape"
+version = "0.0.0"
+dependencies = [
+ "smol_str",
+ "thiserror",
 ]
 
 [[package]]

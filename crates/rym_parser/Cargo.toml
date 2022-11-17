@@ -1,5 +1,5 @@
 [package]
-name = "rym_tt"
+name = "rym_parser"
 version = "0.0.0"
 edition = "2021"
 
@@ -8,4 +8,6 @@ edition = "2021"
 [dependencies]
 smol_str.workspace = true
 rym_lexer = { path = "../rym_lexer" }
+rym_tt = { path = "../rym_tt" }
 rym_span = { path = "../rym_span" }
+rym_unescape = { path = "../rym_unescape" }

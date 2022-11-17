@@ -1,15 +1,16 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
-
 members = [
-	# Types
+	# Global
 	"crates/ast",
 	"crates/rym_span",
 	"crates/rym_tt",
+	"crates/rym_unescape",
 
 	# Parsing
 	"crates/rym_lexer",
+	"crates/rym_parser",
 	"crates/lex",
 	"crates/parse",
 
@@ -23,10 +24,13 @@ members = [
 	"crates/tests",
 ]
 
+[workspace.dependencies]
+smol_str = "0.1.23"
+
 [profile.dist]
 inherits = "release"
 lto = "fat"
 panic = "abort"
 
-# [profile.dev.package]
-# smol_str.opt-level = 3
+[profile.dev.package]
+smol_str.opt-level = 3

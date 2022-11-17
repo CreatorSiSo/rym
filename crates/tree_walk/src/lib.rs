@@ -31,9 +31,7 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 		}
 		// TODO fix print() for repl
 		print!("{string}");
-		std::io::stdout()
-			.flush()
-			.expect("Internal Error: Could not flush stout");
+		std::io::stdout().flush().expect("Internal Error: Could not flush stout");
 		Ok(Value::Unit)
 	});
 
@@ -48,11 +46,7 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 
 	let panic_fn = NativeFunction::new(None, &|_: _, args: &[Value]| {
 		spanned_err(
-			LogicError::Panic(
-				args
-					.iter()
-					.fold(String::new(), |accum, arg| accum + &arg.to_string()),
-			),
+			LogicError::Panic(args.iter().fold(String::new(), |accum, arg| accum + &arg.to_string())),
 			0..0,
 		)
 	});
@@ -108,12 +102,10 @@ impl Default for Interpreter {
 impl Interpreter {
 	pub fn with_globals(globals: Vec<(&str, Value)>) -> Self {
 		Self {
-			env: globals
-				.into_iter()
-				.fold(GlobalEnv::new(), |mut global_env, (name, val)| {
-					global_env.env.declare(name, val, true);
-					global_env
-				}),
+			env: globals.into_iter().fold(GlobalEnv::new(), |mut global_env, (name, val)| {
+				global_env.env.declare(name, val, true);
+				global_env
+			}),
 		}
 	}
 
@@ -190,7 +182,7 @@ impl AstVisitor for Interpreter {
 		}
 	}
 
-	fn visit_lit(&mut self, lit: &ast::Literal, span: Span) -> Self::Result {
+	fn visit_lit(&mut self, lit: &ast::Literal) -> Self::Result {
 		Ok(Inter::None(lit.clone().into()))
 	}
 
@@ -247,10 +239,7 @@ impl AstVisitor for Interpreter {
 		if let Some(arity) = f.arity() {
 			if arity != args.len() {
 				return spanned_err(
-					LogicError::NumArgsMismatch {
-						expected: arity,
-						got: args.len(),
-					},
+					LogicError::NumArgsMismatch { expected: arity, got: args.len() },
 					0..0, /* TODO span args.first().1.start  */
 				);
 			}
@@ -284,19 +273,9 @@ impl AstVisitor for Interpreter {
 		};
 
 		if op == &LogicalOp::And {
-			self.cmp_bool(
-				expr_l.map(|_| val_l),
-				expr_r,
-				|val_l, val_r| val_l && val_r,
-				false,
-			)
+			self.cmp_bool(expr_l.map(|_| val_l), expr_r, |val_l, val_r| val_l && val_r, false)
 		} else {
-			self.cmp_bool(
-				expr_l.map(|_| val_l),
-				expr_r,
-				|val_l, val_r| val_l || val_r,
-				true,
-			)
+			self.cmp_bool(expr_l.map(|_| val_l), expr_r, |val_l, val_r| val_l || val_r, true)
 		}
 	}
 

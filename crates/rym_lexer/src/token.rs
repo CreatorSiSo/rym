@@ -1,17 +1,17 @@
 #[derive(Debug, PartialEq, Eq)]
-pub struct Token {
-	pub kind: TokenKind,
+pub struct PrimitiveToken {
+	pub kind: PrimitiveTokenKind,
 	pub len: u32,
 }
 
-impl Token {
-	pub const fn new(kind: TokenKind, len: u32) -> Self {
+impl PrimitiveToken {
+	pub const fn new(kind: PrimitiveTokenKind, len: u32) -> Self {
 		Self { kind, len }
 	}
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum TokenKind {
+pub enum PrimitiveTokenKind {
 	/// `// comment`
 	LineComment,
 	/// `/* comment */`
@@ -87,14 +87,14 @@ pub enum TokenKind {
 	Ident,
 
 	Literal {
-		kind: LitKind,
+		kind: PrimitiveLitKind,
 	},
 
 	Unkown,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum LitKind {
+pub enum PrimitiveLitKind {
 	/// `783256`, `100_000_000`
 	Integer,
 	/// `1.2358`, `999_999.999`
@@ -103,4 +103,15 @@ pub enum LitKind {
 	String { terminated: bool },
 	/// `'c'`, `'\\'`, `'\n'`
 	Char { terminated: bool },
+}
+
+impl PrimitiveLitKind {
+	pub const fn is_terminated(&self) -> bool {
+		match self {
+			PrimitiveLitKind::Integer => true,
+			PrimitiveLitKind::Float => true,
+			PrimitiveLitKind::String { terminated } => *terminated,
+			PrimitiveLitKind::Char { terminated } => *terminated,
+		}
+	}
 }

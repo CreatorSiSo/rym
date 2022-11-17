@@ -10,8 +10,8 @@ pub struct Cursor<'a> {
 }
 
 impl<'a> Cursor<'a> {
-	pub fn new(input: &'a str) -> Self {
-		Self { len_remaining: input.len(), chars: input.chars() }
+	pub fn new(src: &'a str) -> Self {
+		Self { len_remaining: src.len(), chars: src.chars() }
 	}
 
 	pub(crate) fn bump(&mut self) -> Option<char> {

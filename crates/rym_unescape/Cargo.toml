@@ -1,11 +1,10 @@
 [package]
-name = "rym_tt"
+name = "rym_unescape"
 version = "0.0.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+thiserror = "1.0"
 smol_str.workspace = true
-rym_lexer = { path = "../rym_lexer" }
-rym_span = { path = "../rym_span" }

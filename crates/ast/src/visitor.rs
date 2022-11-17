@@ -20,7 +20,7 @@ pub trait AstVisitor {
 		let Spanned(span, expr) = (*boxed_expr).as_ref();
 		match expr {
 			Expr::Identifier(ident) => self.visit_ident(ident, span),
-			Expr::Literal(lit) => self.visit_lit(lit, span),
+			Expr::Literal(lit) => self.visit_lit(lit),
 			Expr::Assign(expr_l, expr_r) => self.visit_assign((**expr_l).as_ref(), (**expr_r).as_ref()),
 			Expr::Call { callee, args } => self.visit_call((**callee).as_ref(), args),
 
@@ -48,7 +48,7 @@ pub trait AstVisitor {
 	}
 
 	fn visit_ident(&mut self, ident: &str, span: Span) -> Self::Result;
-	fn visit_lit(&mut self, lit: &Literal, span: Span) -> Self::Result;
+	fn visit_lit(&mut self, lit: &Literal) -> Self::Result;
 
 	fn visit_assign(&mut self, expr_l: Spanned<&Expr>, expr_r: Spanned<&Expr>) -> Self::Result;
 	fn visit_call(&mut self, callee: Spanned<&Expr>, args: &[Spanned<Expr>]) -> Self::Result;

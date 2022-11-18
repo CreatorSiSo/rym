@@ -131,7 +131,7 @@ impl Iterator for TokenConverter<'_> {
 							Err(err) => todo!("Unquote error: {err}"),
 						};
 						if let PrimitiveLitKind::String { .. } = string_or_char {
-							TokenKind::Literal(LitKind::String(string))
+							TokenKind::Literal(LitKind::String(SmolStr::new(string)))
 						} else {
 							TokenKind::Literal(LitKind::Char(match string.parse::<char>() {
 								Ok(char) => char,

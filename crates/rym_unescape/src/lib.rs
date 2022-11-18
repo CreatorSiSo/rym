@@ -2,51 +2,52 @@
 //!
 //! # Examples
 //! ```
+//! use rym_unescape::unquote;
 //!
+//! assert_eq!(unquote("\'c\'").unwrap(), "c");
+//! assert_eq!(unquote(r#""Hello World!\n""#).unwrap(), "Hello World!\n");
 //! ```
 
-mod error;
 #[cfg(test)]
 mod tests;
 
-pub use error::Error;
-use smol_str::SmolStr;
+use std::str::Chars;
 
-/// Unquotes `s`.
-pub fn unquote(s: &str) -> Result<SmolStr, Error> {
-	if s.chars().count() < 2 {
-		return Err(Error::NotEnoughChars);
+/// Unquotes `input`.
+pub fn unquote(input: &str) -> Result<String, Error> {
+	if input.len() < 2 {
+		return Err(Error::NotEnoughChars { need: 2 });
 	}
 
-	let quote = s.chars().next().unwrap();
+	let quote = input.chars().next().unwrap();
 
 	if quote != '"' && quote != '\'' && quote != '`' {
 		return Err(Error::UnrecognizedQuote);
 	}
 
-	if s.chars().last().unwrap() != quote {
-		return Err(Error::UnexpectedEOF);
+	if input.chars().last().unwrap() != quote {
+		return Err(Error::Unterminated);
 	}
 
 	// removes quote characters
 	// the sanity checks performed above ensure that the quotes will be ASCII and this will not
 	// panic
-	let s = &s[1..s.len() - 1];
+	let s = &input[1..input.len() - 1];
 
 	unescape(s, Some(quote))
 }
 
-/// Returns `s` after processing escapes such as `\n` and `\x00`.
-pub fn unescape(s: &str, illegal: Option<char>) -> Result<SmolStr, Error> {
-	let mut chars = s.chars();
-	let mut unescaped = String::new();
+/// Returns `input` after processing escapes such as `\n` and `\x00`.
+pub fn unescape(input: &str, illegal: Option<char>) -> Result<String, Error> {
+	let mut chars = input.chars();
+	let mut unescaped = String::with_capacity(input.len());
 	loop {
 		match chars.next() {
 			None => break,
 			Some(c) => unescaped.push(match c {
 				_ if Some(c) == illegal => return Err(Error::IllegalChar),
 				'\\' => match chars.next() {
-					None => return Err(Error::UnexpectedEOF),
+					None => return Err(Error::Unterminated),
 					Some(c) => match c {
 						'\\' | '"' | '\'' | '`' => c,
 						'a' => '\x07',
@@ -58,18 +59,17 @@ pub fn unescape(s: &str, illegal: Option<char>) -> Result<SmolStr, Error> {
 						'v' => '\x0b',
 						// octal
 						'0'..='9' => {
-							let octal = c.to_string() + &take(&mut chars, 2);
-							u8::from_str_radix(&octal, 8).map_err(|_| Error::UnrecognizedEscape)? as char
+							let octal = c.to_string() + take(&mut chars, 2)?;
+							u8::from_str_radix(&octal, 8)
+								.map_err(|err| Error::UnrecognizedEscape(err.to_string()))? as char
 						}
 						// hex
-						'x' => {
-							let hex = take(&mut chars, 2);
-							u8::from_str_radix(&hex, 16).map_err(|_| Error::UnrecognizedEscape)? as char
-						}
+						'x' => u8::from_str_radix(take(&mut chars, 2)?, 16)
+							.map_err(|err| Error::UnrecognizedEscape(err.to_string()))? as char,
 						// unicode
-						'u' => decode_unicode(&take(&mut chars, 4))?,
-						'U' => decode_unicode(&take(&mut chars, 8))?,
-						_ => return Err(Error::UnrecognizedEscape),
+						'u' => decode_unicode(take(&mut chars, 4)?)?,
+						'U' => decode_unicode(take(&mut chars, 8)?)?,
+						_ => return Err(Error::UnrecognizedEscapePrefix(format!("\\{c}"))),
 					},
 				},
 				_ => c,
@@ -77,22 +77,39 @@ pub fn unescape(s: &str, illegal: Option<char>) -> Result<SmolStr, Error> {
 		}
 	}
 
-	Ok(SmolStr::new(unescaped))
+	Ok(unescaped)
 }
 
 #[inline]
-// Iterator#take cannot be used because it consumes the iterator
-fn take<I: Iterator<Item = char>>(iterator: &mut I, n: usize) -> String {
-	let mut s = String::with_capacity(n);
-	for _ in 0..n {
-		s.push(iterator.next().unwrap_or_default());
+fn take<'a>(chars: &mut Chars<'a>, n: usize) -> Result<&'a str, Error> {
+	let prev = chars.as_str();
+	for i in 0..n {
+		chars.next().ok_or(Error::NotEnoughChars { need: n - i })?;
 	}
-	s
+	Ok(&prev[0..n])
 }
 
 fn decode_unicode(code_point: &str) -> Result<char, Error> {
 	match u32::from_str_radix(code_point, 16) {
-		Err(_) => Err(Error::UnrecognizedEscape),
-		Ok(n) => std::char::from_u32(n).ok_or(Error::InvalidUnicode),
+		Err(err) => Err(Error::UnrecognizedEscape(err.to_string())),
+		Ok(n) => char::from_u32(n).ok_or(Error::InvalidUnicode { code_point: n }),
 	}
+}
+
+#[derive(thiserror::Error, Debug, PartialEq, Eq)]
+pub enum Error {
+	#[error("Not enough chars need <{need}> more")]
+	NotEnoughChars { need: usize },
+	#[error("Unrecognized quote character")]
+	UnrecognizedQuote,
+	#[error("Unterminated literal")]
+	Unterminated,
+	#[error("Illegal character")]
+	IllegalChar,
+	#[error("Unrecognized escape sequence prefix: <{0}>")]
+	UnrecognizedEscapePrefix(String),
+	#[error("Unrecognized escape sequence: <{0}>")]
+	UnrecognizedEscape(String),
+	#[error("Invalid unicode code point <{code_point}>")]
+	InvalidUnicode { code_point: u32 },
 }

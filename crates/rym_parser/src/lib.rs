@@ -35,12 +35,36 @@ impl<'a> TokenConverter<'a> {
 		})
 	}
 
-	fn next_token(&mut self) -> Option<(PrimitiveTokenKind, Span)> {
+	fn bump(&mut self) -> Option<(PrimitiveTokenKind, Span)> {
 		self.cursor.next_token().map(|token| {
 			let start_pos = self.pos;
 			self.pos += token.len as usize;
 			(token.kind, Span::new(start_pos, self.pos))
 		})
+	}
+
+	fn peek(&self) -> Option<(PrimitiveTokenKind, Span)> {
+		self.cursor.clone().next_token().map(|token| {
+			let end_pos = self.pos + token.len as usize;
+			(token.kind, Span::new(self.pos, end_pos))
+		})
+	}
+
+	fn match_next(
+		&mut self,
+		span: &mut Span,
+		condition: PrimitiveTokenKind,
+		then: TokenKind,
+		otherwise: TokenKind,
+	) -> TokenKind {
+		if let Some((primitive_kind, end_span)) = self.peek() {
+			if primitive_kind == condition {
+				*span = Span::new(span.start, end_span.end);
+				self.bump();
+				return then;
+			}
+		}
+		otherwise
 	}
 
 	fn src_from_span(&self, span: &Span) -> &'a str {
@@ -52,13 +76,11 @@ impl Iterator for TokenConverter<'_> {
 	type Item = Result<Token, Span>;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		// TODO let mut preceeded_by_whitespace = false;
-		while let Some((old_kind, span)) = self.next_token() {
-			println!(">{}<", self.src_from_span(&span));
+		while let Some((primitive_kind, mut span)) = self.bump() {
+			println!("{span}: >{}<", self.src_from_span(&span));
 
-			let new_kind = match old_kind {
+			let kind = match primitive_kind {
 				PrimitiveTokenKind::Whitespace => {
-					// TODO preceeded_by_whitespace = true;
 					if self.src_from_span(&span).contains('\n') {
 						TokenKind::Newline
 					} else {
@@ -68,22 +90,58 @@ impl Iterator for TokenConverter<'_> {
 
 				// Punctuation
 				PrimitiveTokenKind::Semi => TokenKind::Semi,
-				PrimitiveTokenKind::Colon => TokenKind::Colon, /* ColonColon */
+				PrimitiveTokenKind::Colon => self.match_next(
+					&mut span,
+					PrimitiveTokenKind::Colon,
+					TokenKind::ColonColon,
+					TokenKind::Colon,
+				),
 				PrimitiveTokenKind::Comma => TokenKind::Comma,
 				PrimitiveTokenKind::Dot => TokenKind::Dot,
 
 				// Operator like
-				PrimitiveTokenKind::Or => TokenKind::Or,           /* OrOr */
-				PrimitiveTokenKind::And => TokenKind::And,         /* AndAnd */
-				PrimitiveTokenKind::Plus => TokenKind::Plus,       /* PlusEq */
-				PrimitiveTokenKind::Minus => TokenKind::Minus,     /* MinusEq */
-				PrimitiveTokenKind::Star => TokenKind::Star,       /* StarEq */
-				PrimitiveTokenKind::Slash => TokenKind::Slash,     /* SlashEq */
-				PrimitiveTokenKind::Percent => TokenKind::Percent, /* PercentEq */
-				PrimitiveTokenKind::Eq => TokenKind::Eq,           /* Eq */
-				PrimitiveTokenKind::Bang => TokenKind::Bang,       /* BangEq */
-				PrimitiveTokenKind::LessThan => TokenKind::LessThan, /* LessThanEq */
-				PrimitiveTokenKind::GreaterThan => TokenKind::GreaterThan, /* GreaterThanEq */
+				PrimitiveTokenKind::Or => {
+					self.match_next(&mut span, PrimitiveTokenKind::Or, TokenKind::OrOr, TokenKind::Or)
+				}
+				PrimitiveTokenKind::And => {
+					self.match_next(&mut span, PrimitiveTokenKind::And, TokenKind::AndAnd, TokenKind::And)
+				}
+				PrimitiveTokenKind::Plus => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::PlusEq, TokenKind::Plus)
+				}
+				PrimitiveTokenKind::Minus => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::MinusEq, TokenKind::Minus)
+				}
+				PrimitiveTokenKind::Star => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::StarEq, TokenKind::Star)
+				}
+				PrimitiveTokenKind::Slash => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::SlashEq, TokenKind::Slash)
+				}
+				PrimitiveTokenKind::Percent => self.match_next(
+					&mut span,
+					PrimitiveTokenKind::Eq,
+					TokenKind::PercentEq,
+					TokenKind::Percent,
+				),
+				PrimitiveTokenKind::Eq => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::EqEq, TokenKind::Eq)
+				}
+				PrimitiveTokenKind::Bang => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::BangEq, TokenKind::Bang)
+				}
+				PrimitiveTokenKind::LessThan => self.match_next(
+					&mut span,
+					PrimitiveTokenKind::Eq,
+					TokenKind::LessThanEq,
+					TokenKind::LessThan,
+				),
+				PrimitiveTokenKind::GreaterThan => self.match_next(
+					&mut span,
+					PrimitiveTokenKind::Eq,
+					TokenKind::GreaterThanEq,
+					TokenKind::GreaterThan,
+				),
 
 				// Delimiter
 				PrimitiveTokenKind::OpenParen => TokenKind::OpenDelim(Delimiter::Paren),
@@ -152,7 +210,7 @@ impl Iterator for TokenConverter<'_> {
 				_ => continue,
 			};
 
-			return Some(Ok(Token::new(new_kind, span)));
+			return Some(Ok(Token::new(kind, span)));
 		}
 		None
 	}

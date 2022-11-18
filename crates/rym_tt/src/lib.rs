@@ -70,7 +70,7 @@ pub enum TokenKind {
 	/// `!`
 	Bang,
 	/// `!=`
-	NotEq,
+	BangEq,
 	/// `=`
 	Eq,
 	/// `==`

@@ -5,15 +5,15 @@ use rym_span::Span;
 use rym_tt::{Delimiter, LitKind, Token, TokenKind};
 use smol_str::SmolStr;
 
-use crate::*;
+use super::ConvertLinear;
 
 fn assert_results(src: &str, expect: &[Result<Token, Span>]) {
-	let got: Vec<_> = TokenConverter::new(src, Cursor::new(src)).collect();
+	let got: Vec<_> = ConvertLinear::new(src, Cursor::new(src)).collect();
 	assert_eq!(expect, got)
 }
 
 fn assert_tokens(src: &str, expect: &[Token]) {
-	let got: Vec<Token> = TokenConverter::new(src, Cursor::new(src))
+	let got: Vec<Token> = ConvertLinear::new(src, Cursor::new(src))
 		.map(|result| match result {
 			Ok(token) => token,
 			Err(err) => panic!("Expected no errors got: {err:?}"),
@@ -23,7 +23,7 @@ fn assert_tokens(src: &str, expect: &[Token]) {
 }
 
 fn assert_token_kinds(src: &str, expect: &[TokenKind]) {
-	let got: Vec<TokenKind> = TokenConverter::new(src, Cursor::new(src))
+	let got: Vec<TokenKind> = ConvertLinear::new(src, Cursor::new(src))
 		.map(|result| match result {
 			Ok(token) => token.kind,
 			Err(err) => panic!("Expected no errors got: {err:?}"),

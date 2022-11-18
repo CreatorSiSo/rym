@@ -4,6 +4,7 @@
 members = [
 	# Global
 	"crates/ast",
+	"crates/rym_errors",
 	"crates/rym_span",
 	"crates/rym_tt",
 	"crates/rym_unescape",
@@ -25,7 +26,12 @@ members = [
 ]
 
 [workspace.dependencies]
+rym_lexer = { path = "crates/rym_lexer" }
+rym_span = { path = "crates/rym_span" }
+rym_tt = { path = "crates/rym_tt" }
+rym_unescape = { path = "crates/rym_unescape" }
 smol_str = "0.1.23"
+stringx = "0.1.1"
 
 [profile.dist]
 inherits = "release"

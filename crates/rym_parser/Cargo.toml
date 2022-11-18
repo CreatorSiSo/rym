@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rym_lexer.workspace = true
+rym_span.workspace = true
+rym_tt.workspace = true
+rym_unescape.workspace = true
 smol_str.workspace = true
-rym_lexer = { path = "../rym_lexer" }
-rym_tt = { path = "../rym_tt" }
-rym_span = { path = "../rym_span" }
-rym_unescape = { path = "../rym_unescape" }

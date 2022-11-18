@@ -5,23 +5,24 @@
 //! use rym_unescape::unquote;
 //!
 //! assert_eq!(unquote("\'c\'").unwrap(), "c");
-//! assert_eq!(unquote(r#""Hello World!\n""#).unwrap(), "Hello World!\n");
+//! assert_eq!(unquote("\"Hello World!\\n\"").unwrap(), "Hello World!\n");
 //! ```
 
 #[cfg(test)]
 mod tests;
 
+use std::borrow::Cow;
 use std::str::Chars;
 
 /// Unquotes `input`.
-pub fn unquote(input: &str) -> Result<String, Error> {
+pub fn unquote(input: &str) -> Result<Cow<str>, Error> {
 	if input.len() < 2 {
 		return Err(Error::NotEnoughChars { need: 2 });
 	}
 
 	let quote = input.chars().next().unwrap();
 
-	if quote != '"' && quote != '\'' && quote != '`' {
+	if quote != '"' && quote != '\'' {
 		return Err(Error::UnrecognizedQuote);
 	}
 
@@ -38,46 +39,51 @@ pub fn unquote(input: &str) -> Result<String, Error> {
 }
 
 /// Returns `input` after processing escapes such as `\n` and `\x00`.
-pub fn unescape(input: &str, illegal: Option<char>) -> Result<String, Error> {
-	let mut chars = input.chars();
-	let mut unescaped = String::with_capacity(input.len());
-	loop {
-		match chars.next() {
-			None => break,
-			Some(c) => unescaped.push(match c {
-				_ if Some(c) == illegal => return Err(Error::IllegalChar),
-				'\\' => match chars.next() {
-					None => return Err(Error::Unterminated),
-					Some(c) => match c {
-						'\\' | '"' | '\'' | '`' => c,
-						'a' => '\x07',
-						'b' => '\x08',
-						'f' => '\x0c',
-						'n' => '\n',
-						'r' => '\r',
-						't' => '\t',
-						'v' => '\x0b',
-						// octal
-						'0'..='9' => {
-							let octal = c.to_string() + take(&mut chars, 2)?;
-							u8::from_str_radix(&octal, 8)
-								.map_err(|err| Error::UnrecognizedEscape(err.to_string()))? as char
-						}
-						// hex
-						'x' => u8::from_str_radix(take(&mut chars, 2)?, 16)
-							.map_err(|err| Error::UnrecognizedEscape(err.to_string()))? as char,
-						// unicode
-						'u' => decode_unicode(take(&mut chars, 4)?)?,
-						'U' => decode_unicode(take(&mut chars, 8)?)?,
-						_ => return Err(Error::UnrecognizedEscapePrefix(format!("\\{c}"))),
-					},
-				},
-				_ => c,
-			}),
-		}
+pub fn unescape(input: &str, illegal: Option<char>) -> Result<Cow<str>, Error> {
+	// TODO Check if this actually speeds up performance
+	// Determine if anything has to be done at all
+	if !input.contains(['\\', '\'', '"']) {
+		return Ok(Cow::Borrowed(input));
 	}
 
-	Ok(unescaped)
+	let mut chars = input.chars();
+	let mut unescaped = String::new();
+	loop {
+		let Some(char) = chars.next() else { break };
+		let result_char = match char {
+			_ if Some(char) == illegal => return Err(Error::IllegalChar),
+			'\\' => match chars.next() {
+				None => return Err(Error::Unterminated),
+				Some(char) => match char {
+					'\\' | '"' | '\'' | '`' => char,
+					'a' => '\x07',
+					'b' => '\x08',
+					'f' => '\x0c',
+					'n' => '\n',
+					'r' => '\r',
+					't' => '\t',
+					'v' => '\x0b',
+					// octal
+					'0'..='9' => {
+						let octal = char.to_string() + take(&mut chars, 2)?;
+						u8::from_str_radix(&octal, 8)
+							.map_err(|err| Error::UnrecognizedEscape(err.to_string()))? as char
+					}
+					// hex
+					'x' => u8::from_str_radix(take(&mut chars, 2)?, 16)
+						.map_err(|err| Error::UnrecognizedEscape(err.to_string()))? as char,
+					// unicode
+					'u' => decode_unicode(take(&mut chars, 4)?)?,
+					'U' => decode_unicode(take(&mut chars, 8)?)?,
+					_ => return Err(Error::UnrecognizedEscapePrefix(format!("\\{char}"))),
+				},
+			},
+			_ => char,
+		};
+		unescaped.push(result_char);
+	}
+
+	Ok(Cow::Owned(unescaped))
 }
 
 #[inline]

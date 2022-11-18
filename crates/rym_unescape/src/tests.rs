@@ -24,9 +24,6 @@ fn test_unescape() {
 	assert_eq!(unquote("''").unwrap(), "");
 	assert_eq!(unquote(r#"'\''"#).unwrap(), "'");
 
-	assert_eq!(unquote("``").unwrap(), "");
-	assert_eq!(unquote(r#"`\``"#).unwrap(), "`");
-
 	assert_eq!(unquote("'\\n'").unwrap(), "\n");
 	assert_eq!(unquote("'\\101'").unwrap(), "A");
 	assert_eq!(unquote("'\\x76'").unwrap(), "\x76");

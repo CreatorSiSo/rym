@@ -11,11 +11,10 @@
 #[cfg(test)]
 mod tests;
 
-use std::borrow::Cow;
 use std::str::Chars;
 
 /// Unquotes `input`.
-pub fn unquote(input: &str) -> Result<Cow<str>, Error> {
+pub fn unquote(input: &str) -> Result<String, Error> {
 	if input.len() < 2 {
 		return Err(Error::NotEnoughChars { need: 2 });
 	}
@@ -33,19 +32,13 @@ pub fn unquote(input: &str) -> Result<Cow<str>, Error> {
 	// removes quote characters
 	// the sanity checks performed above ensure that the quotes will be ASCII and this will not
 	// panic
-	let s = &input[1..input.len() - 1];
+	let str = &input[1..input.len() - 1];
 
-	unescape(s, Some(quote))
+	unescape(str, Some(quote))
 }
 
 /// Returns `input` after processing escapes such as `\n` and `\x00`.
-pub fn unescape(input: &str, illegal: Option<char>) -> Result<Cow<str>, Error> {
-	// TODO Check if this actually speeds up performance
-	// Determine if anything has to be done at all
-	if !input.contains(['\\', '\'', '"']) {
-		return Ok(Cow::Borrowed(input));
-	}
-
+pub fn unescape(input: &str, illegal: Option<char>) -> Result<String, Error> {
 	let mut chars = input.chars();
 	let mut unescaped = String::new();
 	loop {
@@ -83,7 +76,7 @@ pub fn unescape(input: &str, illegal: Option<char>) -> Result<Cow<str>, Error> {
 		unescaped.push(result_char);
 	}
 
-	Ok(Cow::Owned(unescaped))
+	Ok(unescaped)
 }
 
 #[inline]

@@ -6,6 +6,4 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rym_span.workspace = true
-stringx.workspace = true
-annotate-snippets = { version = "0.9", features = ["color"] }
+annotate_snippets_builder = { version = "0.1.1", features = ["color"] }

@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rym_errors.workspace = true
 rym_lexer.workspace = true
 rym_span.workspace = true
 rym_tt.workspace = true

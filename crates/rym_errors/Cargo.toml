@@ -1,9 +1,12 @@
 [package]
 name = "rym_errors"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-annotate_snippets_builder = { version = "0.1.1", features = ["color"] }
+rym_span.workspace = true
+annotate = { version = "0.9", features = [
+	"color",
+], package = "annotate-snippets" }

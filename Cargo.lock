@@ -13,15 +13,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "annotate_snippets_builder"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10110feae0087114cb577e61247dafe91b12376decec2d10e9109eda256d8939"
-dependencies = [
- "annotate-snippets",
-]
-
-[[package]]
 name = "ast"
 version = "0.0.0"
 dependencies = [
@@ -334,9 +325,10 @@ dependencies = [
 
 [[package]]
 name = "rym_errors"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
- "annotate_snippets_builder",
+ "annotate-snippets",
+ "rym_span",
 ]
 
 [[package]]
@@ -350,6 +342,7 @@ dependencies = [
 name = "rym_parser"
 version = "0.0.0"
 dependencies = [
+ "rym_errors",
  "rym_lexer",
  "rym_span",
  "rym_tt",

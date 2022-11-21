@@ -26,6 +26,7 @@ members = [
 ]
 
 [workspace.dependencies]
+rym_errors = { path = "crates/rym_errors" }
 rym_lexer = { path = "crates/rym_lexer" }
 rym_span = { path = "crates/rym_span" }
 rym_tt = { path = "crates/rym_tt" }

@@ -1,15 +1,29 @@
 use std::fmt::Display;
 use std::ops::Range;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+pub const DUMMY_SPAN: Span = Span::new(0, 0);
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord)]
 pub struct Span {
 	pub start: usize,
 	pub end: usize,
 }
 
+impl PartialOrd for Span {
+	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+		match self.start.partial_cmp(&other.start) {
+			ord => return ord,
+		}
+	}
+}
+
 impl Span {
 	pub const fn new(start: usize, end: usize) -> Self {
 		Self { start, end }
+	}
+
+	pub const fn is_dummy(&self) -> bool {
+		self.start == 0 && self.end == 0
 	}
 
 	pub const fn move_by(self, amount: i32) -> Self {
@@ -24,9 +38,15 @@ impl Span {
 	}
 }
 
-impl Into<(usize, usize)> for Span {
-	fn into(self) -> (usize, usize) {
-		(self.start, self.end)
+impl From<&Span> for (usize, usize) {
+	fn from(span: &Span) -> (usize, usize) {
+		(span.start, span.end)
+	}
+}
+
+impl From<Span> for (usize, usize) {
+	fn from(span: Span) -> (usize, usize) {
+		(span.start, span.end)
 	}
 }
 

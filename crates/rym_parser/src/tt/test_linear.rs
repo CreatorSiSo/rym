@@ -1,5 +1,6 @@
 #![cfg(test)]
 
+use rym_errors::{Diagnostic, Level};
 use rym_lexer::Cursor;
 use rym_span::Span;
 use rym_tt::{Delimiter, LitKind, Token, TokenKind};
@@ -7,7 +8,7 @@ use smol_str::SmolStr;
 
 use super::ConvertLinear;
 
-fn assert_results(src: &str, expect: &[Result<Token, Span>]) {
+fn assert_results(src: &str, expect: &[Result<Token, Diagnostic>]) {
 	let got: Vec<_> = ConvertLinear::new(src, Cursor::new(src)).collect();
 	assert_eq!(expect, got)
 }
@@ -17,6 +18,16 @@ fn assert_tokens(src: &str, expect: &[Token]) {
 		.map(|result| match result {
 			Ok(token) => token,
 			Err(err) => panic!("Expected no errors got: {err:?}"),
+		})
+		.collect();
+	assert_eq!(got, expect)
+}
+
+fn assert_diagnostics(src: &str, expect: &[Diagnostic]) {
+	let got: Vec<_> = ConvertLinear::new(src, Cursor::new(src))
+		.filter_map(|result| match result {
+			Err(diagnostic) => Some(diagnostic),
+			_ => None,
 		})
 		.collect();
 	assert_eq!(got, expect)
@@ -145,4 +156,50 @@ fn operators() {
 			TokenKind::GreaterThanEq,
 		],
 	)
+}
+
+#[test]
+fn reserved_char() {
+	assert_diagnostics(
+		"@^$#~?",
+		&[
+			Diagnostic::new_spanned(Level::Error, "Reserved character `@`", Span::new(0, 1)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character `^`", Span::new(1, 2)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character `$`", Span::new(2, 3)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character `#`", Span::new(3, 4)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character `~`", Span::new(4, 5)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character `?`", Span::new(5, 6)),
+		],
+	)
+}
+
+#[test]
+fn invalid_char() {
+	assert_diagnostics(
+		"²³€",
+		&[
+			Diagnostic::new_spanned(Level::Error, "Invalid character `²`", Span::new(0, 2)),
+			Diagnostic::new_spanned(Level::Error, "Invalid character `³`", Span::new(2, 4)),
+			Diagnostic::new_spanned(Level::Error, "Invalid character `€`", Span::new(4, 7)),
+		],
+	)
+}
+
+#[test]
+fn unterminated() {
+	assert_diagnostics(
+		"/* *",
+		&[Diagnostic::new_spanned(Level::Error, "Unterminated block comment", Span::new(0, 4))],
+	);
+	assert_diagnostics(
+		"\"Hello World\n",
+		&[Diagnostic::new_spanned(Level::Error, "Unterminated string literal", Span::new(0, 13))],
+	);
+	assert_diagnostics(
+		"'\n'",
+		&[
+			Diagnostic::new_spanned(Level::Error, "Unterminated character literal", Span::new(0, 2)),
+			Diagnostic::new_spanned(Level::Error, "Unterminated character literal", Span::new(2, 3)),
+		],
+	);
 }

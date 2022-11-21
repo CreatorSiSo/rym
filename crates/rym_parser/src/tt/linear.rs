@@ -1,3 +1,4 @@
+use rym_errors::{Diagnostic, Level, RymResult};
 use rym_lexer::{Cursor, PrimitiveLitKind, PrimitiveTokenKind};
 use rym_span::Span;
 use rym_tt::{Delimiter, LitKind, Token, TokenKind};
@@ -16,22 +17,23 @@ pub struct ConvertLinear<'a> {
 }
 
 impl<'a> ConvertLinear<'a> {
+	#[cfg(test)]
 	pub const fn new(src: &'a str, cursor: Cursor<'a>) -> Self {
 		Self { pos: 0, src, cursor }
 	}
 
-	pub fn collect_tuple(&mut self) -> (Vec<Token>, Vec<Span>) {
-		self.fold((Vec::new(), Vec::new()), |mut accum, result| match result {
-			Ok(token) => {
-				accum.0.push(token);
-				accum
-			}
-			Err(error) => {
-				accum.1.push(error);
-				accum
-			}
-		})
-	}
+	// pub fn collect_tuple(&mut self) -> (Vec<Token>, Vec<Diagnostic>) {
+	// 	self.fold((Vec::new(), Vec::new()), |mut accum, result| match result {
+	// 		Ok(token) => {
+	// 			accum.0.push(token);
+	// 			accum
+	// 		}
+	// 		Err(error) => {
+	// 			accum.1.push(error);
+	// 			accum
+	// 		}
+	// 	})
+	// }
 
 	fn bump(&mut self) -> Option<(PrimitiveTokenKind, Span)> {
 		self.cursor.next_token().map(|token| {
@@ -71,7 +73,7 @@ impl<'a> ConvertLinear<'a> {
 }
 
 impl Iterator for ConvertLinear<'_> {
-	type Item = Result<Token, Span>;
+	type Item = RymResult<Token>;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		while let Some((primitive_kind, mut span)) = self.bump() {
@@ -177,34 +179,67 @@ impl Iterator for ConvertLinear<'_> {
 							Err(err) => todo!("Parse <f64> error: {err}"),
 						},
 					)),
-					string_or_char => {
-						// TODO Report errors properly!
-						if !string_or_char.is_terminated() {
-							todo!("Unterminated literal: {string_or_char:?}");
+					PrimitiveLitKind::Char { terminated } => {
+						if !terminated {
+							return Some(Err(Diagnostic::new_spanned(
+								Level::Error,
+								"Unterminated character literal",
+								span,
+							)));
 						}
 						let string = match unquote(self.src_from_span(&span)) {
 							Ok(string) => string,
 							Err(err) => todo!("Unquote error: {err}"),
 						};
-						if let PrimitiveLitKind::String { .. } = string_or_char {
-							TokenKind::Literal(LitKind::String(SmolStr::new(string)))
-						} else {
-							TokenKind::Literal(LitKind::Char(match string.parse::<char>() {
-								Ok(char) => char,
-								Err(err) => todo!("Parse <char> error: `{err}` in: {string}"),
-							}))
+						TokenKind::Literal(LitKind::Char(match string.parse::<char>() {
+							Ok(char) => char,
+							Err(err) => todo!("Parse <char> error: `{err}` in: {string}"),
+						}))
+					}
+					PrimitiveLitKind::String { terminated } => {
+						if !terminated {
+							return Some(Err(Diagnostic::new_spanned(
+								Level::Error,
+								"Unterminated string literal",
+								span,
+							)));
 						}
+						let string = match unquote(self.src_from_span(&span)) {
+							Ok(string) => string,
+							Err(err) => todo!("Unquote error: {err}"),
+						};
+						TokenKind::Literal(LitKind::String(SmolStr::new(string)))
 					}
 				},
 
-				PrimitiveTokenKind::BlockComment { terminated } if !terminated => return Some(Err(span)),
-				PrimitiveTokenKind::Unkown
-				| PrimitiveTokenKind::At
+				PrimitiveTokenKind::BlockComment { terminated } if !terminated => {
+					// TODO: Special reporting for nested block comments
+					// TODO: Add note: "Missing trailing `*/` to terminate the block comment"
+					return Some(Err(Diagnostic::new_spanned(
+						Level::Error,
+						"Unterminated block comment",
+						span,
+					)));
+				}
+				PrimitiveTokenKind::Unkown => {
+					return Some(Err(Diagnostic::new_spanned(
+						Level::Error,
+						format!("Invalid character `{}`", self.src_from_span(&span)),
+						span,
+					)));
+				}
+				PrimitiveTokenKind::At
 				| PrimitiveTokenKind::Caret
 				| PrimitiveTokenKind::Dollar
 				| PrimitiveTokenKind::Pound
 				| PrimitiveTokenKind::Tilde
-				| PrimitiveTokenKind::Question => return Some(Err(span)),
+				| PrimitiveTokenKind::Question => {
+					return Some(Err(Diagnostic::new_spanned(
+						Level::Error,
+						format!("Reserved character `{}`", self.src_from_span(&span)),
+						span,
+					)));
+				}
 				_ => continue,
 			};
 

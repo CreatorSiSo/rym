@@ -18,6 +18,7 @@ pub struct Diagnostic {
 	level: Level,
 	code: Option<&'static str>,
 	title: String,
+	children: Vec<SubDiagnostic>,
 	primary_spans: Vec<Span>,
 	span_labels: Vec<(Span, String)>,
 }
@@ -49,9 +50,20 @@ impl Diagnostic {
 			level,
 			code,
 			title: title.into(),
+			children: vec![],
 			primary_spans: if span.is_dummy() { vec![] } else { vec![span] },
 			span_labels: vec![],
 		}
+	}
+
+	pub fn sub_diagnostic<S: Into<String>>(
+		mut self,
+		level: Level,
+		code: Option<&'static str>,
+		title: S,
+	) -> Self {
+		self.children.push(SubDiagnostic { level, code, title: title.into() });
+		self
 	}
 
 	pub fn span_label<S: Into<String>>(&mut self, span: Span, label: S) {
@@ -61,6 +73,13 @@ impl Diagnostic {
 		self.span_labels.push((span, label.into()));
 		self.span_labels.sort_unstable();
 	}
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct SubDiagnostic {
+	level: Level,
+	code: Option<&'static str>,
+	title: String,
 }
 
 #[derive(Debug, PartialEq, Eq)]

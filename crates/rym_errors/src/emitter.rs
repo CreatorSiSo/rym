@@ -75,5 +75,12 @@ pub fn diagnostic_to_snippet<'a>(
 	// 	1
 	// };
 	snippet.slices.push(Slice { origin, source, annotations, line_start: 1, fold: false });
+	for child in &diagnostic.children {
+		snippet.footer.push(Annotation {
+			annotation_type: level_to_annotation_type(&child.level),
+			label: Some(&child.title),
+			id: child.code,
+		})
+	}
 	snippet
 }

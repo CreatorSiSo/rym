@@ -4,6 +4,7 @@ use super::*;
 use crate::emitter::diagnostic_to_snippet;
 use annotate::display_list::DisplayList;
 
+#[track_caller]
 fn assert_output(
 	origin: Option<&str>,
 	source: Option<&str>,
@@ -58,6 +59,22 @@ fn src() {
 			"8 | \tprintln(\"Bye World!\")",
 			"9 | }",
 			"  |",
+		]
+		.join("\n")],
+	);
+	assert_output(
+		Some("some_where/some_path.rym"),
+		Some(r#""not closed :("#),
+		&[Diagnostic::new_spanned(Level::Error, "Unterminated string literal", Span::new(0, 14))
+			.sub_diagnostic(Level::Note, None, "Missing trailing `\"` to terminate the string literal")],
+		&[&[
+			"error: Unterminated string literal",
+			" --> some_where/some_path.rym:1:1",
+			"  |",
+			"1 | \"not closed :(",
+			"  | ^^^^^^^^^^^^^^",
+			"  |",
+			"  = note: Missing trailing `\"` to terminate the string literal",
 		]
 		.join("\n")],
 	);

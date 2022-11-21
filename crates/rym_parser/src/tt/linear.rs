@@ -88,6 +88,22 @@ impl Iterator for ConvertLinear<'_> {
 					}
 				}
 
+				PrimitiveTokenKind::LineComment => continue,
+				PrimitiveTokenKind::BlockComment { terminated } => {
+					if terminated {
+						continue;
+					}
+					// TODO: Special reporting for nested block comments
+					return Some(Err(
+						Diagnostic::new_spanned(Level::Error, "Unterminated block comment", span)
+							.sub_diagnostic(
+								Level::Note,
+								None,
+								"Missing trailing `*/` to terminate the block comment",
+							),
+					));
+				}
+
 				// Punctuation
 				PrimitiveTokenKind::Semi => TokenKind::Semi,
 				PrimitiveTokenKind::Colon => self.match_next(
@@ -187,11 +203,14 @@ impl Iterator for ConvertLinear<'_> {
 					)),
 					PrimitiveLitKind::Char { terminated } => {
 						if !terminated {
-							return Some(Err(Diagnostic::new_spanned(
-								Level::Error,
-								"Unterminated character literal",
-								span,
-							)));
+							return Some(Err(
+								Diagnostic::new_spanned(Level::Error, "Unterminated character literal", span)
+									.sub_diagnostic(
+										Level::Note,
+										None,
+										"Missing trailing `'` to terminate the character literal",
+									),
+							));
 						}
 						let string = match unquote(self.src_from_span(&span)) {
 							Ok(string) => string,
@@ -210,11 +229,14 @@ impl Iterator for ConvertLinear<'_> {
 					}
 					PrimitiveLitKind::String { terminated } => {
 						if !terminated {
-							return Some(Err(Diagnostic::new_spanned(
-								Level::Error,
-								"Unterminated string literal",
-								span,
-							)));
+							return Some(Err(
+								Diagnostic::new_spanned(Level::Error, "Unterminated string literal", span)
+									.sub_diagnostic(
+										Level::Note,
+										None,
+										"Missing trailing `\"` to terminate the string literal",
+									),
+							));
 						}
 						let string = match unquote(self.src_from_span(&span)) {
 							Ok(string) => string,
@@ -226,15 +248,6 @@ impl Iterator for ConvertLinear<'_> {
 					}
 				},
 
-				PrimitiveTokenKind::BlockComment { terminated } if !terminated => {
-					// TODO: Special reporting for nested block comments
-					// TODO: Add note: "Missing trailing `*/` to terminate the block comment"
-					return Some(Err(Diagnostic::new_spanned(
-						Level::Error,
-						"Unterminated block comment",
-						span,
-					)));
-				}
 				PrimitiveTokenKind::Unkown => {
 					return Some(Err(Diagnostic::new_spanned(Level::Error, "Invalid character", span)));
 				}
@@ -246,7 +259,6 @@ impl Iterator for ConvertLinear<'_> {
 				| PrimitiveTokenKind::Question => {
 					return Some(Err(Diagnostic::new_spanned(Level::Error, "Reserved character", span)));
 				}
-				_ => continue,
 			};
 
 			return Some(Ok(Token::new(kind, span)));

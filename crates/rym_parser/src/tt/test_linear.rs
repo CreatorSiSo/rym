@@ -8,12 +8,14 @@ use smol_str::SmolStr;
 
 use super::ConvertLinear;
 
+#[track_caller]
 fn assert_results(src: &str, expect: &[Result<Token, Diagnostic>]) {
 	let got: Vec<_> = ConvertLinear::new(src, Cursor::new(src)).collect();
 	println!("{got:#?}");
 	assert_eq!(expect, got)
 }
 
+#[track_caller]
 fn assert_tokens(src: &str, expect: &[Token]) {
 	let got: Vec<Token> = ConvertLinear::new(src, Cursor::new(src))
 		.map(|result| match result {
@@ -25,6 +27,7 @@ fn assert_tokens(src: &str, expect: &[Token]) {
 	assert_eq!(got, expect)
 }
 
+#[track_caller]
 fn assert_diagnostics(src: &str, expect: &[Diagnostic]) {
 	let got: Vec<_> = ConvertLinear::new(src, Cursor::new(src))
 		.filter_map(|result| match result {
@@ -36,6 +39,7 @@ fn assert_diagnostics(src: &str, expect: &[Diagnostic]) {
 	assert_eq!(got, expect)
 }
 
+#[track_caller]
 fn assert_token_kinds(src: &str, expect: &[TokenKind]) {
 	let got: Vec<TokenKind> = ConvertLinear::new(src, Cursor::new(src))
 		.map(|result| match result {
@@ -193,17 +197,29 @@ fn invalid_char() {
 fn unterminated() {
 	assert_diagnostics(
 		"/* *",
-		&[Diagnostic::new_spanned(Level::Error, "Unterminated block comment", Span::new(0, 4))],
+		&[Diagnostic::new_spanned(Level::Error, "Unterminated block comment", Span::new(0, 4))
+			.sub_diagnostic(Level::Note, None, "Missing trailing `*/` to terminate the block comment")],
 	);
 	assert_diagnostics(
 		"\"Hello World\n",
-		&[Diagnostic::new_spanned(Level::Error, "Unterminated string literal", Span::new(0, 13))],
+		&[Diagnostic::new_spanned(Level::Error, "Unterminated string literal", Span::new(0, 13))
+			.sub_diagnostic(Level::Note, None, "Missing trailing `\"` to terminate the string literal")],
 	);
 	assert_diagnostics(
 		"'\n'",
 		&[
-			Diagnostic::new_spanned(Level::Error, "Unterminated character literal", Span::new(0, 2)),
-			Diagnostic::new_spanned(Level::Error, "Unterminated character literal", Span::new(2, 3)),
+			Diagnostic::new_spanned(Level::Error, "Unterminated character literal", Span::new(0, 2))
+				.sub_diagnostic(
+					Level::Note,
+					None,
+					"Missing trailing `'` to terminate the character literal",
+				),
+			Diagnostic::new_spanned(Level::Error, "Unterminated character literal", Span::new(2, 3))
+				.sub_diagnostic(
+					Level::Note,
+					None,
+					"Missing trailing `'` to terminate the character literal",
+				),
 		],
 	);
 }

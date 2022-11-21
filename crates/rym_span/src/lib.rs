@@ -3,7 +3,7 @@ use std::ops::Range;
 
 pub const DUMMY_SPAN: Span = Span::new(0, 0);
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Span {
 	pub start: usize,
 	pub end: usize,
@@ -11,9 +11,13 @@ pub struct Span {
 
 impl PartialOrd for Span {
 	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		match self.start.partial_cmp(&other.start) {
-			ord => return ord,
-		}
+		self.start.partial_cmp(&other.start)
+	}
+}
+
+impl Ord for Span {
+	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+		self.start.cmp(&other.start)
 	}
 }
 

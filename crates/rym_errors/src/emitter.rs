@@ -11,9 +11,9 @@ fn level_to_annotation_type(level: &Level) -> AnnotationType {
 }
 
 fn index_to_line_col(source: &str, index: usize, tab_spaces: u8) -> (usize, usize) {
-	let (_, after) = &source.split_at(index);
-	let num_lines = Ord::max(1, after.lines().count());
-	let num_cols = match after.lines().last() {
+	let (before, _) = &source.split_at(index);
+	let num_lines = Ord::max(1, before.lines().count());
+	let num_cols = match before.lines().last() {
 		Some(last_line) => last_line
 			.chars()
 			.map(|c| if c == '\t' { tab_spaces } else { 1 })
@@ -39,9 +39,9 @@ fn test_index_to_line_col() {
 {
 	..more stuff down here
 }"#;
-	assert_eq!(index_to_line_col(src, 2, 47), (4, 3));
-	assert_eq!(index_to_line_col(src, 4, 106), (13, 26));
-	assert_eq!(index_to_line_col(src, 4, 109), (14, 2));
+	assert_eq!(index_to_line_col(src, 47, 2), (4, 3));
+	assert_eq!(index_to_line_col(src, 106, 4), (13, 26));
+	assert_eq!(index_to_line_col(src, 109, 4), (14, 2));
 }
 
 pub fn diagnostic_to_snippet<'a>(
@@ -53,12 +53,12 @@ pub fn diagnostic_to_snippet<'a>(
 	let title = Annotation { id: diagnostic.code, label: Some(&diagnostic.title), annotation_type };
 	let mut snippet = Snippet { title: Some(title), ..Default::default() };
 
-	let Some(mut source) = source else {
+	let Some(source) = source else {
 		// No code snippet should be displayed
 		return snippet;
 	};
 
-	// Just `^^^^^` below text inside span
+	// Just `^^^^^` below spanned text
 	let annotations = diagnostic.primary_spans.iter().fold(vec![], |mut accum, span| {
 		accum.push(SourceAnnotation { annotation_type, label: "", range: span.into() });
 		accum
@@ -68,15 +68,12 @@ pub fn diagnostic_to_snippet<'a>(
 		accum
 	});
 
-	let first_line = if let Some(first_span) = diagnostic.primary_spans.first() {
-		// TODO                                    | tab_spaces should come from global config
-		let line_start = index_to_line_col(source, first_span.start, 2).0;
-		let start_index = source.lines().take(line_start - 1).fold(0, |len, line| len + line.len());
-		source = &source[start_index..];
-		line_start
-	} else {
-		1
-	};
-	snippet.slices.push(Slice { origin, source, annotations, line_start: first_line, fold: false });
+	// let first_line = if let Some(first_span) = diagnostic.primary_spans.first() {
+	// 	// TODO                                     | tab_spaces should come from global config
+	// 	index_to_line_col(source, first_span.start, 2).0
+	// } else {
+	// 	1
+	// };
+	snippet.slices.push(Slice { origin, source, annotations, line_start: 1, fold: false });
 	snippet
 }

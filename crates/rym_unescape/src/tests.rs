@@ -1,14 +1,17 @@
-use crate::{unquote, Error};
+use crate::{unquote, UnquoteError};
 
 #[test]
 fn test_unescape() {
-	assert_eq!(unquote("").unwrap_err(), Error::NotEnoughChars { need: 2 },);
-	assert_eq!(unquote("foobar").unwrap_err(), Error::UnrecognizedQuote,);
-	assert_eq!(unquote("'foobar").unwrap_err(), Error::Unterminated,);
-	assert_eq!(unquote("'foo'bar'").unwrap_err(), Error::IllegalChar,);
-	assert_eq!(unquote("'foobar\\'").unwrap_err(), Error::Unterminated,);
-	assert_eq!(unquote("'test  \\q'").unwrap_err(), Error::UnrecognizedEscapePrefix("\\q".into()),);
-	assert_eq!(unquote("'\\00'").unwrap_err(), Error::NotEnoughChars { need: 1 },);
+	assert_eq!(unquote("").unwrap_err(), UnquoteError::NotEnoughChars { need: 2 },);
+	assert_eq!(unquote("foobar").unwrap_err(), UnquoteError::UnrecognizedQuote,);
+	assert_eq!(unquote("'foobar").unwrap_err(), UnquoteError::Unterminated,);
+	assert_eq!(unquote("'foo'bar'").unwrap_err(), UnquoteError::IllegalChar,);
+	assert_eq!(unquote("'foobar\\'").unwrap_err(), UnquoteError::Unterminated,);
+	assert_eq!(
+		unquote("'test  \\q'").unwrap_err(),
+		UnquoteError::UnrecognizedEscapePrefix("\\q".into()),
+	);
+	assert_eq!(unquote("'\\00'").unwrap_err(), UnquoteError::NotEnoughChars { need: 1 },);
 
 	assert_eq!(
 		unquote(r#""\"Fran & Freddie's Diner	☺\\\"""#).unwrap(),

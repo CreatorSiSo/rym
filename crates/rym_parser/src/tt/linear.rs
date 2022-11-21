@@ -164,7 +164,10 @@ impl Iterator for ConvertLinear<'_> {
 							.parse::<i64>()
 						{
 							Ok(int) => int,
-							Err(err) => todo!("Parse <i64> error: `{err}` in: {}", self.src_from_span(&span)),
+							Err(err) => unreachable!(
+								"Internal Error: Could not parse <i64> from {0}: `{err}`",
+								self.src_from_span(&span)
+							),
 						},
 					)),
 					PrimitiveLitKind::Float => TokenKind::Literal(LitKind::Float(
@@ -176,7 +179,10 @@ impl Iterator for ConvertLinear<'_> {
 							.parse::<f64>()
 						{
 							Ok(float) => float,
-							Err(err) => todo!("Parse <f64> error: {err}"),
+							Err(err) => unreachable!(
+								"Internal Error: Could not parse <f64> from {0}: {err}",
+								self.src_from_span(&span)
+							),
 						},
 					)),
 					PrimitiveLitKind::Char { terminated } => {
@@ -193,7 +199,13 @@ impl Iterator for ConvertLinear<'_> {
 						};
 						TokenKind::Literal(LitKind::Char(match string.parse::<char>() {
 							Ok(char) => char,
-							Err(err) => todo!("Parse <char> error: `{err}` in: {string}"),
+							Err(err) => {
+								return Some(Err(Diagnostic::new_spanned(
+									Level::Error,
+									format!("Could not parse <char>: {err}"),
+									span,
+								)))
+							}
 						}))
 					}
 					PrimitiveLitKind::String { terminated } => {
@@ -206,7 +218,9 @@ impl Iterator for ConvertLinear<'_> {
 						}
 						let string = match unquote(self.src_from_span(&span)) {
 							Ok(string) => string,
-							Err(err) => todo!("Unquote error: {err}"),
+							Err(err) => {
+								return Some(Err(Diagnostic::new_spanned(Level::Error, err.to_string(), span)))
+							}
 						};
 						TokenKind::Literal(LitKind::String(SmolStr::new(string)))
 					}
@@ -222,11 +236,7 @@ impl Iterator for ConvertLinear<'_> {
 					)));
 				}
 				PrimitiveTokenKind::Unkown => {
-					return Some(Err(Diagnostic::new_spanned(
-						Level::Error,
-						format!("Invalid character `{}`", self.src_from_span(&span)),
-						span,
-					)));
+					return Some(Err(Diagnostic::new_spanned(Level::Error, "Invalid character", span)));
 				}
 				PrimitiveTokenKind::At
 				| PrimitiveTokenKind::Caret
@@ -234,11 +244,7 @@ impl Iterator for ConvertLinear<'_> {
 				| PrimitiveTokenKind::Pound
 				| PrimitiveTokenKind::Tilde
 				| PrimitiveTokenKind::Question => {
-					return Some(Err(Diagnostic::new_spanned(
-						Level::Error,
-						format!("Reserved character `{}`", self.src_from_span(&span)),
-						span,
-					)));
+					return Some(Err(Diagnostic::new_spanned(Level::Error, "Reserved character", span)));
 				}
 				_ => continue,
 			};

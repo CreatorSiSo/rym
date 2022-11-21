@@ -14,19 +14,19 @@ mod tests;
 use std::str::Chars;
 
 /// Unquotes `input`.
-pub fn unquote(input: &str) -> Result<String, Error> {
+pub fn unquote(input: &str) -> Result<String, UnquoteError> {
 	if input.len() < 2 {
-		return Err(Error::NotEnoughChars { need: 2 });
+		return Err(UnquoteError::NotEnoughChars { need: 2 });
 	}
 
 	let quote = input.chars().next().unwrap();
 
 	if quote != '"' && quote != '\'' {
-		return Err(Error::UnrecognizedQuote);
+		return Err(UnquoteError::UnrecognizedQuote);
 	}
 
 	if input.chars().last().unwrap() != quote {
-		return Err(Error::Unterminated);
+		return Err(UnquoteError::Unterminated);
 	}
 
 	// removes quote characters
@@ -38,15 +38,15 @@ pub fn unquote(input: &str) -> Result<String, Error> {
 }
 
 /// Returns `input` after processing escapes such as `\n` and `\x00`.
-pub fn unescape(input: &str, illegal: Option<char>) -> Result<String, Error> {
+pub fn unescape(input: &str, illegal: Option<char>) -> Result<String, UnquoteError> {
 	let mut chars = input.chars();
 	let mut unescaped = String::new();
 	loop {
 		let Some(char) = chars.next() else { break };
 		let result_char = match char {
-			_ if Some(char) == illegal => return Err(Error::IllegalChar),
+			_ if Some(char) == illegal => return Err(UnquoteError::IllegalChar),
 			'\\' => match chars.next() {
-				None => return Err(Error::Unterminated),
+				None => return Err(UnquoteError::Unterminated),
 				Some(char) => match char {
 					'\\' | '"' | '\'' | '`' => char,
 					'a' => '\x07',
@@ -60,15 +60,15 @@ pub fn unescape(input: &str, illegal: Option<char>) -> Result<String, Error> {
 					'0'..='9' => {
 						let octal = char.to_string() + take(&mut chars, 2)?;
 						u8::from_str_radix(&octal, 8)
-							.map_err(|err| Error::UnrecognizedEscape(err.to_string()))? as char
+							.map_err(|err| UnquoteError::UnrecognizedEscape(err.to_string()))? as char
 					}
 					// hex
 					'x' => u8::from_str_radix(take(&mut chars, 2)?, 16)
-						.map_err(|err| Error::UnrecognizedEscape(err.to_string()))? as char,
+						.map_err(|err| UnquoteError::UnrecognizedEscape(err.to_string()))? as char,
 					// unicode
 					'u' => decode_unicode(take(&mut chars, 4)?)?,
 					'U' => decode_unicode(take(&mut chars, 8)?)?,
-					_ => return Err(Error::UnrecognizedEscapePrefix(format!("\\{char}"))),
+					_ => return Err(UnquoteError::UnrecognizedEscapePrefix(format!("\\{char}"))),
 				},
 			},
 			_ => char,
@@ -80,23 +80,23 @@ pub fn unescape(input: &str, illegal: Option<char>) -> Result<String, Error> {
 }
 
 #[inline]
-fn take<'a>(chars: &mut Chars<'a>, n: usize) -> Result<&'a str, Error> {
+fn take<'a>(chars: &mut Chars<'a>, n: usize) -> Result<&'a str, UnquoteError> {
 	let prev = chars.as_str();
 	for i in 0..n {
-		chars.next().ok_or(Error::NotEnoughChars { need: n - i })?;
+		chars.next().ok_or(UnquoteError::NotEnoughChars { need: n - i })?;
 	}
 	Ok(&prev[0..n])
 }
 
-fn decode_unicode(code_point: &str) -> Result<char, Error> {
+fn decode_unicode(code_point: &str) -> Result<char, UnquoteError> {
 	match u32::from_str_radix(code_point, 16) {
-		Err(err) => Err(Error::UnrecognizedEscape(err.to_string())),
-		Ok(n) => char::from_u32(n).ok_or(Error::InvalidUnicode { code_point: n }),
+		Err(err) => Err(UnquoteError::UnrecognizedEscape(err.to_string())),
+		Ok(n) => char::from_u32(n).ok_or(UnquoteError::InvalidUnicode { code_point: n }),
 	}
 }
 
 #[derive(thiserror::Error, Debug, PartialEq, Eq)]
-pub enum Error {
+pub enum UnquoteError {
 	#[error("Not enough chars need <{need}> more")]
 	NotEnoughChars { need: usize },
 	#[error("Unrecognized quote character")]

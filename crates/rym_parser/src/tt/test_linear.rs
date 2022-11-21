@@ -10,6 +10,7 @@ use super::ConvertLinear;
 
 fn assert_results(src: &str, expect: &[Result<Token, Diagnostic>]) {
 	let got: Vec<_> = ConvertLinear::new(src, Cursor::new(src)).collect();
+	println!("{got:#?}");
 	assert_eq!(expect, got)
 }
 
@@ -20,6 +21,7 @@ fn assert_tokens(src: &str, expect: &[Token]) {
 			Err(err) => panic!("Expected no errors got: {err:?}"),
 		})
 		.collect();
+	println!("{got:#?}");
 	assert_eq!(got, expect)
 }
 
@@ -30,6 +32,7 @@ fn assert_diagnostics(src: &str, expect: &[Diagnostic]) {
 			_ => None,
 		})
 		.collect();
+	println!("{got:#?}");
 	assert_eq!(got, expect)
 }
 
@@ -40,6 +43,7 @@ fn assert_token_kinds(src: &str, expect: &[TokenKind]) {
 			Err(err) => panic!("Expected no errors got: {err:?}"),
 		})
 		.collect();
+	println!("{got:#?}");
 	assert_eq!(got, expect)
 }
 
@@ -163,12 +167,12 @@ fn reserved_char() {
 	assert_diagnostics(
 		"@^$#~?",
 		&[
-			Diagnostic::new_spanned(Level::Error, "Reserved character `@`", Span::new(0, 1)),
-			Diagnostic::new_spanned(Level::Error, "Reserved character `^`", Span::new(1, 2)),
-			Diagnostic::new_spanned(Level::Error, "Reserved character `$`", Span::new(2, 3)),
-			Diagnostic::new_spanned(Level::Error, "Reserved character `#`", Span::new(3, 4)),
-			Diagnostic::new_spanned(Level::Error, "Reserved character `~`", Span::new(4, 5)),
-			Diagnostic::new_spanned(Level::Error, "Reserved character `?`", Span::new(5, 6)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character", Span::new(0, 1)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character", Span::new(1, 2)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character", Span::new(2, 3)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character", Span::new(3, 4)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character", Span::new(4, 5)),
+			Diagnostic::new_spanned(Level::Error, "Reserved character", Span::new(5, 6)),
 		],
 	)
 }
@@ -178,9 +182,9 @@ fn invalid_char() {
 	assert_diagnostics(
 		"²³€",
 		&[
-			Diagnostic::new_spanned(Level::Error, "Invalid character `²`", Span::new(0, 2)),
-			Diagnostic::new_spanned(Level::Error, "Invalid character `³`", Span::new(2, 4)),
-			Diagnostic::new_spanned(Level::Error, "Invalid character `€`", Span::new(4, 7)),
+			Diagnostic::new_spanned(Level::Error, "Invalid character", Span::new(0, 2)),
+			Diagnostic::new_spanned(Level::Error, "Invalid character", Span::new(2, 4)),
+			Diagnostic::new_spanned(Level::Error, "Invalid character", Span::new(4, 7)),
 		],
 	)
 }

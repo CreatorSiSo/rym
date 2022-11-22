@@ -7,7 +7,8 @@ use smol_str::SmolStr;
 
 type Pos = usize;
 
-pub struct ConvertLinear<'a> {
+#[derive(Clone)]
+pub struct BuildLinear<'a> {
 	/// Absolute offset within the source of the current character.
 	pos: Pos,
 	/// Source text to tokenize.
@@ -16,10 +17,9 @@ pub struct ConvertLinear<'a> {
 	cursor: Cursor<'a>,
 }
 
-impl<'a> ConvertLinear<'a> {
-	#[cfg(test)]
-	pub const fn new(src: &'a str, cursor: Cursor<'a>) -> Self {
-		Self { pos: 0, src, cursor }
+impl<'a> BuildLinear<'a> {
+	pub fn new(src: &'a str) -> Self {
+		Self { pos: 0, src, cursor: Cursor::new(src) }
 	}
 
 	// pub fn collect_tuple(&mut self) -> (Vec<Token>, Vec<Diagnostic>) {
@@ -72,7 +72,7 @@ impl<'a> ConvertLinear<'a> {
 	}
 }
 
-impl Iterator for ConvertLinear<'_> {
+impl Iterator for BuildLinear<'_> {
 	type Item = RymResult<Token>;
 
 	fn next(&mut self) -> Option<Self::Item> {

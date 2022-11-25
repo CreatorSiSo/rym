@@ -107,5 +107,66 @@ fn call() {
 
 #[test]
 fn function() {
-	assert_kinds_errs("() => test", vec![], vec![])
+	assert_kinds_errs(
+		"fn add(a: int, b: int) -> int { a + b }",
+		vec![
+			TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("fn"))),
+			TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("add"))),
+			TokenKindTree::Delimited(
+				Delimiter::Paren,
+				vec![
+					TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("a"))),
+					TokenKindTree::Kind(TokenKind::Colon),
+					TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("int"))),
+					TokenKindTree::Kind(TokenKind::Comma),
+					TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("b"))),
+					TokenKindTree::Kind(TokenKind::Colon),
+					TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("int"))),
+				],
+			),
+			TokenKindTree::Kind(TokenKind::Minus),
+			TokenKindTree::Kind(TokenKind::GreaterThan),
+			TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("int"))),
+			TokenKindTree::Delimited(
+				Delimiter::Brace,
+				vec![
+					TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("a"))),
+					TokenKindTree::Kind(TokenKind::Plus),
+					TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("b"))),
+				],
+			),
+		],
+		vec![],
+	)
+}
+
+#[test]
+fn unclosed() {
+	assert_kinds_errs(
+		"{ a + b",
+		vec![TokenKindTree::Delimited(
+			Delimiter::Brace,
+			vec![
+				TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("a"))),
+				TokenKindTree::Kind(TokenKind::Plus),
+				TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("b"))),
+			],
+		)],
+		vec![/* Diagnostic::new_spanned(Level::Error, "Unclosed delimter", Span::new(0, 8)) */],
+	);
+	assert_kinds_errs(
+		"{ a + (b)",
+		vec![TokenKindTree::Delimited(
+			Delimiter::Brace,
+			vec![
+				TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("a"))),
+				TokenKindTree::Kind(TokenKind::Plus),
+				TokenKindTree::Delimited(
+					Delimiter::Paren,
+					vec![TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("b")))],
+				),
+			],
+		)],
+		vec![],
+	)
 }

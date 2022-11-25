@@ -41,17 +41,7 @@ impl<'src> Lexer<'src> {
 	}
 
 	pub fn new(src: &'src str) -> Self {
-		Self {
-			src,
-			iter: src.char_indices(),
-
-			c: '\0',
-			start: 0,
-			current: 0,
-
-			line: 1,
-			col: 0,
-		}
+		Self { src, iter: src.char_indices(), c: '\0', start: 0, current: 0, line: 1, col: 0 }
 	}
 
 	fn next_token(&mut self) -> LexResult<Token> {
@@ -64,8 +54,7 @@ impl<'src> Lexer<'src> {
 			let c = self.c;
 			self.start = self.current;
 			match c {
-				' ' | '\t' | '\r' => continue,
-				'\n' => break TokenType::Newline,
+				' ' | '\t' | '\r' | '\n' => continue,
 
 				// TODO: Comments
 				'/' if self.matches('/') => self.consume_while(|c| c != '\n'),
@@ -87,6 +76,8 @@ impl<'src> Lexer<'src> {
 				'{' => break TokenType::LeftBrace,
 				'}' => break TokenType::RightBrace,
 
+				'%' if self.matches('=') => break TokenType::PercentEqual,
+				'%' => break TokenType::Percent,
 				'!' if self.matches('=') => break TokenType::BangEqual,
 				'!' => break TokenType::Bang,
 				'=' if self.matches('=') => break TokenType::EqualEqual,
@@ -140,11 +131,7 @@ impl<'src> Lexer<'src> {
 			Err(err) => return LexError::parse_float(self, err),
 		};
 
-		Ok(Token::literal(
-			TokenType::Number,
-			Literal::Number(value),
-			self.start..self.current,
-		))
+		Ok(Token::literal(TokenType::Number, Literal::Number(value), self.start..self.current))
 	}
 
 	fn string(&mut self) -> LexResult<Token> {

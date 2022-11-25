@@ -18,6 +18,8 @@ pub enum TokenType {
 	LeftBrace,
 	RightBrace,
 
+	Percent,
+	PercentEqual,
 	Bang,
 	BangEqual,
 	Equal,
@@ -55,7 +57,6 @@ pub enum TokenType {
 	Struct,
 	Self_,
 
-	Newline,
 	/// Do not use outside of `lex` crate!
 	Eof,
 }
@@ -74,6 +75,8 @@ impl Display for TokenType {
 			TokenType::RightParen => "RightParen",
 			TokenType::LeftBrace => "LeftBrace",
 			TokenType::RightBrace => "RightBrace",
+			TokenType::Percent => "Percent",
+			TokenType::PercentEqual => "PercentEqual",
 			TokenType::Bang => "Bang",
 			TokenType::BangEqual => "BangEqual",
 			TokenType::Equal => "Equal",
@@ -104,18 +107,13 @@ impl Display for TokenType {
 			TokenType::Mut => "Mut",
 			TokenType::Struct => "Struct",
 			TokenType::Self_ => "Self",
-			TokenType::Newline => "Newline",
 			TokenType::Eof => "Eof",
 		})
 	}
 }
 
-pub const LIT_TOKEN_TYPES: [TokenType; 4] = [
-	TokenType::String,
-	TokenType::Number,
-	TokenType::True,
-	TokenType::False,
-];
+pub const LIT_TOKEN_TYPES: [TokenType; 4] =
+	[TokenType::String, TokenType::Number, TokenType::True, TokenType::False];
 
 pub const KEYWORDS: &[(&str, TokenType)] = &[
 	("if", TokenType::If),
@@ -147,27 +145,15 @@ pub struct Token {
 
 impl Token {
 	pub const fn new(typ: TokenType, span: Span) -> Self {
-		Self {
-			typ,
-			data: TokenData::None,
-			span,
-		}
+		Self { typ, data: TokenData::None, span }
 	}
 
 	pub fn literal(typ: TokenType, literal: Literal, span: Span) -> Self {
-		Self {
-			typ,
-			data: TokenData::Literal(literal),
-			span,
-		}
+		Self { typ, data: TokenData::Literal(literal), span }
 	}
 
 	pub fn ident(typ: TokenType, ident: String, span: Span) -> Self {
-		Self {
-			typ,
-			data: TokenData::Identifier(ident),
-			span,
-		}
+		Self { typ, data: TokenData::Identifier(ident), span }
 	}
 }
 

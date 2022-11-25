@@ -36,7 +36,7 @@ impl Parser {
 
 	// TODO: Refactor entire stmt function (maybe split it up)
 	pub fn stmt(&mut self) -> ParseResult<Spanned<Stmt>> {
-		if let Some(token) = self.matches_which(&[TokenType::Semicolon, TokenType::Newline]) {
+		if let Some(token) = self.matches_which(&[TokenType::Semicolon]) {
 			return Ok(Spanned(token.span, Stmt::Empty));
 		}
 
@@ -49,10 +49,7 @@ impl Parser {
 			self.expect(TokenType::Equal, "Expected `=`")?;
 
 			let expr = self.parse_expr()?;
-			let var_end = self.expect_any(
-				&[TokenType::Semicolon, TokenType::Newline],
-				"Expected Semicolon or Newline",
-			)?;
+			let var_end = self.expect(TokenType::Semicolon, "Expected Semicolon or Newline")?;
 
 			return Ok(Spanned(
 				token.span.start..var_end.span.end,
@@ -86,27 +83,20 @@ impl Parser {
 						params.push(other_param.data.ident(TokenType::Identifier));
 					}
 
-					self.expect(
-						TokenType::RightParen,
-						"Expected closing `)` after parameters",
-					)?;
+					self.expect(TokenType::RightParen, "Expected closing `)` after parameters")?;
 
 					params
 				};
 				return Ok(Spanned(
 					fn_token.span.start..self.previous().span.end,
-					Stmt::Decl(Decl::Fn {
-						name,
-						params,
-						body: self.parse_expr()?,
-					}),
+					Stmt::Decl(Decl::Fn { name, params, body: self.parse_expr()? }),
 				));
 			}
 		}
 
 		let expr = self.parse_expr()?;
 		let start = expr.0.start;
-		self.matches_any(&[TokenType::Semicolon, TokenType::Newline]);
+		self.matches(TokenType::Semicolon);
 		Ok(Spanned(start..self.previous().span.end, Stmt::Expr(expr)))
 	}
 
@@ -117,9 +107,7 @@ impl Parser {
 			self.matches_which(&[TokenType::Break, TokenType::Return])
 		{
 			let is_return = typ == TokenType::Return;
-			if self.matches_any(&[TokenType::Semicolon, TokenType::Newline])
-				|| self.peek_eq(0, TokenType::RightBrace)
-			{
+			if self.matches(TokenType::Semicolon) || self.peek_eq(0, TokenType::RightBrace) {
 				return if is_return {
 					ParseError::token_mismatch(self.previous(), "Expected expression after `return`")
 				} else {
@@ -130,11 +118,7 @@ impl Parser {
 			let full_span = span.start..expr.0.end;
 			return Ok(Spanned(
 				full_span,
-				if is_return {
-					Expr::Return(expr)
-				} else {
-					Expr::Break(Some(expr))
-				},
+				if is_return { Expr::Return(expr) } else { Expr::Break(Some(expr)) },
 			));
 		}
 
@@ -154,10 +138,7 @@ impl Parser {
 			self.advance();
 			let expr_r = Box::new(self.parse_expr()?);
 
-			return Ok(Spanned(
-				start..self.previous().span.end,
-				Expr::Assign(expr_l, expr_r),
-			));
+			return Ok(Spanned(start..self.previous().span.end, Expr::Assign(expr_l, expr_r)));
 		}
 
 		self.parse_if()
@@ -178,10 +159,7 @@ impl Parser {
 				None
 			};
 
-			return Ok(Spanned(
-				start..self.previous().span.end,
-				Expr::If(expr, then_block, else_block),
-			));
+			return Ok(Spanned(start..self.previous().span.end, Expr::If(expr, then_block, else_block)));
 		}
 
 		self.parse_loop()
@@ -291,18 +269,20 @@ impl Parser {
 		Ok(left)
 	}
 
-	/// factor => unary (("/" | "*") unary)*
+	/// factor => unary (("/" | "*" | "%") unary)*
 	fn parse_factor(&mut self) -> ParseResult<Spanned<Expr>> {
 		let mut left = self.parse_unary()?;
 
-		while self.matches_any(&[TokenType::Star, TokenType::Slash]) {
+		while self.matches_any(&[TokenType::Star, TokenType::Slash, TokenType::Percent]) {
 			let typ = self.previous().typ.clone();
 			let right = Box::new(self.parse_unary()?);
 
 			left.1 = if typ == TokenType::Star {
 				Expr::Binary(Box::new(left.clone()), BinaryOp::Mul, right)
-			} else {
+			} else if typ == TokenType::Slash {
 				Expr::Binary(Box::new(left.clone()), BinaryOp::Div, right)
+			} else {
+				Expr::Binary(Box::new(left.clone()), BinaryOp::Mod, right)
 			};
 			left.0.end = self.previous().span.end;
 		}
@@ -334,18 +314,12 @@ impl Parser {
 				Vec::new()
 			} else {
 				let args = self.parse_arguments()?;
-				self.expect(
-					TokenType::RightParen,
-					"Expected closing `)` after arguments",
-				)?;
+				self.expect(TokenType::RightParen, "Expected closing `)` after arguments")?;
 				args
 			};
 			expr = Spanned(
 				expr.0.start..self.previous().span.end,
-				Expr::Call {
-					callee: Box::new(expr.clone()),
-					args,
-				},
+				Expr::Call { callee: Box::new(expr.clone()), args },
 			);
 		}
 
@@ -367,27 +341,18 @@ impl Parser {
 	fn parse_primary(&mut self) -> ParseResult<Spanned<Expr>> {
 		if self.peek_eq(0, TokenType::LeftBrace) {
 			let start = self.previous().span.start;
-			return Ok(Spanned(
-				start..self.previous().span.end,
-				Expr::Block(self.parse_block()?),
-			));
+			return Ok(Spanned(start..self.previous().span.end, Expr::Block(self.parse_block()?)));
 		}
 
 		if self.matches(TokenType::LeftParen) {
 			let start = self.previous().span.start;
 			let expr = if self.peek_eq(0, TokenType::RightParen) {
-				Spanned(
-					start..self.previous().span.end,
-					Expr::Literal(Literal::Unit),
-				)
+				Spanned(start..self.previous().span.end, Expr::Literal(Literal::Unit))
 			} else {
 				self.parse_expr()?
 			};
 			self.expect(TokenType::RightParen, "Expected closing `)`")?;
-			return Ok(Spanned(
-				start..self.previous().span.end,
-				Expr::Group(Box::new(expr)),
-			));
+			return Ok(Spanned(start..self.previous().span.end, Expr::Group(Box::new(expr))));
 		}
 
 		if let Some(Token { typ, data, span }) = self.matches_which(&[
@@ -437,14 +402,14 @@ impl Parser {
 }
 
 impl Parser {
-	fn expect_any(&mut self, types: &[TokenType], error_msg: &str) -> ParseResult<Token> {
-		for typ in types {
-			if self.matches(typ.clone()) {
-				return Ok(self.previous());
-			}
-		}
-		ParseError::token_mismatch(self.advance(), error_msg)
-	}
+	// fn expect_any(&mut self, types: &[TokenType], error_msg: &str) -> ParseResult<Token> {
+	// 	for typ in types {
+	// 		if self.matches(typ.clone()) {
+	// 			return Ok(self.previous());
+	// 		}
+	// 	}
+	// 	ParseError::token_mismatch(self.advance(), error_msg)
+	// }
 
 	fn expect(&mut self, typ: TokenType, error_msg: &str) -> ParseResult<Token> {
 		if self.matches(typ) {
@@ -501,9 +466,7 @@ impl Parser {
 
 	fn peek_eq(&mut self, dist: usize, typ: TokenType) -> bool {
 		match self.peek(dist) {
-			Some(Token {
-				typ: peeked_typ, ..
-			}) => peeked_typ == &typ,
+			Some(Token { typ: peeked_typ, .. }) => peeked_typ == &typ,
 			None => false,
 		}
 	}

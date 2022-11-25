@@ -1,7 +1,7 @@
 use super::BuildLinear;
 use rym_errors::{Diagnostic, Level};
 use rym_span::Span;
-use rym_tt::{DelimSpan, Delimiter, Token, TokenKind, TokenTree};
+use rym_tt::{DelimSpan, Token, TokenKind, TokenTree};
 
 pub struct BuildTree<'a> {
 	/// Source text to tokenize.
@@ -18,7 +18,7 @@ impl<'a> BuildTree<'a> {
 	}
 
 	fn bump(&mut self) -> Option<Token> {
-		while let Some(result) = self.tokens.next() {
+		for result in self.tokens.by_ref() {
 			match result {
 				Ok(token) => return Some(token),
 				Err(diagnostic) => {
@@ -30,29 +30,43 @@ impl<'a> BuildTree<'a> {
 		None
 	}
 
-	fn next_delimited(&mut self, outer_token: Token) -> Option<Result<TokenTree, Diagnostic>> {
-		if let Token { kind: TokenKind::OpenDelim(open_delim), .. } = outer_token {
-			let open = outer_token.span;
-			let mut close = open;
-			let mut tokens = vec![];
-			// TODO Make nesting work
-			while let Some(inner_token) = self.bump() {
-				match inner_token.kind {
-					TokenKind::OpenDelim(..) => return self.next_delimited(inner_token),
-					TokenKind::CloseDelim(close_delim) if open_delim == close_delim => {
-						close = inner_token.span;
-						break;
+	pub fn is_next_newline(&self) -> bool {
+		self.tokens.is_next_newline()
+	}
+
+	fn next_tree(&mut self, outer_token: Token) -> Option<Result<TokenTree, Diagnostic>> {
+		let tt = match outer_token.kind {
+			TokenKind::OpenDelim(open_delim) => {
+				let open = outer_token.span;
+				let mut close = open;
+				let mut tokens = vec![];
+				// TODO Make nesting work
+				while let Some(inner_token) = self.bump() {
+					match inner_token.kind {
+						TokenKind::OpenDelim(..) => return self.next_tree(inner_token),
+						TokenKind::CloseDelim(close_delim) if open_delim == close_delim => {
+							close = inner_token.span;
+							break;
+						}
+						_ => tokens.push(TokenTree::Token(inner_token)),
 					}
-					_ => tokens.push(TokenTree::Token(inner_token)),
 				}
+				return Some(Ok(TokenTree::Delimited(
+					DelimSpan { open, close, entire: Span::new(open.start, close.end) },
+					open_delim,
+					tokens,
+				)));
 			}
-			return Some(Ok(TokenTree::Delimited(
-				DelimSpan { open, close, entire: Span::new(open.start, close.end) },
-				open_delim,
-				tokens,
-			)));
-		}
-		None
+			TokenKind::CloseDelim(_) => {
+				return Some(Err(Diagnostic::new_spanned(
+					Level::Error,
+					"Unexpected closing delimiter",
+					outer_token.span,
+				)))
+			}
+			_ => TokenTree::Token(outer_token),
+		};
+		Some(Ok(tt))
 	}
 }
 
@@ -60,20 +74,9 @@ impl<'a> Iterator for BuildTree<'a> {
 	type Item = Result<TokenTree, Diagnostic>;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		while let Some(inner_token) = self.bump() {
-			let tt = match inner_token.kind {
-				TokenKind::OpenDelim(..) => return self.next_delimited(inner_token),
-				TokenKind::CloseDelim(..) => {
-					return Some(Err(Diagnostic::new_spanned(
-						Level::Error,
-						"Unexpected closing delimiter",
-						inner_token.span,
-					)))
-				}
-				_ => TokenTree::Token(inner_token),
-			};
-			return Some(Ok(tt));
+		match self.bump() {
+			Some(token) => self.next_tree(token),
+			None => None,
 		}
-		None
 	}
 }

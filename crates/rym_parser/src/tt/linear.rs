@@ -8,7 +8,7 @@ use smol_str::SmolStr;
 type Pos = usize;
 
 #[derive(Clone)]
-pub struct BuildLinear<'a> {
+pub(crate) struct BuildLinear<'a> {
 	/// Absolute offset within the source of the current character.
 	pos: Pos,
 	/// Source text to tokenize.
@@ -18,7 +18,7 @@ pub struct BuildLinear<'a> {
 }
 
 impl<'a> BuildLinear<'a> {
-	pub fn new(src: &'a str) -> Self {
+	pub(crate) fn new(src: &'a str) -> Self {
 		Self { pos: 0, src, cursor: Cursor::new(src) }
 	}
 
@@ -34,6 +34,16 @@ impl<'a> BuildLinear<'a> {
 	// 		}
 	// 	})
 	// }
+
+	pub(crate) fn is_next_newline(&self) -> bool {
+		if let Some((kind, span)) = self.peek() {
+			println!("{span}: >{}<", self.src_from_span(&span));
+			if kind == PrimitiveTokenKind::Whitespace && self.src_from_span(&span).contains('\n') {
+				return true;
+			}
+		}
+		false
+	}
 
 	fn bump(&mut self) -> Option<(PrimitiveTokenKind, Span)> {
 		self.cursor.next_token().map(|token| {
@@ -77,18 +87,8 @@ impl Iterator for BuildLinear<'_> {
 
 	fn next(&mut self) -> Option<Self::Item> {
 		while let Some((primitive_kind, mut span)) = self.bump() {
-			println!("{span}: >{}<", self.src_from_span(&span));
-
 			let kind = match primitive_kind {
-				PrimitiveTokenKind::Whitespace => {
-					if self.src_from_span(&span).contains('\n') {
-						TokenKind::Newline
-					} else {
-						continue;
-					}
-				}
-
-				PrimitiveTokenKind::LineComment => continue,
+				PrimitiveTokenKind::Whitespace | PrimitiveTokenKind::LineComment => continue,
 				PrimitiveTokenKind::BlockComment { terminated } => {
 					if terminated {
 						continue;

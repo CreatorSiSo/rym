@@ -7,7 +7,7 @@ use smol_str::SmolStr;
 
 type Pos = usize;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct BuildLinear<'a> {
 	/// Absolute offset within the source of the current character.
 	pos: Pos,

@@ -1,12 +1,12 @@
 #![cfg(test)]
 
 use super::BuildTree;
-use rym_errors::Diagnostic;
+use rym_errors::{Diagnostic, Level};
 use rym_span::Span;
 use rym_tt::{DelimSpan, Delimiter, Token, TokenKind, TokenTree};
 use smol_str::SmolStr;
 
-fn map_ts_errs(src: &str) -> (Vec<TokenTree>, Vec<Diagnostic>) {
+fn map_tokentrees_errs(src: &str) -> (Vec<TokenTree>, Vec<Diagnostic>) {
 	BuildTree::new(src).fold((vec![], vec![]), |mut accum, result| {
 		match result {
 			Ok(tt) => accum.0.push(tt),
@@ -17,8 +17,8 @@ fn map_ts_errs(src: &str) -> (Vec<TokenTree>, Vec<Diagnostic>) {
 }
 
 #[track_caller]
-fn assert_ts_errs(src: &str, ts: Vec<TokenTree>, errs: Vec<Diagnostic>) {
-	assert_eq!(map_ts_errs(src), (ts, errs));
+fn assert_tokentrees_errs(src: &str, ts: Vec<TokenTree>, errs: Vec<Diagnostic>) {
+	assert_eq!(map_tokentrees_errs(src), (ts, errs));
 }
 
 #[track_caller]
@@ -34,8 +34,8 @@ fn assert_kinds_errs(src: &str, kinds: Vec<TokenKindTree>, errs: Vec<Diagnostic>
 			accum
 		})
 	}
-	let got = map_ts_errs(src);
-	assert_eq!((transform(got.0), got.1), (kinds, errs));
+	let got = map_tokentrees_errs(src);
+	assert_eq!((got.1, transform(got.0)), (errs, kinds));
 }
 
 #[derive(Debug, PartialEq)]
@@ -48,7 +48,7 @@ pub enum TokenKindTree {
 
 #[test]
 fn call() {
-	assert_ts_errs(
+	assert_tokentrees_errs(
 		"empty_call()",
 		vec![
 			TokenTree::Token(Token::new(TokenKind::Ident(SmolStr::new("empty_call")), Span::new(0, 10))),
@@ -60,7 +60,7 @@ fn call() {
 		],
 		vec![],
 	);
-	assert_ts_errs(
+	assert_tokentrees_errs(
 		"call(arg_1: float, arg_2: bool = true)",
 		vec![
 			TokenTree::Token(Token::new(TokenKind::Ident(SmolStr::new("call")), Span::new(0, 4))),
@@ -142,6 +142,22 @@ fn function() {
 
 #[test]
 fn unclosed() {
+	// TODO Add multiline variants of tests
+	assert_kinds_errs(
+		"({[",
+		vec![TokenKindTree::Delimited(
+			Delimiter::Paren,
+			vec![TokenKindTree::Delimited(
+				Delimiter::Brace,
+				vec![TokenKindTree::Delimited(Delimiter::Bracket, vec![])],
+			)],
+		)],
+		vec![
+			Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 3)),
+			Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(1, 3)),
+			Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(2, 3)),
+		],
+	);
 	assert_kinds_errs(
 		"{ a + b",
 		vec![TokenKindTree::Delimited(
@@ -152,7 +168,7 @@ fn unclosed() {
 				TokenKindTree::Kind(TokenKind::Ident(SmolStr::new("b"))),
 			],
 		)],
-		vec![/* Diagnostic::new_spanned(Level::Error, "Unclosed delimter", Span::new(0, 8)) */],
+		vec![Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 7))],
 	);
 	assert_kinds_errs(
 		"{ a + (b)",
@@ -167,6 +183,6 @@ fn unclosed() {
 				),
 			],
 		)],
-		vec![],
+		vec![Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 9))],
 	)
 }

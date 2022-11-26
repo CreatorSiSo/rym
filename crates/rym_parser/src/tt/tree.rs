@@ -6,31 +6,22 @@ use rym_tt::{DelimSpan, Token, TokenKind, TokenTree};
 #[derive(Debug)]
 pub struct TreeLexer<'a> {
 	/// Previous lexer stage that creates the tokens.
-	tokens: LinearLexer<'a>,
-	/// External struct to submit diagnostics to.
+	lexer: LinearLexer<'a>,
+	/// Global struct to submit diagnostics to.
 	handler: &'a Handler,
 }
 
 impl<'a> TreeLexer<'a> {
 	pub fn new(src: &'a str, handler: &'a Handler) -> Self {
-		Self { tokens: LinearLexer::new(src), handler }
+		Self { lexer: LinearLexer::new(src, handler), handler }
 	}
 
 	pub fn is_next_newline(&self) -> bool {
-		self.tokens.is_next_newline()
+		self.lexer.is_next_newline()
 	}
 
 	fn bump(&mut self) -> Option<Token> {
-		for result in self.tokens.by_ref() {
-			match result {
-				Ok(token) => return Some(token),
-				Err(diagnostic) => {
-					self.handler.emit(diagnostic);
-					continue;
-				}
-			}
-		}
-		None
+		self.lexer.next()
 	}
 
 	fn next_tree(&mut self, outer_token: Token) -> TokenTree {

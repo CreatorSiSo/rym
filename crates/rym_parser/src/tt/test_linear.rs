@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use rym_errors::{Diagnostic, Level};
+use rym_errors::{Diagnostic, Handler, Level};
 use rym_span::Span;
 use rym_tt::{Delimiter, LitKind, Token, TokenKind};
 use smol_str::SmolStr;
@@ -8,51 +8,46 @@ use smol_str::SmolStr;
 use super::LinearLexer;
 
 #[track_caller]
-fn assert_results(src: &str, expect: &[Result<Token, Diagnostic>]) {
-	let got: Vec<_> = LinearLexer::new(src).collect();
+fn assert_results(src: &str, expect: &[Token], diagnostics: &[Diagnostic]) {
+	let handler = Handler::default();
+	let got: Vec<_> = LinearLexer::new(src, &handler).collect();
 	println!("{got:#?}");
-	assert_eq!(expect, got)
+	assert_eq!(expect, got);
+	assert_eq!(diagnostics, &handler.collect());
 }
 
 #[track_caller]
 fn assert_tokens(src: &str, expect: &[Token]) {
-	let got: Vec<Token> = LinearLexer::new(src)
-		.map(|result| match result {
-			Ok(token) => token,
-			Err(err) => panic!("Expected no errors got: {err:?}"),
-		})
-		.collect();
+	let handler = Handler::default();
+	let got: Vec<Token> = LinearLexer::new(src, &handler).collect();
+	let errors = handler.collect();
+	assert_eq!(errors, vec![], "Expected no errors got: {errors:?}");
 	println!("{got:#?}");
-	assert_eq!(got, expect)
+	assert_eq!(got, expect);
 }
 
 #[track_caller]
 fn assert_diagnostics(src: &str, expect: &[Diagnostic]) {
-	let got: Vec<_> = LinearLexer::new(src)
-		.filter_map(|result| match result {
-			Err(diagnostic) => Some(diagnostic),
-			_ => None,
-		})
-		.collect();
-	println!("{got:#?}");
-	assert_eq!(got, expect)
+	let handler = Handler::default();
+	let _: Vec<_> = LinearLexer::new(src, &handler).collect();
+	let errors = handler.collect();
+	println!("{errors:#?}",);
+	assert_eq!(errors, expect)
 }
 
 #[track_caller]
 fn assert_token_kinds(src: &str, expect: &[TokenKind]) {
-	let got: Vec<TokenKind> = LinearLexer::new(src)
-		.map(|result| match result {
-			Ok(token) => token.kind,
-			Err(err) => panic!("Expected no errors got: {err:?}"),
-		})
-		.collect();
+	let handler = Handler::default();
+	let got: Vec<TokenKind> = LinearLexer::new(src, &handler).map(|token| token.kind).collect();
+	let errors = handler.collect();
+	assert_eq!(errors, vec![], "Expected no errors got: {errors:?}");
 	println!("{got:#?}");
-	assert_eq!(got, expect)
+	assert_eq!(got, expect);
 }
 
 #[test]
 fn empty() {
-	assert_results("", &[])
+	assert_results("", &[], &[])
 }
 
 #[test]

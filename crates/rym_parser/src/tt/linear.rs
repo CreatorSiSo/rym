@@ -1,4 +1,4 @@
-use rym_errors::{Diagnostic, Level, RymResult};
+use rym_errors::{Diagnostic, Handler, Level};
 use rym_lexer::{Cursor, PrimitiveLitKind, PrimitiveTokenKind};
 use rym_span::Span;
 use rym_tt::{Delimiter, LitKind, Token, TokenKind};
@@ -15,25 +15,14 @@ pub(crate) struct LinearLexer<'a> {
 	src: &'a str,
 	/// Cursor for getting lexer tokens.
 	cursor: Cursor<'a>,
+	/// Global struct to submit diagnostics to.
+	handler: &'a Handler,
 }
 
 impl<'a> LinearLexer<'a> {
-	pub(crate) fn new(src: &'a str) -> Self {
-		Self { pos: 0, src, cursor: Cursor::new(src) }
+	pub(crate) fn new(src: &'a str, handler: &'a Handler) -> Self {
+		Self { pos: 0, src, cursor: Cursor::new(src), handler }
 	}
-
-	// pub fn collect_tuple(&mut self) -> (Vec<Token>, Vec<Diagnostic>) {
-	// 	self.fold((Vec::new(), Vec::new()), |mut accum, result| match result {
-	// 		Ok(token) => {
-	// 			accum.0.push(token);
-	// 			accum
-	// 		}
-	// 		Err(error) => {
-	// 			accum.1.push(error);
-	// 			accum
-	// 		}
-	// 	})
-	// }
 
 	pub(crate) fn is_next_newline(&self) -> bool {
 		if let Some((kind, span)) = self.peek() {
@@ -83,7 +72,7 @@ impl<'a> LinearLexer<'a> {
 }
 
 impl Iterator for LinearLexer<'_> {
-	type Item = RymResult<Token>;
+	type Item = Token;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		while let Some((primitive_kind, mut span)) = self.bump() {
@@ -94,14 +83,15 @@ impl Iterator for LinearLexer<'_> {
 						continue;
 					}
 					// TODO: Special reporting for nested block comments
-					return Some(Err(
+					self.handler.emit(
 						Diagnostic::new_spanned(Level::Error, "Unterminated block comment", span)
 							.sub_diagnostic(
 								Level::Note,
 								None,
 								"Missing trailing `*/` to terminate the block comment",
 							),
-					));
+					);
+					continue;
 				}
 
 				// Punctuation
@@ -203,14 +193,15 @@ impl Iterator for LinearLexer<'_> {
 					)),
 					PrimitiveLitKind::Char { terminated } => {
 						if !terminated {
-							return Some(Err(
+							self.handler.emit(
 								Diagnostic::new_spanned(Level::Error, "Unterminated character literal", span)
 									.sub_diagnostic(
 										Level::Note,
 										None,
 										"Missing trailing `'` to terminate the character literal",
 									),
-							));
+							);
+							continue;
 						}
 						let string = match unquote(self.src_from_span(&span)) {
 							Ok(string) => string,
@@ -219,29 +210,32 @@ impl Iterator for LinearLexer<'_> {
 						TokenKind::Literal(LitKind::Char(match string.parse::<char>() {
 							Ok(char) => char,
 							Err(err) => {
-								return Some(Err(Diagnostic::new_spanned(
+								self.handler.emit(Diagnostic::new_spanned(
 									Level::Error,
 									format!("Could not parse <char>: {err}"),
 									span,
-								)))
+								));
+								continue;
 							}
 						}))
 					}
 					PrimitiveLitKind::String { terminated } => {
 						if !terminated {
-							return Some(Err(
+							self.handler.emit(
 								Diagnostic::new_spanned(Level::Error, "Unterminated string literal", span)
 									.sub_diagnostic(
 										Level::Note,
 										None,
 										"Missing trailing `\"` to terminate the string literal",
 									),
-							));
+							);
+							continue;
 						}
 						let string = match unquote(self.src_from_span(&span)) {
 							Ok(string) => string,
 							Err(err) => {
-								return Some(Err(Diagnostic::new_spanned(Level::Error, err.to_string(), span)))
+								self.handler.emit(Diagnostic::new_spanned(Level::Error, err.to_string(), span));
+								continue;
 							}
 						};
 						TokenKind::Literal(LitKind::String(SmolStr::new(string)))
@@ -249,7 +243,8 @@ impl Iterator for LinearLexer<'_> {
 				},
 
 				PrimitiveTokenKind::Unkown => {
-					return Some(Err(Diagnostic::new_spanned(Level::Error, "Invalid character", span)));
+					self.handler.emit(Diagnostic::new_spanned(Level::Error, "Invalid character", span));
+					continue;
 				}
 				PrimitiveTokenKind::At
 				| PrimitiveTokenKind::Caret
@@ -257,11 +252,12 @@ impl Iterator for LinearLexer<'_> {
 				| PrimitiveTokenKind::Pound
 				| PrimitiveTokenKind::Tilde
 				| PrimitiveTokenKind::Question => {
-					return Some(Err(Diagnostic::new_spanned(Level::Error, "Reserved character", span)));
+					self.handler.emit(Diagnostic::new_spanned(Level::Error, "Reserved character", span));
+					continue;
 				}
 			};
 
-			return Some(Ok(Token::new(kind, span)));
+			return Some(Token::new(kind, span));
 		}
 		None
 	}

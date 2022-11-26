@@ -5,18 +5,18 @@ use rym_span::Span;
 use rym_tt::{Delimiter, LitKind, Token, TokenKind};
 use smol_str::SmolStr;
 
-use super::BuildLinear;
+use super::LinearLexer;
 
 #[track_caller]
 fn assert_results(src: &str, expect: &[Result<Token, Diagnostic>]) {
-	let got: Vec<_> = BuildLinear::new(src).collect();
+	let got: Vec<_> = LinearLexer::new(src).collect();
 	println!("{got:#?}");
 	assert_eq!(expect, got)
 }
 
 #[track_caller]
 fn assert_tokens(src: &str, expect: &[Token]) {
-	let got: Vec<Token> = BuildLinear::new(src)
+	let got: Vec<Token> = LinearLexer::new(src)
 		.map(|result| match result {
 			Ok(token) => token,
 			Err(err) => panic!("Expected no errors got: {err:?}"),
@@ -28,7 +28,7 @@ fn assert_tokens(src: &str, expect: &[Token]) {
 
 #[track_caller]
 fn assert_diagnostics(src: &str, expect: &[Diagnostic]) {
-	let got: Vec<_> = BuildLinear::new(src)
+	let got: Vec<_> = LinearLexer::new(src)
 		.filter_map(|result| match result {
 			Err(diagnostic) => Some(diagnostic),
 			_ => None,
@@ -40,7 +40,7 @@ fn assert_diagnostics(src: &str, expect: &[Diagnostic]) {
 
 #[track_caller]
 fn assert_token_kinds(src: &str, expect: &[TokenKind]) {
-	let got: Vec<TokenKind> = BuildLinear::new(src)
+	let got: Vec<TokenKind> = LinearLexer::new(src)
 		.map(|result| match result {
 			Ok(token) => token.kind,
 			Err(err) => panic!("Expected no errors got: {err:?}"),

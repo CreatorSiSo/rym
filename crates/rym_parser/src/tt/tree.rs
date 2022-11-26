@@ -1,19 +1,19 @@
-use super::BuildLinear;
-use rym_errors::{Diagnostic, Level};
+use super::LinearLexer;
+use rym_errors::{Diagnostic, Handler, Level};
 use rym_span::Span;
 use rym_tt::{DelimSpan, Token, TokenKind, TokenTree};
 
 #[derive(Debug)]
-pub struct BuildTree<'a> {
+pub struct TreeLexer<'a> {
 	/// Previous lexer stage that creates the tokens.
-	tokens: BuildLinear<'a>,
-	/// Saving all diagnostics to return them afterwards
-	diagnostics: Vec<Diagnostic>,
+	tokens: LinearLexer<'a>,
+	/// External struct to submit diagnostics to.
+	handler: &'a Handler,
 }
 
-impl<'a> BuildTree<'a> {
-	pub fn new(src: &'a str) -> Self {
-		Self { tokens: BuildLinear::new(src), diagnostics: vec![] }
+impl<'a> TreeLexer<'a> {
+	pub fn new(src: &'a str, handler: &'a Handler) -> Self {
+		Self { tokens: LinearLexer::new(src), handler }
 	}
 
 	pub fn is_next_newline(&self) -> bool {
@@ -25,7 +25,7 @@ impl<'a> BuildTree<'a> {
 			match result {
 				Ok(token) => return Some(token),
 				Err(diagnostic) => {
-					self.diagnostics.push(diagnostic);
+					self.handler.emit(diagnostic);
 					continue;
 				}
 			}
@@ -37,7 +37,7 @@ impl<'a> BuildTree<'a> {
 		loop {
 			match outer_token.kind {
 				TokenKind::CloseDelim(_) => {
-					self.diagnostics.push(Diagnostic::new_spanned(
+					self.handler.emit(Diagnostic::new_spanned(
 						Level::Error,
 						"Unexpected closing delimiter",
 						outer_token.span,
@@ -68,7 +68,7 @@ impl<'a> BuildTree<'a> {
 							Some(TokenTree::Delimited(delim_span, ..)) => close_span = delim_span.close,
 							None => (),
 						}
-						self.diagnostics.push(Diagnostic::new_spanned(
+						self.handler.emit(Diagnostic::new_spanned(
 							Level::Error,
 							"Unclosed delimiter",
 							Span::new(open_span.start, close_span.end),
@@ -91,13 +91,13 @@ impl<'a> BuildTree<'a> {
 	}
 }
 
-impl<'a> Iterator for BuildTree<'a> {
-	type Item = Result<TokenTree, Diagnostic>;
+impl<'a> Iterator for TreeLexer<'a> {
+	type Item = TokenTree;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		match self.bump() {
-			Some(token) => Some(Ok(self.next_tree(token))),
-			None => self.diagnostics.pop().map(|d| Err(d)),
+			Some(token) => Some(self.next_tree(token)),
+			None => None,
 		}
 	}
 }

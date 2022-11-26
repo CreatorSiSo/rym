@@ -8,7 +8,7 @@ use smol_str::SmolStr;
 type Pos = usize;
 
 #[derive(Clone, Debug)]
-pub(crate) struct BuildLinear<'a> {
+pub(crate) struct LinearLexer<'a> {
 	/// Absolute offset within the source of the current character.
 	pos: Pos,
 	/// Source text to tokenize.
@@ -17,7 +17,7 @@ pub(crate) struct BuildLinear<'a> {
 	cursor: Cursor<'a>,
 }
 
-impl<'a> BuildLinear<'a> {
+impl<'a> LinearLexer<'a> {
 	pub(crate) fn new(src: &'a str) -> Self {
 		Self { pos: 0, src, cursor: Cursor::new(src) }
 	}
@@ -82,7 +82,7 @@ impl<'a> BuildLinear<'a> {
 	}
 }
 
-impl Iterator for BuildLinear<'_> {
+impl Iterator for LinearLexer<'_> {
 	type Item = RymResult<Token>;
 
 	fn next(&mut self) -> Option<Self::Item> {

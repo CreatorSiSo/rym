@@ -1,24 +1,20 @@
 #![cfg(test)]
 
-use super::BuildTree;
-use rym_errors::{Diagnostic, Level};
+use super::TreeLexer;
+use rym_errors::{Diagnostic, Handler, Level};
 use rym_span::Span;
 use rym_tt::{DelimSpan, Delimiter, Token, TokenKind, TokenTree};
 use smol_str::SmolStr;
 
-fn map_tokentrees_errs(src: &str) -> (Vec<TokenTree>, Vec<Diagnostic>) {
-	BuildTree::new(src).fold((vec![], vec![]), |mut accum, result| {
-		match result {
-			Ok(tt) => accum.0.push(tt),
-			Err(err) => accum.1.push(err),
-		};
-		accum
-	})
+fn map_tokenstream_errors(src: &str) -> (Vec<TokenTree>, Vec<Diagnostic>) {
+	let mut error_handler = Handler::default();
+	let token_stream = TreeLexer::new(src, &mut error_handler).collect();
+	(token_stream, error_handler.collect())
 }
 
 #[track_caller]
 fn assert_tokentrees_errs(src: &str, ts: Vec<TokenTree>, errs: Vec<Diagnostic>) {
-	assert_eq!(map_tokentrees_errs(src), (ts, errs));
+	assert_eq!(map_tokenstream_errors(src), (ts, errs));
 }
 
 #[track_caller]
@@ -34,7 +30,7 @@ fn assert_kinds_errs(src: &str, kinds: Vec<TokenKindTree>, errs: Vec<Diagnostic>
 			accum
 		})
 	}
-	let got = map_tokentrees_errs(src);
+	let got = map_tokenstream_errors(src);
 	assert_eq!((got.1, transform(got.0)), (errs, kinds));
 }
 
@@ -153,9 +149,9 @@ fn unclosed() {
 			)],
 		)],
 		vec![
-			Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 3)),
-			Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(1, 3)),
 			Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(2, 3)),
+			Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(1, 3)),
+			Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 3)),
 		],
 	);
 	assert_kinds_errs(

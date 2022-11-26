@@ -1,7 +1,10 @@
 use rym_span::{Span, DUMMY_SPAN};
 
 mod emitter;
+mod handler;
 mod tests;
+
+pub use handler::Handler;
 
 pub type RymResult<T> = Result<T, Diagnostic>;
 

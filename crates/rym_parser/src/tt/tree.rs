@@ -1,9 +1,10 @@
-use super::LinearLexer;
 use rym_errors::{Diagnostic, Handler, Level};
 use rym_span::Span;
-use rym_tt::{DelimSpan, Token, TokenKind, TokenTree};
+use rym_tt::{DelimSpan, TokenTree};
 
-#[derive(Debug)]
+use super::linear::{LinearLexer, LinearToken, LinearTokenKind};
+
+#[derive(Debug, Clone)]
 pub struct TreeLexer<'a> {
 	/// Previous lexer stage that creates the tokens.
 	lexer: LinearLexer<'a>,
@@ -20,14 +21,14 @@ impl<'a> TreeLexer<'a> {
 		self.lexer.is_next_newline()
 	}
 
-	fn bump(&mut self) -> Option<Token> {
+	fn bump(&mut self) -> Option<LinearToken> {
 		self.lexer.next()
 	}
 
-	fn next_tree(&mut self, outer_token: Token) -> TokenTree {
+	fn next_tree(&mut self, outer_token: LinearToken) -> TokenTree {
 		loop {
 			match outer_token.kind {
-				TokenKind::CloseDelim(_) => {
+				LinearTokenKind::CloseDelim(_) => {
 					self.handler.emit(Diagnostic::new_spanned(
 						Level::Error,
 						"Unexpected closing delimiter",
@@ -35,7 +36,7 @@ impl<'a> TreeLexer<'a> {
 					));
 					continue;
 				}
-				TokenKind::OpenDelim(open_delim) => {
+				LinearTokenKind::OpenDelim(open_delim) => {
 					let open_span = outer_token.span;
 					let mut close_span = open_span;
 					let mut tokens = vec![];
@@ -43,13 +44,13 @@ impl<'a> TreeLexer<'a> {
 
 					while let Some(inner_token) = self.bump() {
 						match inner_token.kind {
-							TokenKind::OpenDelim(..) => tokens.push(self.next_tree(inner_token)),
-							TokenKind::CloseDelim(close_delim) if close_delim == open_delim => {
+							LinearTokenKind::OpenDelim(..) => tokens.push(self.next_tree(inner_token)),
+							LinearTokenKind::CloseDelim(close_delim) if close_delim == open_delim => {
 								close_span = inner_token.span;
 								unclosed = false;
 								break;
 							}
-							_ => tokens.push(TokenTree::Token(inner_token)),
+							_ => tokens.push(TokenTree::Token(inner_token.into_token())),
 						}
 					}
 
@@ -76,7 +77,7 @@ impl<'a> TreeLexer<'a> {
 						tokens,
 					);
 				}
-				_ => break TokenTree::Token(outer_token),
+				_ => break TokenTree::Token(outer_token.into_token()),
 			}
 		}
 	}
@@ -86,9 +87,6 @@ impl<'a> Iterator for TreeLexer<'a> {
 	type Item = TokenTree;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		match self.bump() {
-			Some(token) => Some(self.next_tree(token)),
-			None => None,
-		}
+		self.bump().map(|token| self.next_tree(token))
 	}
 }

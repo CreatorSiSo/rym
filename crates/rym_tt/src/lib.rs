@@ -1,34 +1,10 @@
+use std::fmt::Debug;
+
 use rym_span::Span;
 use smol_str::SmolStr;
 
-/// ```
-/// # use rym_tt::*;
-/// # use rym_span::*;
-///
-/// let tt = TokenTree::Token(Token { kind: TokenKind::And, span: Span::new(2, 3) });
-/// let token_stream =
-/// TokenStream(vec![WrappedTt::Newline, WrappedTt::Tt(tt.clone())]);
-///
-/// let mut iter = token_stream.iter();
-/// let mut into_iter = token_stream.clone().into_iter();
-///
-/// assert_eq!(iter.peek(), Some(&tt));
-/// assert_eq!(into_iter.peek(), Some(&tt));
-///
-/// assert_eq!(iter.peek_wrapped(), Some(&WrappedTt::Newline));
-/// assert_eq!(into_iter.peek_wrapped(), Some(&WrappedTt::Newline));
-///
-/// assert_eq!(iter.is_next_newline(), true);
-/// assert_eq!(into_iter.is_next_newline(), true);
-///
-/// assert_eq!(iter.next(), Some(&tt));
-/// assert_eq!(into_iter.next(), Some(tt));
-///
-/// assert_eq!(iter.is_next_newline(), false);
-/// assert_eq!(into_iter.is_next_newline(), false);
-/// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct TokenStream(pub Vec<WrappedTt>);
+pub struct TokenStream(pub Vec<TokenTree>);
 
 impl TokenStream {
 	pub fn iter(&self) -> Iter<'_> {
@@ -36,43 +12,37 @@ impl TokenStream {
 	}
 }
 
-impl FromIterator<WrappedTt> for TokenStream {
-	fn from_iter<T: IntoIterator<Item = WrappedTt>>(iter: T) -> Self {
+impl FromIterator<TokenTree> for TokenStream {
+	fn from_iter<T: IntoIterator<Item = TokenTree>>(iter: T) -> Self {
 		Self(iter.into_iter().collect())
-	}
-}
-
-impl From<Vec<WrappedTt>> for TokenStream {
-	fn from(vec: Vec<WrappedTt>) -> Self {
-		TokenStream(vec)
 	}
 }
 
 impl From<Vec<TokenTree>> for TokenStream {
 	fn from(vec: Vec<TokenTree>) -> Self {
-		TokenStream(vec.into_iter().map(WrappedTt::Tt).collect())
+		TokenStream(vec)
 	}
 }
 
-pub trait TokenStreamIter {
+pub trait TokenStreamIter: Debug {
+	fn peek_unfiltered(&self) -> Option<&TokenTree>;
 	fn peek(&self) -> Option<&TokenTree>;
-	fn peek_wrapped(&self) -> Option<&WrappedTt>;
 
 	fn is_next_newline(&self) -> bool {
-		matches!(self.peek_wrapped(), Some(WrappedTt::Newline))
+		matches!(self.peek_unfiltered(), Some(tt) if tt.is_newline())
 	}
 }
 
 #[derive(Debug, Clone)]
-pub struct Iter<'a>(std::slice::Iter<'a, WrappedTt>);
+pub struct Iter<'a>(std::slice::Iter<'a, TokenTree>);
 
 impl TokenStreamIter for Iter<'_> {
-	fn peek(&self) -> Option<&TokenTree> {
-		self.clone().next()
+	fn peek_unfiltered(&self) -> Option<&TokenTree> {
+		self.0.clone().next()
 	}
 
-	fn peek_wrapped(&self) -> Option<&WrappedTt> {
-		self.0.clone().next()
+	fn peek(&self) -> Option<&TokenTree> {
+		self.clone().next()
 	}
 }
 
@@ -80,10 +50,10 @@ impl<'a> Iterator for Iter<'a> {
 	type Item = &'a TokenTree;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		for next in self.0.by_ref() {
-			match next {
-				WrappedTt::Newline => continue,
-				WrappedTt::Tt(tt) => return Some(tt),
+		for tt in self.0.by_ref() {
+			match tt {
+				_ if tt.is_newline() => continue,
+				_ => return Some(tt),
 			}
 		}
 		None
@@ -102,22 +72,15 @@ impl IntoIterator for TokenStream {
 }
 
 #[derive(Debug)]
-pub struct IntoIter(Vec<WrappedTt>);
+pub struct IntoIter(Vec<TokenTree>);
 
 impl TokenStreamIter for IntoIter {
 	fn peek(&self) -> Option<&TokenTree> {
-		for wrapped in self.0.iter() {
-			match wrapped {
-				WrappedTt::Tt(tt) => return Some(tt),
-				_ => continue,
-			}
-		}
-		None
+		self.0.iter().filter(|tt| !tt.is_newline()).last()
 	}
 
-	fn peek_wrapped(&self) -> Option<&WrappedTt> {
-		// Internal vec is reversed, so we get the last element
-		self.0.last()
+	fn peek_unfiltered(&self) -> Option<&TokenTree> {
+		self.0.iter().last()
 	}
 }
 
@@ -125,20 +88,14 @@ impl Iterator for IntoIter {
 	type Item = TokenTree;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		while let Some(next) = self.0.pop() {
-			match next {
-				WrappedTt::Newline => continue,
-				WrappedTt::Tt(tt) => return Some(tt),
+		while let Some(tt) = self.0.pop() {
+			match tt {
+				_ if tt.is_newline() => continue,
+				_ => return Some(tt),
 			}
 		}
 		None
 	}
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum WrappedTt {
-	Newline,
-	Tt(TokenTree),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -147,6 +104,37 @@ pub enum TokenTree {
 	Token(Token),
 	/// Delimited sequence of token trees.
 	Delimited(DelimSpan, Delimiter, TokenStream),
+}
+
+impl TokenTree {
+	fn is_newline(&self) -> bool {
+		matches!(self, TokenTree::Token(Token { kind: TokenKind::Newline, .. }))
+	}
+}
+
+#[cfg(test)]
+#[test]
+fn token_stream() {
+	let tt_1 = TokenTree::Token(Token { kind: TokenKind::And, span: Span::new(1, 2) });
+	let token_stream = TokenStream(vec![
+		TokenTree::Token(Token { kind: TokenKind::Newline, span: Span::new(0, 1) }),
+		tt_1.clone(),
+	]);
+
+	let mut iter = token_stream.iter();
+	let mut into_iter = token_stream.clone().into_iter();
+
+	assert_eq!(iter.peek(), Some(&tt_1));
+	assert_eq!(into_iter.peek(), Some(&tt_1));
+
+	assert_eq!(iter.is_next_newline(), true);
+	assert_eq!(into_iter.is_next_newline(), true);
+
+	assert_eq!(iter.next(), Some(&tt_1));
+	assert_eq!(into_iter.next(), Some(tt_1));
+
+	assert_eq!(iter.is_next_newline(), false);
+	assert_eq!(into_iter.is_next_newline(), false);
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -162,7 +150,11 @@ impl Token {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum TokenKind {
+	/// `\n`
+	Newline,
+
 	// Punctuation token.
 	/// `;`
 	Semi,
@@ -220,6 +212,10 @@ pub enum TokenKind {
 	GreaterThan,
 	/// `>=`
 	GreaterThanEq,
+
+	/// Delimiter token.
+	OpenDelim(Delimiter),
+	CloseDelim(Delimiter),
 
 	/// Indentifier token: `some_thing`, `test`
 	Ident(SmolStr),

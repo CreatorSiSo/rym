@@ -1,7 +1,7 @@
 use rym_errors::{Diagnostic, Handler, Level};
 use rym_lexer::{Cursor, PrimitiveLitKind, PrimitiveTokenKind};
 use rym_span::Span;
-use rym_tt::{Delimiter, LitKind};
+use rym_tt::{Delimiter, LitKind, Token, TokenKind};
 use rym_unescape::unquote;
 use smol_str::SmolStr;
 
@@ -43,9 +43,9 @@ impl<'a> LinearLexer<'a> {
 		&mut self,
 		span: &mut Span,
 		condition: PrimitiveTokenKind,
-		then: LinearTokenKind,
-		otherwise: LinearTokenKind,
-	) -> LinearTokenKind {
+		then: TokenKind,
+		otherwise: TokenKind,
+	) -> TokenKind {
 		if let Some((primitive_kind, end_span)) = self.peek() {
 			if primitive_kind == condition {
 				*span = Span::new(span.start, end_span.end);
@@ -62,14 +62,14 @@ impl<'a> LinearLexer<'a> {
 }
 
 impl Iterator for LinearLexer<'_> {
-	type Item = LinearToken;
+	type Item = Token;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		while let Some((primitive_kind, mut span)) = self.bump() {
 			let kind = match primitive_kind {
 				PrimitiveTokenKind::Whitespace => {
 					if self.src_from_span(&span).contains('\n') {
-						LinearTokenKind::Newline
+						TokenKind::Newline
 					} else {
 						continue;
 					}
@@ -92,99 +92,73 @@ impl Iterator for LinearLexer<'_> {
 				}
 
 				// Punctuation
-				PrimitiveTokenKind::Semi => LinearTokenKind::Semi,
+				PrimitiveTokenKind::Semi => TokenKind::Semi,
 				PrimitiveTokenKind::Colon => self.match_next(
 					&mut span,
 					PrimitiveTokenKind::Colon,
-					LinearTokenKind::ColonColon,
-					LinearTokenKind::Colon,
+					TokenKind::ColonColon,
+					TokenKind::Colon,
 				),
-				PrimitiveTokenKind::Comma => LinearTokenKind::Comma,
-				PrimitiveTokenKind::Dot => LinearTokenKind::Dot,
+				PrimitiveTokenKind::Comma => TokenKind::Comma,
+				PrimitiveTokenKind::Dot => TokenKind::Dot,
 
 				// Operator like
-				PrimitiveTokenKind::Or => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Or,
-					LinearTokenKind::OrOr,
-					LinearTokenKind::Or,
-				),
-				PrimitiveTokenKind::And => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::And,
-					LinearTokenKind::AndAnd,
-					LinearTokenKind::And,
-				),
-				PrimitiveTokenKind::Plus => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Eq,
-					LinearTokenKind::PlusEq,
-					LinearTokenKind::Plus,
-				),
-				PrimitiveTokenKind::Minus => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Eq,
-					LinearTokenKind::MinusEq,
-					LinearTokenKind::Minus,
-				),
-				PrimitiveTokenKind::Star => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Eq,
-					LinearTokenKind::StarEq,
-					LinearTokenKind::Star,
-				),
-				PrimitiveTokenKind::Slash => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Eq,
-					LinearTokenKind::SlashEq,
-					LinearTokenKind::Slash,
-				),
+				PrimitiveTokenKind::Or => {
+					self.match_next(&mut span, PrimitiveTokenKind::Or, TokenKind::OrOr, TokenKind::Or)
+				}
+				PrimitiveTokenKind::And => {
+					self.match_next(&mut span, PrimitiveTokenKind::And, TokenKind::AndAnd, TokenKind::And)
+				}
+				PrimitiveTokenKind::Plus => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::PlusEq, TokenKind::Plus)
+				}
+				PrimitiveTokenKind::Minus => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::MinusEq, TokenKind::Minus)
+				}
+				PrimitiveTokenKind::Star => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::StarEq, TokenKind::Star)
+				}
+				PrimitiveTokenKind::Slash => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::SlashEq, TokenKind::Slash)
+				}
 				PrimitiveTokenKind::Percent => self.match_next(
 					&mut span,
 					PrimitiveTokenKind::Eq,
-					LinearTokenKind::PercentEq,
-					LinearTokenKind::Percent,
+					TokenKind::PercentEq,
+					TokenKind::Percent,
 				),
-				PrimitiveTokenKind::Eq => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Eq,
-					LinearTokenKind::EqEq,
-					LinearTokenKind::Eq,
-				),
-				PrimitiveTokenKind::Bang => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Eq,
-					LinearTokenKind::BangEq,
-					LinearTokenKind::Bang,
-				),
+				PrimitiveTokenKind::Eq => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::EqEq, TokenKind::Eq)
+				}
+				PrimitiveTokenKind::Bang => {
+					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::BangEq, TokenKind::Bang)
+				}
 				PrimitiveTokenKind::LessThan => self.match_next(
 					&mut span,
 					PrimitiveTokenKind::Eq,
-					LinearTokenKind::LessThanEq,
-					LinearTokenKind::LessThan,
+					TokenKind::LessThanEq,
+					TokenKind::LessThan,
 				),
 				PrimitiveTokenKind::GreaterThan => self.match_next(
 					&mut span,
 					PrimitiveTokenKind::Eq,
-					LinearTokenKind::GreaterThanEq,
-					LinearTokenKind::GreaterThan,
+					TokenKind::GreaterThanEq,
+					TokenKind::GreaterThan,
 				),
 
 				// Delimiter
-				PrimitiveTokenKind::OpenParen => LinearTokenKind::OpenDelim(Delimiter::Paren),
-				PrimitiveTokenKind::CloseParen => LinearTokenKind::CloseDelim(Delimiter::Paren),
-				PrimitiveTokenKind::OpenBrace => LinearTokenKind::OpenDelim(Delimiter::Brace),
-				PrimitiveTokenKind::CloseBrace => LinearTokenKind::CloseDelim(Delimiter::Brace),
-				PrimitiveTokenKind::OpenBracket => LinearTokenKind::OpenDelim(Delimiter::Bracket),
-				PrimitiveTokenKind::CloseBracket => LinearTokenKind::CloseDelim(Delimiter::Bracket),
+				PrimitiveTokenKind::OpenParen => TokenKind::OpenDelim(Delimiter::Paren),
+				PrimitiveTokenKind::CloseParen => TokenKind::CloseDelim(Delimiter::Paren),
+				PrimitiveTokenKind::OpenBrace => TokenKind::OpenDelim(Delimiter::Brace),
+				PrimitiveTokenKind::CloseBrace => TokenKind::CloseDelim(Delimiter::Brace),
+				PrimitiveTokenKind::OpenBracket => TokenKind::OpenDelim(Delimiter::Bracket),
+				PrimitiveTokenKind::CloseBracket => TokenKind::CloseDelim(Delimiter::Bracket),
 
 				// Indentifier or Keyword
-				PrimitiveTokenKind::Ident => {
-					LinearTokenKind::Ident(SmolStr::new(self.src_from_span(&span)))
-				}
+				PrimitiveTokenKind::Ident => TokenKind::Ident(SmolStr::new(self.src_from_span(&span))),
 
 				PrimitiveTokenKind::Literal { kind } => match kind {
-					PrimitiveLitKind::Integer => LinearTokenKind::Literal(LitKind::Integer(
+					PrimitiveLitKind::Integer => TokenKind::Literal(LitKind::Integer(
 						match self
 							.src_from_span(&span)
 							.chars()
@@ -199,7 +173,7 @@ impl Iterator for LinearLexer<'_> {
 							),
 						},
 					)),
-					PrimitiveLitKind::Float => LinearTokenKind::Literal(LitKind::Float(
+					PrimitiveLitKind::Float => TokenKind::Literal(LitKind::Float(
 						match self
 							.src_from_span(&span)
 							.chars()
@@ -230,7 +204,7 @@ impl Iterator for LinearLexer<'_> {
 							Ok(string) => string,
 							Err(err) => todo!("Unquote error: {err}"),
 						};
-						LinearTokenKind::Literal(LitKind::Char(match string.parse::<char>() {
+						TokenKind::Literal(LitKind::Char(match string.parse::<char>() {
 							Ok(char) => char,
 							Err(err) => {
 								self.handler.emit(Diagnostic::new_spanned(
@@ -261,7 +235,7 @@ impl Iterator for LinearLexer<'_> {
 								continue;
 							}
 						};
-						LinearTokenKind::Literal(LitKind::String(string))
+						TokenKind::Literal(LitKind::String(string))
 					}
 				},
 
@@ -280,94 +254,8 @@ impl Iterator for LinearLexer<'_> {
 				}
 			};
 
-			return Some(LinearToken::new(kind, span));
+			return Some(Token::new(kind, span));
 		}
 		None
 	}
-}
-
-#[derive(Debug, PartialEq)]
-pub(crate) struct LinearToken {
-	pub(crate) kind: LinearTokenKind,
-	pub(crate) span: Span,
-}
-
-impl LinearToken {
-	pub(crate) const fn new(kind: LinearTokenKind, span: Span) -> Self {
-		Self { kind, span }
-	}
-}
-
-#[derive(Debug, PartialEq)]
-pub(crate) enum LinearTokenKind {
-	/// `\n`
-	Newline,
-
-	// Punctuation token.
-	/// `;`
-	Semi,
-	/// `:`
-	Colon,
-	/// `::`
-	ColonColon,
-	/// `,`
-	Comma,
-	/// `.`
-	Dot,
-
-	// Operator like token.
-	/// `|`
-	Or,
-	/// `||`
-	OrOr,
-	/// `&`
-	And,
-	/// `&&`
-	AndAnd,
-	/// `+`
-	Plus,
-	/// `+=`
-	PlusEq,
-	/// `-`
-	Minus,
-	/// `-=`
-	MinusEq,
-	/// `*`
-	Star,
-	/// `*=`
-	StarEq,
-	/// `/`
-	Slash,
-	/// `/=`
-	SlashEq,
-	/// `%`
-	Percent,
-	/// `%=`
-	PercentEq,
-	/// `!`
-	Bang,
-	/// `!=`
-	BangEq,
-	/// `=`
-	Eq,
-	/// `==`
-	EqEq,
-	/// `<`
-	LessThan,
-	/// `<=`
-	LessThanEq,
-	/// `>`
-	GreaterThan,
-	/// `>=`
-	GreaterThanEq,
-
-	/// Delimiter token.
-	OpenDelim(Delimiter),
-	CloseDelim(Delimiter),
-
-	/// Indentifier token: `some_thing`, `test`
-	Ident(SmolStr),
-
-	/// Literal token: `"Hello World!"`, `'\n'`, `36_254`, `0.2346`
-	Literal(LitKind),
 }

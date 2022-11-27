@@ -1,8 +1,8 @@
 use rym_errors::{Diagnostic, Handler, Level};
 use rym_span::Span;
-use rym_tt::{DelimSpan, Token, TokenKind, TokenStream, TokenTree, WrappedTt};
+use rym_tt::{DelimSpan, Token, TokenKind, TokenStream, TokenTree};
 
-use super::linear::{LinearLexer, LinearToken, LinearTokenKind};
+use super::linear::LinearLexer;
 
 #[derive(Debug, Clone)]
 pub struct TreeLexer<'a> {
@@ -17,14 +17,14 @@ impl<'a> TreeLexer<'a> {
 		Self { linear: LinearLexer::new(src, handler), handler }
 	}
 
-	fn bump(&mut self) -> Option<LinearToken> {
+	fn bump(&mut self) -> Option<Token> {
 		self.linear.next()
 	}
 
-	fn next_tt(&mut self, outer_token: LinearToken) -> WrappedTt {
+	fn next_tt(&mut self, outer_token: Token) -> TokenTree {
 		loop {
 			match outer_token.kind {
-				LinearTokenKind::CloseDelim(_) => {
+				TokenKind::CloseDelim(_) => {
 					self.handler.emit(Diagnostic::new_spanned(
 						Level::Error,
 						"Unexpected closing delimiter",
@@ -32,7 +32,7 @@ impl<'a> TreeLexer<'a> {
 					));
 					continue;
 				}
-				LinearTokenKind::OpenDelim(open_delim) => {
+				TokenKind::OpenDelim(open_delim) => {
 					let open_span = outer_token.span;
 					let mut close_span = open_span;
 					let mut token_stream = vec![];
@@ -40,23 +40,19 @@ impl<'a> TreeLexer<'a> {
 
 					while let Some(inner_token) = self.bump() {
 						let tt = match inner_token.kind {
-							LinearTokenKind::Newline => {
-								token_stream.push(WrappedTt::Newline);
-								continue;
-							}
-							LinearTokenKind::OpenDelim(..) => self.next_tt(inner_token),
-							LinearTokenKind::CloseDelim(close_delim) if close_delim == open_delim => {
+							TokenKind::OpenDelim(..) => self.next_tt(inner_token),
+							TokenKind::CloseDelim(close_delim) if close_delim == open_delim => {
 								close_span = inner_token.span;
 								unclosed = false;
 								break;
 							}
-							_ => linear_token_into_wrapped_tt(inner_token),
+							_ => TokenTree::Token(inner_token),
 						};
 						token_stream.push(tt);
 					}
 
 					if unclosed {
-						if let Some(WrappedTt::Tt(tt)) = token_stream.last() {
+						if let Some(tt) = token_stream.last() {
 							close_span = match tt {
 								TokenTree::Token(token) => token.span,
 								TokenTree::Delimited(delim_span, ..) => delim_span.close,
@@ -69,7 +65,7 @@ impl<'a> TreeLexer<'a> {
 						))
 					}
 
-					break WrappedTt::Tt(TokenTree::Delimited(
+					break TokenTree::Delimited(
 						DelimSpan {
 							open: open_span,
 							close: close_span,
@@ -77,56 +73,16 @@ impl<'a> TreeLexer<'a> {
 						},
 						open_delim,
 						TokenStream(token_stream),
-					));
+					);
 				}
-				_ => break linear_token_into_wrapped_tt(outer_token),
+				_ => break TokenTree::Token(outer_token),
 			}
 		}
 	}
 }
 
-// TODO: Benchmark if #[inline] makes a difference here
-/// ## Panic
-/// Panics if linear_token.kind is `LinearTokenKind::OpenDelim` | `LinearTokenKind::CloseDelim`
-fn linear_token_into_wrapped_tt(LinearToken { kind, span }: LinearToken) -> WrappedTt {
-	let kind = match kind {
-		LinearTokenKind::Newline => return WrappedTt::Newline,
-		LinearTokenKind::Semi => TokenKind::Semi,
-		LinearTokenKind::Colon => TokenKind::Colon,
-		LinearTokenKind::ColonColon => TokenKind::ColonColon,
-		LinearTokenKind::Comma => TokenKind::Comma,
-		LinearTokenKind::Dot => TokenKind::Dot,
-		LinearTokenKind::Or => TokenKind::Or,
-		LinearTokenKind::OrOr => TokenKind::OrOr,
-		LinearTokenKind::And => TokenKind::And,
-		LinearTokenKind::AndAnd => TokenKind::AndAnd,
-		LinearTokenKind::Plus => TokenKind::Plus,
-		LinearTokenKind::PlusEq => TokenKind::PlusEq,
-		LinearTokenKind::Minus => TokenKind::Minus,
-		LinearTokenKind::MinusEq => TokenKind::MinusEq,
-		LinearTokenKind::Star => TokenKind::Star,
-		LinearTokenKind::StarEq => TokenKind::StarEq,
-		LinearTokenKind::Slash => TokenKind::Slash,
-		LinearTokenKind::SlashEq => TokenKind::SlashEq,
-		LinearTokenKind::Percent => TokenKind::Percent,
-		LinearTokenKind::PercentEq => TokenKind::PercentEq,
-		LinearTokenKind::Bang => TokenKind::Bang,
-		LinearTokenKind::BangEq => TokenKind::BangEq,
-		LinearTokenKind::Eq => TokenKind::Eq,
-		LinearTokenKind::EqEq => TokenKind::EqEq,
-		LinearTokenKind::LessThan => TokenKind::LessThan,
-		LinearTokenKind::LessThanEq => TokenKind::LessThanEq,
-		LinearTokenKind::GreaterThan => TokenKind::GreaterThan,
-		LinearTokenKind::GreaterThanEq => TokenKind::GreaterThanEq,
-		LinearTokenKind::Ident(name) => TokenKind::Ident(name),
-		LinearTokenKind::Literal(lit) => TokenKind::Literal(lit),
-		delim => unreachable!("Internal Error: Cannot convert {delim:?} to TokenKind"),
-	};
-	WrappedTt::Tt(TokenTree::Token(Token { kind, span }))
-}
-
 impl<'a> Iterator for TreeLexer<'a> {
-	type Item = WrappedTt;
+	type Item = TokenTree;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		self.bump().map(|token| self.next_tt(token))

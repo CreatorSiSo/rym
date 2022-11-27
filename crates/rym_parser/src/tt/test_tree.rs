@@ -1,35 +1,37 @@
 #![cfg(test)]
 
-use super::TreeLexer;
 use rym_errors::{Diagnostic, Handler, Level};
 use rym_span::Span;
-use rym_tt::{DelimSpan, Delimiter, Token, TokenKind, TokenTree};
+use rym_tt::{DelimSpan, Delimiter, Token, TokenKind, TokenStream, TokenTree};
 use smol_str::SmolStr;
 
-fn map_tokenstream_errors(src: &str) -> (Vec<TokenTree>, Vec<Diagnostic>) {
+use super::TreeLexer;
+
+fn map_tokenstream_errors(src: &str) -> (TokenStream, Vec<Diagnostic>) {
 	let mut error_handler = Handler::default();
-	let token_stream = TreeLexer::new(src, &mut error_handler).collect();
+	let token_stream: TokenStream = TreeLexer::new(src, &mut error_handler).collect();
 	(token_stream, error_handler.collect())
 }
 
 #[track_caller]
-fn assert_tokentrees_errs(src: &str, ts: Vec<TokenTree>, errs: Vec<Diagnostic>) {
-	assert_eq!(map_tokenstream_errors(src), (ts, errs));
+fn assert_tokentrees_errs(src: &str, ts: impl Into<TokenStream>, errs: Vec<Diagnostic>) {
+	assert_eq!(map_tokenstream_errors(src), (ts.into(), errs));
 }
 
 #[track_caller]
 fn assert_kinds_errs(src: &str, kinds: Vec<TokenKindTree>, errs: Vec<Diagnostic>) {
-	fn transform(tokens: Vec<TokenTree>) -> Vec<TokenKindTree> {
-		tokens.into_iter().fold(vec![], |mut accum, tt| {
+	fn transform(token_stream: TokenStream) -> Vec<TokenKindTree> {
+		token_stream.into_iter().fold(vec![], |mut accum, tt| {
 			match tt {
 				TokenTree::Token(token) => accum.push(TokenKindTree::Kind(token.kind)),
-				TokenTree::Delimited(_, delim, tokens) => {
-					accum.push(TokenKindTree::Delimited(delim, transform(tokens)))
+				TokenTree::Delimited(_, delim, delim_ts) => {
+					accum.push(TokenKindTree::Delimited(delim, transform(delim_ts)))
 				}
 			};
 			accum
 		})
 	}
+
 	let got = map_tokenstream_errors(src);
 	assert_eq!((got.1, transform(got.0)), (errs, kinds));
 }
@@ -51,7 +53,7 @@ fn call() {
 			TokenTree::Delimited(
 				DelimSpan { open: Span::new(10, 11), close: Span::new(11, 12), entire: Span::new(10, 12) },
 				rym_tt::Delimiter::Paren,
-				vec![],
+				TokenStream(vec![]),
 			),
 		],
 		vec![],
@@ -73,7 +75,8 @@ fn call() {
 					TokenTree::Token(Token::new(TokenKind::Ident(SmolStr::new("bool")), Span::new(26, 30))),
 					TokenTree::Token(Token::new(TokenKind::Eq, Span::new(31, 32))),
 					TokenTree::Token(Token::new(TokenKind::Ident(SmolStr::new("true")), Span::new(33, 37))),
-				],
+				]
+				.into(),
 			),
 		],
 		vec![],

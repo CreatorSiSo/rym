@@ -1,7 +1,7 @@
 use rym_errors::{Diagnostic, Handler, Level};
 use rym_lexer::{Cursor, PrimitiveLitKind, PrimitiveTokenKind};
 use rym_span::Span;
-use rym_tt::{Delimiter, LitKind, Token, TokenKind};
+use rym_tt::{Delimiter, LitKind};
 use rym_unescape::unquote;
 use smol_str::SmolStr;
 
@@ -22,16 +22,6 @@ pub(crate) struct LinearLexer<'a> {
 impl<'a> LinearLexer<'a> {
 	pub(crate) fn new(src: &'a str, handler: &'a Handler) -> Self {
 		Self { pos: 0, src, cursor: Cursor::new(src), handler }
-	}
-
-	pub(crate) fn is_next_newline(&self) -> bool {
-		if let Some((kind, span)) = self.peek() {
-			dbg!(format!("{span}: >{}<", self.src_from_span(&span)));
-			if kind == PrimitiveTokenKind::Whitespace && self.src_from_span(&span).contains('\n') {
-				return true;
-			}
-		}
-		false
 	}
 
 	fn bump(&mut self) -> Option<(PrimitiveTokenKind, Span)> {
@@ -77,7 +67,14 @@ impl Iterator for LinearLexer<'_> {
 	fn next(&mut self) -> Option<Self::Item> {
 		while let Some((primitive_kind, mut span)) = self.bump() {
 			let kind = match primitive_kind {
-				PrimitiveTokenKind::Whitespace | PrimitiveTokenKind::LineComment => continue,
+				PrimitiveTokenKind::Whitespace => {
+					if self.src_from_span(&span).contains('\n') {
+						LinearTokenKind::Newline
+					} else {
+						continue;
+					}
+				}
+				PrimitiveTokenKind::LineComment => continue,
 				PrimitiveTokenKind::BlockComment { terminated } => {
 					if terminated {
 						continue;
@@ -299,49 +296,13 @@ impl LinearToken {
 	pub(crate) const fn new(kind: LinearTokenKind, span: Span) -> Self {
 		Self { kind, span }
 	}
-
-	// TODO: Benchmark if #[inline] makes a difference here
-	/// ## Panic
-	/// Panics if self.kind is `LinearTokenKind::OpenDelim` | `LinearTokenKind::CloseDelim`
-	pub(crate) fn into_token(self) -> Token {
-		let kind = match self.kind {
-			LinearTokenKind::Semi => TokenKind::Semi,
-			LinearTokenKind::Colon => TokenKind::Colon,
-			LinearTokenKind::ColonColon => TokenKind::ColonColon,
-			LinearTokenKind::Comma => TokenKind::Comma,
-			LinearTokenKind::Dot => TokenKind::Dot,
-			LinearTokenKind::Or => TokenKind::Or,
-			LinearTokenKind::OrOr => TokenKind::OrOr,
-			LinearTokenKind::And => TokenKind::And,
-			LinearTokenKind::AndAnd => TokenKind::AndAnd,
-			LinearTokenKind::Plus => TokenKind::Plus,
-			LinearTokenKind::PlusEq => TokenKind::PlusEq,
-			LinearTokenKind::Minus => TokenKind::Minus,
-			LinearTokenKind::MinusEq => TokenKind::MinusEq,
-			LinearTokenKind::Star => TokenKind::Star,
-			LinearTokenKind::StarEq => TokenKind::StarEq,
-			LinearTokenKind::Slash => TokenKind::Slash,
-			LinearTokenKind::SlashEq => TokenKind::SlashEq,
-			LinearTokenKind::Percent => TokenKind::Percent,
-			LinearTokenKind::PercentEq => TokenKind::PercentEq,
-			LinearTokenKind::Bang => TokenKind::Bang,
-			LinearTokenKind::BangEq => TokenKind::BangEq,
-			LinearTokenKind::Eq => TokenKind::Eq,
-			LinearTokenKind::EqEq => TokenKind::EqEq,
-			LinearTokenKind::LessThan => TokenKind::LessThan,
-			LinearTokenKind::LessThanEq => TokenKind::LessThanEq,
-			LinearTokenKind::GreaterThan => TokenKind::GreaterThan,
-			LinearTokenKind::GreaterThanEq => TokenKind::GreaterThanEq,
-			LinearTokenKind::Ident(name) => TokenKind::Ident(name),
-			LinearTokenKind::Literal(lit) => TokenKind::Literal(lit),
-			delim => unreachable!("Internal Error: Cannot convert {delim:?} to TokenKind"),
-		};
-		Token { kind, span: self.span }
-	}
 }
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum LinearTokenKind {
+	/// `\n`
+	Newline,
+
 	// Punctuation token.
 	/// `;`
 	Semi,

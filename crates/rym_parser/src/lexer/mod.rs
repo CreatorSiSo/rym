@@ -1,9 +1,12 @@
 use rym_errors::{Diagnostic, Handler, Level};
 use rym_lexer::{Cursor, PrimitiveLitKind, PrimitiveTokenKind};
 use rym_span::Span;
-use rym_tt::{Delimiter, LitKind, Token, TokenKind};
 use rym_unescape::unquote;
 use smol_str::SmolStr;
+
+mod test;
+mod token_stream;
+pub use token_stream::*;
 
 type Pos = usize;
 
@@ -155,7 +158,13 @@ impl Iterator for LinearLexer<'_> {
 				PrimitiveTokenKind::CloseBracket => TokenKind::CloseDelim(Delimiter::Bracket),
 
 				// Indentifier or Keyword
-				PrimitiveTokenKind::Ident => TokenKind::Ident(SmolStr::new(self.src_from_span(&span))),
+				PrimitiveTokenKind::Ident => {
+					let name = self.src_from_span(&span);
+					match KEYWORDS_MAP.0.iter().position(|kw| *kw == name) {
+						Some(pos) => KEYWORDS_MAP.1[pos].clone(),
+						None => TokenKind::Ident(SmolStr::new(name)),
+					}
+				}
 
 				PrimitiveTokenKind::Literal { kind } => match kind {
 					PrimitiveLitKind::Integer => TokenKind::Literal(LitKind::Integer(

@@ -2,10 +2,9 @@
 
 use rym_errors::{Diagnostic, Handler, Level};
 use rym_span::Span;
-use rym_tt::{Delimiter, LitKind, Token, TokenKind};
 use smol_str::SmolStr;
 
-use super::linear::LinearLexer;
+use super::{Delimiter, LinearLexer, LitKind, Token, TokenKind};
 
 #[track_caller]
 fn assert_results(src: &str, expect: &[Token], diagnostics: &[Diagnostic]) {
@@ -56,14 +55,14 @@ fn expr_if() {
 	assert_tokens(
 		src,
 		&[
-			Token::new(TokenKind::Ident(SmolStr::new("if")), Span::new(0, 2)),
+			Token::new(TokenKind::If, Span::new(0, 2)),
 			Token::new(TokenKind::Ident(SmolStr::new("test")), Span::new(3, 7)),
 			Token::new(TokenKind::EqEq, Span::new(8, 10)),
 			Token::new(TokenKind::Ident(SmolStr::new("true")), Span::new(11, 15)),
 			Token::new(TokenKind::OpenDelim(Delimiter::Brace), Span::new(16, 17)),
 			Token::new(TokenKind::Literal(LitKind::String("is correct".into())), Span::new(18, 30)),
 			Token::new(TokenKind::CloseDelim(Delimiter::Brace), Span::new(31, 32)),
-			Token::new(TokenKind::Ident(SmolStr::new("else")), Span::new(33, 37)),
+			Token::new(TokenKind::Else, Span::new(33, 37)),
 			Token::new(TokenKind::OpenDelim(Delimiter::Brace), Span::new(38, 39)),
 			Token::new(TokenKind::Literal(LitKind::String("is not correct".into())), Span::new(40, 56)),
 			Token::new(TokenKind::CloseDelim(Delimiter::Brace), Span::new(57, 58)),
@@ -73,14 +72,14 @@ fn expr_if() {
 	assert_token_kinds(
 		src,
 		&[
-			TokenKind::Ident(SmolStr::new("if")),
+			TokenKind::If,
 			TokenKind::Ident(SmolStr::new("test")),
 			TokenKind::EqEq,
 			TokenKind::Ident(SmolStr::new("true")),
 			TokenKind::OpenDelim(Delimiter::Brace),
 			TokenKind::Literal(LitKind::String("is correct".into())),
 			TokenKind::CloseDelim(Delimiter::Brace),
-			TokenKind::Ident(SmolStr::new("else")),
+			TokenKind::Else,
 			TokenKind::OpenDelim(Delimiter::Brace),
 			TokenKind::Literal(LitKind::String("is not correct".into())),
 			TokenKind::CloseDelim(Delimiter::Brace),
@@ -210,4 +209,125 @@ fn unterminated() {
 				),
 		],
 	);
+}
+
+#[test]
+fn call() {
+	assert_tokens(
+		"empty_call()",
+		&[
+			Token::new(TokenKind::Ident(SmolStr::new("empty_call")), Span::new(0, 10)),
+			Token::new(TokenKind::OpenDelim(Delimiter::Paren), Span::new(10, 11)),
+			Token::new(TokenKind::CloseDelim(Delimiter::Paren), Span::new(11, 12)),
+		],
+	);
+	assert_tokens(
+		"call(arg_1: float, arg_2: bool = true)",
+		&[
+			Token::new(TokenKind::Ident(SmolStr::new("call")), Span::new(0, 4)),
+			Token::new(TokenKind::OpenDelim(Delimiter::Paren), Span::new(4, 5)),
+			Token::new(TokenKind::Ident(SmolStr::new("arg_1")), Span::new(5, 10)),
+			Token::new(TokenKind::Colon, Span::new(10, 11)),
+			Token::new(TokenKind::Ident(SmolStr::new("float")), Span::new(12, 17)),
+			Token::new(TokenKind::Comma, Span::new(17, 18)),
+			Token::new(TokenKind::Ident(SmolStr::new("arg_2")), Span::new(19, 24)),
+			Token::new(TokenKind::Colon, Span::new(24, 25)),
+			Token::new(TokenKind::Ident(SmolStr::new("bool")), Span::new(26, 30)),
+			Token::new(TokenKind::Eq, Span::new(31, 32)),
+			Token::new(TokenKind::Ident(SmolStr::new("true")), Span::new(33, 37)),
+			Token::new(TokenKind::CloseDelim(Delimiter::Paren), Span::new(37, 38)),
+		],
+	);
+	assert_token_kinds(
+		"call(arg_1: float, arg_2: bool = true)",
+		&[
+			TokenKind::Ident(SmolStr::new("call")),
+			TokenKind::OpenDelim(Delimiter::Paren),
+			TokenKind::Ident(SmolStr::new("arg_1")),
+			TokenKind::Colon,
+			TokenKind::Ident(SmolStr::new("float")),
+			TokenKind::Comma,
+			TokenKind::Ident(SmolStr::new("arg_2")),
+			TokenKind::Colon,
+			TokenKind::Ident(SmolStr::new("bool")),
+			TokenKind::Eq,
+			TokenKind::Ident(SmolStr::new("true")),
+			TokenKind::CloseDelim(Delimiter::Paren),
+		],
+	)
+}
+
+#[test]
+fn function() {
+	assert_token_kinds(
+		"fn add(a: int, b: int) -> int { a + b }",
+		&[
+			TokenKind::Fn,
+			TokenKind::Ident(SmolStr::new("add")),
+			TokenKind::OpenDelim(Delimiter::Paren),
+			TokenKind::Ident(SmolStr::new("a")),
+			TokenKind::Colon,
+			TokenKind::Ident(SmolStr::new("int")),
+			TokenKind::Comma,
+			TokenKind::Ident(SmolStr::new("b")),
+			TokenKind::Colon,
+			TokenKind::Ident(SmolStr::new("int")),
+			TokenKind::CloseDelim(Delimiter::Paren),
+			TokenKind::Minus,
+			TokenKind::GreaterThan,
+			TokenKind::Ident(SmolStr::new("int")),
+			TokenKind::OpenDelim(Delimiter::Brace),
+			TokenKind::Ident(SmolStr::new("a")),
+			TokenKind::Plus,
+			TokenKind::Ident(SmolStr::new("b")),
+			TokenKind::CloseDelim(Delimiter::Brace),
+		],
+	)
+}
+
+#[test]
+fn unclosed() {
+	// TODO Add multiline variants of tests
+	assert_results(
+		"({[",
+		&[
+			Token::new(TokenKind::OpenDelim(Delimiter::Paren), Span::new(0, 1)),
+			Token::new(TokenKind::OpenDelim(Delimiter::Brace), Span::new(1, 2)),
+			Token::new(TokenKind::OpenDelim(Delimiter::Bracket), Span::new(2, 3)),
+		],
+		&[
+			// TODO: Emit "Unclosed delimiter" errors
+			// Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(2, 3)),
+			// Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(1, 3)),
+			// Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 3)),
+		],
+	);
+	assert_results(
+		"{ a + b",
+		&[
+			Token::new(TokenKind::OpenDelim(Delimiter::Brace), Span::new(0, 1)),
+			Token::new(TokenKind::Ident(SmolStr::new("a")), Span::new(2, 3)),
+			Token::new(TokenKind::Plus, Span::new(4, 5)),
+			Token::new(TokenKind::Ident(SmolStr::new("b")), Span::new(6, 7)),
+		],
+		&[
+			// TODO: Emit "Unclosed delimiter" errors
+			// Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 7)),
+		],
+	);
+	assert_results(
+		"{ a + (b)",
+		&[
+			Token::new(TokenKind::OpenDelim(Delimiter::Brace), Span::new(0, 1)),
+			Token::new(TokenKind::Ident(SmolStr::new("a")), Span::new(2, 3)),
+			Token::new(TokenKind::Plus, Span::new(4, 5)),
+			Token::new(TokenKind::OpenDelim(Delimiter::Paren), Span::new(6, 7)),
+			Token::new(TokenKind::Ident(SmolStr::new("b")), Span::new(7, 8)),
+			Token::new(TokenKind::CloseDelim(Delimiter::Paren), Span::new(8, 9)),
+		],
+		&[
+			// TODO: Emit "Unclosed delimiter" errors
+			// Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 9)),
+		],
+	)
 }

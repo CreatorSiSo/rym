@@ -7,17 +7,15 @@
 //! Decl ⮕ VarDecl | TypeDecl | FnDecl | StructDecl | EnumDecl
 //!
 //! VarDecl ⮕ ("const" | "mut") Ident "=" Expr StmtEnd
+//! FnDecl ⮕ "fn" Ident "(" FnParams? ")" ("->" Type)? Block
+//! FnParams ⮕ Ident ("," Ident)* ","?
 //!
-//! TypeDecl ⮕ Ident "=" __TODO__ StmtEnd
-//!
-//! FnDecl ⮕ "fn" Ident "(" ArgsList ")" Block
-//!
+//! TypeDecl ⮕ "type" Ident "=" __TODO__ StmtEnd
 //! StructDecl ⮕ "struct" Ident (StmtEnd | "{" StructFields? "}" | "(" TupleFields? ")")
 //! StructFields ⮕ StructField ("," StructField)* ","?
 //! TupleFields ⮕ TupleField ("," TupleField)* ","?
 //! StructField ⮕ Ident ":" Type ("=" Expr)?
 //! TupleField ⮕ (Ident ":")? Type
-//!
 //! EnumDecl ⮕ "enum" Ident __TODO__
 //!
 //! Expr ⮕ ExprWithBlock | ExprWithoutBlock
@@ -40,7 +38,7 @@ use rym_span::Span;
 use smol_str::SmolStr;
 
 pub mod lexer;
-use lexer::{LinearLexer, LitKind, Tk, Token, TokenKind, TokenStream};
+use lexer::{Delimiter, LinearLexer, LitKind, Tk, TokenKind, TokenStream};
 
 pub fn parse(src: &str, handler: &Handler) -> Vec<Stmt> {
 	let mut token_stream: TokenStream = LinearLexer::new(src, handler).collect();
@@ -59,48 +57,88 @@ impl<'a> Parser<'a> {
 
 	/// ```ignore
 	/// Module ⮕ Stmt*
-	/// Stmt ⮕ (Decl | Expr) StmtEnd
 	/// ```
 	fn parse_module(&mut self, token_stream: &mut TokenStream) -> Vec<Stmt> {
 		let mut stmts = vec![];
 		loop {
-			let Some(token) = token_stream.peek(false) else {
-				break stmts;
-			};
-			let result = match token.kind {
-				TokenKind::Const => self.parse_var_decl(token_stream, false),
-				TokenKind::Mut => self.parse_var_decl(token_stream, true),
-				_ => todo!(), /* self.parse_expr(token_stream).map(Stmt::Expr) */
-			};
-			match result {
-				Ok(stmt) => {
-					stmts.push(stmt);
-					if let Err(err) = token_stream.expect(&[Tk::Semi, Tk::Newline]) {
-						self.handler.emit(err)
-					}
-				}
+			match self.parse_stmt(token_stream) {
+				Ok(maybe_stmt) => match maybe_stmt {
+					Some(stmt) => stmts.push(stmt),
+					None => return stmts,
+				},
 				Err(err) => self.handler.emit(err),
 			}
 		}
 	}
 
 	/// ```ignore
+	/// Stmt ⮕ (Decl | Expr) StmtEnd
+	/// ```
+	fn parse_stmt(&self, token_stream: &mut TokenStream) -> RymResult<Option<Stmt>> {
+		let Some(token) = token_stream.peek(false) else {
+			return Ok(None);
+		};
+		let stmt = match token.kind {
+			TokenKind::Const => self.parse_var_decl(token_stream, false),
+			TokenKind::Mut => self.parse_var_decl(token_stream, true),
+			TokenKind::Fn => self.parse_fn_decl(token_stream),
+			_ => return Ok(None), /* self.parse_expr(token_stream).map(Stmt::Expr) */
+		}?;
+		token_stream.expect(&[Tk::Eof, Tk::Newline, Tk::Semi, Tk::CloseDelim(Delimiter::Brace)])?;
+		Ok(Some(stmt))
+	}
+
+	/// ```ignore
 	/// VarDecl ⮕ ("const" | "mut") Ident "=" Expr
 	/// ```
-	fn parse_var_decl(&mut self, token_stream: &mut TokenStream, mutable: bool) -> RymResult<Stmt> {
+	fn parse_var_decl(&self, token_stream: &mut TokenStream, mutable: bool) -> RymResult<Stmt> {
 		token_stream.expect(&[Tk::Const, Tk::Mut])?;
-		let Token { kind: TokenKind::Ident(name), span } = token_stream.expect(Tk::Ident)? else {
-			unreachable!();
-		};
+		let name = token_stream.expect_ident()?;
 		token_stream.expect(Tk::Eq)?;
-		Ok(Stmt::VarDecl { name, mutable, ident_span: span })
+		Ok(Stmt::VarDecl { name, mutable })
+	}
+
+	/// ```ignore
+	/// FnDecl ⮕ "fn" Ident FnParams ("->" Type)? Block
+	/// ```
+	fn parse_fn_decl(&self, token_stream: &mut TokenStream) -> RymResult<Stmt> {
+		token_stream.expect(Tk::Fn)?;
+		let name = token_stream.expect_ident()?;
+		let params = self.parse_fn_params(token_stream)?;
+		let return_type = if token_stream.matches(Tk::Minus).is_some()
+			&& token_stream.expect(Tk::GreaterThan).is_ok()
+		{
+			Some(token_stream.expect_ident()?)
+		} else {
+			None
+		};
+		let body = self.parse_block(token_stream)?;
+		Ok(Stmt::FnDecl { name, params, return_type, body })
+	}
+
+	/// ```ignore
+	/// FnParams ⮕ "(" Inner? ")"
+	/// Inner ⮕ Ident ("," Ident)* ","?
+	/// ```
+	fn parse_fn_params(&self, token_stream: &mut TokenStream) -> RymResult<Vec<(SmolStr, Span)>> {
+		token_stream.expect(Tk::OpenDelim(Delimiter::Paren))?;
+		if token_stream.matches(Tk::CloseDelim(Delimiter::Paren)).is_some() {
+			return Ok(vec![]);
+		}
+
+		let mut params = vec![token_stream.expect_ident()?];
+		while let Some(..) = token_stream.matches(Tk::Comma) {
+			params.push(token_stream.expect_ident()?);
+		}
+		token_stream.matches(Tk::CloseDelim(Delimiter::Paren));
+		Ok(params)
 	}
 
 	/// Expr => UnaryExpr
-	fn parse_expr(&mut self, outer_ts: &mut TokenStream) -> RymResult<Expr> {
-		// let Some(l_tt) = outer_ts.next() else {
-		// 	return Err(Diagnostic::new(Level::Error, "Unexpected end of file"));
-		// };
+	fn parse_expr(&self, token_stream: &mut TokenStream) -> RymResult<Expr> {
+		let Some(_) = token_stream.matches(&[Tk::Literal, Tk::Ident]) else {
+			todo!()
+		};
 		// let lhs = match l_tt {
 		// 	Token { kind, span } => match kind {
 		// 		TokenKind::Ident(name) => Expr::Ident { name, span },
@@ -121,19 +159,15 @@ impl<'a> Parser<'a> {
 		// 	// let (r_tt, r_bp) = match binding_power(tt, lhs.is_none()) {};
 		// }
 
-		todo!()
+		// todo!()
+		Ok(Expr::Empty)
 	}
 
-	fn parse_block_expr(&self, token_stream: &mut TokenStream) -> RymResult<Expr> {
-		todo!()
-	}
-
-	fn parse_array_expr(&self, token_stream: &mut TokenStream) -> RymResult<Expr> {
-		todo!()
-	}
-
-	fn make_lit_expr(&self, lit: LitKind) -> Expr {
-		todo!()
+	fn parse_block(&self, token_stream: &mut TokenStream) -> RymResult<Block> {
+		let start = token_stream.expect(Tk::OpenDelim(Delimiter::Brace))?.span.start;
+		let stmts = vec![];
+		let end = token_stream.expect(Tk::CloseDelim(Delimiter::Brace))?.span.end;
+		Ok(Block { stmts, span: Span::new(start, end) })
 	}
 }
 
@@ -143,9 +177,24 @@ impl<'a> Parser<'a> {
 
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
-	VarDecl { name: SmolStr, mutable: bool, ident_span: Span },
-	Expr(Expr),
 	Empty,
+	Expr(Expr),
+	VarDecl {
+		name: (SmolStr, Span),
+		mutable: bool,
+	},
+	FnDecl {
+		name: (SmolStr, Span),
+		params: Vec<(SmolStr, Span)>,
+		return_type: Option<(SmolStr, Span)>,
+		body: Block,
+	},
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Block {
+	pub stmts: Vec<Stmt>,
+	pub span: Span,
 }
 
 #[derive(Debug, PartialEq)]
@@ -154,6 +203,7 @@ pub enum Expr {
 	Unary { op: UnaryOp, rhs: Box<Expr>, span: Span },
 	Ident { name: SmolStr, span: Span },
 	Literal { lit: LitKind, span: Span },
+	Empty,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -176,77 +226,4 @@ pub enum UnaryOp {
 	Not,
 	/// `-`
 	Neg,
-}
-
-#[cfg(test)]
-mod parse {
-	use super::*;
-	use indoc::indoc;
-	use rym_errors::Diagnostic;
-	use std::ops::Range;
-
-	#[track_caller]
-	fn assert_ast_errs(src: &str, expected: &[Stmt], errs: &[Diagnostic]) {
-		let handler = Handler::default();
-		let got_ast = parse(src, &handler);
-
-		let got_errs = handler.collect();
-		println!("{:?}", got_errs);
-		assert_eq!(&got_errs, errs);
-
-		assert_eq!(&got_ast, expected);
-	}
-
-	fn const_decl(name: &str, Range { start, end }: Range<usize>) -> Stmt {
-		Stmt::VarDecl { name: SmolStr::new(name), mutable: false, ident_span: Span { start, end } }
-	}
-
-	fn mut_decl(name: &str, Range { start, end }: Range<usize>) -> Stmt {
-		Stmt::VarDecl { name: SmolStr::new(name), mutable: true, ident_span: Span { start, end } }
-	}
-
-	fn expr_binary(lhs: Expr, op: BinaryOp, rhs: Expr, span: Range<usize>) -> Expr {
-		Expr::Binary {
-			lhs: Box::new(lhs),
-			op,
-			rhs: Box::new(rhs),
-			span: Span::new(span.start, span.end),
-		}
-	}
-
-	fn expr_ident(name: &str, span: Range<usize>) -> Expr {
-		Expr::Ident { name: SmolStr::new(name), span: Span::new(span.start, span.end) }
-	}
-
-	fn expr_lit(lit: impl Into<LitKind>, span: Range<usize>) -> Expr {
-		Expr::Literal { lit: lit.into(), span: Span::new(span.start, span.end) }
-	}
-
-	// #[test]
-	fn simple_addition() {
-		assert_ast_errs(
-			"src + 2",
-			&[Stmt::Expr(expr_binary(expr_ident("src", 0..3), BinaryOp::Add, expr_lit(2, 6..7), 0..7))],
-			&[],
-		);
-	}
-
-	#[test]
-	fn var_decl() {
-		assert_ast_errs(
-			"const	test1 = \n mut test2 = ;\n",
-			&[const_decl("test1", 6..11), mut_decl("test2", 20..25)],
-			&[],
-		);
-		assert_ast_errs(
-			indoc!(
-				r#"const
-				test1	=
-				mut	test2=;
-				"#
-			),
-			&[const_decl("test1", 6..11), mut_decl("test2", 18..23)],
-			&[],
-		);
-	}
 }

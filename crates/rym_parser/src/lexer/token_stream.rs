@@ -1,5 +1,5 @@
 use rym_errors::{Diagnostic, Level, RymResult};
-use rym_span::Span;
+use rym_span::{Span, DUMMY_SPAN};
 use smol_str::SmolStr;
 use std::fmt::Debug;
 use stringx::Join;
@@ -22,16 +22,46 @@ impl TokenStream {
 		Self { tokens, previous: None }
 	}
 
+	pub fn expect_ident(&mut self) -> RymResult<(SmolStr, Span)> {
+		let Token { kind: TokenKind::Ident(name), span } = self.expect(Tk::Ident)? else {
+			// SAFETY: TokenKind is checked to be Ident inside self.expect()
+			unsafe { std::hint::unreachable_unchecked() }
+		};
+		Ok((name, span))
+	}
+
 	/// Consume next token if it matches one of the token kinds in the pattern
+	/// otherwise return an error
 	pub fn expect<P: Pattern>(&mut self, pattern: P) -> RymResult<Token> {
-		// Only process newline tokens if we are expecting them
-		let process_newlines = pattern.contains_newline();
+		match self.matches(pattern.clone()) {
+			Some(token) => Ok(token),
+			None => match self.peek(pattern.includes(&Tk::Newline)) {
+				Some(got) => Err(Diagnostic::new_spanned(
+					Level::Error,
+					format!("Expected `{}` got `{:?}`", pattern.joined_str(" | "), got.kind),
+					got.span,
+				)),
+				None => {
+					Err(Diagnostic::new(Level::Error, format!("Expected `{}`", pattern.joined_str(" | "))))
+				}
+			},
+		}
+	}
+
+	/// Consume next token if it matches one of the token kinds in the pattern
+	pub fn matches<P: Pattern>(&mut self, pattern: P) -> Option<Token> {
+		// Only process newline tokens if the pattern contains them
+		let process_newlines = pattern.includes(&Tk::Newline);
 		let Some(got) = self.peek(process_newlines) else {
-			return Err(Diagnostic::new(Level::Error, format!("Expected `{}`", pattern.joined_str(" | "))));
+			return if pattern.includes(&Tk::Eof) {
+				Some(Token::new(TokenKind::Newline, DUMMY_SPAN))
+			} else {
+				None
+			};
 		};
 
 		if pattern.matches(&got.kind) {
-			return Ok(
+			return Some(
 				// SAFETY: Next token must exist because self.peek() is Some(..)
 				if process_newlines {
 					unsafe { self.next_unfiltered().unwrap_unchecked() }
@@ -41,10 +71,7 @@ impl TokenStream {
 			);
 		}
 
-		Err(Diagnostic::new(
-			Level::Error,
-			format!("Expected `{}` got `{:?}`", pattern.joined_str(" | "), got.kind),
-		))
+		None
 	}
 
 	pub fn peek(&self, process_newline: bool) -> Option<&Token> {
@@ -64,18 +91,6 @@ impl TokenStream {
 	}
 }
 
-impl FromIterator<Token> for TokenStream {
-	fn from_iter<T: IntoIterator<Item = Token>>(iter: T) -> Self {
-		Self::new(iter.into_iter().collect())
-	}
-}
-
-impl From<Vec<Token>> for TokenStream {
-	fn from(tokens: Vec<Token>) -> Self {
-		TokenStream::new(tokens)
-	}
-}
-
 impl Iterator for TokenStream {
 	type Item = Token;
 
@@ -87,6 +102,18 @@ impl Iterator for TokenStream {
 			}
 		}
 		None
+	}
+}
+
+impl FromIterator<Token> for TokenStream {
+	fn from_iter<T: IntoIterator<Item = Token>>(iter: T) -> Self {
+		Self::new(iter.into_iter().collect())
+	}
+}
+
+impl From<Vec<Token>> for TokenStream {
+	fn from(tokens: Vec<Token>) -> Self {
+		TokenStream::new(tokens)
 	}
 }
 
@@ -111,6 +138,8 @@ fn token_stream() {
 		token_stream.expect(Tk::Ident),
 		Ok(Token { kind: TokenKind::Ident(SmolStr::new("test")), span: Span::new(2, 6) })
 	);
+	assert_eq!(token_stream.expect(Tk::Eof), Ok(Token::new(TokenKind::Newline, DUMMY_SPAN)));
+	assert_eq!(token_stream.matches(Tk::Eof), Some(Token::new(TokenKind::Newline, DUMMY_SPAN)));
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -236,10 +265,10 @@ pub const KEYWORDS_MAP: ([&str; 8], [TokenKind; 8]) = (
 	],
 );
 
-pub trait Pattern {
+pub trait Pattern: Clone {
 	fn joined_str(&self, sep: &str) -> String;
 	fn matches(&self, other: &TokenKind) -> bool;
-	fn contains_newline(&self) -> bool;
+	fn includes(&self, x: &Tk) -> bool;
 }
 
 impl<const N: usize> Pattern for &[Tk; N] {
@@ -251,8 +280,8 @@ impl<const N: usize> Pattern for &[Tk; N] {
 		self.iter().any(|kind| kind.matches(other))
 	}
 
-	fn contains_newline(&self) -> bool {
-		self.contains(&Tk::Newline)
+	fn includes(&self, x: &Tk) -> bool {
+		self.contains(x)
 	}
 }
 
@@ -265,13 +294,14 @@ impl Pattern for Tk {
 		self.matches(other)
 	}
 
-	fn contains_newline(&self) -> bool {
-		self == &Tk::Newline
+	fn includes(&self, x: &Tk) -> bool {
+		self == x
 	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tk {
+	Eof,
 	Newline,
 
 	// Punctuation
@@ -320,10 +350,11 @@ pub enum Tk {
 
 	Ident,
 
-	LiteralString,
-	LiteralChar,
+	Literal,
 	LiteralInt,
 	LiteralFloat,
+	LiteralChar,
+	LiteralString,
 }
 
 impl Tk {
@@ -372,7 +403,8 @@ impl Tk {
 			| (TokenKind::While, Tk::While)
 			| (TokenKind::For, Tk::For) => true,
 
-			(TokenKind::OpenDelim(delim), Tk::OpenDelim(m_delim)) => matches!(
+			(TokenKind::OpenDelim(delim), Tk::OpenDelim(m_delim))
+			| (TokenKind::CloseDelim(delim), Tk::CloseDelim(m_delim)) => matches!(
 				(delim, m_delim),
 				(Delimiter::Paren, Delimiter::Paren)
 					| (Delimiter::Brace, Delimiter::Brace)
@@ -383,7 +415,8 @@ impl Tk {
 
 			(TokenKind::Literal(lit), kind_match) => matches!(
 				(lit, kind_match),
-				(LitKind::Int(_), Tk::LiteralInt)
+				(_, Tk::Literal)
+					| (LitKind::Int(_), Tk::LiteralInt)
 					| (LitKind::Float(_), Tk::LiteralFloat)
 					| (LitKind::Char(_), Tk::LiteralChar)
 					| (LitKind::String(_), Tk::LiteralString)

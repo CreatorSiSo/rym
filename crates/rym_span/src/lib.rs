@@ -43,20 +43,32 @@ impl Span {
 }
 
 impl From<&Span> for (usize, usize) {
-	fn from(span: &Span) -> (usize, usize) {
-		(span.start, span.end)
+	fn from(Span { start, end }: &Span) -> (usize, usize) {
+		(*start, *end)
 	}
 }
 
 impl From<Span> for (usize, usize) {
-	fn from(span: Span) -> (usize, usize) {
-		(span.start, span.end)
+	fn from(Span { start, end }: Span) -> (usize, usize) {
+		(start, end)
 	}
 }
 
 impl From<&Span> for Range<usize> {
-	fn from(span: &Span) -> Range<usize> {
-		Range { start: span.start, end: span.end }
+	fn from(Span { start, end }: &Span) -> Range<usize> {
+		Range { start: *start, end: *end }
+	}
+}
+
+impl From<Span> for Range<usize> {
+	fn from(Span { start, end }: Span) -> Range<usize> {
+		Range { start, end }
+	}
+}
+
+impl From<Range<usize>> for Span {
+	fn from(Range { start, end }: Range<usize>) -> Span {
+		Span { start, end }
 	}
 }
 

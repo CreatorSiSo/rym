@@ -11,25 +11,16 @@ struct Should {
 
 impl Should {
 	fn succeed() -> Self {
-		Self {
-			fail_lex: false,
-			fail_parse: false,
-			fail_exec: false,
-		}
+		Self { fail_lex: false, fail_parse: false, fail_exec: false }
 	}
 }
 
-#[test]
+// FIXME #[test]
 fn exec() {
 	for (path, src) in sources::SOURCES {
 		let path = path;
 		let should = if src.starts_with("//! fail") {
-			let flags: Vec<&str> = src[8..]
-				.lines()
-				.next()
-				.unwrap()
-				.split_whitespace()
-				.collect();
+			let flags: Vec<&str> = src[8..].lines().next().unwrap().split_whitespace().collect();
 			Should {
 				fail_lex: flags.contains(&"lex"),
 				fail_parse: flags.contains(&"parse"),
@@ -45,11 +36,7 @@ fn exec() {
 		let exec_result = Interpreter::default().eval(&ast);
 
 		match should {
-			Should {
-				fail_lex,
-				fail_parse,
-				fail_exec,
-			} => {
+			Should { fail_lex, fail_parse, fail_exec } => {
 				if fail_lex {
 					if lex_errors.is_empty() {
 						panic!("Expected lex errors got none, {path}");

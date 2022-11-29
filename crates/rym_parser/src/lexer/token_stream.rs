@@ -22,7 +22,6 @@ impl TokenStream {
 		Self { tokens, previous: None }
 	}
 
-	#[must_use]
 	/// Consume next token if it matches one of the token kinds in the pattern
 	pub fn expect<P: Pattern>(&mut self, pattern: P) -> RymResult<Token> {
 		// Only process newline tokens if we are expecting them
@@ -373,22 +372,22 @@ impl Tk {
 			| (TokenKind::While, Tk::While)
 			| (TokenKind::For, Tk::For) => true,
 
-			(TokenKind::OpenDelim(delim), Tk::OpenDelim(m_delim)) => match (delim, m_delim) {
+			(TokenKind::OpenDelim(delim), Tk::OpenDelim(m_delim)) => matches!(
+				(delim, m_delim),
 				(Delimiter::Paren, Delimiter::Paren)
-				| (Delimiter::Brace, Delimiter::Brace)
-				| (Delimiter::Bracket, Delimiter::Bracket) => true,
-				_ => false,
-			},
+					| (Delimiter::Brace, Delimiter::Brace)
+					| (Delimiter::Bracket, Delimiter::Bracket)
+			),
 
 			(TokenKind::Ident(..), Tk::Ident) => true,
 
-			(TokenKind::Literal(lit), kind_match) => match (lit, kind_match) {
+			(TokenKind::Literal(lit), kind_match) => matches!(
+				(lit, kind_match),
 				(LitKind::Int(_), Tk::LiteralInt)
-				| (LitKind::Float(_), Tk::LiteralFloat)
-				| (LitKind::Char(_), Tk::LiteralChar)
-				| (LitKind::String(_), Tk::LiteralString) => true,
-				_ => false,
-			},
+					| (LitKind::Float(_), Tk::LiteralFloat)
+					| (LitKind::Char(_), Tk::LiteralChar)
+					| (LitKind::String(_), Tk::LiteralString)
+			),
 
 			_ => false,
 		}

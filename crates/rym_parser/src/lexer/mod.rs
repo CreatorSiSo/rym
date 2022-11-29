@@ -167,7 +167,7 @@ impl Iterator for LinearLexer<'_> {
 				}
 
 				PrimitiveTokenKind::Literal { kind } => match kind {
-					PrimitiveLitKind::Integer => TokenKind::Literal(LitKind::Integer(
+					PrimitiveLitKind::Integer => TokenKind::Literal(LitKind::Int(
 						match self
 							.src_from_span(&span)
 							.chars()

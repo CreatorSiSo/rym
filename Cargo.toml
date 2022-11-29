@@ -29,6 +29,7 @@ rym_errors = { path = "crates/rym_errors" }
 rym_lexer = { path = "crates/rym_lexer" }
 rym_span = { path = "crates/rym_span" }
 rym_unescape = { path = "crates/rym_unescape" }
+indoc = "1.0.7"
 smol_str = "0.1.23"
 stringx = "0.1.1"
 

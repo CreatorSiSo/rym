@@ -93,7 +93,7 @@ fn literals() {
 	assert_token_kinds(
 		r#"999_999_999 1.284_324_68 'c' '\n' '\x41' '\u24B6' '\u8DEF' "Hello World!\n""#,
 		&[
-			TokenKind::Literal(LitKind::Integer(999_999_999)),
+			TokenKind::Literal(LitKind::Int(999_999_999)),
 			TokenKind::Literal(LitKind::Float(1.284_324_68)),
 			TokenKind::Literal(LitKind::Char('c')),
 			TokenKind::Literal(LitKind::Char('\n')),

@@ -10,4 +10,6 @@ rym_errors.workspace = true
 rym_lexer.workspace = true
 rym_span.workspace = true
 rym_unescape.workspace = true
+indoc.workspace = true
 smol_str.workspace = true
+stringx.workspace = true

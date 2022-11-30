@@ -1,36 +1,70 @@
 //! # Rym Grammar
 //!
 //! ```ignore
-//! Module ⮕ Stmt*
-//! Stmt ⮕ Expr | Decl
+//! File ⮕ Item*
+//! Item ⮕ Module | Use | Function | Enum | Struct | Trait | Implementation
 //!
-//! Decl ⮕ VarDecl | TypeDecl | FnDecl | StructDecl | EnumDecl
+//! Module ⮕ "module" Ident "{" Item* "}"
 //!
-//! VarDecl ⮕ ("const" | "mut") Ident "=" Expr StmtEnd
-//! FnDecl ⮕ "fn" Ident "(" FnParams? ")" ("->" Type)? Block
-//! FnParams ⮕ Ident ("," Ident)* ","?
+//! Use ⮕ "use" UseTree ItemEnd
+//! UseTree ⮕ Path | Path "::" "*" | Path "::" "{" (UseTree ("," UseTree)*)? "}"
 //!
-//! TypeDecl ⮕ "type" Ident "=" __TODO__ StmtEnd
-//! StructDecl ⮕ "struct" Ident (StmtEnd | "{" StructFields? "}" | "(" TupleFields? ")")
-//! StructFields ⮕ StructField ("," StructField)* ","?
+//! Function ⮕ "fn" Ident "(" FunctionParams? ")" ("->" Type)? BlockExpr
+//! FunctionParams ⮕ Ident ("," Ident)* ","?
+//!
+//! Enum ⮕ "enum" Ident "{" EnumItem ("," EnumItem)* ","? "}"
+//! EnumItem ⮕ Ident ("(" TupleFields? ")" | "{" StructFields? "}")?
+//!
+//! Struct ⮕ "struct" Ident ("(" TupleFields? ")" | "{" StructFields? "}" | ItemEnd)
 //! TupleFields ⮕ TupleField ("," TupleField)* ","?
+//! TupleField ⮕ (Ident ":")? Type ("=" Expr)?
+//! StructFields ⮕ StructField ("," StructField)* ","?
 //! StructField ⮕ Ident ":" Type ("=" Expr)?
-//! TupleField ⮕ (Ident ":")? Type
-//! EnumDecl ⮕ "enum" Ident __TODO__
 //!
-//! Expr ⮕ ExprWithBlock | ExprWithoutBlock
-//! ExprWithoutBlock ⮕ LiteralExpr | PathExpr | OperatorExpr
+//! Trait ⮕ "trait" Ident "{" __TODO__ "}"
+//!
+//! Implementation ⮕ "impl" Path ("for" Path) "{" __TODO__ "}"
+//!
+//! Stmt ⮕ Item | VarStmt | ExprStmt
+//!
+//! VarStmt ⮕ ("const" | "mut") Ident "=" Expr ItemEnd
+//!
+//! ExprStmt ⮕ Expr ItemEnd
+//! Expr ⮕ ExprWithoutBlock | ExprWithBlock
+//!
+//! ExprWithoutBlock ⮕ LiteralExpr | PathExpr | OperatorExpr | GroupedExpr | ArrayExpr
+//!                    | IndexExpr | Tuple | MethodCallExpr | CallExpr | RangeExpr
+//!                    | ClosureExpr | ContinueExpr | BreakExpr | ReturnExpr
 //! LiteralExpr ⮕ FloatLit | IntLit | StringLit | CharLit
 //! PathExpr ⮕ Path
 //! OperatorExpr ⮕ UnaryExpr | BinaryExpr
 //! UnaryExpr ⮕ ("!" | "-") Expr
 //! BinaryExpr ⮕ Expr ("+" | "-" | "*" | "/" | "%") Expr
-//! ExprWithBlock ⮕ IfExpr |
+//! GroupedExpr ⮕ "(" Expr ")"
+//! ArrayExpr ⮕ "[" (Expr ("," Expr)* ","? | Expr ";" Expr) "]"
+//! IndexExpr ⮕ Expr "[" Expr "]"
+//! Tuple ⮕ "(" ((Expr ",")+ Expr)? ")"
+//! MethodCallExpr ⮕ Expr "." Ident "(" CallArgs? ")"
+//! CallExpr ⮕ Expr "(" CallArgs? ")"
+//! CallArgs ⮕ Expr ("," Expr)* ","
+//! RangeExpr ⮕ Expr? ".." "="? Expr?
+//! ClosureExpr ⮕ "|" ClosureParams "|" (Expr | "->" Type BlockExpr)
+//! ClosureParams ⮕ __TODO__
+//! ContinueExpr ⮕ "continue"
+//! BreakExpr ⮕ "break" Expr?
+//! ReturnExpr ⮕ "return" Expr
+//!
+//! ExprWithBlock ⮕ BlockExpr | LoopExpr | IfExpr | IfVarExpr | MatchExpr
+//! BlockExpr ⮕ "{" Stmt* "}"
+//! LoopExpr ⮕ "loop" BlockExpr
+//! IfExpr ⮕ "if" Expr BlockExpr ("else" (BlockExpr | IfExpr | IfVarExpr))?
+//! IfVarExpr ⮕ "if" ("const" | "mut") __TODO__ "=" Expr BlockExpr ("else" (BlockExpr | IfExpr | IfVarExpr))?
+//! MatchExpr ⮕ __TODO__
 //!
 //! Type ⮕ Path
 //! Path ⮕ Ident ("::" Ident)*
-//! StmtEnd ⮕ ";" | "\n" | EOF
 //! Ident ⮕ ('_' | UnicodeIdentStart) UnicodeIdentContinue
+//! ItemEnd ⮕ ";" | "\n" | EOF
 //! ```
 
 use rym_errors::{Handler, RymResult};
@@ -72,7 +106,7 @@ impl<'a> Parser<'a> {
 	}
 
 	/// ```ignore
-	/// Stmt ⮕ (Decl | Expr) StmtEnd
+	/// Stmt ⮕ (Decl | Expr) ItemEnd
 	/// ```
 	fn parse_stmt(&self, token_stream: &mut TokenStream) -> RymResult<Option<Stmt>> {
 		let Some(token) = token_stream.peek(false) else {

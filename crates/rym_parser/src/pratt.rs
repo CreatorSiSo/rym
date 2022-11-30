@@ -1,4 +1,3 @@
-#![cfg(test)]
 enum S {
 	Cons(char, Vec<S>),
 }

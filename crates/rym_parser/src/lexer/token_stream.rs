@@ -8,7 +8,7 @@ use stringx::Join;
 #[non_exhaustive]
 pub struct TokenStream {
 	tokens: Vec<Token>,
-	previous: Option<TokenKind>,
+	previous_span: Span,
 }
 
 impl TokenStream {
@@ -19,7 +19,11 @@ impl TokenStream {
 
 	// Assumes that tokens is already reversed
 	const fn new_reversed(tokens: Vec<Token>) -> Self {
-		Self { tokens, previous: None }
+		Self { tokens, previous_span: DUMMY_SPAN }
+	}
+
+	pub fn consume_while<P: Pattern>(&mut self, pattern: P) {
+		self.tokens = self.skip_while(|token| token.matches(pattern.clone())).collect();
 	}
 
 	pub fn expect_ident(&mut self) -> RymResult<(SmolStr, Span)> {
@@ -82,12 +86,23 @@ impl TokenStream {
 		}
 	}
 
+	pub fn previous_span(&self) -> Span {
+		self.previous_span
+	}
+
 	pub fn is_next_newline(&self) -> bool {
 		matches!(self.peek(true), Some(token) if token.is_newline())
 	}
 
+	pub fn is_empty(&self) -> bool {
+		self.tokens.is_empty()
+	}
+
 	fn next_unfiltered(&mut self) -> Option<Token> {
-		self.tokens.pop()
+		self.tokens.pop().map(|token| {
+			self.previous_span = token.span;
+			token
+		})
 	}
 }
 
@@ -98,7 +113,10 @@ impl Iterator for TokenStream {
 		while let Some(token) = self.tokens.pop() {
 			match token {
 				_ if token.is_newline() => continue,
-				_ => return Some(token),
+				_ => {
+					self.previous_span = token.span;
+					return Some(token);
+				}
 			}
 		}
 		None
@@ -155,6 +173,10 @@ impl Token {
 
 	pub const fn is_newline(&self) -> bool {
 		matches!(self.kind, TokenKind::Newline)
+	}
+
+	pub fn matches<P: Pattern>(&self, pattern: P) -> bool {
+		pattern.matches(&self.kind)
 	}
 }
 
@@ -223,12 +245,24 @@ pub enum TokenKind {
 	GreaterThanEq,
 
 	// Keywords
+	/// `module`
+	Module,
+	/// `use`
+	Use,
+	/// `fn`
+	Fn,
+	/// `enum`
+	Enum,
+	/// `struct`
+	Struct,
+	/// `trait`
+	Trait,
+	/// `impl`
+	Impl,
 	/// `const`
 	Const,
 	/// `mut`
 	Mut,
-	/// `fn`
-	Fn,
 	/// `if`
 	If,
 	/// `else`
@@ -251,12 +285,28 @@ pub enum TokenKind {
 	Literal(LitKind),
 }
 
-pub const KEYWORDS_MAP: ([&str; 8], [TokenKind; 8]) = (
-	["const", "mut", "fn", "if", "else", "loop", "while", "for"],
+impl TokenKind {
+	pub fn matches<P: Pattern>(&self, pattern: P) -> bool {
+		pattern.matches(self)
+	}
+}
+
+const KEYWORDS_NUM: usize = 14;
+pub const KEYWORDS_MAP: ([&str; KEYWORDS_NUM], [TokenKind; KEYWORDS_NUM]) = (
 	[
+		"module", "use", "fn", "enum", "struct", "trait", "impl", "const", "mut", "if", "else", "loop",
+		"while", "for",
+	],
+	[
+		TokenKind::Module,
+		TokenKind::Use,
+		TokenKind::Fn,
+		TokenKind::Enum,
+		TokenKind::Struct,
+		TokenKind::Trait,
+		TokenKind::Impl,
 		TokenKind::Const,
 		TokenKind::Mut,
-		TokenKind::Fn,
 		TokenKind::If,
 		TokenKind::Else,
 		TokenKind::Loop,
@@ -336,9 +386,15 @@ pub enum Tk {
 	GreaterThanEq,
 
 	// Keywords
+	Module,
+	Use,
+	Fn,
+	Enum,
+	Struct,
+	Trait,
+	Impl,
 	Const,
 	Mut,
-	Fn,
 	If,
 	Else,
 	Loop,
@@ -394,9 +450,14 @@ impl Tk {
 			| (TokenKind::GreaterThanEq, Tk::GreaterThanEq) => true,
 
 			// Keywords
-			(TokenKind::Const, Tk::Const)
-			| (TokenKind::Mut, Tk::Mut)
+			(TokenKind::Module, Tk::Module)
+			| (TokenKind::Use, Tk::Use)
 			| (TokenKind::Fn, Tk::Fn)
+			| (TokenKind::Enum, Tk::Enum)
+			| (TokenKind::Struct, Tk::Struct)
+			| (TokenKind::Trait, Tk::Trait)
+			| (TokenKind::Impl, Tk::Impl)
+			| (TokenKind::Mut, Tk::Mut)
 			| (TokenKind::If, Tk::If)
 			| (TokenKind::Else, Tk::Else)
 			| (TokenKind::Loop, Tk::Loop)
@@ -435,13 +496,6 @@ pub enum Delimiter {
 	Brace,
 	/// `[ .. ]`
 	Bracket,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DelimSpan {
-	pub open: Span,
-	pub close: Span,
-	pub entire: Span,
 }
 
 #[derive(Debug, Clone, PartialEq)]

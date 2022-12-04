@@ -1,27 +1,39 @@
 use super::*;
+use rym_parser::parse_single_expr;
 use BinaryOp::*;
+
+fn assert_expr_errs(src: &str, expect: RymResult<Expr>, errs: &[Diagnostic]) {
+	let handler = Handler::default();
+	let got_expr = parse_single_expr(src, &handler);
+
+	let got_errs = handler.collect();
+	println!("{:?}", got_errs);
+	assert_eq!(&got_errs, errs);
+
+	assert_eq!(got_expr, expect);
+}
 
 // #[test]
 fn simple_addition() {
-	assert_ast_errs(
+	assert_expr_errs(
 		"src + 2",
-		&[Stmt::Expr(expr_binary(Add, expr_ident("src", 0..3), expr_lit(2, 6..7), 0..7))],
+		Ok(expr_binary(Add, expr_ident("src", 0..3), expr_lit(2, 6..7), 0..7)),
 		&[],
 	);
 }
 
 // #[test]
 fn tests() {
-	assert_ast_errs("1", &[Stmt::Expr(expr_lit(1, 0..1))], &[]);
+	assert_expr_errs("1", Ok(expr_lit(1, 0..1)), &[]);
 
-	assert_ast_errs(
+	assert_expr_errs(
 		"1 + 2 * 3",
-		&[Stmt::Expr(expr_binary(
+		Ok(expr_binary(
 			Add,
 			expr_lit(1, 0..1),
 			expr_binary(Mul, expr_lit(2, 4..5), expr_lit(3, 8..9), 4..9),
 			0..9,
-		))],
+		)),
 		&[],
 	);
 

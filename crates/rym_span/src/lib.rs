@@ -3,6 +3,13 @@ use std::ops::Range;
 
 pub const DUMMY_SPAN: Span = Span::new(0, 0);
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DelimSpan {
+	pub open: Span,
+	pub close: Span,
+	pub entire: Span,
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Span {
 	pub start: usize,

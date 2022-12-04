@@ -295,12 +295,7 @@ fn unclosed() {
 			Token::new(TokenKind::OpenDelim(Delimiter::Brace), Span::new(1, 2)),
 			Token::new(TokenKind::OpenDelim(Delimiter::Bracket), Span::new(2, 3)),
 		],
-		&[
-			// TODO: Emit "Unclosed delimiter" errors
-			// Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(2, 3)),
-			// Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(1, 3)),
-			// Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 3)),
-		],
+		&[],
 	);
 	assert_results(
 		"{ a + b",
@@ -310,10 +305,7 @@ fn unclosed() {
 			Token::new(TokenKind::Plus, Span::new(4, 5)),
 			Token::new(TokenKind::Ident(SmolStr::new("b")), Span::new(6, 7)),
 		],
-		&[
-			// TODO: Emit "Unclosed delimiter" errors
-			// Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 7)),
-		],
+		&[],
 	);
 	assert_results(
 		"{ a + (b)",
@@ -325,9 +317,6 @@ fn unclosed() {
 			Token::new(TokenKind::Ident(SmolStr::new("b")), Span::new(7, 8)),
 			Token::new(TokenKind::CloseDelim(Delimiter::Paren), Span::new(8, 9)),
 		],
-		&[
-			// TODO: Emit "Unclosed delimiter" errors
-			// Diagnostic::new_spanned(Level::Error, "Unclosed delimiter", Span::new(0, 9)),
-		],
+		&[],
 	)
 }

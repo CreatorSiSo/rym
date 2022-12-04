@@ -1,4 +1,4 @@
-use crate::Diagnostic;
+use crate::{Diagnostic, RymResult};
 use std::cell::RefCell;
 
 #[derive(Debug, Default)]
@@ -11,6 +11,16 @@ struct HandlerInner {
 
 /// Deals with errors and other output.
 impl Handler {
+	pub fn handle<T>(&self, result: RymResult<T>) -> Option<T> {
+		match result {
+			Ok(val) => Some(val),
+			Err(err) => {
+				self.emit(err);
+				None
+			}
+		}
+	}
+
 	pub fn emit(&self, diagnostic: Diagnostic) {
 		match self.0.try_borrow_mut() {
 			Ok(mut inner) => inner.diagnostics.push(diagnostic),

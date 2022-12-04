@@ -75,6 +75,15 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 			}
 		});
 
+	let sqrt_fn = NativeFunction::new(Some(1), &|_: _, args: &[Value]| {
+		let val = &args[0];
+		if let Value::Number(num) = val {
+			Ok(Value::Number(num.sqrt()))
+		} else {
+			spanned_err(TypeError::Expected(Type::Number, val.typ()), 0..0)
+		}
+	});
+
 	vec![
 		("print", print_fn.into()),
 		("println", println_fn.into()),
@@ -82,6 +91,7 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 		("assert", assert_fn.into()),
 		("assert_eq", assert_eq_fn.into()),
 		("floor", floor_fn.into()),
+		("sqrt", sqrt_fn.into()),
 		("PI", std::f64::consts::PI.into()),
 		("TAU", std::f64::consts::TAU.into()),
 		("E", std::f64::consts::E.into()),

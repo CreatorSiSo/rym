@@ -68,7 +68,7 @@ fn delim_span(open: Range<usize>, close: Range<usize>, entire: Range<usize>) -> 
 	DelimSpan { open: open.into(), close: close.into(), entire: entire.into() }
 }
 
-// #[test]
+#[test]
 fn pratt() {
 	enum Token {
 		Number(f64),

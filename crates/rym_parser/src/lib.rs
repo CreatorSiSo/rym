@@ -74,7 +74,7 @@ use rym_span::{DelimSpan, Span};
 use smol_str::SmolStr;
 
 pub mod lexer;
-use lexer::{Delimiter, LinearLexer, LitKind, Tk, Token, TokenKind, TokenStream};
+use lexer::{Delimiter, LinearLexer, LitKind, Token, TokenKind, TokenStream};
 
 pub fn parse(src: &str, handler: &Handler) -> Vec<Item> {
 	let mut token_stream: TokenStream = LinearLexer::new(src, handler).collect();
@@ -108,13 +108,13 @@ impl<'a> Parser<'a> {
 				Err(err) => {
 					self.handler.emit(err);
 					token_stream.consume_while(&[
-						Tk::Module,
-						Tk::Use,
-						Tk::Fn,
-						Tk::Enum,
-						Tk::Struct,
-						Tk::Trait,
-						Tk::Impl,
+						TokenKind::Module,
+						TokenKind::Use,
+						TokenKind::Fn,
+						TokenKind::Enum,
+						TokenKind::Struct,
+						TokenKind::Trait,
+						TokenKind::Impl,
 					]);
 				}
 			}
@@ -127,13 +127,13 @@ impl<'a> Parser<'a> {
 	///```
 	pub fn parse_item(&mut self, token_stream: &mut TokenStream) -> RymResult<Item> {
 		let Token { kind: item_kind, .. } = token_stream.expect(&[
-			Tk::Module,
-			Tk::Use,
-			Tk::Fn,
-			Tk::Enum,
-			Tk::Struct,
-			Tk::Trait,
-			Tk::Impl,
+			TokenKind::Module,
+			TokenKind::Use,
+			TokenKind::Fn,
+			TokenKind::Enum,
+			TokenKind::Struct,
+			TokenKind::Trait,
+			TokenKind::Impl,
 		])?;
 		match item_kind {
 			TokenKind::Module => self.parse_module(token_stream),
@@ -172,11 +172,11 @@ impl<'a> Parser<'a> {
 
 		let (params, _) = self.parse_delimited(token_stream, Delimiter::Paren, |_, token_stream| {
 			let param = token_stream.expect_ident();
-			token_stream.matches(Tk::Comma);
+			token_stream.matches(TokenKind::Comma);
 			param
 		})?;
 
-		let return_type = match token_stream.matches(Tk::ThinArrow) {
+		let return_type = match token_stream.matches(TokenKind::ThinArrow) {
 			Some(_) => Some(token_stream.expect_ident()?),
 			None => None,
 		};
@@ -213,32 +213,8 @@ impl<'a> Parser<'a> {
 	// }
 
 	/// Expr => UnaryExpr
-	fn parse_expr(&self, token_stream: &mut TokenStream) -> RymResult<Expr> {
-		let Some(_) = token_stream.matches(&[Tk::Literal, Tk::Ident]) else {
-			todo!()
-		};
-		// let lhs = match l_tt {
-		// 	Token { kind, span } => match kind {
-		// 		TokenKind::Ident(name) => Expr::Ident { name, span },
-		// 		TokenKind::Literal(lit) => self.make_lit_expr(lit),
-		// 		other => panic!("{other:?}"),
-		// 	},
-		// 	// TokenTree::Delimited(_, delim, delim_ts) => match delim {
-		// 	// 	Delimiter::Paren => self.parse_expr(&mut delim_ts.into_iter())?,
-		// 	// 	Delimiter::Brace => self.parse_block_expr(&mut delim_ts.into_iter())?,
-		// 	// 	Delimiter::Bracket => self.parse_array_expr(&mut delim_ts.into_iter())?,
-		// 	// },
-		// };
-
-		// loop {
-		// 	let Some(r_tt) = outer_ts.next() else {
-		// 		return Err(Diagnostic::new(Level::Error, "Unexpected end of file"));
-		// 	};
-		// 	// let (r_tt, r_bp) = match binding_power(tt, lhs.is_none()) {};
-		// }
-
-		// todo!()
-		Ok(Expr::Empty)
+	fn parse_expr(&self, _token_stream: &mut TokenStream) -> RymResult<Expr> {
+		todo!()
 	}
 
 	fn parse_block(&mut self, token_stream: &mut TokenStream) -> RymResult<Block> {
@@ -256,7 +232,7 @@ impl<'a> Parser<'a> {
 		f: impl Fn(&mut Self, &mut TokenStream) -> RymResult<T>,
 	) -> RymResult<(Vec<T>, DelimSpan)> {
 		println!("Inside delimted {delim:?}");
-		let Token { span: open, .. } = token_stream.expect(Tk::OpenDelim(delim))?;
+		let Token { span: open, .. } = token_stream.expect(TokenKind::OpenDelim(delim))?;
 		let mut items = vec![];
 
 		let close = loop {
@@ -271,7 +247,7 @@ impl<'a> Parser<'a> {
 				break last;
 			}
 
-			match token_stream.matches(Tk::CloseDelim(delim)) {
+			match token_stream.matches(TokenKind::CloseDelim(delim)) {
 				Some(Token { span, .. }) => break span,
 				None => self.handler.handle(f(self, token_stream)).map(|item| items.push(item)),
 			};

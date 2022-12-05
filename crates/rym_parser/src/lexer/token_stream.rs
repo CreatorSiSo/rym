@@ -4,6 +4,12 @@ use smol_str::SmolStr;
 use std::fmt::Debug;
 use stringx::Join;
 
+pub trait Pattern: Clone {
+	fn joined_str(&self, sep: &str) -> String;
+	fn matches(&self, other: &TokenKind) -> bool;
+	fn includes(&self, x: &TokenKind) -> bool;
+}
+
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub struct TokenStream {
@@ -27,7 +33,7 @@ impl TokenStream {
 	}
 
 	pub fn expect_ident(&mut self) -> RymResult<(SmolStr, Span)> {
-		let Token { kind: TokenKind::Ident(name), span } = self.expect(Tk::Ident)? else {
+		let Token { kind: TokenKind::Ident(name), span } = self.expect(ValueTokenKind::Ident)? else {
 			// SAFETY: TokenKind is checked to be Ident inside self.expect()
 			unsafe { std::hint::unreachable_unchecked() }
 		};
@@ -39,7 +45,7 @@ impl TokenStream {
 	pub fn expect<P: Pattern>(&mut self, pattern: P) -> RymResult<Token> {
 		match self.matches(pattern.clone()) {
 			Some(token) => Ok(token),
-			None => match self.peek(pattern.includes(&Tk::Newline)) {
+			None => match self.peek(pattern.includes(&TokenKind::Newline)) {
 				Some(got) => Err(Diagnostic::new_spanned(
 					Level::Error,
 					format!("Expected `{}` got `{:?}`", pattern.joined_str(" | "), got.kind),
@@ -55,9 +61,9 @@ impl TokenStream {
 	/// Consume next token if it matches one of the token kinds in the pattern
 	pub fn matches<P: Pattern>(&mut self, pattern: P) -> Option<Token> {
 		// Only process newline tokens if the pattern contains them
-		let process_newlines = pattern.includes(&Tk::Newline);
+		let process_newlines = pattern.includes(&TokenKind::Newline);
 		let Some(got) = self.peek(process_newlines) else {
-			return if pattern.includes(&Tk::Eof) {
+			return if pattern.includes(&TokenKind::Eof) {
 				Some(Token::new(TokenKind::Newline, DUMMY_SPAN))
 			} else {
 				None
@@ -153,11 +159,14 @@ fn token_stream() {
 	assert_eq!(token_stream.next(), Some(Token { kind: TokenKind::And, span: Span::new(1, 2) }));
 	assert_eq!(token_stream.is_next_newline(), false);
 	assert_eq!(
-		token_stream.expect(Tk::Ident),
+		token_stream.expect(ValueTokenKind::Ident),
 		Ok(Token { kind: TokenKind::Ident(SmolStr::new("test")), span: Span::new(2, 6) })
 	);
-	assert_eq!(token_stream.expect(Tk::Eof), Ok(Token::new(TokenKind::Newline, DUMMY_SPAN)));
-	assert_eq!(token_stream.matches(Tk::Eof), Some(Token::new(TokenKind::Newline, DUMMY_SPAN)));
+	assert_eq!(token_stream.expect(TokenKind::Eof), Ok(Token::new(TokenKind::Newline, DUMMY_SPAN)));
+	assert_eq!(
+		token_stream.matches(TokenKind::Eof),
+		Some(Token::new(TokenKind::Newline, DUMMY_SPAN))
+	);
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -183,9 +192,6 @@ impl Token {
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub enum TokenKind {
-	/// `\n`
-	Newline,
-
 	// Punctuation
 	/// `;`
 	Semi,
@@ -287,11 +293,44 @@ pub enum TokenKind {
 
 	/// Literal token: `"Hello World!"`, `'\n'`, `36_254`, `0.2346`
 	Literal(LitKind),
+
+	/// `\n`
+	Newline,
+	///
+	Eof,
 }
 
 impl TokenKind {
-	pub fn matches<P: Pattern>(&self, pattern: P) -> bool {
+	pub fn matches<P: Pattern>(&self, pattern: &P) -> bool {
 		pattern.matches(self)
+	}
+}
+
+impl<const N: usize> Pattern for &[TokenKind; N] {
+	fn joined_str(&self, sep: &str) -> String {
+		self.iter().join_format(sep, |kind| format!("{kind:?}"))
+	}
+
+	fn matches(&self, other: &TokenKind) -> bool {
+		self.iter().any(|kind| kind.matches(other))
+	}
+
+	fn includes(&self, x: &TokenKind) -> bool {
+		self.contains(x)
+	}
+}
+
+impl Pattern for TokenKind {
+	fn joined_str(&self, _: &str) -> String {
+		format!("{self:?}")
+	}
+
+	fn matches(&self, other: &TokenKind) -> bool {
+		self == other
+	}
+
+	fn includes(&self, x: &TokenKind) -> bool {
+		self == x
 	}
 }
 
@@ -319,181 +358,33 @@ pub const KEYWORDS_MAP: ([&str; KEYWORDS_NUM], [TokenKind; KEYWORDS_NUM]) = (
 	],
 );
 
-pub trait Pattern: Clone {
-	fn joined_str(&self, sep: &str) -> String;
-	fn matches(&self, other: &TokenKind) -> bool;
-	fn includes(&self, x: &Tk) -> bool;
-}
-
-impl<const N: usize> Pattern for &[Tk; N] {
-	fn joined_str(&self, sep: &str) -> String {
-		self.iter().join_format(sep, |kind| format!("{kind:?}"))
-	}
-
-	fn matches(&self, other: &TokenKind) -> bool {
-		self.iter().any(|kind| kind.matches(other))
-	}
-
-	fn includes(&self, x: &Tk) -> bool {
-		self.contains(x)
-	}
-}
-
-impl Pattern for Tk {
-	fn joined_str(&self, _: &str) -> String {
-		format!("{self:?}")
-	}
-
-	fn matches(&self, other: &TokenKind) -> bool {
-		self.matches(other)
-	}
-
-	fn includes(&self, x: &Tk) -> bool {
-		self == x
-	}
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Tk {
-	Eof,
-	Newline,
-
-	// Punctuation
-	Semi,
-	Colon,
-	ColonColon,
-	Comma,
-	Dot,
-	ThinArrow,
-	FatArrow,
-
-	// Operator like
-	Or,
-	OrOr,
-	And,
-	AndAnd,
-	Plus,
-	PlusEq,
-	Minus,
-	MinusEq,
-	Star,
-	StarEq,
-	Slash,
-	SlashEq,
-	Percent,
-	PercentEq,
-	Bang,
-	BangEq,
-	Eq,
-	EqEq,
-	LessThan,
-	LessThanEq,
-	GreaterThan,
-	GreaterThanEq,
-
-	// Keywords
-	Module,
-	Use,
-	Fn,
-	Enum,
-	Struct,
-	Trait,
-	Impl,
-	Const,
-	Mut,
-	If,
-	Else,
-	Loop,
-	While,
-	For,
-
-	OpenDelim(Delimiter),
-	CloseDelim(Delimiter),
-
+#[derive(Debug, Clone)]
+pub enum ValueTokenKind {
 	Ident,
-
-	Literal,
 	LiteralInt,
 	LiteralFloat,
 	LiteralChar,
 	LiteralString,
 }
 
-impl Tk {
-	// TODO: Remove the Tk enum
-	const fn matches(&self, other: &TokenKind) -> bool {
-		match (other, self) {
-			(TokenKind::Newline, Tk::Newline) => true,
+impl Pattern for ValueTokenKind {
+	fn joined_str(&self, _: &str) -> String {
+		format!("{self:?}")
+	}
 
-			// Punctuation
-			(TokenKind::Semi, Tk::Semi)
-			| (TokenKind::Colon, Tk::Colon)
-			| (TokenKind::ColonColon, Tk::ColonColon)
-			| (TokenKind::Comma, Tk::Comma)
-			| (TokenKind::Dot, Tk::Dot)
-			| (TokenKind::ThinArrow, Tk::ThinArrow)
-			| (TokenKind::FatArrow, Tk::FatArrow) => true,
+	fn matches(&self, other: &TokenKind) -> bool {
+		matches!(
+			(other, self),
+			(TokenKind::Ident(_), ValueTokenKind::Ident)
+				| (TokenKind::Literal(LitKind::Int(_)), ValueTokenKind::LiteralInt)
+				| (TokenKind::Literal(LitKind::Float(_)), ValueTokenKind::LiteralFloat)
+				| (TokenKind::Literal(LitKind::Char(_)), ValueTokenKind::LiteralFloat)
+				| (TokenKind::Literal(LitKind::String(_)), ValueTokenKind::LiteralString)
+		)
+	}
 
-			// Operator like
-			(TokenKind::Or, Tk::Or)
-			| (TokenKind::OrOr, Tk::OrOr)
-			| (TokenKind::And, Tk::And)
-			| (TokenKind::AndAnd, Tk::AndAnd)
-			| (TokenKind::Plus, Tk::Plus)
-			| (TokenKind::PlusEq, Tk::PlusEq)
-			| (TokenKind::Minus, Tk::Minus)
-			| (TokenKind::MinusEq, Tk::MinusEq)
-			| (TokenKind::Star, Tk::Star)
-			| (TokenKind::StarEq, Tk::StarEq)
-			| (TokenKind::Slash, Tk::Slash)
-			| (TokenKind::SlashEq, Tk::SlashEq)
-			| (TokenKind::Percent, Tk::Percent)
-			| (TokenKind::PercentEq, Tk::PercentEq)
-			| (TokenKind::Bang, Tk::Bang)
-			| (TokenKind::BangEq, Tk::BangEq)
-			| (TokenKind::Eq, Tk::Eq)
-			| (TokenKind::EqEq, Tk::EqEq)
-			| (TokenKind::LessThan, Tk::LessThan)
-			| (TokenKind::LessThanEq, Tk::LessThanEq)
-			| (TokenKind::GreaterThan, Tk::GreaterThan)
-			| (TokenKind::GreaterThanEq, Tk::GreaterThanEq) => true,
-
-			// Keywords
-			(TokenKind::Module, Tk::Module)
-			| (TokenKind::Use, Tk::Use)
-			| (TokenKind::Fn, Tk::Fn)
-			| (TokenKind::Enum, Tk::Enum)
-			| (TokenKind::Struct, Tk::Struct)
-			| (TokenKind::Trait, Tk::Trait)
-			| (TokenKind::Impl, Tk::Impl)
-			| (TokenKind::Mut, Tk::Mut)
-			| (TokenKind::If, Tk::If)
-			| (TokenKind::Else, Tk::Else)
-			| (TokenKind::Loop, Tk::Loop)
-			| (TokenKind::While, Tk::While)
-			| (TokenKind::For, Tk::For) => true,
-
-			(TokenKind::OpenDelim(delim), Tk::OpenDelim(m_delim))
-			| (TokenKind::CloseDelim(delim), Tk::CloseDelim(m_delim)) => matches!(
-				(delim, m_delim),
-				(Delimiter::Paren, Delimiter::Paren)
-					| (Delimiter::Brace, Delimiter::Brace)
-					| (Delimiter::Bracket, Delimiter::Bracket)
-			),
-
-			(TokenKind::Ident(..), Tk::Ident) => true,
-
-			(TokenKind::Literal(lit), kind_match) => matches!(
-				(lit, kind_match),
-				(_, Tk::Literal)
-					| (LitKind::Int(_), Tk::LiteralInt)
-					| (LitKind::Float(_), Tk::LiteralFloat)
-					| (LitKind::Char(_), Tk::LiteralChar)
-					| (LitKind::String(_), Tk::LiteralString)
-			),
-
-			_ => false,
-		}
+	fn includes(&self, x: &TokenKind) -> bool {
+		self.matches(x)
 	}
 }
 

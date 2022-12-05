@@ -197,6 +197,10 @@ pub enum TokenKind {
 	Comma,
 	/// `.`
 	Dot,
+	/// `->`
+	ThinArrow,
+	/// `=>`
+	FatArrow,
 
 	// Operator like
 	/// `|`
@@ -360,6 +364,8 @@ pub enum Tk {
 	ColonColon,
 	Comma,
 	Dot,
+	ThinArrow,
+	FatArrow,
 
 	// Operator like
 	Or,
@@ -414,6 +420,7 @@ pub enum Tk {
 }
 
 impl Tk {
+	// TODO: Remove the Tk enum
 	const fn matches(&self, other: &TokenKind) -> bool {
 		match (other, self) {
 			(TokenKind::Newline, Tk::Newline) => true,
@@ -423,7 +430,9 @@ impl Tk {
 			| (TokenKind::Colon, Tk::Colon)
 			| (TokenKind::ColonColon, Tk::ColonColon)
 			| (TokenKind::Comma, Tk::Comma)
-			| (TokenKind::Dot, Tk::Dot) => true,
+			| (TokenKind::Dot, Tk::Dot)
+			| (TokenKind::ThinArrow, Tk::ThinArrow)
+			| (TokenKind::FatArrow, Tk::FatArrow) => true,
 
 			// Operator like
 			(TokenKind::Or, Tk::Or)

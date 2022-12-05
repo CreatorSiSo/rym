@@ -42,27 +42,37 @@ impl<'a> LinearLexer<'a> {
 		})
 	}
 
-	fn match_next(
-		&mut self,
-		span: &mut Span,
-		condition: PrimitiveTokenKind,
-		then: TokenKind,
-		otherwise: TokenKind,
-	) -> TokenKind {
-		if let Some((primitive_kind, end_span)) = self.peek() {
-			if primitive_kind == condition {
-				*span = Span::new(span.start, end_span.end);
-				self.bump();
-				return then;
-			}
-		}
-		otherwise
-	}
-
 	fn src_from_span(&self, span: &Span) -> &'a str {
 		&self.src[span.start..span.end]
 	}
+
+	fn map_next(
+		&mut self,
+		span: &mut Span,
+		map_fn: impl Fn(Option<PrimitiveTokenKind>) -> Mapped,
+	) -> TokenKind {
+		let mut end = span.end;
+		match if let Some((kind, end_span)) = self.peek() {
+			end = end_span.end;
+			map_fn(Some(kind))
+		} else {
+			map_fn(None)
+		} {
+			Mapped::Multi(kind) => {
+				*span = Span::new(span.start, end);
+				self.bump();
+				kind
+			}
+			Mapped::Single(kind) => kind,
+		}
+	}
 }
+
+enum Mapped {
+	Single(TokenKind),
+	Multi(TokenKind),
+}
+use Mapped::{Multi, Single};
 
 impl Iterator for LinearLexer<'_> {
 	type Item = Token;
@@ -96,58 +106,60 @@ impl Iterator for LinearLexer<'_> {
 
 				// Punctuation
 				PrimitiveTokenKind::Semi => TokenKind::Semi,
-				PrimitiveTokenKind::Colon => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Colon,
-					TokenKind::ColonColon,
-					TokenKind::Colon,
-				),
+				PrimitiveTokenKind::Colon => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Colon) => Multi(TokenKind::ColonColon),
+					_ => Single(TokenKind::Colon),
+				}),
 				PrimitiveTokenKind::Comma => TokenKind::Comma,
 				PrimitiveTokenKind::Dot => TokenKind::Dot,
 
 				// Operator like
-				PrimitiveTokenKind::Or => {
-					self.match_next(&mut span, PrimitiveTokenKind::Or, TokenKind::OrOr, TokenKind::Or)
-				}
-				PrimitiveTokenKind::And => {
-					self.match_next(&mut span, PrimitiveTokenKind::And, TokenKind::AndAnd, TokenKind::And)
-				}
-				PrimitiveTokenKind::Plus => {
-					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::PlusEq, TokenKind::Plus)
-				}
-				PrimitiveTokenKind::Minus => {
-					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::MinusEq, TokenKind::Minus)
-				}
-				PrimitiveTokenKind::Star => {
-					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::StarEq, TokenKind::Star)
-				}
-				PrimitiveTokenKind::Slash => {
-					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::SlashEq, TokenKind::Slash)
-				}
-				PrimitiveTokenKind::Percent => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Eq,
-					TokenKind::PercentEq,
-					TokenKind::Percent,
-				),
-				PrimitiveTokenKind::Eq => {
-					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::EqEq, TokenKind::Eq)
-				}
-				PrimitiveTokenKind::Bang => {
-					self.match_next(&mut span, PrimitiveTokenKind::Eq, TokenKind::BangEq, TokenKind::Bang)
-				}
-				PrimitiveTokenKind::LessThan => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Eq,
-					TokenKind::LessThanEq,
-					TokenKind::LessThan,
-				),
-				PrimitiveTokenKind::GreaterThan => self.match_next(
-					&mut span,
-					PrimitiveTokenKind::Eq,
-					TokenKind::GreaterThanEq,
-					TokenKind::GreaterThan,
-				),
+				PrimitiveTokenKind::Or => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Or) => Multi(TokenKind::OrOr),
+					_ => Single(TokenKind::Or),
+				}),
+				PrimitiveTokenKind::And => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::And) => Multi(TokenKind::AndAnd),
+					_ => Single(TokenKind::And),
+				}),
+				PrimitiveTokenKind::Plus => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Eq) => Multi(TokenKind::PlusEq),
+					_ => Single(TokenKind::Plus),
+				}),
+				PrimitiveTokenKind::Minus => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Eq) => Multi(TokenKind::MinusEq),
+					Some(PrimitiveTokenKind::GreaterThan) => Multi(TokenKind::ThinArrow),
+					_ => Single(TokenKind::Minus),
+				}),
+				PrimitiveTokenKind::Star => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Eq) => Multi(TokenKind::StarEq),
+					_ => Single(TokenKind::Star),
+				}),
+				PrimitiveTokenKind::Slash => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Eq) => Multi(TokenKind::SlashEq),
+					_ => Single(TokenKind::Slash),
+				}),
+				PrimitiveTokenKind::Percent => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Eq) => Multi(TokenKind::PercentEq),
+					_ => Single(TokenKind::Percent),
+				}),
+				PrimitiveTokenKind::Eq => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Eq) => Multi(TokenKind::EqEq),
+					Some(PrimitiveTokenKind::GreaterThan) => Multi(TokenKind::FatArrow),
+					_ => Single(TokenKind::Eq),
+				}),
+				PrimitiveTokenKind::Bang => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Eq) => Multi(TokenKind::BangEq),
+					_ => Single(TokenKind::Bang),
+				}),
+				PrimitiveTokenKind::LessThan => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Eq) => Multi(TokenKind::LessThanEq),
+					_ => Single(TokenKind::LessThan),
+				}),
+				PrimitiveTokenKind::GreaterThan => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Eq) => Multi(TokenKind::GreaterThanEq),
+					_ => Single(TokenKind::GreaterThan),
+				}),
 
 				// Delimiter
 				PrimitiveTokenKind::OpenParen => TokenKind::OpenDelim(Delimiter::Paren),

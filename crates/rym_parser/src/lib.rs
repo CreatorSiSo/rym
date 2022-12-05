@@ -165,39 +165,25 @@ impl<'a> Parser<'a> {
 	/// Assumes that the `module` keyword has already been consumed
 	/// ```ignore
 	/// Function ⮕ "fn" Ident "(" FunctionParams? ")" ("->" Type)? BlockExpr
+	/// FunctionParams ⮕ Ident ("," Ident)* ","?
 	/// ```
 	fn parse_function(&mut self, token_stream: &mut TokenStream) -> RymResult<Item> {
 		let name = token_stream.expect_ident()?;
-		let params = self.parse_function_params(token_stream)?;
-		let return_type = if token_stream.matches(Tk::Minus).is_some()
-			&& token_stream.expect(Tk::GreaterThan).is_ok()
-		{
-			Some(token_stream.expect_ident()?)
-		} else {
-			None
+
+		let (params, _) = self.parse_delimited(token_stream, Delimiter::Paren, |_, token_stream| {
+			let param = token_stream.expect_ident();
+			token_stream.matches(Tk::Comma);
+			param
+		})?;
+
+		let return_type = match token_stream.matches(Tk::ThinArrow) {
+			Some(_) => Some(token_stream.expect_ident()?),
+			None => None,
 		};
+
 		let body = self.parse_block(token_stream)?;
+
 		Ok(Item::Function { name, params, return_type, body })
-	}
-
-	/// ```ignore
-	/// FunctionParams ⮕ Ident ("," Ident)* ","?
-	/// ```
-	fn parse_function_params(
-		&self,
-		token_stream: &mut TokenStream,
-	) -> RymResult<Vec<(SmolStr, Span)>> {
-		token_stream.expect(Tk::OpenDelim(Delimiter::Paren))?;
-		if token_stream.matches(Tk::CloseDelim(Delimiter::Paren)).is_some() {
-			return Ok(vec![]);
-		}
-
-		let mut params = vec![token_stream.expect_ident()?];
-		while let Some(..) = token_stream.matches(Tk::Comma) {
-			params.push(token_stream.expect_ident()?);
-		}
-		token_stream.matches(Tk::CloseDelim(Delimiter::Paren));
-		Ok(params)
 	}
 
 	// /// ```ignore
@@ -269,11 +255,12 @@ impl<'a> Parser<'a> {
 		delim: Delimiter,
 		f: impl Fn(&mut Self, &mut TokenStream) -> RymResult<T>,
 	) -> RymResult<(Vec<T>, DelimSpan)> {
-		println!("YEEEE");
+		println!("Inside delimted {delim:?}");
 		let Token { span: open, .. } = token_stream.expect(Tk::OpenDelim(delim))?;
 		let mut items = vec![];
 
 		let close = loop {
+			println!("Inside delimted {delim:?}");
 			if token_stream.is_empty() {
 				let last = token_stream.previous_span();
 				self.handler.emit(Diagnostic::new_spanned(

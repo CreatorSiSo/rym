@@ -1,6 +1,7 @@
 use indoc::indoc;
 use rym_errors::RymResult;
 use rym_errors::{Diagnostic, Handler};
+use rym_parser::UnaryOp;
 use rym_parser::{lexer::LitKind, parse, BinaryOp, Block, Expr, Item, Stmt};
 use rym_span::DelimSpan;
 use smol_str::SmolStr;
@@ -65,4 +66,140 @@ fn block(stmts: Vec<Stmt>, span: DelimSpan) -> Block {
 
 fn delim_span(open: Range<usize>, close: Range<usize>, entire: Range<usize>) -> DelimSpan {
 	DelimSpan { open: open.into(), close: close.into(), entire: entire.into() }
+}
+
+// #[test]
+fn pratt() {
+	enum Token {
+		Number(f64),
+		Plus,
+		Minus,
+		Star,
+		Slash,
+		LParen,
+		RParen,
+		EOF,
+	}
+
+	struct Parser {
+		tokens: Vec<Token>,
+		current: usize,
+	}
+
+	#[derive(Debug, PartialEq)]
+	enum Expr {
+		Binary { op: BinaryOp, left: Box<Expr>, right: Box<Expr> },
+		Unary { op: UnaryOp, right: Box<Expr> },
+		Number(f64),
+	}
+
+	impl Parser {
+		fn parse_expression(&mut self, precedence: i32) -> Expr {
+			let mut left = self.parse_prefix();
+
+			while precedence < self.get_token_precedence() {
+				left = self.parse_infix(left);
+			}
+
+			left
+		}
+
+		fn parse_prefix(&mut self) -> Expr {
+			match self.tokens[self.current] {
+				Token::Number(num) => {
+					self.current += 1;
+					Expr::Number(num)
+				}
+				Token::Minus => {
+					self.current += 1;
+					Expr::Unary { op: UnaryOp::Neg, right: Box::new(self.parse_expression(100)) }
+				}
+				Token::LParen => {
+					self.current += 1;
+					let node = self.parse_expression(0);
+					self.current += 1;
+					node
+				}
+				_ => {
+					panic!()
+				}
+			}
+		}
+
+		fn parse_infix(&mut self, left: Expr) -> Expr {
+			let precedence = self.get_token_precedence();
+			let token = &self.tokens[self.current];
+			self.current += 1;
+
+			match token {
+				Token::Plus => Expr::Binary {
+					op: BinaryOp::Add,
+					left: Box::new(left),
+					right: Box::new(self.parse_expression(precedence)),
+				},
+				Token::Minus => Expr::Binary {
+					op: BinaryOp::Sub,
+					left: Box::new(left),
+					right: Box::new(self.parse_expression(precedence)),
+				},
+				Token::Star => Expr::Binary {
+					op: BinaryOp::Mul,
+					left: Box::new(left),
+					right: Box::new(self.parse_expression(precedence)),
+				},
+				Token::Slash => Expr::Binary {
+					op: BinaryOp::Div,
+					left: Box::new(left),
+					right: Box::new(self.parse_expression(precedence)),
+				},
+				_ => {
+					panic!()
+				}
+			}
+		}
+
+		fn get_token_precedence(&mut self) -> i32 {
+			let token = &self.tokens[self.current];
+
+			match token {
+				Token::Plus | Token::Minus => 2,
+				Token::Star | Token::Slash => 3,
+				Token::LParen | Token::RParen => 1,
+				_ => -1,
+			}
+		}
+	}
+
+	let tokens = vec![
+		Token::Number(2.0),
+		Token::Plus,
+		Token::Minus,
+		Token::Number(3.0),
+		Token::Star,
+		Token::Number(4.0),
+		Token::EOF,
+	];
+
+	let mut parser = Parser { tokens, current: 0 };
+	let ast = parser.parse_expression(0);
+
+	assert_eq!(
+		ast,
+		Expr::Binary {
+			op: BinaryOp::Add,
+			left: Box::new(Expr::Number(2.0)),
+			right: Box::new(Expr::Binary {
+				op: BinaryOp::Mul,
+				left: Box::new(Expr::Unary { op: UnaryOp::Neg, right: Box::new(Expr::Number(3.0)) }),
+				right: Box::new(Expr::Number(4.0))
+			})
+		}
+	);
+
+	let tokens = vec![Token::Number(2.0), Token::EOF];
+
+	let mut parser = Parser { tokens, current: 0 };
+	let ast = parser.parse_expression(0);
+
+	assert_eq!(ast, Expr::Number(2.0));
 }

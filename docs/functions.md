@@ -1,38 +1,65 @@
 # Functions
 
+## Empty
+
+```rust
+fn no_params_no_return() {}
+fn no_params_no_return() -> () {}
+```
+
+```rust
+fn no_params() -> bool {
+	true
+}
+```
+
+## Paramaters
+
 ```rust
 fn add(a: int, b: int) -> int {
 	a + b
 }
 
-const added = add(4, 3)
-assert_eq(added, 7)
+const sum = add(4, 3)
+assert_eq(sum, 7)
+```
+
+## Default Values
+
+```rust
+fn round(number: float, precision = 0) {
+	..
+}
+```
+
+## Rest Parameters
+
+```rust
+fn print(..values: [Todo], sep = " ", end = "\n", flush = false) -> Io {
+	..
+}
 ```
 
 ## Side Effects
 
-- Io = Input Output, like writing to stdout, stderr
-- Div = Diverge, Function might never exit
-- Ffi = Foreign function interface, Anything could happen
+- Io: Input Output, like writing to stdout, stderr or any other file
+- Div: Diverge, Function might never return
+- Ffi: Foreign function interface, Anything could happen
 - ...
 
 ```rust
-fn function() {} // pure function
-pr procedure() {} // side effects allowed
+fn function() -> Number {} // pure function, returns a Number
+fn procedure() -> Io, Number {} // Io side effects allowed, returns a Number
+fn procedure() -> Io {} // Io side effects allowed, returns ()
+fn procedure() -> Io, () {} // Io side effects allowed, returns ()
 ```
 
 ```rust
-fn function() -> Number {} // returns a Number
-pr procedure() -> Io, Number {} // Io side effects allowed, returns a Number
-pr procedure() -> Io {} // Io side effects allowed, returns ()
-```
-
-```rust
-pr main() -> Io, Result<(), Error> {
+fn main() -> Io, Result<(), Error> {
 	might_return_error()?
 	const testing = 24
 	const maybe_value = do_stuff(testing).even_more(false)
-	stdout::display(maybe_value)
+	print(maybe_value)
 
 	Ok(())
 }

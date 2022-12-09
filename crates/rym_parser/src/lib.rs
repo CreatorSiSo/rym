@@ -162,23 +162,36 @@ impl<'a> Parser<'a> {
 		Ok(Item::Module { name, items, delim_span })
 	}
 
-	/// Assumes that the `module` keyword has already been consumed
+	/// Assumes that the `fn` keyword has already been consumed
 	/// ```ignore
 	/// Function ⮕ "fn" Ident "(" FunctionParams? ")" ("->" Type)? BlockExpr
-	/// FunctionParams ⮕ Ident ("," Ident)* ","?
+	/// FunctionParams ⮕ FunctionParam ("," FunctionParam)* ","?
+	/// FunctionParam ⮕ ".."? Ident (":" Path)? ("=" Expr)?
 	/// ```
 	fn parse_function(&mut self, token_stream: &mut TokenStream) -> RymResult<Item> {
 		let name = token_stream.expect_ident()?;
 
 		let (params, _) = self.parse_delimited(token_stream, Delimiter::Paren, |_, token_stream| {
-			let param = token_stream.expect_ident();
+			let rest_param = token_stream.matches(TokenKind::DotDot).is_some();
+			let name = token_stream.expect_ident()?;
+
+			let typ = if token_stream.matches(TokenKind::Colon).is_some() {
+				// TODO Use path insted of ident
+				Some(token_stream.expect_ident()?)
+			} else {
+				None
+			};
+
+			// TODO Parse default values
 			token_stream.matches(TokenKind::Comma);
-			param
+			Ok(FunctionParam { rest_param, name, typ, default: None })
 		})?;
 
-		let return_type = match token_stream.matches(TokenKind::ThinArrow) {
-			Some(_) => Some(token_stream.expect_ident()?),
-			None => None,
+		let return_type = if token_stream.matches(TokenKind::ThinArrow).is_some() {
+			// TODO Use path insted of ident
+			Some(token_stream.expect_ident()?)
+		} else {
+			None
 		};
 
 		let body = self.parse_block(token_stream)?;
@@ -271,7 +284,7 @@ pub enum Item {
 	Use,
 	Function {
 		name: (SmolStr, Span),
-		params: Vec<(SmolStr, Span)>,
+		params: Vec<FunctionParam>,
 		return_type: Option<(SmolStr, Span)>,
 		body: Block,
 	},
@@ -279,6 +292,14 @@ pub enum Item {
 	Struct,
 	Trait,
 	Impl,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct FunctionParam {
+	pub rest_param: bool,
+	pub name: (SmolStr, Span),
+	pub typ: Option<(SmolStr, Span)>, // TODO: Make this a path
+	pub default: Option<Expr>,
 }
 
 #[derive(Debug, PartialEq)]

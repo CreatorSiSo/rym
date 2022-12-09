@@ -199,14 +199,12 @@ pub enum TokenKind {
 	Colon,
 	/// `::`
 	ColonColon,
-	/// `,`
-	Comma,
 	/// `.`
 	Dot,
-	/// `->`
-	ThinArrow,
-	/// `=>`
-	FatArrow,
+	/// `..`
+	DotDot,
+	/// `,`
+	Comma,
 
 	// Operator like
 	/// `|`
@@ -253,6 +251,10 @@ pub enum TokenKind {
 	GreaterThan,
 	/// `>=`
 	GreaterThanEq,
+	/// `->`
+	ThinArrow,
+	/// `=>`
+	FatArrow,
 
 	// Keywords
 	/// `module`

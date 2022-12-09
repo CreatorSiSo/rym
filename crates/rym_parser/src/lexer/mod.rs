@@ -110,8 +110,11 @@ impl Iterator for LinearLexer<'_> {
 					Some(PrimitiveTokenKind::Colon) => Multi(TokenKind::ColonColon),
 					_ => Single(TokenKind::Colon),
 				}),
+				PrimitiveTokenKind::Dot => self.map_next(&mut span, |kind| match kind {
+					Some(PrimitiveTokenKind::Dot) => Multi(TokenKind::DotDot),
+					_ => Single(TokenKind::Dot),
+				}),
 				PrimitiveTokenKind::Comma => TokenKind::Comma,
-				PrimitiveTokenKind::Dot => TokenKind::Dot,
 
 				// Operator like
 				PrimitiveTokenKind::Or => self.map_next(&mut span, |kind| match kind {

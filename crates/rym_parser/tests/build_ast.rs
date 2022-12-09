@@ -1,8 +1,8 @@
 use indoc::indoc;
 use rym_errors::RymResult;
 use rym_errors::{Diagnostic, Handler};
-use rym_parser::UnaryOp;
 use rym_parser::{lexer::LitKind, parse, BinaryOp, Block, Expr, Item, Stmt};
+use rym_parser::{FunctionParam, UnaryOp};
 use rym_span::DelimSpan;
 use smol_str::SmolStr;
 use std::ops::Range;
@@ -28,15 +28,32 @@ fn item_module(name: (&str, Range<usize>), items: Vec<Item>, span: DelimSpan) ->
 
 fn fn_item(
 	name: (&str, Range<usize>),
-	params: Vec<(&str, Range<usize>)>,
+	params: Vec<FunctionParam>,
 	return_type: Option<(&str, Range<usize>)>,
 	body: Block,
 ) -> Item {
 	Item::Function {
 		name: (SmolStr::new(name.0), name.1.into()),
-		params: params.into_iter().map(|name| (SmolStr::new(name.0), name.1.into())).collect(),
+		params,
 		return_type: return_type.map(|typ| (SmolStr::new(typ.0), typ.1.into())),
 		body,
+	}
+}
+
+fn fn_param(name: (&str, Range<usize>), typ: Option<(&str, Range<usize>)>) -> FunctionParam {
+	fn_rest_param(false, name, typ)
+}
+
+fn fn_rest_param(
+	rest_param: bool,
+	name: (&str, Range<usize>),
+	typ: Option<(&str, Range<usize>)>,
+) -> FunctionParam {
+	FunctionParam {
+		rest_param,
+		name: (name.0.into(), name.1.into()),
+		typ: typ.map(|typ| (typ.0.into(), typ.1.into())),
+		default: None,
 	}
 }
 

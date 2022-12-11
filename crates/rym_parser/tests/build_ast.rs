@@ -1,7 +1,7 @@
 use indoc::indoc;
 use rym_errors::RymResult;
-use rym_errors::{Diagnostic, Handler};
-use rym_parser::{lexer::LitKind, parse, BinaryOp, Block, Expr, Item, Stmt};
+use rym_errors::{Diagnostic, DiagnosticHandler};
+use rym_parser::{lexer::LitKind, parse_file_from_src, BinaryOp, Block, Expr, Item, Stmt};
 use rym_parser::{FunctionParam, UnaryOp};
 use rym_span::DelimSpan;
 use smol_str::SmolStr;
@@ -12,8 +12,8 @@ mod item;
 
 #[track_caller]
 fn assert_ast_errs(src: &str, expected: &[Item], errs: &[Diagnostic]) {
-	let handler = Handler::default();
-	let got_ast = parse(src, &handler);
+	let handler = DiagnosticHandler::default();
+	let got_ast = parse_file_from_src(src, &handler);
 
 	let got_errs = handler.collect();
 	println!("{:?}", got_errs);

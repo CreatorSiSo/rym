@@ -1,10 +1,10 @@
 use super::*;
-use rym_parser::parse_single_expr;
+use rym_parser::parse_expr_from_src;
 use BinaryOp::*;
 
 fn assert_expr_errs(src: &str, expect: RymResult<Expr>, errs: &[Diagnostic]) {
-	let handler = Handler::default();
-	let got_expr = parse_single_expr(src, &handler);
+	let handler = DiagnosticHandler::default();
+	let got_expr = parse_expr_from_src(src, &handler);
 
 	let got_errs = handler.collect();
 	println!("{:?}", got_errs);

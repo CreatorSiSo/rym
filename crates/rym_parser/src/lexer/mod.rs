@@ -1,4 +1,4 @@
-use rym_errors::{Diagnostic, Handler, Level};
+use rym_errors::{Diagnostic, DiagnosticHandler, Level};
 use rym_lexer::{Cursor, PrimitiveLitKind, PrimitiveTokenKind};
 use rym_span::Span;
 use rym_unescape::unquote;
@@ -19,11 +19,11 @@ pub(crate) struct LinearLexer<'a> {
 	/// Cursor for getting lexer tokens.
 	cursor: Cursor<'a>,
 	/// Global struct to submit diagnostics to.
-	handler: &'a Handler,
+	handler: &'a DiagnosticHandler,
 }
 
 impl<'a> LinearLexer<'a> {
-	pub(crate) fn new(src: &'a str, handler: &'a Handler) -> Self {
+	pub(crate) fn new(src: &'a str, handler: &'a DiagnosticHandler) -> Self {
 		Self { pos: 0, src, cursor: Cursor::new(src), handler }
 	}
 

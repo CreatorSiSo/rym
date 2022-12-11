@@ -4,7 +4,7 @@ mod emitter;
 mod handler;
 mod tests;
 
-pub use handler::Handler;
+pub use handler::DiagnosticHandler;
 
 pub type RymResult<T> = Result<T, Diagnostic>;
 

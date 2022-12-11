@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use rym_errors::{Diagnostic, Handler, Level};
+use rym_errors::{Diagnostic, DiagnosticHandler, Level};
 use rym_span::Span;
 use smol_str::SmolStr;
 
@@ -8,7 +8,7 @@ use super::{Delimiter, LinearLexer, LitKind, Token, TokenKind};
 
 #[track_caller]
 fn assert_results(src: &str, expect: &[Token], diagnostics: &[Diagnostic]) {
-	let handler = Handler::default();
+	let handler = DiagnosticHandler::default();
 	let got: Vec<_> = LinearLexer::new(src, &handler).collect();
 	println!("{got:#?}");
 	assert_eq!(expect, got);
@@ -17,7 +17,7 @@ fn assert_results(src: &str, expect: &[Token], diagnostics: &[Diagnostic]) {
 
 #[track_caller]
 fn assert_tokens(src: &str, expect: &[Token]) {
-	let handler = Handler::default();
+	let handler = DiagnosticHandler::default();
 	let got: Vec<Token> = LinearLexer::new(src, &handler).collect();
 	let errors = handler.collect();
 	assert_eq!(errors, vec![], "Expected no errors got: {errors:?}");
@@ -27,7 +27,7 @@ fn assert_tokens(src: &str, expect: &[Token]) {
 
 #[track_caller]
 fn assert_diagnostics(src: &str, expect: &[Diagnostic]) {
-	let handler = Handler::default();
+	let handler = DiagnosticHandler::default();
 	let _: Vec<_> = LinearLexer::new(src, &handler).collect();
 	let errors = handler.collect();
 	println!("{errors:#?}",);
@@ -36,7 +36,7 @@ fn assert_diagnostics(src: &str, expect: &[Diagnostic]) {
 
 #[track_caller]
 fn assert_token_kinds(src: &str, expect: &[TokenKind]) {
-	let handler = Handler::default();
+	let handler = DiagnosticHandler::default();
 	let got: Vec<TokenKind> = LinearLexer::new(src, &handler).map(|token| token.kind).collect();
 	let errors = handler.collect();
 	assert_eq!(errors, vec![], "Expected no errors got: {errors:?}");

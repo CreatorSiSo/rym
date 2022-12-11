@@ -25,8 +25,8 @@ fn function() {
 			("params", 3..9),
 			vec![
 				fn_param(("self", 10..14), None),
-				fn_param(("testing", 16..23), Some(("Some", 25..29))),
-				fn_param(("other_stuff", 31..42), Some(("Other", 44..49))),
+				fn_param(("testing", 16..23), Some(path!(Some, 25..29))),
+				fn_param(("other_stuff", 31..42), Some(path!(Other, 44..49))),
 			],
 			None,
 			block(vec![], delim_span(51..52, 52..53, 51..53)),
@@ -44,7 +44,7 @@ fn function_param_default() {
 			vec![
 				fn_param(("self", 11..15), None),
 				fn_param_default(("testing", 17..24), None, Some(expr_lit(0, 27..28))),
-				fn_param(("other_stuff", 30..41), Some(("Other", 43..48))),
+				fn_param(("other_stuff", 30..41), Some(path!(Other, 43..48))),
 			],
 			None,
 			block(vec![], delim_span(50..51, 51..52, 50..52)),
@@ -71,7 +71,7 @@ fn function_rest_param() {
 		"fn print(..values: Display) {}",
 		&[fn_item(
 			("print", 3..8),
-			vec![fn_rest_param(true, ("values", 11..17), Some(("Display", 19..26)))],
+			vec![fn_rest_param(true, ("values", 11..17), Some(path!(Display, 19..26)))],
 			None,
 			block(vec![], delim_span(28..29, 29..30, 28..30)),
 		)],
@@ -110,7 +110,7 @@ fn function_return_type() {
 		&[fn_item(
 			("empty", 3..8),
 			vec![],
-			Some(("Type", 14..18)),
+			Some(path!(Type, 14..18)),
 			block(vec![], delim_span(19..20, 21..22, 19..22)),
 		)],
 		&[],
@@ -121,7 +121,7 @@ fn function_return_type() {
 		&[fn_item(
 			("self_param", 3..13),
 			vec![fn_param(("self", 14..18), None)],
-			Some(("Type_123", 23..31)),
+			Some(path!(Type_123, 23..31)),
 			block(vec![], delim_span(32..33, 34..35, 32..35)),
 		)],
 		&[],

@@ -38,7 +38,6 @@
 //! MatchExpr ⮕ __TODO__
 //!
 //! Type ⮕ Path
-//! Path ⮕ Ident ("::" Ident)*
 //! Ident ⮕ ('_' | UnicodeIdentStart) UnicodeIdentContinue
 //! ItemEnd ⮕ ";" | "\n" | EOF
 //! ```
@@ -149,10 +148,9 @@ fn parse_function(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -
 		let rest_param = token_stream.matches(TokenKind::DotDot).is_some();
 		let name = parse_ident_and_handle_err(handler, token_stream);
 
-		// TODO Use path insted of ident
 		let typ = token_stream
 			.matches(TokenKind::Colon)
-			.and_then(|_| token_stream.expect_ident().ok_or_emit(handler));
+			.and_then(|_| parse_path(handler, token_stream).ok_or_emit(handler));
 
 		let default = token_stream.matches(TokenKind::Eq).and_then(|_| {
 			match token_stream.expect([TokenKind::AnyLiteral]) {
@@ -175,10 +173,9 @@ fn parse_function(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -
 		Ok(FunctionParam { rest_param, name, typ, default })
 	})?;
 
-	// TODO Use path insted of ident
 	let return_type = token_stream
 		.matches(TokenKind::ThinArrow)
-		.and_then(|_| token_stream.expect_ident().ok_or_emit(handler));
+		.and_then(|_| parse_path(handler, token_stream).ok_or_emit(handler));
 
 	let body = parse_block(handler, token_stream)?;
 
@@ -295,6 +292,17 @@ fn parse_delimited<T: Debug>(
 	Ok((items, DelimSpan { open, close, entire: Span::new(open.start, close.end) }))
 }
 
+/// ```ignore
+/// Path ⮕ Ident ("::" Ident)*
+/// ```
+fn parse_path(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> RymResult<Path> {
+	let mut segments = vec![token_stream.expect_ident()?];
+	while let Some(_) = token_stream.matches(TokenKind::ColonColon) {
+		token_stream.expect_ident().ok_or_emit(handler).map(|segment| segments.push(segment));
+	}
+	Ok(Path { segments })
+}
+
 fn parse_ident_and_handle_err(
 	handler: &DiagnosticHandler,
 	token_stream: &mut TokenStream,
@@ -320,7 +328,7 @@ pub enum Item {
 	Function {
 		name: (SmolStr, Span),
 		params: Vec<FunctionParam>,
-		return_type: Option<(SmolStr, Span)>,
+		return_type: Option<Path>,
 		body: Block,
 	},
 	Enum,
@@ -333,7 +341,7 @@ pub enum Item {
 pub struct FunctionParam {
 	pub rest_param: bool,
 	pub name: (SmolStr, Span),
-	pub typ: Option<(SmolStr, Span)>, // TODO: Make this a path
+	pub typ: Option<Path>,
 	pub default: Option<Expr>,
 }
 
@@ -354,7 +362,7 @@ pub struct Block {
 pub enum Expr {
 	Binary { lhs: Box<Expr>, op: BinaryOp, rhs: Box<Expr>, span: Span },
 	Unary { op: UnaryOp, rhs: Box<Expr>, span: Span },
-	Ident { name: SmolStr, span: Span },
+	Path { path: Path },
 	Literal { lit: LitKind, span: Span },
 	Empty,
 }
@@ -379,4 +387,9 @@ pub enum UnaryOp {
 	Not,
 	/// `-`
 	Neg,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct Path {
+	pub segments: Vec<(SmolStr, Span)>,
 }

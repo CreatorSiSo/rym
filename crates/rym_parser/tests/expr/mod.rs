@@ -17,7 +17,7 @@ fn assert_expr_errs(src: &str, expect: RymResult<Expr>, errs: &[Diagnostic]) {
 fn simple_addition() {
 	assert_expr_errs(
 		"src + 2",
-		Ok(expr_binary(Add, expr_ident("src", 0..3), expr_lit(2, 6..7), 0..7)),
+		Ok(expr_binary(Add, expr_path(path!(src, 0..3)), expr_lit(2, 6..7), 0..7)),
 		&[],
 	);
 }

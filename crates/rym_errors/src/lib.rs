@@ -8,14 +8,6 @@ pub use handler::DiagnosticHandler;
 
 pub type RymResult<T> = Result<T, Diagnostic>;
 
-pub trait IntoDiagnostic
-where
-	Self: Sized,
-{
-	#[must_use]
-	fn into_diagnostic(self) -> Diagnostic;
-}
-
 #[derive(Debug, PartialEq, Eq)]
 pub struct Diagnostic {
 	level: Level,

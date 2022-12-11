@@ -92,3 +92,13 @@ pub enum Level {
 	Note,
 	Help,
 }
+
+pub trait HandleDiagnostic<T> {
+	fn ok_or_emit(self, handler: &DiagnosticHandler) -> Option<T>;
+}
+
+impl<T> HandleDiagnostic<T> for RymResult<T> {
+	fn ok_or_emit(self, handler: &DiagnosticHandler) -> Option<T> {
+		self.map_err(|err| handler.emit(err)).ok()
+	}
+}

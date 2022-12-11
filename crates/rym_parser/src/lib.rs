@@ -69,7 +69,7 @@
 
 use std::fmt::Debug;
 
-use rym_errors::{Diagnostic, DiagnosticHandler, Level, RymResult};
+use rym_errors::{Diagnostic, DiagnosticHandler, HandleDiagnostic, Level, RymResult};
 use rym_span::{DelimSpan, Span, DUMMY_SPAN};
 use smol_str::SmolStr;
 
@@ -167,7 +167,7 @@ fn parse_function(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -
 		// TODO Use path insted of ident
 		let typ = token_stream
 			.matches(TokenKind::Colon)
-			.and_then(|_| handler.handle(token_stream.expect_ident()));
+			.and_then(|_| token_stream.expect_ident().ok_or_emit(handler));
 
 		let default = token_stream.matches(TokenKind::Eq).and_then(|_| {
 			match token_stream.expect([TokenKind::AnyLiteral]) {
@@ -193,7 +193,7 @@ fn parse_function(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -
 	// TODO Use path insted of ident
 	let return_type = token_stream
 		.matches(TokenKind::ThinArrow)
-		.and_then(|_| handler.handle(token_stream.expect_ident()));
+		.and_then(|_| token_stream.expect_ident().ok_or_emit(handler));
 
 	let body = parse_block(handler, token_stream)?;
 
@@ -239,14 +239,14 @@ fn parse_block(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> R
 	Ok(Block { stmts, span })
 }
 
-/// Expectes the next token to be the opening variant of the delimiter
-/// Executes the provided function until the closing variant of the delimiter is seen
-/// Produces diagnostics is it is unclosed
+/// The next token has to be the opening variant of the delimiter
+/// Executes parse_inner_f until the closing variant of the delimiter is seen
+/// Returns an error with diagnostics if it is unclosed
 fn parse_delimited<T: Debug>(
 	handler: &DiagnosticHandler,
 	token_stream: &mut TokenStream,
 	delim: Delimiter,
-	f: impl Fn(&DiagnosticHandler, &mut TokenStream) -> RymResult<T>,
+	parse_inner_f: impl Fn(&DiagnosticHandler, &mut TokenStream) -> RymResult<T>,
 ) -> RymResult<(Vec<T>, DelimSpan)> {
 	dbg!(delim);
 	let Token { span: open, .. } = token_stream.expect(TokenKind::OpenDelim(delim))?;
@@ -266,7 +266,7 @@ fn parse_delimited<T: Debug>(
 
 		match token_stream.matches(TokenKind::CloseDelim(delim)) {
 			Some(Token { span, .. }) => break span,
-			None => handler.handle(f(handler, token_stream)).map(|item| items.push(item)),
+			None => parse_inner_f(handler, token_stream).ok_or_emit(handler).map(|item| items.push(item)),
 		};
 	};
 

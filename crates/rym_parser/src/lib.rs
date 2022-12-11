@@ -70,7 +70,7 @@
 use std::fmt::Debug;
 
 use rym_errors::{Diagnostic, Handler, Level, RymResult};
-use rym_span::{DelimSpan, Span};
+use rym_span::{DelimSpan, Span, DUMMY_SPAN};
 use smol_str::SmolStr;
 
 pub mod lexer;
@@ -107,7 +107,7 @@ impl<'a> Parser<'a> {
 				Ok(item) => items.push(item),
 				Err(err) => {
 					self.handler.emit(err);
-					token_stream.consume_while(&[
+					token_stream.consume_while([
 						TokenKind::Module,
 						TokenKind::Use,
 						TokenKind::Fn,
@@ -125,8 +125,8 @@ impl<'a> Parser<'a> {
 	/// ```ignore
 	/// Item ⮕ Module | Use | Function | Enum | Struct | Trait | Implementation
 	///```
-	pub fn parse_item(&mut self, token_stream: &mut TokenStream) -> RymResult<Item> {
-		let Token { kind: item_kind, .. } = token_stream.expect(&[
+	pub fn parse_item(&self, token_stream: &mut TokenStream) -> RymResult<Item> {
+		let Token { kind: item_kind, .. } = token_stream.expect([
 			TokenKind::Module,
 			TokenKind::Use,
 			TokenKind::Fn,
@@ -151,7 +151,7 @@ impl<'a> Parser<'a> {
 	/// ```ignore
 	/// Module ⮕ "module" Ident "{" Item* "}"
 	/// ```
-	fn parse_module(&mut self, token_stream: &mut TokenStream) -> RymResult<Item> {
+	fn parse_module(&self, token_stream: &mut TokenStream) -> RymResult<Item> {
 		let name = token_stream.expect_ident()?;
 
 		let (items, delim_span) =
@@ -168,31 +168,43 @@ impl<'a> Parser<'a> {
 	/// FunctionParams ⮕ FunctionParam ("," FunctionParam)* ","?
 	/// FunctionParam ⮕ ".."? Ident (":" Path)? ("=" Expr)?
 	/// ```
-	fn parse_function(&mut self, token_stream: &mut TokenStream) -> RymResult<Item> {
-		let name = token_stream.expect_ident()?;
+	fn parse_function(&self, token_stream: &mut TokenStream) -> RymResult<Item> {
+		let name = parse_ident_and_handle_err(self.handler, token_stream);
 
 		let (params, _) = self.parse_delimited(token_stream, Delimiter::Paren, |_, token_stream| {
 			let rest_param = token_stream.matches(TokenKind::DotDot).is_some();
-			let name = token_stream.expect_ident()?;
+			let name = parse_ident_and_handle_err(self.handler, token_stream);
 
-			let typ = if token_stream.matches(TokenKind::Colon).is_some() {
-				// TODO Use path insted of ident
-				Some(token_stream.expect_ident()?)
-			} else {
-				None
-			};
+			// TODO Use path insted of ident
+			let typ = token_stream
+				.matches(TokenKind::Colon)
+				.and_then(|_| self.handler.handle(token_stream.expect_ident()));
 
-			// TODO Parse default values
+			let default = token_stream.matches(TokenKind::Eq).and_then(|_| {
+				match token_stream.expect([TokenKind::AnyLiteral]) {
+					Ok(Token { kind, span }) => {
+						let lit = match kind {
+							TokenKind::Literal(lit) => lit,
+							_ => unreachable!(),
+						};
+						Some(Expr::Literal { lit, span })
+					}
+					Err(err) => {
+						self.handler.emit(err);
+						token_stream.consume_until([TokenKind::Comma, TokenKind::CloseDelim(Delimiter::Paren)]);
+						None
+					}
+				}
+			});
+
 			token_stream.matches(TokenKind::Comma);
-			Ok(FunctionParam { rest_param, name, typ, default: None })
+			Ok(FunctionParam { rest_param, name, typ, default })
 		})?;
 
-		let return_type = if token_stream.matches(TokenKind::ThinArrow).is_some() {
-			// TODO Use path insted of ident
-			Some(token_stream.expect_ident()?)
-		} else {
-			None
-		};
+		// TODO Use path insted of ident
+		let return_type = token_stream
+			.matches(TokenKind::ThinArrow)
+			.and_then(|_| self.handler.handle(token_stream.expect_ident()));
 
 		let body = self.parse_block(token_stream)?;
 
@@ -230,7 +242,7 @@ impl<'a> Parser<'a> {
 		todo!()
 	}
 
-	fn parse_block(&mut self, token_stream: &mut TokenStream) -> RymResult<Block> {
+	fn parse_block(&self, token_stream: &mut TokenStream) -> RymResult<Block> {
 		let (stmts, span) = self.parse_delimited(token_stream, Delimiter::Brace, |_, _| todo!())?;
 		Ok(Block { stmts, span })
 	}
@@ -239,17 +251,17 @@ impl<'a> Parser<'a> {
 	/// Executes the provided function until the closing variant of the delimiter is seen
 	/// Produces diagnostics is it is unclosed
 	fn parse_delimited<T: Debug>(
-		&mut self,
+		&self,
 		token_stream: &mut TokenStream,
 		delim: Delimiter,
-		f: impl Fn(&mut Self, &mut TokenStream) -> RymResult<T>,
+		f: impl Fn(&Self, &mut TokenStream) -> RymResult<T>,
 	) -> RymResult<(Vec<T>, DelimSpan)> {
-		println!("Inside delimted {delim:?}");
+		dbg!(delim);
 		let Token { span: open, .. } = token_stream.expect(TokenKind::OpenDelim(delim))?;
 		let mut items = vec![];
 
 		let close = loop {
-			println!("Inside delimted {delim:?}");
+			dbg!(delim);
 			if token_stream.is_empty() {
 				let last = token_stream.previous_span();
 				self.handler.emit(Diagnostic::new_spanned(
@@ -268,6 +280,16 @@ impl<'a> Parser<'a> {
 
 		Ok((items, DelimSpan { open, close, entire: Span::new(open.start, close.end) }))
 	}
+}
+
+fn parse_ident_and_handle_err(
+	handler: &Handler,
+	token_stream: &mut TokenStream,
+) -> (SmolStr, Span) {
+	token_stream
+		.expect_ident()
+		.map_err(|err| handler.emit(err))
+		.unwrap_or((SmolStr::new("<empty>"), DUMMY_SPAN))
 }
 
 // fn binding_power(tt: Token, is_prefix: bool) -> (Token, (u8, u8)) {

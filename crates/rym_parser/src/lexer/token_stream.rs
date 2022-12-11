@@ -4,7 +4,7 @@ use smol_str::SmolStr;
 use std::fmt::Debug;
 use stringx::Join;
 
-pub trait Pattern: Clone {
+pub trait Pattern: Clone + Debug {
 	fn joined_str(&self, sep: &str) -> String;
 	fn matches(&self, other: &TokenKind) -> bool;
 	fn includes(&self, x: &TokenKind) -> bool;
@@ -30,12 +30,19 @@ impl TokenStream {
 
 	pub fn consume_while<P: Pattern>(&mut self, pattern: P) {
 		self.tokens = self.skip_while(|token| token.matches(pattern.clone())).collect();
+		self.tokens.reverse()
+	}
+
+	pub fn consume_until<P: Pattern>(&mut self, pattern: P) {
+		self.tokens = self.skip_while(|token| !token.matches(pattern.clone())).collect();
+		self.tokens.reverse()
 	}
 
 	pub fn expect_ident(&mut self) -> RymResult<(SmolStr, Span)> {
-		let Token { kind: TokenKind::Ident(name), span } = self.expect(ValueTokenKind::Ident)? else {
-			// SAFETY: TokenKind is checked to be Ident inside self.expect()
-			unsafe { std::hint::unreachable_unchecked() }
+		let Token { kind: TokenKind::Ident(name), span } = self.expect(TokenKind::AnyIdent)? else {
+			// SAFETY: self.expect() ensures that kind is always TokenKind::Ident()
+			// unsafe { std::hint::unreachable_unchecked() }
+			panic!()
 		};
 		Ok((name, span))
 	}
@@ -43,41 +50,32 @@ impl TokenStream {
 	/// Consume next token if it matches one of the token kinds in the pattern
 	/// otherwise return an error
 	pub fn expect<P: Pattern>(&mut self, pattern: P) -> RymResult<Token> {
-		match self.matches(pattern.clone()) {
-			Some(token) => Ok(token),
-			None => match self.peek(pattern.includes(&TokenKind::Newline)) {
-				Some(got) => Err(Diagnostic::new_spanned(
-					Level::Error,
-					format!("Expected `{}` got `{:?}`", pattern.joined_str(" | "), got.kind),
-					got.span,
-				)),
-				None => {
-					Err(Diagnostic::new(Level::Error, format!("Expected `{}`", pattern.joined_str(" | "))))
-				}
-			},
+		if let Some(token) = self.matches(pattern.clone()) {
+			return Ok(token);
 		}
+		if let Some(got) = self.peek(pattern.includes(&TokenKind::Newline)) {
+			return Err(Diagnostic::new_spanned(
+				Level::Error,
+				format!("Expected `{}` got `{:?}`", pattern.joined_str(" | "), got.kind),
+				got.span,
+			));
+		}
+		Err(Diagnostic::new(Level::Error, format!("Expected `{}`", pattern.joined_str(" | "))))
 	}
 
 	/// Consume next token if it matches one of the token kinds in the pattern
 	pub fn matches<P: Pattern>(&mut self, pattern: P) -> Option<Token> {
 		// Only process newline tokens if the pattern contains them
 		let process_newlines = pattern.includes(&TokenKind::Newline);
+
 		let Some(got) = self.peek(process_newlines) else {
-			return if pattern.includes(&TokenKind::Eof) {
-				Some(Token::new(TokenKind::Newline, DUMMY_SPAN))
-			} else {
-				None
-			};
+			return pattern.includes(&TokenKind::Eof).then_some(Token::new(TokenKind::Newline, DUMMY_SPAN));
 		};
 
 		if pattern.matches(&got.kind) {
 			return Some(
 				// SAFETY: Next token must exist because self.peek() is Some(..)
-				if process_newlines {
-					unsafe { self.next_unfiltered().unwrap_unchecked() }
-				} else {
-					unsafe { self.next().unwrap_unchecked() }
-				},
+				if process_newlines { self.next_unfiltered().unwrap() } else { self.next().unwrap() },
 			);
 		}
 
@@ -148,6 +146,10 @@ fn token_stream() {
 		Token { kind: TokenKind::Newline, span: Span::new(0, 1) },
 		Token { kind: TokenKind::And, span: Span::new(1, 2) },
 		Token { kind: TokenKind::Ident(SmolStr::new("test")), span: Span::new(2, 6) },
+		Token { kind: TokenKind::OpenDelim(Delimiter::Paren), span: Span::new(0, 0) },
+		Token { kind: TokenKind::OpenDelim(Delimiter::Bracket), span: Span::new(0, 0) },
+		Token { kind: TokenKind::CloseDelim(Delimiter::Bracket), span: Span::new(0, 0) },
+		Token { kind: TokenKind::CloseDelim(Delimiter::Paren), span: Span::new(0, 0) },
 	]);
 
 	assert_eq!(
@@ -159,9 +161,24 @@ fn token_stream() {
 	assert_eq!(token_stream.next(), Some(Token { kind: TokenKind::And, span: Span::new(1, 2) }));
 	assert_eq!(token_stream.is_next_newline(), false);
 	assert_eq!(
-		token_stream.expect(ValueTokenKind::Ident),
+		token_stream.expect(TokenKind::AnyIdent),
 		Ok(Token { kind: TokenKind::Ident(SmolStr::new("test")), span: Span::new(2, 6) })
 	);
+
+	token_stream.consume_until(TokenKind::OpenDelim(Delimiter::Paren));
+	assert_eq!(
+		token_stream.next_unfiltered().map(|token| token.kind),
+		Some(TokenKind::OpenDelim(Delimiter::Paren))
+	);
+
+	token_stream.consume_while(TokenKind::OpenDelim(Delimiter::Bracket));
+	assert_eq!(
+		token_stream.next_unfiltered().map(|token| token.kind),
+		Some(TokenKind::CloseDelim(Delimiter::Bracket))
+	);
+
+	token_stream.consume_until(TokenKind::Eof);
+
 	assert_eq!(token_stream.expect(TokenKind::Eof), Ok(Token::new(TokenKind::Newline, DUMMY_SPAN)));
 	assert_eq!(
 		token_stream.matches(TokenKind::Eof),
@@ -296,9 +313,17 @@ pub enum TokenKind {
 	/// Literal token: `"Hello World!"`, `'\n'`, `36_254`, `0.2346`
 	Literal(LitKind),
 
+	/// Special token kinds used in patterns
+	AnyIdent,
+	AnyLiteral,
+	AnyLiteralInt,
+	AnyLiteralFloat,
+	AnyLiteralChar,
+	AnyLiteralString,
+
 	/// `\n`
 	Newline,
-	///
+	/// Well thats where it ends...
 	Eof,
 }
 
@@ -308,7 +333,7 @@ impl TokenKind {
 	}
 }
 
-impl<const N: usize> Pattern for &[TokenKind; N] {
+impl<const N: usize> Pattern for [TokenKind; N] {
 	fn joined_str(&self, sep: &str) -> String {
 		self.iter().join_format(sep, |kind| format!("{kind:?}"))
 	}
@@ -327,11 +352,25 @@ impl Pattern for TokenKind {
 		format!("{self:?}")
 	}
 
-	fn matches(&self, other: &TokenKind) -> bool {
-		self == other
+	fn matches(&self, other: &Self) -> bool {
+		match (self, other) {
+			_ if self == other => true,
+			(Self::Ident(_), Self::AnyIdent) | (Self::AnyIdent, Self::Ident(_)) => true,
+			(Self::Literal(_), Self::AnyLiteral)
+			| (Self::Literal(LitKind::Int(_)), Self::AnyLiteralInt)
+			| (Self::Literal(LitKind::Float(_)), Self::AnyLiteralFloat)
+			| (Self::Literal(LitKind::Char(_)), Self::AnyLiteralChar)
+			| (Self::Literal(LitKind::String(_)), Self::AnyLiteralString)
+			| (Self::AnyLiteral, Self::Literal(_))
+			| (Self::AnyLiteralInt, Self::Literal(LitKind::Int(_)))
+			| (Self::AnyLiteralFloat, Self::Literal(LitKind::Float(_)))
+			| (Self::AnyLiteralChar, Self::Literal(LitKind::Char(_)))
+			| (Self::AnyLiteralString, Self::Literal(LitKind::String(_))) => true,
+			_ => false,
+		}
 	}
 
-	fn includes(&self, x: &TokenKind) -> bool {
+	fn includes(&self, x: &Self) -> bool {
 		self == x
 	}
 }
@@ -359,36 +398,6 @@ pub const KEYWORDS_MAP: ([&str; KEYWORDS_NUM], [TokenKind; KEYWORDS_NUM]) = (
 		TokenKind::For,
 	],
 );
-
-#[derive(Debug, Clone)]
-pub enum ValueTokenKind {
-	Ident,
-	LiteralInt,
-	LiteralFloat,
-	LiteralChar,
-	LiteralString,
-}
-
-impl Pattern for ValueTokenKind {
-	fn joined_str(&self, _: &str) -> String {
-		format!("{self:?}")
-	}
-
-	fn matches(&self, other: &TokenKind) -> bool {
-		matches!(
-			(other, self),
-			(TokenKind::Ident(_), ValueTokenKind::Ident)
-				| (TokenKind::Literal(LitKind::Int(_)), ValueTokenKind::LiteralInt)
-				| (TokenKind::Literal(LitKind::Float(_)), ValueTokenKind::LiteralFloat)
-				| (TokenKind::Literal(LitKind::Char(_)), ValueTokenKind::LiteralFloat)
-				| (TokenKind::Literal(LitKind::String(_)), ValueTokenKind::LiteralString)
-		)
-	}
-
-	fn includes(&self, x: &TokenKind) -> bool {
-		self.matches(x)
-	}
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Delimiter {

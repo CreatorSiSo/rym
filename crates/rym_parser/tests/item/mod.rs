@@ -1,3 +1,6 @@
+use rym_errors::Level;
+use rym_span::Span;
+
 use super::*;
 
 #[test]
@@ -51,14 +54,68 @@ fn function() {
 }
 
 #[test]
+fn function_param_default() {
+	assert_ast_errs(
+		"fn default(self, testing = 0, other_stuff: Other) {}",
+		&[fn_item(
+			("default", 3..10),
+			vec![
+				fn_param(("self", 11..15), None),
+				fn_param_default(("testing", 17..24), None, Some(expr_lit(0, 27..28))),
+				fn_param(("other_stuff", 30..41), Some(("Other", 43..48))),
+			],
+			None,
+			block(vec![], delim_span(50..51, 51..52, 50..52)),
+		)],
+		&[],
+	);
+}
+
+#[test]
 fn function_rest_param() {
 	assert_ast_errs(
-		"fn print(..values) {}",
+		r#"fn funny(..values) {}"#,
 		&[fn_item(
-			("print", 3..8),
+			("funny", 3..8),
 			vec![fn_rest_param(true, ("values", 11..17), None)],
 			None,
 			block(vec![], delim_span(19..20, 20..21, 19..21)),
+		)],
+		&[],
+	);
+
+	assert_ast_errs(
+		// TODO: Use "fn print(..values: [Display]) {}", once arrays types have been added
+		"fn print(..values: Display) {}",
+		&[fn_item(
+			("print", 3..8),
+			vec![fn_rest_param(true, ("values", 11..17), Some(("Display", 19..26)))],
+			None,
+			block(vec![], delim_span(28..29, 29..30, 28..30)),
+		)],
+		&[],
+	);
+
+	// TODO: Add more tests for error recovery when parsing function params
+	assert_ast_errs(
+		r#"fn funny(..values = &%) {}"#,
+		&[fn_item(
+			("funny", 3..8),
+			vec![fn_rest_param(true, ("values", 11..17), None)],
+			None,
+			block(vec![], delim_span(24..25, 25..26, 24..26)),
+		)],
+		&[Diagnostic::new_spanned(Level::Error, "Expected `AnyLiteral` got `And`", Span::new(20, 21))],
+	);
+
+	assert_ast_errs(
+		// TODO: Use r#"fn funny(..values = [12]) {}"#, once arrays have been added
+		r#"fn funny(..values = 12) {}"#,
+		&[fn_item(
+			("funny", 3..8),
+			vec![fn_rest_param_default(true, ("values", 11..17), None, Some(expr_lit(12, 20..22)))],
+			None,
+			block(vec![], delim_span(24..25, 25..26, 24..26)),
 		)],
 		&[],
 	);

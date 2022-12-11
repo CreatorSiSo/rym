@@ -49,11 +49,28 @@ fn fn_rest_param(
 	name: (&str, Range<usize>),
 	typ: Option<(&str, Range<usize>)>,
 ) -> FunctionParam {
+	fn_rest_param_default(rest_param, name, typ, None)
+}
+
+fn fn_param_default(
+	name: (&str, Range<usize>),
+	typ: Option<(&str, Range<usize>)>,
+	default: Option<Expr>,
+) -> FunctionParam {
+	fn_rest_param_default(false, name, typ, default)
+}
+
+fn fn_rest_param_default(
+	rest_param: bool,
+	name: (&str, Range<usize>),
+	typ: Option<(&str, Range<usize>)>,
+	default: Option<Expr>,
+) -> FunctionParam {
 	FunctionParam {
 		rest_param,
 		name: (name.0.into(), name.1.into()),
 		typ: typ.map(|typ| (typ.0.into(), typ.1.into())),
-		default: None,
+		default,
 	}
 }
 

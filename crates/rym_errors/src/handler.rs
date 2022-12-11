@@ -11,6 +11,7 @@ struct HandlerInner {
 
 /// Deals with errors and other output.
 impl Handler {
+	// TODO: Add new trait that provides a ok_or_emit(handler: &Handler) -> Option<T> {} function for RymResult<T>
 	pub fn handle<T>(&self, result: RymResult<T>) -> Option<T> {
 		match result {
 			Ok(val) => Some(val),

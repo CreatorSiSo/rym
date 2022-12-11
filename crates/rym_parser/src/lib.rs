@@ -1,30 +1,6 @@
 //! # Rym Grammar
 //!
 //! ```ignore
-//! File ⮕ Item*
-//! Item ⮕ Module | Use | Function | Enum | Struct | Trait | Implementation
-//!
-//! Module ⮕ "module" Ident "{" Item* "}"
-//!
-//! Use ⮕ "use" UseTree ItemEnd
-//! UseTree ⮕ Path | Path "::" "*" | Path "::" "{" (UseTree ("," UseTree)*)? "}"
-//!
-//! Function ⮕ "fn" Ident "(" FunctionParams? ")" ("->" Type)? BlockExpr
-//! FunctionParams ⮕ Ident ("," Ident)* ","?
-//!
-//! Enum ⮕ "enum" Ident "{" EnumItem ("," EnumItem)* ","? "}"
-//! EnumItem ⮕ Ident ("(" TupleFields? ")" | "{" StructFields? "}")?
-//!
-//! Struct ⮕ "struct" Ident ("(" TupleFields? ")" | "{" StructFields? "}" | ItemEnd)
-//! TupleFields ⮕ TupleField ("," TupleField)* ","?
-//! TupleField ⮕ (Ident ":")? Type ("=" Expr)?
-//! StructFields ⮕ StructField ("," StructField)* ","?
-//! StructField ⮕ Ident ":" Type ("=" Expr)?
-//!
-//! Trait ⮕ "trait" Ident "{" __TODO__ "}"
-//!
-//! Implementation ⮕ "impl" Path ("for" Path) "{" __TODO__ "}"
-//!
 //! Stmt ⮕ Item | VarStmt | ExprStmt
 //!
 //! VarStmt ⮕ ("const" | "mut") Ident "=" Expr ItemEnd
@@ -126,12 +102,12 @@ pub fn parse_item(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -
 	])?;
 	match item_kind {
 		TokenKind::Module => parse_module(handler, token_stream),
-		TokenKind::Use => todo!(),
+		TokenKind::Use => parse_use(handler, token_stream),
 		TokenKind::Fn => parse_function(handler, token_stream),
-		TokenKind::Enum => todo!(),
-		TokenKind::Struct => todo!(),
-		TokenKind::Trait => todo!(),
-		TokenKind::Impl => todo!(),
+		TokenKind::Enum => parse_enum(handler, token_stream),
+		TokenKind::Struct => parse_struct(handler, token_stream),
+		TokenKind::Trait => parse_trait(handler, token_stream),
+		TokenKind::Impl => parse_impl(handler, token_stream),
 		_ => unreachable!(),
 	}
 }
@@ -149,6 +125,15 @@ fn parse_module(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> 
 		})?;
 
 	Ok(Item::Module { name, items, delim_span })
+}
+
+/// Assumes that the `use` keyword has already been consumed
+/// ```ignore
+/// Use ⮕ "use" UseTree ItemEnd
+/// UseTree ⮕ Path | Path "::" "*" | Path "::" "{" (UseTree ("," UseTree)*)? "}"
+/// ```
+fn parse_use(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> RymResult<Item> {
+	todo!()
 }
 
 /// Assumes that the `fn` keyword has already been consumed
@@ -198,6 +183,43 @@ fn parse_function(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -
 	let body = parse_block(handler, token_stream)?;
 
 	Ok(Item::Function { name, params, return_type, body })
+}
+
+/// Assumes that the `enum` keyword has already been consumed
+/// ```ignore
+/// Enum ⮕ "enum" Ident "{" EnumItem ("," EnumItem)* ","? "}"
+/// EnumItem ⮕ Ident ("(" TupleFields? ")" | "{" StructFields? "}")?
+/// ```
+fn parse_enum(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> RymResult<Item> {
+	todo!()
+}
+
+/// Assumes that the `struct` keyword has already been consumed
+/// ```ignore
+/// Struct ⮕ "struct" Ident ("(" TupleFields? ")" | "{" StructFields? "}" | ItemEnd)
+/// TupleFields ⮕ TupleField ("," TupleField)* ","?
+/// TupleField ⮕ (Ident ":")? Type ("=" Expr)?
+/// StructFields ⮕ StructField ("," StructField)* ","?
+/// StructField ⮕ Ident ":" Type ("=" Expr)?
+/// ```
+fn parse_struct(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> RymResult<Item> {
+	todo!()
+}
+
+/// Assumes that the `trait` keyword has already been consumed
+/// ```ignore
+/// Trait ⮕ "trait" Ident "{" __TODO__ "}"
+/// ```
+fn parse_trait(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> RymResult<Item> {
+	todo!()
+}
+
+/// Assumes that the `impl` keyword has already been consumed
+/// ```ignore
+/// Implementation ⮕ "impl" Path ("for" Path) "{" __TODO__ "}"
+/// ```
+fn parse_impl(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> RymResult<Item> {
+	todo!()
 }
 
 // /// ```ignore

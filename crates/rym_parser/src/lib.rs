@@ -98,6 +98,8 @@ pub fn parse_item(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -
 		TokenKind::Struct,
 		TokenKind::Trait,
 		TokenKind::Impl,
+		TokenKind::Const,
+		TokenKind::Mut,
 	])?;
 	match item_kind {
 		TokenKind::Module => parse_module(handler, token_stream),
@@ -107,6 +109,8 @@ pub fn parse_item(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -
 		TokenKind::Struct => parse_struct(handler, token_stream),
 		TokenKind::Trait => parse_trait(handler, token_stream),
 		TokenKind::Impl => parse_impl(handler, token_stream),
+		TokenKind::Const => parse_var(handler, token_stream),
+		TokenKind::Mut => parse_var(handler, token_stream),
 		_ => unreachable!(),
 	}
 }
@@ -188,7 +192,9 @@ fn parse_function(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -
 /// EnumItem ⮕ Ident ("(" TupleFields? ")" | "{" StructFields? "}")?
 /// ```
 fn parse_enum(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> RymResult<Item> {
-	todo!()
+	let name = parse_ident_and_handle_err(handler, token_stream);
+
+	Ok(Item::Enum { name })
 }
 
 /// Assumes that the `struct` keyword has already been consumed
@@ -216,6 +222,14 @@ fn parse_trait(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> R
 /// Implementation ⮕ "impl" Path ("for" Path) "{" __TODO__ "}"
 /// ```
 fn parse_impl(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> RymResult<Item> {
+	todo!()
+}
+
+/// Assumes that the `const` or `mut` keywords have already been consumed
+/// ```ignore
+/// Implementation ⮕ "impl" Path ("for" Path) "{" __TODO__ "}"
+/// ```
+fn parse_var(handler: &DiagnosticHandler, token_stream: &mut TokenStream) -> RymResult<Item> {
 	todo!()
 }
 
@@ -331,7 +345,9 @@ pub enum Item {
 		return_type: Option<Path>,
 		body: Block,
 	},
-	Enum,
+	Enum {
+		name: (SmolStr, Span),
+	},
 	Struct,
 	Trait,
 	Impl,

@@ -1,6 +1,7 @@
 # Rym
 
-**Rym Lang** or just **Rym** is a statically typed 'mid-level' programming language inspired by and written in Rust for educational purposes. Big thanks go to Robert Nystrom who made his book [crafting interpreters](http://craftinginterpreters.com) open source which enabled me to read it and learn a lot :).
+**Rym Lang** or just **Rym** is a modern, statically typed programming language inspired by Rust, Swift, Python and others that focuses on ease of use and safety.
+Big thanks go to Robert Nystrom who made his book [crafting interpreters](http://craftinginterpreters.com) open source which enabled me to read and learn from it :).
 
 ![Screenshot from 2022-11-06 04-48-30](https://user-images.githubusercontent.com/64036709/200153194-31819cec-809c-4fa7-b7db-feda44a1fa9b.png)
 
@@ -9,34 +10,44 @@
 - [Rym](#rym)
 	- [Content](#content)
 	- [About Rym](#about-rym)
-		- [Goals](#goals)
 		- [Name](#name)
-	- [Similar projects](#similar-projects)
+		- [Goals](#goals)
 	- [How to install](#how-to-install)
+	- [Similar projects](#similar-projects)
+	- [Inspirational projects](#inspirational-projects)
 	- [Project Structure](#project-structure)
 		- [Tests](#tests)
 - [Todos](#todos)
 
 ## About Rym
 
-### Goals
-
-- Enjoyable DX (Development Experience)
-  - Informative errors and warnings
-  - Built in tools
-- Safe programming language
-  - No `null` `nil` `undefined`
-  - Static but inferred types
-- Should work as a scripting language
-- Great interoperabilty with Rust
-  - Should just work out of the box
-- Ui and apps programming
-
 ### Name
 
 - **R**ust**y** ⇒ Heavily borrows 🙃 from Rust
 - **M**ulti-paradigm ⇒ Mix of object oriented, procedural and functional programming
 - Programming **Lang**uage ⇒ because thats what it is
+
+### Goals
+
+- **MVP**
+  - Safety
+    - No `null` `nil` `undefined`
+    - Optionals wrapped in `Option<T>` enum
+    - Errors wrapped in `Result<T>`
+    - Statically typed
+- **1.0**
+  - Enjoyable DX (Development Experience)
+    - Inferred types
+    - Informative errors and warnings
+    - Builtin tools
+  - Great interoperabilty with Rust
+    - Should just work out of the box
+- **Past 1.0**
+  - Ui and Apps programming
+
+## How to install
+
+**TODO**
 
 ## Similar projects
 
@@ -46,9 +57,9 @@
 - [Rhai](https://github.com/rhaiscript/rhai): Embedded scripting language for Rust.
 - [Rune](https://github.com/rune-rs/rune): Embeddable dynamic programming language for Rust.
 
-## How to install
+## Inspirational projects
 
-**TODO**
+- [HVM](https://github.com/Kindelia/HVM): A massively parallel, optimal functional runtime in Rust
 
 ## Project Structure
 
@@ -82,18 +93,15 @@ This internally runs `cargo r --bin gen -- ./crates/tests/src/integration` which
 - [ ] Interpreter
   - [ ] add method for defining variable on interpreter directly
 - [ ] add benchmarking capabilities
-  - [ ] cargo alias eg. `cargo bench`
 - [ ] use arena allocator for scopes
   - [ ] benchmark before & after
-- [ ] use logos lexer generator
+- [ ] use logos lexer generator?
 - [ ] errors
   - [ ] use `Spanned<T>` where possible
-  - [x] construct error location from `Span` and source (file)
-  - [x] use annotations lib to display errors
   - [ ] implement error recovery to safe expr/stmt
   - [ ] use error codes that link to a more detailed explanation (https://github.com/rust-lang/rust/tree/master/compiler/rustc_error_codes)
   - [ ] `true && (break)` currently only returns `Error: Expected Literal got RightParen, Span: 14..14`, it should also say something along the lines of: `Tip: insert expression or semicolon after break`
-- [ ] types
+- [ ] data types
   - [ ] `Number`, `String`, `Char`, `Bool`
   - [ ] (literal) values that come from source code directly:
     - [ ] `LiteralNumber`, `LiteralString`, `LiteralChar`, `LiteralBool`

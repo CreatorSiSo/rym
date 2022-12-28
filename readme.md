@@ -60,7 +60,7 @@ Big thanks go to Robert Nystrom who made his book [crafting interpreters](http:/
 ## Inspirational projects
 
 - [HVM](https://github.com/Kindelia/HVM): A massively parallel, optimal functional runtime in Rust
-- [Fused Effects](https://github.com/fused-effects/fused-effects)
+- [Fused Effects](https://github.com/fused-effects/fused-effects): A fast, flexible, fused effect system for Haskell
 
 ## Project Structure
 

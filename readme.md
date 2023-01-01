@@ -3,20 +3,19 @@
 **Rym Lang** or just **Rym** is a modern, statically typed programming language inspired by Rust, Swift, Python and others that focuses on ease of use and safety.
 Big thanks go to Robert Nystrom who made his book [crafting interpreters](http://craftinginterpreters.com) open source which enabled me to read and learn from it :).
 
-![Screenshot from 2022-11-06 04-48-30](https://user-images.githubusercontent.com/64036709/200153194-31819cec-809c-4fa7-b7db-feda44a1fa9b.png)
-
 ## Content
 
 - [Rym](#rym)
-	- [Content](#content)
-	- [About Rym](#about-rym)
-		- [Name](#name)
-		- [Goals](#goals)
-	- [How to install](#how-to-install)
-	- [Similar projects](#similar-projects)
-	- [Inspirational projects](#inspirational-projects)
-	- [Project Structure](#project-structure)
-		- [Tests](#tests)
+  - [Content](#content)
+  - [About Rym](#about-rym)
+    - [Name](#name)
+    - [Goals](#goals)
+  - [Examples](#examples)
+  - [How to install](#how-to-install)
+  - [Inspirational projects](#inspirational-projects)
+  - [Similar projects](#similar-projects)
+  - [Project Structure](#project-structure)
+    - [Tests](#tests)
 - [Todos](#todos)
 
 ## About Rym
@@ -36,7 +35,7 @@ Big thanks go to Robert Nystrom who made his book [crafting interpreters](http:/
     - Errors wrapped in `Result<T>`
     - Statically typed
 - **1.0**
-  - Enjoyable DX (Development Experience)
+  - Nice DX (Development Experience)
     - Inferred types
     - Informative errors and warnings
     - Builtin tools
@@ -45,9 +44,71 @@ Big thanks go to Robert Nystrom who made his book [crafting interpreters](http:/
 - **Past 1.0**
   - Ui and Apps programming
 
+## Examples
+
+```rust
+fn main() -> Result<(), Error>, @Io {
+	const msg = "Hello World"
+	print(msg)
+
+	mut num = 2/4 * (10 - 1)
+	print("Number:", num)
+
+	const msg = msg + "!"
+	print("Combined:", msg, num)
+}
+```
+
+In Rym you can unwrap `Tryable` values like `Option`s or `Result`s
+
+```rust
+const inner = maybe_value()!
+
+// Same as
+const inner = maybe_value().unwrap()
+```
+
+Early returns when unwrapping `Tryable`s
+
+```rust
+fn main() -> Result<Number, String> {
+	const number = maybe_error()?
+	print(number)
+
+	// Same as
+	const inner = match maybe_error() {
+		Ok(val) => val,
+		err => return err,
+	}
+	print(inner)
+}
+```
+
+Tryable chaining
+
+```rust
+const chained = maybe_error()&.to_string()
+
+// Short form of:
+const chained = match maybe_error() {
+	Ok(val) => Ok(val.to_string()),
+	err => err,
+}
+// or:
+const chained = maybe_error().and_then(|val| Ok(val.to_string()))
+```
+
 ## How to install
 
 **TODO**
+
+## Inspirational projects
+
+- [HVM](https://github.com/Kindelia/HVM): A massively parallel, optimal functional runtime in Rust
+- [Unison](https://www.unison-lang.org/): A friendly programming language from the future (statically-typed, functional)
+- [Fused Effects](https://github.com/fused-effects/fused-effects): A fast, flexible, fused effect system for Haskell
+- [Rust](https://github.com/rust-lang/rust): Empowering everyone to build reliable and efficient software.
+- [Swift](https://github.com/apple/swift): A Swift is a high-performance system programming language.
 
 ## Similar projects
 
@@ -56,11 +117,6 @@ Big thanks go to Robert Nystrom who made his book [crafting interpreters](http:/
 - [Tao](https://github.com/zesterer/tao): Statically-typed functional language with polymorphism, typeclasses, algebraic effects, sum types, pattern-matching, first-class functions, currying, good diagnostics, and much more!
 - [Rhai](https://github.com/rhaiscript/rhai): Embedded scripting language for Rust.
 - [Rune](https://github.com/rune-rs/rune): Embeddable dynamic programming language for Rust.
-
-## Inspirational projects
-
-- [HVM](https://github.com/Kindelia/HVM): A massively parallel, optimal functional runtime in Rust
-- [Fused Effects](https://github.com/fused-effects/fused-effects): A fast, flexible, fused effect system for Haskell
 
 ## Project Structure
 
@@ -91,21 +147,19 @@ This internally runs `cargo r --bin gen -- ./crates/tests/src/integration` which
 
 # Todos
 
-- [ ] Interpreter
-  - [ ] add method for defining variable on interpreter directly
 - [ ] add benchmarking capabilities
-- [ ] use arena allocator for scopes
+- [ ] use arena allocator for scopes?
   - [ ] benchmark before & after
 - [ ] use logos lexer generator?
 - [ ] errors
   - [ ] use `Spanned<T>` where possible
-  - [ ] implement error recovery to safe expr/stmt
+  - [ ] implement error recovery to jump to next safe expr/stmt
   - [ ] use error codes that link to a more detailed explanation (https://github.com/rust-lang/rust/tree/master/compiler/rustc_error_codes)
   - [ ] `true && (break)` currently only returns `Error: Expected Literal got RightParen, Span: 14..14`, it should also say something along the lines of: `Tip: insert expression or semicolon after break`
 - [ ] data types
-  - [ ] `Number`, `String`, `Char`, `Bool`
+  - [ ] `number`s, `string`, `char`, `bool`
   - [ ] (literal) values that come from source code directly:
-    - [ ] `LiteralNumber`, `LiteralString`, `LiteralChar`, `LiteralBool`
+    - [ ] `Literal<u8>`, `Literal<f32>`, `Literal<string>`, `Literal<char>`, `Literal<bool>`
     - [ ] `1`, `2.2`, `"Hello World!"`, `'\n'`, `false`
-  - [ ] type unions: `0 | 1 | Bool`
-  - [ ] type functions [docs/functions.md](docs/functions.md#type_functions)
+  - [ ] type unions: `0 | 1 | bool`
+  - [ ] type functions [docs/functions.md](docs/functions.md#type_functions)?

@@ -1,18 +1,23 @@
 {
 	"name": "rym-lang",
-	"displayName": "Rym Lang",
+	"displayName": "Rym",
 	"description": "Language extension for the Rym programming language.",
-	"repository": {
-		"url": "https://github.com/creatorsiso/rym",
-		"directory": "extensions/vscode"
-	},
-	"version": "0.0.3",
-	"engines": {
-		"vscode": "^1.72.1"
-	},
 	"categories": [
 		"Programming Languages"
 	],
+	"icon": "icons/icon.png",
+	"license": "MIT",
+	"repository": {
+		"url": "https://github.com/creatorsiso/rym",
+		"directory": "crates/ext_vscode"
+	},
+	"version": "0.0.5",
+	"engines": {
+		"vscode": "^1.74.2"
+	},
+	"scripts": {
+		"pkg": "vsce package"
+	},
 	"contributes": {
 		"languages": [
 			{
@@ -29,6 +34,9 @@
 					"light": "./icons/file-icon-light.svg"
 				},
 				"configuration": "./language-configuration.json"
+			},
+			{
+				"id": "rym-injection"
 			}
 		],
 		"grammars": [
@@ -36,6 +44,18 @@
 				"language": "rym",
 				"scopeName": "source.rym",
 				"path": "./syntaxes/rym.tmLanguage.json"
+			},
+			{
+				"language": "rym-injection",
+				"scopeName": "markdown.rym.codeblock",
+				"path": "./syntaxes/markdown-rym.tmLanguage.json",
+				"injectTo": [
+					"text.html.markdown",
+					"text.html.quarto"
+				],
+				"embeddedLanguages": {
+					"meta.embedded.block.rym": "rym"
+				}
 			}
 		]
 	},

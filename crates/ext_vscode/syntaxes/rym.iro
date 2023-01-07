@@ -1,0 +1,239 @@
+// - Press Ctrl + '+'/'-' To Zoom in
+// - Press Ctrl + S to save and recalculate...
+// - Documents are saved to web storage.
+// - Only one save slot supported.
+// - Matches cannot span lines.
+// - Unicode chars must be defined in \u0000 to \uffff format.
+// - All matches must be contained by a single group ( ... )
+// - Look behinds not permitted, (?<= or (?<!
+// - Look forwards are permitted (?= or (?!
+// - Constants are defined as __my_const = (......)
+// - The \= format allows unescaped regular expressions
+// - Constants referenced by match \= $${__my_const}
+// - Constants can reference other constants
+
+name                   = rym
+file_extensions[]      = rym;
+
+// Styles
+
+styles[] {
+   .comment: style {
+      color                 = grey
+      italic                = true
+      ace_scope             = comment
+      textmate_scope        = comment
+      pygments_scope        = Comment
+   }
+
+   .keyword: style {
+      color                 = #f78c6c
+      ace_scope             = keyword.control
+      textmate_scope        = keyword.control
+      pygments_scope        = Keyword
+   }
+
+   .decl_keyword: style {
+      color                 = #c792ea
+      ace_scope             = keyword.other storage.type
+      textmate_scope        = keyword.other storage.type
+      pygments_scope        = Keyword
+   }
+
+   .ctrl_flow_keyword: style {
+      color                 = #89ddff
+      italic                = true
+      ace_scope             = keyword
+      textmate_scope        = keyword
+      pygments_scope        = Keyword
+   }
+
+   .ident: style {
+      color                 = #a6accd
+      ace_scope             = variable.other
+      textmate_scope        = variable.other
+      pygments_scope        = Name.Variable
+   }
+
+   .function_ident: style {
+      color                 = #82aaff
+      ace_scope             = entity.name.function
+      textmate_scope        = entity.name.function
+      pygments_scope        = Name.Function
+   }
+
+   .complex_ident: style {
+      color                 = #ffcb6b
+      ace_scope             = entity.name
+      textmate_scope        = entity.name
+      pygments_scope        = Name.Variable
+   }
+
+   .numeric: style {
+      color                 = #f78c6c
+      ace_scope             = constant.numeric
+      textmate_scope        = constant.numeric
+      pygments_scope        = Number
+   }
+
+   .bool: style {
+      color                 = #f78c6c
+      italic                = true
+      ace_scope             = constant.language.bool
+      textmate_scope        = constant.language.bool
+      pygments_scope        = Literal
+   }
+
+   .paren: style {
+      color                 = #ffd700
+      ace_scope             = punctuation
+      textmate_scope        = punctuation
+      pygments_scope        = Punctuation
+   }
+
+   .punctuation: style {
+      color                 = #89ddff
+      ace_scope             = punctuation
+      textmate_scope        = punctuation
+      pygments_scope        = Punctuation
+   }
+
+   .text: style {
+      color                 = #c3e88d
+      ace_scope             = string
+      textmate_scope        = string
+      pygments_scope        = String
+   }
+}
+
+// Parse contexts
+
+contexts[]  {
+   // Main Context - Entry point context
+   main: context {
+      :pattern {
+         regex          \= (//.*)
+         styles[]        = .comment;
+      }
+
+      :include "multi_line_comment";
+
+      :pattern {
+         regex          \= (use|pub|self|Self|super|as|impl|move|func|proc)
+         styles[]        = .keyword;
+      }
+
+      :pattern {
+         regex          \= (const|mut|struct|enum)
+         styles[]        = .decl_keyword;
+      }
+
+      :pattern {
+         regex          \= (while|loop|for|in|match)
+         styles[]        = .ctrl_flow_keyword;
+      }
+
+      :pattern {
+         regex          \= (true|false)
+         styles[]        = .bool;
+      }
+
+      :pattern {
+         regex          \= ([a-z|_][A-Za-z0-9|_]*(?=\(|<))
+         styles[]        = .function_ident;
+      }
+
+      :pattern {
+         regex          \= ([a-z|_][A-Za-z0-9|_]*)
+         styles[]        = .ident;
+      }
+
+      :pattern {
+         regex          \= ([A-Z|_][A-Za-z0-9|_]*)
+         styles[]        = .complex_ident;
+      }
+
+      :include "numeric";
+
+      :inline_push {
+         regex          \= (\")
+         styles[]        = .punctuation;
+         default_style   = .text
+         :pop {
+            regex       \= (\")
+            styles[]     = .punctuation;
+         }
+      }
+
+      :inline_push {
+         regex          \= (\')
+         styles[]        = .punctuation;
+         default_style   = .text
+         :pop {
+            regex       \= (\')
+            styles[]     = .punctuation;
+         }
+      }
+
+      :include "paren";
+
+      :pattern {
+         regex          \= (\.|:|;|,|<|>|=|\+|\*|/|->|=>|@)
+         styles[]        = .punctuation;
+      }
+   }
+
+   paren: context {
+      :inline_push {
+         regex          \= (\{)
+         styles[]        = .paren;
+         :pop {
+            regex       \= (\})
+            styles[]     = .paren;
+         }
+         :include "main";
+      }
+
+      :inline_push {
+         regex          \= (\()
+         styles[]        = .paren;
+         :pop {
+            regex       \= (\))
+            styles[]     = .paren;
+         }
+         :include "main";
+      }
+
+      :inline_push {
+         regex          \= (\[)
+         styles[]        = .paren;
+         :pop {
+            regex       \= (\])
+            styles[]     = .paren;
+         }
+         :include "main";
+      }
+   }
+
+   // Numeric Context
+   numeric: context {
+      :pattern {
+         regex          \= (\b\d[_|\d]*)
+         styles[]        = .numeric;
+      }
+   }
+
+   // Multi Line Comment Context
+   multi_line_comment: context {
+      description        = multiline
+      :inline_push {
+         regex          \= (/\*)
+         styles[]        = .comment;
+         default_style   = .comment
+         :pop {
+            regex       \= (\*/)
+            styles[]     = .comment;
+         }
+      }
+   }
+}

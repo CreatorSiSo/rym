@@ -1,29 +1,20 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "Rym",
+	"scopeName": "source.rym",
+
 	"patterns": [
-		{
-			"include": "#block-comments"
-		},
-		{
-			"include": "#comments"
-		},
-		{
-			"include": "#keywords"
-		},
-		{
-			"include": "#strings"
-		},
-		{
-			"include": "#constants"
-		},
-		{
-			"include": "#function_declaration"
-		},
-		{
-			"include": "#function_name"
-		}
+		{ "include": "#block-comments" },
+		{ "include": "#comments" },
+		{ "include": "#keywords" },
+		{ "include": "#punctuation" },
+		{ "include": "#strings" },
+		{ "include": "#constants" },
+		{ "include": "#function_declaration" },
+		{ "include": "#function_name" },
+		{ "include": "#ident" }
 	],
+
 	"repository": {
 		"comments": {
 			"patterns": [
@@ -39,6 +30,7 @@
 				}
 			]
 		},
+
 		"block-comments": {
 			"patterns": [
 				{
@@ -51,25 +43,18 @@
 					"name": "comment.block.documentation.rym",
 					"begin": "/\\*\\*",
 					"end": "\\*/",
-					"patterns": [
-						{
-							"include": "#block-comments"
-						}
-					]
+					"patterns": [{ "include": "#block-comments" }]
 				},
 				{
 					"comment": "block comments",
 					"name": "comment.block.rym",
 					"begin": "/\\*(?!\\*)",
 					"end": "\\*/",
-					"patterns": [
-						{
-							"include": "#block-comments"
-						}
-					]
+					"patterns": [{ "include": "#block-comments" }]
 				}
 			]
 		},
+
 		"constants": {
 			"patterns": [
 				{
@@ -77,60 +62,42 @@
 					"name": "constant.numeric.decimal.rym",
 					"match": "\\b\\d[\\d_]*(\\.?)[\\d_]*(?:(E)([+-])([\\d_]+))?(f32|f64|i128|i16|i32|i64|i8|isize|u128|u16|u32|u64|u8|usize)?\\b",
 					"captures": {
-						"1": {
-							"name": "punctuation.separator.dot.decimal.rym"
-						},
-						"2": {
-							"name": "keyword.operator.exponent.rym"
-						},
-						"3": {
-							"name": "keyword.operator.exponent.sign.rym"
-						},
-						"4": {
-							"name": "constant.numeric.decimal.exponent.mantissa.rym"
-						},
-						"5": {
-							"name": "entity.name.type.numeric.rym"
-						}
+						"1": { "name": "punctuation.separator.dot.decimal.rym" },
+						"2": { "name": "keyword.operator.exponent.rym" },
+						"3": { "name": "keyword.operator.exponent.sign.rym" },
+						"4": { "name": "constant.numeric.decimal.exponent.mantissa.rym" },
+						"5": { "name": "entity.name.type.numeric.rym" }
 					}
 				},
 				{
 					"comment": "booleans",
-					"name": "constant.language.bool.rym",
-					"match": "\\b(true|false)\\b"
+					"match": "\\b(true|false)\\b",
+					"name": "constant.language.bool.rym keyword.other.rym"
 				}
 			]
 		},
+
 		"function_declaration": {
 			"patterns": [
 				{
-					"begin": "\\b(fn)\\b",
+					"begin": "\\b(func|proc)\\b",
 					"beginCaptures": {
-						"1": {
-							"name": "storage.type.fn.rym"
-						}
+						"1": { "name": "storage.type.fn.rym keyword.other.rym" }
 					},
 					"end": "(\\{)|(?=\\/\\/|\\n|\\r)",
 					"endCaptures": {
-						"1": {
-							"name": "punctuation.definition.block.begin.rym"
-						}
+						"1": { "name": "punctuation.definition.block.begin.rym" }
 					},
 					"name": "meta.function.signature.rym",
 					"patterns": [
-						{
-							"include": "#function_declaration"
-						},
-						{
-							"include": "#function_name"
-						},
-						{
-							"include": "#parameters"
-						}
+						{ "include": "#function_declaration" },
+						{ "include": "#function_name" },
+						{ "include": "#parameters" }
 					]
 				}
 			]
 		},
+
 		"function_name": {
 			"patterns": [
 				{
@@ -138,28 +105,42 @@
 					"name": "entity.name.function.rym"
 				},
 				{
-					"match": "([_a-zA-Z][_a-zA-Z0-9]*)\\s*(:?=)(?=\\s*fn\\()",
+					"match": "([_a-zA-Z][_a-zA-Z0-9]*)\\s*((?=<.*\\()|(?=\\())",
 					"captures": {
-						"1": {
-							"name": "entity.name.function.rym"
-						},
-						"2": {
-							"name": "keyword.operator.assignment.rym"
-						}
+						"1": { "name": "entity.name.function.rym" },
+						"2": { "name": "keyword.operator.assignment.rym" }
 					}
 				}
 			]
 		},
+
+		"ident": {
+			"patterns": [
+				{
+					"match": "([A-Z]|_+[A-Z])[_a-zA-Z0-9]*",
+					"name": "entity.name.rym"
+				},
+				{
+					"match": "[_a-z][_a-zA-Z0-9]*",
+					"name": "variable.name"
+				}
+			]
+		},
+
 		"keywords": {
 			"patterns": [
 				{
 					"name": "keyword.other.rym",
-					"match": "\\b(fn)\\b"
+					"match": "\\b(func|proc|use|pub|self|Self|super|as|move)\\b"
+				},
+				{
+					"name": "keyword.control keyword.other.rym",
+					"match": "\\b(impl|trait|struct|enum)\\b"
 				},
 				{
 					"comment": "control flow keywords",
 					"name": "keyword.control.rym",
-					"match": "\\b(break|continue|else|for|if|loop|return|while)\\b"
+					"match": "\\b(loop|while|for|in|if|else|return|break|continue)\\b"
 				},
 				{
 					"comment": "storage keywords",
@@ -190,31 +171,79 @@
 					"comment": "less than, greater than (special case)",
 					"match": "(?:\\b|(?:(\\))|(\\])|(\\})))[ \\t]+([<>])[ \\t]+(?:\\b|(?:(\\()|(\\[)|(\\{)))",
 					"captures": {
-						"1": {
-							"name": "punctuation.brackets.round.rym"
-						},
-						"2": {
-							"name": "punctuation.brackets.square.rym"
-						},
-						"3": {
-							"name": "punctuation.brackets.curly.rym"
-						},
-						"4": {
-							"name": "keyword.operator.comparison.rym"
-						},
-						"5": {
-							"name": "punctuation.brackets.round.rym"
-						},
-						"6": {
-							"name": "punctuation.brackets.square.rym"
-						},
-						"7": {
-							"name": "punctuation.brackets.curly.rym"
-						}
+						"1": { "name": "punctuation.brackets.round.rym" },
+						"2": { "name": "punctuation.brackets.square.rym" },
+						"3": { "name": "punctuation.brackets.curly.rym" },
+						"4": { "name": "keyword.operator.comparison.rym" },
+						"5": { "name": "punctuation.brackets.round.rym" },
+						"6": { "name": "punctuation.brackets.square.rym" },
+						"7": { "name": "punctuation.brackets.curly.rym" }
 					}
 				}
 			]
 		},
+
+		"punctuation": {
+			"patterns": [
+				{
+					"comment": "dot",
+					"name": "punctuation.dot.rym",
+					"match": "\\."
+				},
+				{
+					"comment": "comma",
+					"name": "punctuation.comma.rym",
+					"match": ","
+				},
+				{
+					"comment": "colon",
+					"name": "punctuation.colon.rym",
+					"match": ":"
+				},
+				{
+					"comment": "semicolon",
+					"name": "punctuation.semi.rym",
+					"match": ";"
+				},
+				{
+					"comment": "at",
+					"name": "punctuation.at.rym",
+					"match": "@"
+				},
+				{
+					"comment": "thin arrow",
+					"name": "punctuation.rym",
+					"match": "->"
+				},
+				{
+					"comment": "fat arrow",
+					"name": "punctuation.rym",
+					"match": "=>"
+				},
+				{
+					"comment": "curly braces",
+					"name": "punctuation.brackets.curly.rym",
+					"match": "[{}]"
+				},
+				{
+					"comment": "parentheses, round brackets",
+					"name": "punctuation.brackets.round.rym",
+					"match": "[()]"
+				},
+				{
+					"comment": "square brackets",
+					"name": "punctuation.brackets.square.rym",
+					"match": "[\\[\\]]"
+				},
+
+				{
+					"comment": "angle brackets",
+					"name": "punctuation.brackets.angle.rym",
+					"match": "(?<!=)[<>]"
+				}
+			]
+		},
+
 		"strings": {
 			"name": "string.quoted.double.rym",
 			"begin": "\"",
@@ -226,6 +255,5 @@
 				}
 			]
 		}
-	},
-	"scopeName": "source.rym"
+	}
 }

@@ -1,4 +1,4 @@
-fn fib_recurse(n) {
+func fib_recurse(n) {
 	if n == 0 || n == 1 {
 		return n
 	}

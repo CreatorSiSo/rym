@@ -1,4 +1,4 @@
-fn fib_iter(n) {
+func fib_iter(n) {
 	mut current = 0
 	mut next = 1
 

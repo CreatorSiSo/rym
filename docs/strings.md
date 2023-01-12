@@ -2,10 +2,10 @@
 
 ## Prefix Functions
 
-```rust
+```rym
 /// Parse formatting expressions from string,
 /// runs at compile time
-fn f(string: String) -> Result<Ast, ParseError> {
+func f(string: String) -> Result<Ast, ParseError> {
 	..
 }
 

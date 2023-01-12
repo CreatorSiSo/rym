@@ -1,23 +1,31 @@
-fn returns_fn(value, info) /* -> Fn */ {
-	println("called outer with value: `", value, "`")
-	println("\t", info)
-
-	fn inner(value) /* -> () */ {
-		println("called inner with value: `", value, "`")
-		println("\t", info)
-	}
-
-	inner
+struct String {
+	vec: Vec<u8>
 }
 
-// const returns_fn = "placeholder"
+/// This is a doccomment
+func main() -> {
+	const test: () = {
+		mut one = 40 / 40 + 0 * 90_000
+		print(2, f"{one} plus 2")
 
-const fn_ = returns_fn(1, "test")
-println(" ---")
+		/* This
+		is
+		a
+		multiline
+		comment */
+		const tuple_1 = (1, 2, 3)
+		_block: {
 
-// TODO: Make function envs separate from the main one
-const info = {}
-const called_fn_1 = returns_fn(false, "Functions are currently closures...")(true)
-println(" ---")
+		}
 
-const called_fn_1 = { const test = returns_fn; test(32, "Blocky") }(64)
+		loop {}
+		while true {}
+		for i in 0..10 {}
+	}
+}
+
+func print(args: ..[impl Debug]) -> !Io {
+}
+
+func gen<T>(args: ..[impl Debug]) -> !Io {
+}

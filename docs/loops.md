@@ -2,7 +2,7 @@
 
 ## Loop
 
-```rust
+```rym
 loop {
 	...
 }
@@ -10,7 +10,7 @@ loop {
 
 ## While
 
-```rust
+```rym
 while expr {
 	...
 }
@@ -18,7 +18,7 @@ while expr {
 
 ## For
 
-```rust
+```rym
 for element in collection {
 	...
 }

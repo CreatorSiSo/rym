@@ -1,8 +1,8 @@
 # Modules
 
-```rust
+```rym
 mod something {
-	pub(crate) fn welcome_msg() -> String {
+	pub(crate) func welcome_msg() -> String {
 		"Hello World :)"
 	}
 
@@ -13,10 +13,10 @@ mod something {
 }
 
 mod somewhere {
-	use super::something::{welcome_msg, startup_msg}
-	use crate::something::{welcome_msg, startup_msg}
+	use super.something.{welcome_msg, startup_msg}
+	use crate.something.{welcome_msg, startup_msg}
 
-	fn main() {
+	func main() {
 		const msg = startup_msg("pcbeepboop")
 		const msg = welcome_msg()
 	}

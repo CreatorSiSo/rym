@@ -1,14 +1,13 @@
-
-
-fn main() -> Io; Result<(), Error> {
+func main() -> Result<(), Error>, !Io {
 	const msg = "Hello World"
-	println(msg)
+	print(msg)
 
 	mut num = 2 / 4 * (10 - 1)
-	println("Number:\t", num)
+	// TODO Do not insert space between items if leeding or trailing whitespace is detected
+	print("Number:\t", num)
 
 	const msg = msg + "!"
-	println("Combined:\t", msg, " ", num)
+	print("Combined:\t", msg, num)
 
 	might_return_error()?
 	const maybe_value = do_stuff(testing).even_more(false)

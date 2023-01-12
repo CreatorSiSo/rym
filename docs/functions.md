@@ -175,7 +175,7 @@ const add = |a: int, b: int| a + b
   	if value.ends_with("px") {
   		Ok(())
   	} else {
-  		Err(TypeError::Mismatch("Expected `px` at the end of a WidthString."))
+  		Err(.Mismatch("Expected `px` at the end of a WidthString."))
   	}
   }
 
@@ -183,7 +183,7 @@ const add = |a: int, b: int| a + b
   	if value.ends_with("px") {
   		Ok(())
   	} else {
-  		Err(TypeError::Mismatch("Expected `px` at the end of a WidthString."))
+  		Err(.Mismatch("Expected `px` at the end of a WidthString."))
   	}
   }
 ```

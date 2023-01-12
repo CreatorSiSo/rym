@@ -1,0 +1,23 @@
+use crate.Unwrap
+use crate.Div
+
+pub enum Result<T, E> {
+	Ok(T),
+	Err(E),
+}
+
+impl<T> Unwrap<T> for Option<T> where T: Debug {
+	func unwrap(move self) -> T, ?Div {
+		match self {
+			Ok(value) => value,
+			Err(err) => panic(f"Called Result.unwrap() on Result.Err({err:?})"),
+		}
+	}
+
+	func expect(move self, panic_msg: String) -> T, ?Div {
+		match self {
+			Ok(value) => value,
+			Err(err) => panic(f"Expect {panic_msg} got {err:?}"),
+		}
+	}
+}

@@ -21,12 +21,12 @@ classDiagram
 		Some~T~
 
 		<<impl>>
-		const fn is_none(self) bool
-		const fn is_some(self) bool
+		const func is_none(self) bool
+		const func is_some(self) bool
 
-		const fn as_mut(mut self) Option~mut T~
+		const func as_mut(mut self) Option~mut T~
 
-		const fn expect(move self, msg: String) T
-		const fn unwrap(move self) T
+		const func expect(move self, msg: String) T
+		const func unwrap(move self) T
 	}
 ```

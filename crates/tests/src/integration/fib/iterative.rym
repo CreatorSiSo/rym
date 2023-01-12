@@ -1,7 +1,7 @@
 // Other fibonacci sequence algorithms:
 // https://eskeype.github.io/2018/04/20/7-Fibonacci-Algorithms/
 
-fn fib_iter(n) {
+func fib_iter(n) {
 	mut current = 0
 	mut next = 1
 

@@ -6,16 +6,16 @@ Big thanks go to Robert Nystrom who made his book [crafting interpreters](http:/
 ## Content
 
 - [Rym](#rym)
-	- [Content](#content)
-	- [About Rym](#about-rym)
-		- [Name](#name)
-		- [Goals](#goals)
-	- [Examples](#examples)
-	- [How to install](#how-to-install)
-	- [Inspirational projects](#inspirational-projects)
-	- [Similar projects](#similar-projects)
-	- [Project Structure](#project-structure)
-		- [Tests](#tests)
+  - [Content](#content)
+  - [About Rym](#about-rym)
+    - [Name](#name)
+    - [Goals](#goals)
+  - [Examples](#examples)
+  - [How to install](#how-to-install)
+  - [Inspirational projects](#inspirational-projects)
+  - [Similar projects](#similar-projects)
+  - [Project Structure](#project-structure)
+    - [Tests](#tests)
 - [Todos](#todos)
 
 ## About Rym
@@ -47,7 +47,7 @@ Big thanks go to Robert Nystrom who made his book [crafting interpreters](http:/
 ## Examples
 
 ```rust
-fn main() -> Result<(), Error>, @Io {
+func main() -> Result<(), Error>, ?Io {
 	const msg = "Hello World"
 	print(msg)
 
@@ -71,7 +71,7 @@ const inner = maybe_value().unwrap()
 Early returns when unwrapping `Tryable`s
 
 ```rust
-fn main() -> Result<Number, String> {
+func main() -> Result<Number, String> {
 	const number = maybe_error()?
 	print(number)
 

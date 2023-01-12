@@ -1,0 +1,13 @@
+use crate.Div
+
+pub func panic(msg: String) -> !Div {
+	// TODO
+}
+
+pub func todo(msg: String) -> !Div {
+	panic("__TODO__")
+}
+
+pub func unreachable(msg: String) -> !Div {
+	// TODO
+}

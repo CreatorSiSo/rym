@@ -1,6 +1,6 @@
 # Tuples
 
-```rust
+```rym
 const tuple = (89, "testing", false)
 assert_eq(tuple.0, 89)
 assert_eq(tuple.1, "testing")

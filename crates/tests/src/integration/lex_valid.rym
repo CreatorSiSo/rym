@@ -22,14 +22,14 @@ ident	ifier
 ! != = == > >= < <=
 if else for while loop return break
  false true && ||
- fn const mut
+ func const mut
  struct self
  print
 "
 
 if else for while loop return break
 false true
-fn const mut
+func const mut
 struct self
 
 testing(arg1,, arg2)

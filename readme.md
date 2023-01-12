@@ -6,16 +6,16 @@ Big thanks go to Robert Nystrom who made his book [crafting interpreters](http:/
 ## Content
 
 - [Rym](#rym)
-  - [Content](#content)
-  - [About Rym](#about-rym)
-    - [Name](#name)
-    - [Goals](#goals)
-  - [Examples](#examples)
-  - [How to install](#how-to-install)
-  - [Inspirational projects](#inspirational-projects)
-  - [Similar projects](#similar-projects)
-  - [Project Structure](#project-structure)
-    - [Tests](#tests)
+	- [Content](#content)
+	- [About Rym](#about-rym)
+		- [Name](#name)
+		- [Goals](#goals)
+	- [Examples](#examples)
+	- [How to install](#how-to-install)
+	- [Inspirational projects](#inspirational-projects)
+	- [Similar projects](#similar-projects)
+	- [Project Structure](#project-structure)
+		- [Tests](#tests)
 - [Todos](#todos)
 
 ## About Rym
@@ -147,6 +147,7 @@ This internally runs `cargo r --bin gen -- ./crates/tests/src/integration` which
 
 # Todos
 
+- [ ] use insta snapshot testing crate
 - [ ] add benchmarking capabilities
 - [ ] use arena allocator for scopes?
   - [ ] benchmark before & after

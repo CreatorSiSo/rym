@@ -211,6 +211,11 @@
 					"match": "@"
 				},
 				{
+					"comment": "question mark",
+					"name": "punctuation.question.rym",
+					"match": "\\?"
+				},
+				{
 					"comment": "thin arrow",
 					"name": "punctuation.rym",
 					"match": "->"

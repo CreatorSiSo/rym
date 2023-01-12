@@ -6,21 +6,9 @@ use std::num::{ParseFloatError, ParseIntError};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum LexError {
-	InvalidChar {
-		msg: String,
-		line: usize,
-		col: usize,
-	},
-	ParseInt {
-		msg: String,
-		line: usize,
-		col: usize,
-	},
-	ParseFloat {
-		msg: String,
-		line: usize,
-		col: usize,
-	},
+	InvalidChar { msg: String, line: usize, col: usize },
+	ParseInt { msg: String, line: usize, col: usize },
+	ParseFloat { msg: String, line: usize, col: usize },
 }
 
 impl LexError {

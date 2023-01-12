@@ -33,6 +33,11 @@ impl Span {
 		Self { start, end }
 	}
 
+	/// Constructs a new span `l_span.start..r_span.end`
+	pub const fn new_around(l_span: Span, r_span: Span) -> Self {
+		Self { start: l_span.start, end: r_span.end }
+	}
+
 	pub const fn is_dummy(&self) -> bool {
 		self.start == 0 && self.end == 0
 	}

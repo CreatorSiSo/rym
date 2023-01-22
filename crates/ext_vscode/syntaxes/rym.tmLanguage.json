@@ -6,6 +6,7 @@
 	"patterns": [
 		{ "include": "#block-comments" },
 		{ "include": "#comments" },
+		{ "include": "#primitive_types" },
 		{ "include": "#keywords" },
 		{ "include": "#punctuation" },
 		{ "include": "#strings" },
@@ -60,7 +61,7 @@
 				{
 					"comment": "decimal integers and floats",
 					"name": "constant.numeric.decimal.rym",
-					"match": "\\b\\d[\\d_]*(\\.?)[\\d_]*(?:(E)([+-])([\\d_]+))?(f32|f64|i128|i16|i32|i64|i8|isize|u128|u16|u32|u64|u8|usize)?\\b",
+					"match": "\\b\\d[\\d_]*(\\.?)[\\d_]*(?:(E)([+-])([\\d_]+))?(f\\d+|i\\d+|isize|u\\d+|usize)?\\b",
 					"captures": {
 						"1": { "name": "punctuation.separator.dot.decimal.rym" },
 						"2": { "name": "keyword.operator.exponent.rym" },
@@ -101,11 +102,11 @@
 		"function_name": {
 			"patterns": [
 				{
-					"match": "([_a-zA-Z][_a-zA-Z0-9]*)(?=\\s*\\()",
+					"match": "([_a-z][_a-zA-Z0-9]*)(?=\\s*\\()",
 					"name": "entity.name.function.rym"
 				},
 				{
-					"match": "([_a-zA-Z][_a-zA-Z0-9]*)\\s*((?=<.*\\()|(?=\\())",
+					"match": "([_a-z][_a-zA-Z0-9]*)\\s*((?=<.*\\()|(?=\\())",
 					"captures": {
 						"1": { "name": "entity.name.function.rym" },
 						"2": { "name": "keyword.operator.assignment.rym" }
@@ -179,6 +180,16 @@
 						"6": { "name": "punctuation.brackets.square.rym" },
 						"7": { "name": "punctuation.brackets.curly.rym" }
 					}
+				}
+			]
+		},
+
+		"primitive_types": {
+			"patterns": [
+				{
+					"comment": "primitive types",
+					"name": "entity.name.type.rym",
+					"match": "\\b(bool|int|isize|uint|usize|char|string)\\b"
 				}
 			]
 		},

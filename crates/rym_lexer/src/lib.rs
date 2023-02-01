@@ -108,10 +108,12 @@ impl Cursor<'_> {
 		let mut depth: usize = 1;
 		while let Some(c) = self.bump() {
 			match c {
+				// Open nested block comment
 				'/' if self.peek() == '*' => {
 					self.bump();
 					depth += 1;
 				}
+				// Close nested block comment or outer comment
 				'*' if self.peek() == '/' => {
 					self.bump();
 					depth -= 1;

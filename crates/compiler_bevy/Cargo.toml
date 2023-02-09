@@ -1,0 +1,11 @@
+[package]
+name = "compiler_bevy"
+version = "0.0.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rym_lexer.workspace = true
+bevy = { version = "0.9", default-features = false }
+glob = "0.3.1"

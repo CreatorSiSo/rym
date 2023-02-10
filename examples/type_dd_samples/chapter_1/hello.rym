@@ -1,0 +1,3 @@
+func main() -> @Io {
+	print("Hello, Rym world!")
+}

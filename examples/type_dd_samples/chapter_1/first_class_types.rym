@@ -1,0 +1,12 @@
+func string_or_int(x: bool) -> Type {
+	if x { int } else { string }
+}
+
+func get_string_or_int(x: bool) -> string_or_int(x) {
+	if x { 94 } else { "Ninety four" }
+}
+
+valToString : (x : Bool) -> StringOrInt x -> String
+valToString x val = case x of
+                         True => cast val
+                         False => val

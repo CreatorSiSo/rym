@@ -1,9 +1,0 @@
-//! fail lex
-
-if ³ true {
-
-} else {
-
-}
-
-~@€½³²

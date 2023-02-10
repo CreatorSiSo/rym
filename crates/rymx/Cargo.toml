@@ -11,8 +11,9 @@ stringx.workspace = true
 colored = "2.0.0"
 rustyline = "10.0.0"
 ast = { path = "../ast" }
-lex = { path = "../lex" }
-parse = { path = "../parse" }
+rym_lexer = { path = "../rym_lexer" }
+rym_parser = { path = "../rym_parser" }
+rym_errors = { path = "../rym_errors" }
 tree_walk = { path = "../tree_walk" }
 
 [features]

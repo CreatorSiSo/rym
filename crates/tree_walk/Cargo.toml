@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 ast = { path = "../ast" }
-parse = { path = "../parse" }
+rym_parser = { path = "../rym_parser" }
 thiserror = "1.0.37"

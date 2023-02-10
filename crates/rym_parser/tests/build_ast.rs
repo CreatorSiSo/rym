@@ -1,4 +1,4 @@
-use indoc::indoc;
+// use indoc::indoc;
 use rym_errors::Level;
 use rym_errors::{Diagnostic, DiagnosticHandler, RymResult};
 use rym_parser::lexer::LitKind;

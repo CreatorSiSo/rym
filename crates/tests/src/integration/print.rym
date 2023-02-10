@@ -1,3 +1,0 @@
-println(true)
-println(2 + 1)
-println("one")

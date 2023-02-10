@@ -1,7 +1,7 @@
-use crate::log;
-use colored::Colorize;
-use lex::Lexer;
-use parse::Parser;
+// use crate::log;
+// use colored::Colorize;
+// use lex::Lexer;
+// use parse::Parser;
 use tree_walk::Interpreter;
 
 use rustyline::error::ReadlineError;
@@ -23,10 +23,7 @@ impl Repl {
 		if editor.load_history(".history").is_err() {
 			println!("No previous history.");
 		}
-		Ok(Self {
-			interpreter: Interpreter::default(),
-			editor,
-		})
+		Ok(Self { interpreter: Interpreter::default(), editor })
 	}
 
 	fn watch(mut self) {
@@ -55,32 +52,32 @@ impl Repl {
 	}
 
 	fn eval_line(&mut self, line: String) {
-		let (tokens, errors) = Lexer::lex(&line);
-		log::block("Lexer", || {
-			log::tokens(&tokens);
-			log::errors(&errors);
-			errors.is_empty()
-		});
+		// let (tokens, errors) = Lexer::lex(&line);
+		// log::block("Lexer", || {
+		// 	log::tokens(&tokens);
+		// 	log::errors(&errors);
+		// 	errors.is_empty()
+		// });
 
-		let (ast, errors) = Parser::parse(tokens);
-		let correct_syntax = errors.is_empty();
-		log::block("Parser", || {
-			log::ast(&ast);
-			log::errors(&errors);
-			errors.is_empty()
-		});
+		// let (ast, errors) = Parser::parse(tokens);
+		// let correct_syntax = errors.is_empty();
+		// log::block("Parser", || {
+		// 	log::ast(&ast);
+		// 	log::errors(&errors);
+		// 	errors.is_empty()
+		// });
 
-		if !correct_syntax {
-			return;
-		}
+		// if !correct_syntax {
+		// 	return;
+		// }
 
-		log::block("Interpreter", || {
-			if let Err(error) = self.interpreter.eval(&ast) {
-				println!("{} {error:?}", "Error:".red().bold());
-				false
-			} else {
-				true
-			}
-		});
+		// log::block("Interpreter", || {
+		// 	if let Err(error) = self.interpreter.eval(&ast) {
+		// 		println!("{} {error:?}", "Error:".red().bold());
+		// 		false
+		// 	} else {
+		// 		true
+		// 	}
+		// });
 	}
 }

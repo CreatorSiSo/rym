@@ -13,7 +13,7 @@ fn assert_expr_errs(src: &str, expect: RymResult<Expr>, errs: &[Diagnostic]) {
 	assert_eq!(got_expr, expect);
 }
 
-// #[test]
+#[test]
 fn simple_addition() {
 	assert_expr_errs(
 		"src + 2",

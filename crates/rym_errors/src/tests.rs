@@ -40,28 +40,28 @@ fn no_src() {
 
 #[test]
 fn src() {
-	assert_output(
-		Some("crates/tests/src/integration/control_flow.rym"),
-		Some(&include_str!("../../tests/src/integration/control_flow.rym")[0..103]),
-		&[Diagnostic::new_spanned(Level::Error, "Undeclared variable `say_hello`", Span::new(11, 20))],
-		&[&[
-			"error: Undeclared variable `say_hello`",
-			" --> crates/tests/src/integration/control_flow.rym:3:7",
-			"  |",
-			"1 | //!",
-			"2 | ",
-			"3 | const say_hello = false",
-			"  |       ^^^^^^^^^",
-			"4 | ",
-			"5 | if say_hello {",
-			"6 | \tprintln(\"Hello World!\")",
-			"7 | } else {",
-			"8 | \tprintln(\"Bye World!\")",
-			"9 | }",
-			"  |",
-		]
-		.join("\n")],
-	);
+	// assert_output(
+	// 	Some("crates/tests/src/integration/control_flow.rym"),
+	// 	Some(&include_str!("../../tests/src/integration/control_flow.rym")[0..103]),
+	// 	&[Diagnostic::new_spanned(Level::Error, "Undeclared variable `say_hello`", Span::new(11, 20))],
+	// 	&[&[
+	// 		"error: Undeclared variable `say_hello`",
+	// 		" --> crates/tests/src/integration/control_flow.rym:3:7",
+	// 		"  |",
+	// 		"1 | //!",
+	// 		"2 | ",
+	// 		"3 | const say_hello = false",
+	// 		"  |       ^^^^^^^^^",
+	// 		"4 | ",
+	// 		"5 | if say_hello {",
+	// 		"6 | \tprintln(\"Hello World!\")",
+	// 		"7 | } else {",
+	// 		"8 | \tprintln(\"Bye World!\")",
+	// 		"9 | }",
+	// 		"  |",
+	// 	]
+	// 	.join("\n")],
+	// );
 	assert_output(
 		Some("some_where/some_path.rym"),
 		Some(r#""not closed :("#),

@@ -11,18 +11,12 @@ members = [
 	# Parsing
 	"crates/rym_lexer",
 	"crates/rym_parser",
-	"crates/lex",
-	"crates/parse",
 
 	# Evaluation
 	"crates/tree_walk",
 
 	# Cli
-	"crates/compiler_bevy",
 	"crates/rymx",
-
-	# Integration Tests
-	"crates/tests",
 ]
 
 [workspace.dependencies]

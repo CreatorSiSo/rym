@@ -1,0 +1,14 @@
+---
+source: src/test.rs
+expression: maybe_items
+---
+Ok(
+    Func {
+        name: (
+            "testing",
+            5..12,
+        ),
+        params: [],
+        body: None,
+    },
+)

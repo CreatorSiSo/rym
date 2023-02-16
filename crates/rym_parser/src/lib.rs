@@ -1,55 +1,8 @@
-//! # Rym Grammar
-//!
-//! ```ignore
-//! Stmt ⮕ Item | VarStmt | ExprStmt
-//!
-//! VarStmt ⮕ ("const" | "mut") Ident "=" Expr ItemEnd
-//!
-//! ExprStmt ⮕ Expr ItemEnd
-//! Expr ⮕ ExprWithoutBlock | ExprWithBlock
-//!
-//! ExprWithoutBlock ⮕ LiteralExpr | PathExpr | OperatorExpr | GroupedExpr | ArrayExpr
-//!                    | IndexExpr | Tuple | MethodCallExpr | CallExpr | RangeExpr
-//!                    | ClosureExpr | ContinueExpr | BreakExpr | ReturnExpr
-//! LiteralExpr ⮕ FloatLit | IntLit | StringLit | CharLit
-//! PathExpr ⮕ Path
-//! OperatorExpr ⮕ UnaryExpr | BinaryExpr
-//! UnaryExpr ⮕ ("!" | "-") Expr
-//! BinaryExpr ⮕ Expr ("+" | "-" | "*" | "/" | "%") Expr
-//! GroupedExpr ⮕ "(" Expr ")"
-//! ArrayExpr ⮕ "[" (Expr ("," Expr)* ","? | Expr ";" Expr) "]"
-//! IndexExpr ⮕ Expr "[" Expr "]"
-//! Tuple ⮕ "(" ((Expr ",")+ Expr)? ")"
-//! MethodCallExpr ⮕ Expr "." Ident "(" CallArgs? ")"
-//! CallExpr ⮕ Expr "(" CallArgs? ")"
-//! CallArgs ⮕ Expr ("," Expr)* ","
-//! RangeExpr ⮕ Expr? ".." "="? Expr?
-//! ClosureExpr ⮕ "|" ClosureParams "|" (Expr | "->" Type BlockExpr)
-//! ClosureParams ⮕ __TODO__
-//! ContinueExpr ⮕ "continue"
-//! BreakExpr ⮕ "break" Expr?
-//! ReturnExpr ⮕ "return" Expr
-//!
-//! ExprWithBlock ⮕ BlockExpr | LoopExpr | IfExpr | IfVarExpr | MatchExpr
-//! BlockExpr ⮕ "{" Stmt* "}"
-//! LoopExpr ⮕ "loop" BlockExpr
-//! IfExpr ⮕ "if" Expr BlockExpr ("else" (BlockExpr | IfExpr | IfVarExpr))?
-//! IfVarExpr ⮕ "if" ("const" | "mut") __TODO__ "=" Expr BlockExpr ("else" (BlockExpr | IfExpr | IfVarExpr))?
-//! MatchExpr ⮕ __TODO__
-//!
-//! Type ⮕ Path
-//! Ident ⮕ ('_' | UnicodeIdentStart) UnicodeIdentContinue
-//! ItemEnd ⮕ ";" | "\n" | EOF
-//! ```
-
 use std::fmt::Debug;
 
 use rym_errors::{Diagnostic, DiagnosticHandler, HandleDiagnostic, Level, RymResult};
 use rym_span::{DelimSpan, Span, DUMMY_SPAN};
 use smol_str::SmolStr;
-
-pub mod lexer;
-use lexer::{Delimiter, LinearLexer, LitKind, Token, TokenKind, TokenStream};
 
 pub fn parse_file_from_src(src: &str, handler: &DiagnosticHandler) -> Vec<Item> {
 	let mut token_stream: TokenStream = LinearLexer::new(src, handler).collect();

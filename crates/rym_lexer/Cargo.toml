@@ -7,3 +7,11 @@ edition = "2021"
 
 [dependencies]
 unicode-ident = "1.0.5"
+stringx = { version = "0.1", optional = true }
+rym_errors = { workspace = true, optional = true }
+rym_span = { workspace = true, optional = true }
+rym_unescape = { workspace = true, optional = true }
+
+[features]
+default = ["rich"]
+rich = ["stringx", "rym_errors", "rym_span", "rym_unescape"]

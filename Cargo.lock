@@ -325,6 +325,10 @@ dependencies = [
 name = "rym_lexer"
 version = "0.0.0"
 dependencies = [
+ "rym_errors",
+ "rym_span",
+ "rym_unescape",
+ "stringx",
  "unicode-ident",
 ]
 

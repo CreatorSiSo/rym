@@ -11,7 +11,7 @@ macro_rules! insta_assert_parser {
 			let token_stream = Stream::from_iter(0..0, Lexer::new($src));
 			let maybe_items = $parser.parse(token_stream);
 
-			let snapshot = format!("Input: \"{}\"\n\n{:#?}", $src, &maybe_items);
+			let snapshot = format!("---\n{}\n---\n\n{:#?}", $src, &maybe_items);
 			insta::assert_snapshot!(&snapshot);
 		})*
 	};
@@ -44,6 +44,7 @@ fn simple_expressions() {
 		"(grouped_ident)",
 		"func_name(2, \"Do stuff!!\", true)",
 		"(make_func())()()()",
+		"(((wrapped)))()",
 	}
 }
 
@@ -106,5 +107,26 @@ fn variables() {
 
 			// TODO: count from 0 to 10 and print f"{counter}: Hello World!\n" every time
 		}"#),
+	}
+}
+
+#[test]
+fn if_expressions() {
+	insta_assert_parser! {
+		expr_parser();
+		r#"if true then { print("Hello Universe!"); } else { print("Hello World!"); }"#,
+		r#"if (true == false) then ("Hello Universe!") else ("Hello World!")"#,
+		r#"if true then "Hello Universe!" else "Hello World!""#,
+		indoc!(r#"
+			if true then "Hello Universe!"
+			else "Hello World!""#),
+		indoc!(r#"
+			if stuff_goes_right(1, 2, 9) then {
+				print("Hello Universe!");
+				20;
+			} else {
+				print("Hello World!");
+				10;
+			}"#),
 	}
 }

@@ -1,0 +1,27 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+---
+if true then "Hello Universe!" else "Hello World!"
+---
+
+Ok(
+    (
+        If {
+            condition: (
+                Ident("true"),
+                3..7,
+            ),
+            then_branch: (
+                String("Hello Universe!"),
+                13..30,
+            ),
+            else_branch: (
+                String("Hello World!"),
+                36..50,
+            ),
+        },
+        0..50,
+    ),
+)

@@ -2,10 +2,12 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
-Input: "{
+---
+{
 	testing;
 	testing;
-}"
+}
+---
 
 Ok(
     (

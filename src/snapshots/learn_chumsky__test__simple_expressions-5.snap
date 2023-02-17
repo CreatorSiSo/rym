@@ -3,18 +3,18 @@ source: src/test.rs
 expression: "&snapshot"
 ---
 ---
--0.
+(((wrapped)))()
 ---
 
 Ok(
     (
-        Unary(
-            Neg,
+        Call(
             (
-                Float(0, 0),
-                1..3,
+                Ident("wrapped"),
+                3..10,
             ),
+            [],
         ),
-        0..3,
+        3..15,
     ),
 )

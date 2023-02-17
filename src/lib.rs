@@ -10,7 +10,7 @@ use rym_lexer::rich::Token;
 type Span = std::ops::Range<usize>;
 type Spanned<T> = (T, Span);
 
-pub trait TokenParser<O> = Parser<Token, O, Error = Simple<Token>>;
+pub trait TokenParser<O> = Parser<Token, O, Error = Simple<Token>> + Clone;
 
 /// line_end => ";" | EOF
 // fn line_end() -> impl TokenParser<()> {
@@ -63,6 +63,29 @@ pub trait TokenParser<O> = Parser<Token, O, Error = Simple<Token>>;
 // 	})
 // }
 
+pub fn stmt_parser(expr_parser: impl TokenParser<Spanned<Expr>>) -> impl TokenParser<Stmt> {
+	let ident = select! { Token::Ident(ident) => ident }
+		.map_with_span(|ident, span| (ident, span))
+		.labelled("identifier");
+
+	let var = just(Token::Const)
+		.to(false)
+		.or(just(Token::Mut).to(true))
+		.then(ident)
+		.then_ignore(just(Token::Eq))
+		.then(expr_parser.clone());
+
+	choice((
+		var.map(|((mutable, name), init)| Stmt::Var {
+			mutable,
+			name,
+			init,
+		}),
+		expr_parser.map(|expr| Stmt::Expr(expr)),
+	))
+	.then_ignore(just(Token::Semi))
+}
+
 pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 	let ident = select! { Token::Ident(ident) => ident }
 		// .map_with_span(|ident, span| (ident, span))
@@ -77,9 +100,13 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 				Token::String(val) => Expr::String(val),
 			};
 
+			let group = raw_expr
+				.clone()
+				.delimited_by(just(Token::OpenParen), just(Token::CloseParen));
+
 			let atom = choice((literal, ident.map(Expr::Ident)))
 				.map_with_span(|expr, span: Span| (expr, span))
-				.or(raw_expr.delimited_by(just(Token::OpenParen), just(Token::CloseParen)));
+				.or(group);
 
 			// List of expressions without delimiters
 			let items = expr
@@ -148,28 +175,29 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 			comp
 		});
 
-		let var = just(Token::Const)
-			.to(false)
-			.or(just(Token::Mut).to(true))
-			.then(ident.map_with_span(|name, span: Span| (name, span)))
-			.then_ignore(just(Token::Eq))
-			.then(expr.clone());
-
-		let stmt = choice((
-			var.map(|((mutable, name), init)| Stmt::Var {
-				mutable,
-				name,
-				init,
-			}),
-			expr.map(|expr| Stmt::Expr(expr)),
-		))
-		.then_ignore(just(Token::Semi));
-
-		let block = stmt
+		let block = stmt_parser(expr.clone())
 			.repeated()
 			.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace))
 			.map_with_span(|stmts, span| (Expr::Block(stmts), span));
 
-		raw_expr.or(block)
+		let if_ = recursive(|if_| {
+			just(Token::If)
+				.ignore_then(expr.clone())
+				.then_ignore(just(Token::Ident("then".into())))
+				.then(expr.clone())
+				.then(just(Token::Else).ignore_then(expr.clone()).or(if_))
+				.map_with_span(|((condition, then_branch), else_branch), span| {
+					(
+						Expr::If {
+							condition: Box::new(condition),
+							then_branch: Box::new(then_branch),
+							else_branch: Box::new(else_branch),
+						},
+						span,
+					)
+				})
+		});
+
+		choice((raw_expr, block, if_))
 	})
 }

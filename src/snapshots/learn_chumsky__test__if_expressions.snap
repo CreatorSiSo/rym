@@ -1,0 +1,67 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+---
+if true then { print("Hello Universe!"); } else { print("Hello World!"); }
+---
+
+Ok(
+    (
+        If {
+            condition: (
+                Ident("true"),
+                3..7,
+            ),
+            then_branch: (
+                Block(
+                    [
+                        Expr(
+                            (
+                                Call(
+                                    (
+                                        Ident("print"),
+                                        15..20,
+                                    ),
+                                    [
+                                        (
+                                            String("Hello Universe!"),
+                                            21..38,
+                                        ),
+                                    ],
+                                ),
+                                15..39,
+                            ),
+                        ),
+                    ],
+                ),
+                13..42,
+            ),
+            else_branch: (
+                Block(
+                    [
+                        Expr(
+                            (
+                                Call(
+                                    (
+                                        Ident("print"),
+                                        50..55,
+                                    ),
+                                    [
+                                        (
+                                            String("Hello World!"),
+                                            56..70,
+                                        ),
+                                    ],
+                                ),
+                                50..71,
+                            ),
+                        ),
+                    ],
+                ),
+                48..74,
+            ),
+        },
+        0..74,
+    ),
+)

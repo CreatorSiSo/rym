@@ -2,7 +2,9 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
-Input: "indentifier_1"
+---
+indentifier_1
+---
 
 Ok(
     (

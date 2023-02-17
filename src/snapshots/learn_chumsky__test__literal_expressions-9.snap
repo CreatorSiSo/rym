@@ -2,7 +2,9 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
-Input: "'\t'"
+---
+'\t'
+---
 
 Ok(
     (

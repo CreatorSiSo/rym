@@ -1,0 +1,37 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+---
+if (true == false) then ("Hello Universe!") else ("Hello World!")
+---
+
+Ok(
+    (
+        If {
+            condition: (
+                Binary(
+                    (
+                        Ident("true"),
+                        4..8,
+                    ),
+                    Eq,
+                    (
+                        Ident("false"),
+                        12..17,
+                    ),
+                ),
+                4..17,
+            ),
+            then_branch: (
+                String("Hello Universe!"),
+                25..42,
+            ),
+            else_branch: (
+                String("Hello World!"),
+                50..64,
+            ),
+        },
+        0..65,
+    ),
+)

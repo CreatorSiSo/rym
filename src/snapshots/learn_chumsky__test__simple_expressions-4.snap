@@ -2,7 +2,9 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
-Input: "(make_func())()()()"
+---
+(make_func())()()()
+---
 
 Ok(
     (

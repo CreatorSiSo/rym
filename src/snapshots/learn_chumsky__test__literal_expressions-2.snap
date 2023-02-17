@@ -2,7 +2,9 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
-Input: "823_472_340_983_273_327"
+---
+823_472_340_983_273_327
+---
 
 Ok(
     (

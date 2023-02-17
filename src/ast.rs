@@ -65,6 +65,12 @@ pub enum Expr {
 
 	Call(Box<Spanned<Expr>>, Vec<Spanned<Expr>>),
 	Block(Vec<Stmt>),
+
+	If {
+		condition: Box<Spanned<Expr>>,
+		then_branch: Box<Spanned<Expr>>,
+		else_branch: Box<Spanned<Expr>>,
+	},
 }
 
 impl std::fmt::Debug for Expr {
@@ -86,7 +92,18 @@ impl std::fmt::Debug for Expr {
 				.finish(),
 
 			Self::Call(val0, val1) => f.debug_tuple("Call").field(val0).field(val1).finish(),
+
 			Self::Block(val0) => f.debug_tuple("Block").field(val0).finish(),
+			Self::If {
+				condition,
+				then_branch,
+				else_branch,
+			} => f
+				.debug_struct("If")
+				.field("condition", condition)
+				.field("then_branch", then_branch)
+				.field("else_branch", else_branch)
+				.finish(),
 		}
 	}
 }

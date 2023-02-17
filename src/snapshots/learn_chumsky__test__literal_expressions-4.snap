@@ -2,7 +2,9 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
-Input: "0."
+---
+0.
+---
 
 Ok(
     (

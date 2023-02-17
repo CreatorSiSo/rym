@@ -2,7 +2,9 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
-Input: "1 == 1 + 2 / 3 != 0"
+---
+1 == 1 + 2 / 3 != 0
+---
 
 Ok(
     (

@@ -2,7 +2,9 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
-Input: "func_name(2, "Do stuff!!", true)"
+---
+func_name(2, "Do stuff!!", true)
+---
 
 Ok(
     (

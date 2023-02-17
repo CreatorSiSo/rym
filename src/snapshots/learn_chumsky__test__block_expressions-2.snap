@@ -2,7 +2,9 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
-Input: "{ call_me(); and_me(); }"
+---
+{ call_me(); and_me(); }
+---
 
 Ok(
     (

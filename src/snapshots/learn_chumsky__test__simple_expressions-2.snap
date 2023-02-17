@@ -4,4 +4,9 @@ expression: "&snapshot"
 ---
 Input: "(grouped_ident)"
 
-Ok((Ident("grouped_ident"), 1..14))
+Ok(
+    (
+        Ident("grouped_ident"),
+        1..14,
+    ),
+)

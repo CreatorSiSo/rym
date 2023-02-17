@@ -1,0 +1,18 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "-255"
+
+Ok(
+    (
+        Unary(
+            Neg,
+            (
+                Int(255),
+                1..4,
+            ),
+        ),
+        0..4,
+    ),
+)

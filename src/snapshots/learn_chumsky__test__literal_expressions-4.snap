@@ -4,4 +4,9 @@ expression: "&snapshot"
 ---
 Input: "0."
 
-Ok((Float(0, 0), 0..2))
+Ok(
+    (
+        Float(0, 0),
+        0..2,
+    ),
+)

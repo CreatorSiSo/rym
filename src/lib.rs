@@ -3,7 +3,7 @@
 mod ast;
 mod test;
 
-use ast::{Expr, Item, Stmt};
+use ast::{BinaryOp, Expr, Item, Stmt, UnaryOp};
 use chumsky::prelude::*;
 use rym_lexer::rich::Token;
 
@@ -13,19 +13,13 @@ type Spanned<T> = (T, Span);
 pub trait TokenParser<O> = Parser<Token, O, Error = Simple<Token>>;
 
 /// line_end => ";" | EOF
-fn line_end() -> impl TokenParser<()> {
-	// TODO Look into
-	// TODO   - automatic semicolon insertion eg. Js
-	// TODO   - rules for omitting semicolons eg. Go
+// fn line_end() -> impl TokenParser<()> {
+// 	// TODO Look into
+// 	// TODO   - automatic semicolon insertion eg. Js
+// 	// TODO   - rules for omitting semicolons eg. Go
 
-	choice((just(Token::Semi), just(Token::Eof))).ignored()
-}
-
-fn ident() -> impl TokenParser<String> {
-	select! { Token::Ident(ident) => ident }
-		// .map_with_span(|ident, span| (ident, span))
-		.labelled("identifier")
-}
+// 	choice((just(Token::Semi), just(Token::Eof))).ignored()
+// }
 
 /// item => func_decl | type_decl | var_decl
 // pub fn item() -> impl TokenParser<Item> {
@@ -70,6 +64,10 @@ fn ident() -> impl TokenParser<String> {
 // }
 
 pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
+	let ident = select! { Token::Ident(ident) => ident }
+		// .map_with_span(|ident, span| (ident, span))
+		.labelled("identifier");
+
 	recursive(|expr| {
 		let raw_expr = recursive(|raw_expr| {
 			let literal = select! {
@@ -79,8 +77,8 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 				Token::String(val) => Expr::String(val),
 			};
 
-			let atom = choice((literal, ident().map(Expr::Ident)))
-				.map_with_span(|expr, span| (expr, span))
+			let atom = choice((literal, ident.map(Expr::Ident)))
+				.map_with_span(|expr, span: Span| (expr, span))
 				.or(raw_expr.delimited_by(just(Token::OpenParen), just(Token::CloseParen)));
 
 			// List of expressions without delimiters
@@ -90,7 +88,7 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 				.then(
 					items
 						.delimited_by(just(Token::OpenParen), just(Token::CloseParen))
-						.map_with_span(|args, span| (args, span))
+						.map_with_span(|args, span: Span| (args, span))
 						.repeated(),
 				)
 				.foldl(|spanned_func, (args, args_span)| {
@@ -98,7 +96,53 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 					(Expr::Call(Box::new(spanned_func), args), span)
 				});
 
-			call
+			// Unary operators (not and negate) have equal precedence
+			let op = just(Token::Bang)
+				.to(UnaryOp::Not)
+				.or(just(Token::Minus).to(UnaryOp::Neg))
+				.map_with_span(|op, span: Span| (op, span));
+			let unary = op.repeated().then(call).foldr(|(op, op_span), rhs| {
+				let span = op_span.start..rhs.1.end;
+				(Expr::Unary(op, Box::new(rhs)), span)
+			});
+
+			// Product operators (multiply and divide) have equal precedence
+			let op = just(Token::Star)
+				.to(BinaryOp::Mul)
+				.or(just(Token::Slash).to(BinaryOp::Div));
+			let product = unary
+				.clone()
+				.then(op.then(unary).repeated())
+				.foldl(|lhs, (op, rhs)| {
+					let span = lhs.1.start..rhs.1.end;
+					(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)
+				});
+
+			// Sum operators (add and subtract) have equal precedence
+			let op = just(Token::Plus)
+				.to(BinaryOp::Add)
+				.or(just(Token::Minus).to(BinaryOp::Sub));
+			let sum = product
+				.clone()
+				.then(op.then(product).repeated())
+				.foldl(|lhs, (op, rhs)| {
+					let span = lhs.1.start..rhs.1.end;
+					(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)
+				});
+
+			// Comparison operators (equal and not-equal) have equal precedence
+			let op = just(Token::EqEq)
+				.to(BinaryOp::Eq)
+				.or(just(Token::BangEq).to(BinaryOp::Neq));
+			let comp = sum
+				.clone()
+				.then(op.then(sum).repeated())
+				.foldl(|lhs, (op, rhs)| {
+					let span = lhs.1.start..rhs.1.end;
+					(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)
+				});
+
+			comp
 		});
 
 		raw_expr

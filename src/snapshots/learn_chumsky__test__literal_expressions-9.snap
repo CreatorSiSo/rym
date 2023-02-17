@@ -4,4 +4,9 @@ expression: "&snapshot"
 ---
 Input: "'\t'"
 
-Ok((Char('\t'), 0..4))
+Ok(
+    (
+        Char('\t'),
+        0..4,
+    ),
+)

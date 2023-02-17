@@ -1,0 +1,18 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "-1.0"
+
+Ok(
+    (
+        Unary(
+            Neg,
+            (
+                Float(1, 0),
+                1..4,
+            ),
+        ),
+        0..4,
+    ),
+)

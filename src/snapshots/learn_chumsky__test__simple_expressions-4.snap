@@ -1,0 +1,36 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "(make_func())()()()"
+
+Ok(
+    (
+        Call(
+            (
+                Call(
+                    (
+                        Call(
+                            (
+                                Call(
+                                    (
+                                        Ident("make_func"),
+                                        1..10,
+                                    ),
+                                    [],
+                                ),
+                                1..12,
+                            ),
+                            [],
+                        ),
+                        1..15,
+                    ),
+                    [],
+                ),
+                1..17,
+            ),
+            [],
+        ),
+        1..19,
+    ),
+)

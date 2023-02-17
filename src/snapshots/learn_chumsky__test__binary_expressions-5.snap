@@ -1,0 +1,22 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "lhs * rhs"
+
+Ok(
+    (
+        Binary(
+            (
+                Ident("lhs"),
+                0..3,
+            ),
+            Mul,
+            (
+                Ident("rhs"),
+                6..9,
+            ),
+        ),
+        0..9,
+    ),
+)

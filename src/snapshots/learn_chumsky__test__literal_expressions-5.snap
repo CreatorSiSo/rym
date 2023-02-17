@@ -4,4 +4,9 @@ expression: "&snapshot"
 ---
 Input: "444.444"
 
-Ok((Float(444, 444), 0..7))
+Ok(
+    (
+        Float(444, 444),
+        0..7,
+    ),
+)

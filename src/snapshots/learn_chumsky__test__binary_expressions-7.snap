@@ -1,0 +1,52 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "1 + 2 - 3 * 4 / 5"
+
+Ok(
+    (
+        Binary(
+            (
+                Binary(
+                    (
+                        Int(1),
+                        0..1,
+                    ),
+                    Add,
+                    (
+                        Int(2),
+                        4..5,
+                    ),
+                ),
+                0..5,
+            ),
+            Sub,
+            (
+                Binary(
+                    (
+                        Binary(
+                            (
+                                Int(3),
+                                8..9,
+                            ),
+                            Mul,
+                            (
+                                Int(4),
+                                12..13,
+                            ),
+                        ),
+                        8..13,
+                    ),
+                    Div,
+                    (
+                        Int(5),
+                        16..17,
+                    ),
+                ),
+                8..17,
+            ),
+        ),
+        0..17,
+    ),
+)

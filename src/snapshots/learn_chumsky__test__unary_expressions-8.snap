@@ -1,0 +1,28 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "!(lhs == rhs)"
+
+Ok(
+    (
+        Unary(
+            Not,
+            (
+                Binary(
+                    (
+                        Ident("lhs"),
+                        2..5,
+                    ),
+                    Eq,
+                    (
+                        Ident("rhs"),
+                        9..12,
+                    ),
+                ),
+                2..12,
+            ),
+        ),
+        0..12,
+    ),
+)

@@ -1,0 +1,30 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "!!!true"
+
+Ok(
+    (
+        Unary(
+            Not,
+            (
+                Unary(
+                    Not,
+                    (
+                        Unary(
+                            Not,
+                            (
+                                Ident("true"),
+                                3..7,
+                            ),
+                        ),
+                        2..7,
+                    ),
+                ),
+                1..7,
+            ),
+        ),
+        0..7,
+    ),
+)

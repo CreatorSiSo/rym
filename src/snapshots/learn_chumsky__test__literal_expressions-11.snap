@@ -4,4 +4,9 @@ expression: "&snapshot"
 ---
 Input: " "abc" "
 
-Ok((String("abc"), 1..6))
+Ok(
+    (
+        String("abc"),
+        1..6,
+    ),
+)

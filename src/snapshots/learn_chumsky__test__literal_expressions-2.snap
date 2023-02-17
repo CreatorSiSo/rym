@@ -1,0 +1,7 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "823_472_340_983_273_327"
+
+Ok((Int(823472340983273327), 0..23))

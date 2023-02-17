@@ -1,0 +1,7 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "func_name(2, "Do stuff!!", true)"
+
+Ok((Call((Ident("func_name"), 0..9), [(Int(2), 10..11), (String("Do stuff!!"), 13..25), (Ident("true"), 27..31)]), 0..32))

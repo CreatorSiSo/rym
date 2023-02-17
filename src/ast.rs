@@ -5,14 +5,13 @@ pub enum Item {
 	Func {
 		name: Spanned<String>,
 		params: Vec<Spanned<String>>,
-		body: Option<Expr>,
+		body: Option<Spanned<Expr>>,
 	},
 	Type {
 		name: Spanned<String>,
 	},
 	Var {
 		name: Spanned<String>,
-
 		init: Option<Expr>,
 	},
 }
@@ -25,7 +24,11 @@ pub enum Stmt {
 
 #[derive(Debug)]
 pub enum Expr {
-	Int(i64),
+	Int(u64),
+	Float(u64, u64),
+	Char(char),
+	String(String),
+
 	Ident(String),
 
 	// Unary expressions (!, -)
@@ -38,5 +41,6 @@ pub enum Expr {
 	Mul(Box<Expr>, Box<Expr>),
 	Div(Box<Expr>, Box<Expr>),
 
+	Call(Box<Spanned<Expr>>, Vec<Spanned<Expr>>),
 	Block(Vec<Stmt>),
 }

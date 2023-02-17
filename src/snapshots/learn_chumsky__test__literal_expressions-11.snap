@@ -1,0 +1,7 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: " "abc" "
+
+Ok((String("abc"), 1..6))

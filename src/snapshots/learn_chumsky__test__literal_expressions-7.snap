@@ -1,0 +1,7 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "'a'"
+
+Ok((Char('a'), 0..3))

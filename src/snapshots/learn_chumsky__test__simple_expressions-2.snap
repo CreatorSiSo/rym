@@ -1,0 +1,7 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "(grouped_ident)"
+
+Ok((Ident("grouped_ident"), 1..14))

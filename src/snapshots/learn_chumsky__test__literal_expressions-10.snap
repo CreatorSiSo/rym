@@ -1,0 +1,7 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "'\r'"
+
+Ok((Char('\r'), 0..4))

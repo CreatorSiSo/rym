@@ -1,0 +1,7 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "indentifier_1"
+
+Ok((Ident("indentifier_1"), 0..13))

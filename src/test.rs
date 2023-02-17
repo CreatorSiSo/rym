@@ -9,16 +9,37 @@ macro_rules! insta_assert_parser {
 		$({
 			let token_stream = Stream::from_iter(0..0, Lexer::new($src));
 			let maybe_items = $parser.parse(token_stream);
-			insta::assert_debug_snapshot!(maybe_items);
+			let snapshot = format!("Input: \"{}\"\n\n{:?}", $src, maybe_items);
+			insta::assert_snapshot!(&snapshot);
 		})*
 	};
 }
 
 #[test]
-fn parse_item() {
-	insta_assert_parser!(
-		item_parser();
-		"func testing(param_0, param_1, param_n,)\n",
-		"func testing();\n",
-	);
+fn literal_expressions() {
+	insta_assert_parser! {
+		expr_parser();
+		"823_472_340",
+		"823_472_340_983_273_327",
+		"1.0",
+		"0.",
+		"444.444",
+		"9_999_999_999_999.999_999_999",
+		"'a'",
+		"'\\n'",
+		"'\\t'",
+		"'\\r'",
+		r#" "abc" "#,
+		r#" "Hello World!\n" "#,
+	}
+}
+
+#[test]
+fn simple_expressions() {
+	insta_assert_parser! {
+		expr_parser();
+		"indentifier_1",
+		"(grouped_ident)",
+		"func_name(2, \"Do stuff!!\", true)",
+	}
 }

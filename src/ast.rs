@@ -1,24 +1,28 @@
 use crate::Spanned;
 
-#[derive(Debug, Clone)]
-pub enum Item {
-	Func {
-		name: Spanned<String>,
-		params: Vec<Spanned<String>>,
-		body: Option<Spanned<Expr>>,
-	},
-	Type {
-		name: Spanned<String>,
-	},
-	Var {
-		name: Spanned<String>,
-		init: Option<Spanned<Expr>>,
-	},
-}
+// #[derive(Debug, Clone)]
+// pub enum Item {
+// 	Func {
+// 		name: Spanned<String>,
+// 		params: Vec<Spanned<String>>,
+// 		body: Option<Spanned<Expr>>,
+// 	},
+// 	Type {
+// 		name: Spanned<String>,
+// 	},
+// 	Var {
+// 		name: Spanned<String>,
+// 		init: Option<Spanned<Expr>>,
+// 	},
+// }
 
 #[derive(Debug, Clone)]
 pub enum Stmt {
-	Item(Item),
+	Var {
+		mutable: bool,
+		name: Spanned<String>,
+		init: Spanned<Expr>,
+	},
 	Expr(Spanned<Expr>),
 }
 

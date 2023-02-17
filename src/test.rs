@@ -94,3 +94,17 @@ fn block_expressions() {
 		"{ call_me(); and_me(); }",
 	}
 }
+
+#[test]
+fn variables() {
+	insta_assert_parser! {
+		expr_parser();
+		indoc!(r#"
+		{
+			const msg = "Hello World!\n";
+			mut counter = 0;
+
+			// TODO: count from 0 to 10 and print f"{counter}: Hello World!\n" every time
+		}"#),
+	}
+}

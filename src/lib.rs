@@ -3,7 +3,7 @@
 mod ast;
 mod test;
 
-use ast::{BinaryOp, Expr, Item, Stmt, UnaryOp};
+use ast::{BinaryOp, Expr, Stmt, UnaryOp};
 use chumsky::prelude::*;
 use rym_lexer::rich::Token;
 
@@ -69,11 +69,6 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 		.labelled("identifier");
 
 	recursive(|expr| {
-		let stmt = expr
-			.clone()
-			.then_ignore(just(Token::Semi))
-			.map(|expr| Stmt::Expr(expr));
-
 		let raw_expr = recursive(|raw_expr| {
 			let literal = select! {
 				Token::Int(val) => Expr::Int(val),
@@ -87,7 +82,10 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 				.or(raw_expr.delimited_by(just(Token::OpenParen), just(Token::CloseParen)));
 
 			// List of expressions without delimiters
-			let items = expr.separated_by(just(Token::Comma)).allow_trailing();
+			let items = expr
+				.clone()
+				.separated_by(just(Token::Comma))
+				.allow_trailing();
 
 			let call = atom
 				.then(
@@ -149,6 +147,23 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 
 			comp
 		});
+
+		let var = just(Token::Const)
+			.to(false)
+			.or(just(Token::Mut).to(true))
+			.then(ident.map_with_span(|name, span: Span| (name, span)))
+			.then_ignore(just(Token::Eq))
+			.then(expr.clone());
+
+		let stmt = choice((
+			var.map(|((mutable, name), init)| Stmt::Var {
+				mutable,
+				name,
+				init,
+			}),
+			expr.map(|expr| Stmt::Expr(expr)),
+		))
+		.then_ignore(just(Token::Semi));
 
 		let block = stmt
 			.repeated()

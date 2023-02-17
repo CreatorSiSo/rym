@@ -69,6 +69,11 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 		.labelled("identifier");
 
 	recursive(|expr| {
+		let stmt = expr
+			.clone()
+			.then_ignore(just(Token::Semi))
+			.map(|expr| Stmt::Expr(expr));
+
 		let raw_expr = recursive(|raw_expr| {
 			let literal = select! {
 				Token::Int(val) => Expr::Int(val),
@@ -145,6 +150,11 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 			comp
 		});
 
-		raw_expr
+		let block = stmt
+			.repeated()
+			.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace))
+			.map_with_span(|stmts, span| (Expr::Block(stmts), span));
+
+		raw_expr.or(block)
 	})
 }

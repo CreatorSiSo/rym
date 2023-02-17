@@ -19,7 +19,7 @@ pub enum Item {
 #[derive(Debug, Clone)]
 pub enum Stmt {
 	Item(Item),
-	Expr(Expr),
+	Expr(Spanned<Expr>),
 }
 
 #[derive(Debug, Clone)]

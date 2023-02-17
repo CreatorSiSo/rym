@@ -2,6 +2,7 @@
 
 use super::*;
 use chumsky::Stream;
+use indoc::indoc;
 use rym_lexer::rich::Lexer;
 
 macro_rules! insta_assert_parser {
@@ -77,5 +78,19 @@ fn binary_expressions() {
 
 		"1 + 2 - 3 * 4 / 5",
 		"1 == 1 + 2 / 3 != 0",
+	}
+}
+
+#[test]
+fn block_expressions() {
+	insta_assert_parser! {
+		expr_parser();
+		indoc!("
+		{
+			testing;
+			testing;
+		}"),
+
+		"{ call_me(); and_me(); }",
 	}
 }

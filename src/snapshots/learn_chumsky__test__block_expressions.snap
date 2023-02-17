@@ -1,0 +1,30 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "{
+	testing;
+	testing;
+}"
+
+Ok(
+    (
+        Block(
+            [
+                Expr(
+                    (
+                        Ident("testing"),
+                        3..10,
+                    ),
+                ),
+                Expr(
+                    (
+                        Ident("testing"),
+                        13..20,
+                    ),
+                ),
+            ],
+        ),
+        0..23,
+    ),
+)

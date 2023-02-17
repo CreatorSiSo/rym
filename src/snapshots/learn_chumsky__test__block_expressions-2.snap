@@ -1,0 +1,39 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+Input: "{ call_me(); and_me(); }"
+
+Ok(
+    (
+        Block(
+            [
+                Expr(
+                    (
+                        Call(
+                            (
+                                Ident("call_me"),
+                                2..9,
+                            ),
+                            [],
+                        ),
+                        2..11,
+                    ),
+                ),
+                Expr(
+                    (
+                        Call(
+                            (
+                                Ident("and_me"),
+                                13..19,
+                            ),
+                            [],
+                        ),
+                        13..21,
+                    ),
+                ),
+            ],
+        ),
+        0..24,
+    ),
+)

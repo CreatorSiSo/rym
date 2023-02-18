@@ -2,11 +2,11 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 if true then { print("Hello Universe!"); } else { print("Hello World!"); }
 ---
 
-Ok(
+Some(
     (
         If {
             condition: (
@@ -65,3 +65,7 @@ Ok(
         0..74,
     ),
 )
+
+--- Errors ---
+[]
+---

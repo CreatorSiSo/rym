@@ -2,13 +2,17 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
  "abc" 
 ---
 
-Ok(
+Some(
     (
         String("abc"),
         1..6,
     ),
 )
+
+--- Errors ---
+[]
+---

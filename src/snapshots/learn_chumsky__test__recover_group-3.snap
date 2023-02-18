@@ -1,0 +1,49 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+--- Input ---
+( / 888)
+---
+
+Some(
+    (
+        Error,
+        0..8,
+    ),
+)
+
+--- Errors ---
+[
+    Report {
+        label: Some(
+            "identifier",
+        ),
+        span: 2..3,
+        reason: Unexpected,
+        expected: [
+            Some(
+                Dot,
+            ),
+            Some(
+                Minus,
+            ),
+            Some(
+                Bang,
+            ),
+            Some(
+                If,
+            ),
+            Some(
+                OpenParen,
+            ),
+            Some(
+                OpenBrace,
+            ),
+        ],
+        found: Some(
+            Slash,
+        ),
+    },
+]
+---

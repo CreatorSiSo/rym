@@ -2,13 +2,17 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 '\n'
 ---
 
-Ok(
+Some(
     (
         Char('\n'),
         0..4,
     ),
 )
+
+--- Errors ---
+[]
+---

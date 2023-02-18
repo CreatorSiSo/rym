@@ -2,11 +2,11 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 !lhs == rhs
 ---
 
-Ok(
+Some(
     (
         Binary(
             (
@@ -28,3 +28,7 @@ Ok(
         0..11,
     ),
 )
+
+--- Errors ---
+[]
+---

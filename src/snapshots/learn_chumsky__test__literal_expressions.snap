@@ -2,13 +2,17 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 823_472_340
 ---
 
-Ok(
+Some(
     (
         Int(823472340),
         0..11,
     ),
 )
+
+--- Errors ---
+[]
+---

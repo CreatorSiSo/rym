@@ -2,11 +2,11 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 (((wrapped)))()
 ---
 
-Ok(
+Some(
     (
         Call(
             (
@@ -18,3 +18,7 @@ Ok(
         3..15,
     ),
 )
+
+--- Errors ---
+[]
+---

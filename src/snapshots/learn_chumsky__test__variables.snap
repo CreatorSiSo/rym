@@ -2,7 +2,7 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 {
 	const msg = "Hello World!\n";
 	mut counter = 0;
@@ -11,7 +11,7 @@ expression: "&snapshot"
 }
 ---
 
-Ok(
+Some(
     (
         Block(
             [
@@ -42,3 +42,7 @@ Ok(
         0..132,
     ),
 )
+
+--- Errors ---
+[]
+---

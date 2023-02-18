@@ -2,11 +2,11 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 func_name(2, "Do stuff!!", true)
 ---
 
-Ok(
+Some(
     (
         Call(
             (
@@ -31,3 +31,7 @@ Ok(
         0..32,
     ),
 )
+
+--- Errors ---
+[]
+---

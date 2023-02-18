@@ -1,0 +1,53 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+--- Input ---
+(testing;)
+---
+
+Some(
+    (
+        Error,
+        0..10,
+    ),
+)
+
+--- Errors ---
+[
+    Report {
+        label: None,
+        span: 8..9,
+        reason: Unexpected,
+        expected: [
+            Some(
+                Plus,
+            ),
+            Some(
+                Minus,
+            ),
+            Some(
+                Star,
+            ),
+            Some(
+                Slash,
+            ),
+            Some(
+                BangEq,
+            ),
+            Some(
+                EqEq,
+            ),
+            Some(
+                OpenParen,
+            ),
+            Some(
+                CloseParen,
+            ),
+        ],
+        found: Some(
+            Semi,
+        ),
+    },
+]
+---

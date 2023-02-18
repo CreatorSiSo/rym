@@ -2,13 +2,17 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 9_999_999_999_999.999_999_999
 ---
 
-Ok(
+Some(
     (
         Float(9999999999999, 999999999),
         0..29,
     ),
 )
+
+--- Errors ---
+[]
+---

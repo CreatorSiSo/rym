@@ -2,13 +2,17 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 444.444
 ---
 
-Ok(
+Some(
     (
         Float(444, 444),
         0..7,
     ),
 )
+
+--- Errors ---
+[]
+---

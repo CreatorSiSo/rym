@@ -2,13 +2,17 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 'a'
 ---
 
-Ok(
+Some(
     (
         Char('a'),
         0..3,
     ),
 )
+
+--- Errors ---
+[]
+---

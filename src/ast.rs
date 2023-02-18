@@ -24,6 +24,7 @@ pub enum Stmt {
 		init: Spanned<Expr>,
 	},
 	Expr(Spanned<Expr>),
+	Error,
 }
 
 #[derive(Debug, Clone)]
@@ -75,6 +76,8 @@ pub enum Expr {
 		then_branch: Box<Spanned<Expr>>,
 		else_branch: Box<Spanned<Expr>>,
 	},
+
+	Error,
 }
 
 impl std::fmt::Debug for Expr {
@@ -113,6 +116,8 @@ impl std::fmt::Debug for Expr {
 				.field("then_branch", then_branch)
 				.field("else_branch", else_branch)
 				.finish(),
+
+			Self::Error => write!(f, "Error"),
 		}
 	}
 }

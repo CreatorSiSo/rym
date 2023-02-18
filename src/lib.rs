@@ -1,5 +1,3 @@
-#![feature(trait_alias)]
-
 mod ast;
 mod test;
 
@@ -9,8 +7,6 @@ use rym_lexer::rich::Token;
 
 type Span = std::ops::Range<usize>;
 type Spanned<T> = (T, Span);
-
-pub trait TokenParser<O> = Parser<Token, O, Error = Simple<Token>> + Clone;
 
 /// line_end => ";" | EOF
 // fn line_end() -> impl TokenParser<()> {
@@ -63,35 +59,31 @@ pub trait TokenParser<O> = Parser<Token, O, Error = Simple<Token>> + Clone;
 // 	})
 // }
 
-pub fn stmt_parser(expr_parser: impl TokenParser<Spanned<Expr>>) -> impl TokenParser<Stmt> {
-	let ident = select! { Token::Ident(ident) => ident }
-		.map_with_span(|ident, span| (ident, span))
-		.labelled("identifier");
-
-	let var = just(Token::Const)
-		.to(false)
-		.or(just(Token::Mut).to(true))
-		.then(ident)
-		.then_ignore(just(Token::Eq))
-		.then(expr_parser.clone());
-
-	choice((
-		var.map(|((mutable, name), init)| Stmt::Var {
-			mutable,
-			name,
-			init,
-		}),
-		expr_parser.map(|expr| Stmt::Expr(expr)),
-	))
-	.then_ignore(just(Token::Semi))
-}
-
-pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
+pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>> + Clone {
 	let ident = select! { Token::Ident(ident) => ident }
 		.map_with_span(|ident, span| (ident, span))
 		.labelled("identifier");
 
 	recursive(|expr| {
+		let stmt = {
+			let var = just(Token::Const)
+				.to(false)
+				.or(just(Token::Mut).to(true))
+				.then(ident)
+				.then_ignore(just(Token::Eq))
+				.then(expr.clone());
+
+			choice((
+				var.map(|((mutable, name), init)| Stmt::Var {
+					mutable,
+					name,
+					init,
+				}),
+				expr.clone().map(|expr| Stmt::Expr(expr)),
+			))
+			.then_ignore(just(Token::Semi))
+		};
+
 		let literal = select! {
 			Token::Int(val) => Expr::Int(val),
 			Token::Float(r_val, l_val) => Expr::Float(r_val, l_val),
@@ -100,12 +92,24 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 		}
 		.map_with_span(|expr, span: Span| (expr, span));
 
+		let group = expr
+			.clone()
+			.delimited_by(just(Token::OpenParen), just(Token::CloseParen));
+
 		// atom => "(" expr ")" | literal | IDENT
 		let atom = choice((
-			expr.clone()
-				.delimited_by(just(Token::OpenParen), just(Token::CloseParen)),
+			group,
 			literal,
 			ident.map(|(ident, span)| (Expr::Ident(ident), span)),
+		)) // Attempt to recover anything that looks like a group but contains errors
+		.recover_with(nested_delimiters(
+			Token::OpenParen,
+			Token::CloseParen,
+			[
+				(Token::OpenBrace, Token::CloseBrace),
+				(Token::OpenBracket, Token::CloseBracket),
+			],
+			|span| (Expr::Error, span),
 		));
 
 		// items => expr (expr ",")* ","?
@@ -119,6 +123,16 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 			.then(
 				items
 					.delimited_by(just(Token::OpenParen), just(Token::CloseParen))
+					// Attempt to recover anything that looks like a call but contains errors
+					.recover_with(nested_delimiters(
+						Token::OpenParen,
+						Token::CloseParen,
+						[
+							(Token::OpenBrace, Token::CloseBrace),
+							(Token::OpenBracket, Token::CloseBracket),
+						],
+						|span| vec![(Expr::Error, span)],
+					))
 					.map_with_span(|args, span: Span| (args, span))
 					.repeated(),
 			)
@@ -176,9 +190,19 @@ pub fn expr_parser() -> impl TokenParser<Spanned<Expr>> {
 		let raw_expr = comp;
 
 		// block => "{" stmt* "}"
-		let block = stmt_parser(expr.clone())
+		let block = stmt
 			.repeated()
 			.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace))
+			// Attempt to recover anything that looks like a block but contains errors
+			.recover_with(nested_delimiters(
+				Token::OpenBrace,
+				Token::CloseBrace,
+				[
+					(Token::OpenBracket, Token::CloseBracket),
+					(Token::OpenParen, Token::CloseParen),
+				],
+				|_| vec![Stmt::Error],
+			))
 			.map_with_span(|stmts, span| (Expr::Block(stmts), span));
 
 		// if => "if" expr "then" expr "else" expr

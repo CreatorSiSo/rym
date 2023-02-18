@@ -1,0 +1,69 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+--- Input ---
+testing(1 2 3)
+---
+
+Some(
+    (
+        Call(
+            (
+                Ident("testing"),
+                0..7,
+            ),
+            [
+                (
+                    Error,
+                    7..14,
+                ),
+            ],
+        ),
+        0..14,
+    ),
+)
+
+--- Errors ---
+[
+    Report {
+        label: None,
+        span: 10..11,
+        reason: Unexpected,
+        expected: [
+            Some(
+                Comma,
+            ),
+            Some(
+                Plus,
+            ),
+            Some(
+                Minus,
+            ),
+            Some(
+                Star,
+            ),
+            Some(
+                Slash,
+            ),
+            Some(
+                BangEq,
+            ),
+            Some(
+                EqEq,
+            ),
+            Some(
+                OpenParen,
+            ),
+            Some(
+                CloseParen,
+            ),
+        ],
+        found: Some(
+            Int(
+                2,
+            ),
+        ),
+    },
+]
+---

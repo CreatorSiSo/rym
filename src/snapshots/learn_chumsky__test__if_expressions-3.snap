@@ -2,11 +2,11 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 if true then "Hello Universe!" else "Hello World!"
 ---
 
-Ok(
+Some(
     (
         If {
             condition: (
@@ -25,3 +25,7 @@ Ok(
         0..50,
     ),
 )
+
+--- Errors ---
+[]
+---

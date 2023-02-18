@@ -1,17 +1,50 @@
 #![cfg(test)]
 
 use super::*;
+use chumsky::error::SimpleReason;
 use chumsky::Stream;
 use indoc::indoc;
 use rym_lexer::rich::Lexer;
+
+#[derive(Debug)]
+#[allow(dead_code)]
+struct Report<'a> {
+	label: Option<&'a str>,
+	span: Span,
+	reason: &'a SimpleReason<Token, Span>,
+	expected: Vec<&'a Option<Token>>,
+	found: Option<&'a Token>,
+}
+
+impl<'a> From<&'a Simple<Token>> for Report<'a> {
+	fn from(err: &'a Simple<Token>) -> Self {
+		Report {
+			label: err.label(),
+			span: err.span(),
+			reason: err.reason(),
+			expected: {
+				let mut expected = err.expected().collect::<Vec<_>>();
+				expected.sort();
+				expected
+			},
+			found: err.found(),
+		}
+	}
+}
 
 macro_rules! insta_assert_parser {
 	($parser:expr; $($src:expr),+ $(,)?) => {
 		$({
 			let token_stream = Stream::from_iter(0..0, Lexer::new($src));
-			let maybe_items = $parser.parse(token_stream);
+			let (ast, mut errors) = expr_parser().parse_recovery(token_stream);
 
-			let snapshot = format!("---\n{}\n---\n\n{:#?}", $src, &maybe_items);
+			errors.sort_by(|l, r| l.span().start.cmp(&r.span().start));
+			let reports: Vec<Report> = errors.iter().map(|err| Report::from(err)).collect();
+
+			let snapshot = format!(
+				"--- Input ---\n{}\n---\n\n{:#?}\n\n--- Errors ---\n{:#?}\n---",
+				$src, &ast, &reports
+			);
 			insta::assert_snapshot!(&snapshot);
 		})*
 	};
@@ -140,4 +173,38 @@ fn if_expressions() {
 				10;
 			}"#),
 	}
+}
+
+#[test]
+fn recover_group() {
+	insta_assert_parser!(
+		expr_parser();
+		"(testing;)", // invalid semicolon
+		"(1 +)", // missing rhs
+		"( / 888)", // missing rhs
+		// "((testing)", // unclosed inner group
+	);
+}
+
+#[test]
+fn recover_block() {
+	insta_assert_parser!(
+		expr_parser();
+		"{ testing }", // missing semicolon
+		// TODO fix unclosed delimiters
+		// "{ (testing; }", // unclosed group
+		// "{ {testing; }", // unclosed block
+	);
+}
+
+#[test]
+fn recover_call() {
+	insta_assert_parser!(
+		expr_parser();
+		"testing(,)", // missing args
+		"testing(,)()()", // missing args
+		"testing(1 2 3)", // missing commas
+		"testing(1 + / 2)", // missing commas
+		// "testing(1, {2, 3)", // unclosed block
+	);
 }

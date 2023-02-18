@@ -2,11 +2,11 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 .{ }
 ---
 
-Ok(
+Some(
     (
         Record {
             name: None,
@@ -15,3 +15,7 @@ Ok(
         0..4,
     ),
 )
+
+--- Errors ---
+[]
+---

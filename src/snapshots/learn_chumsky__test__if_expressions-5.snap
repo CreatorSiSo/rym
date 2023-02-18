@@ -2,7 +2,7 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 if stuff_goes_right(1, 2, 9) then {
 	print("Hello Universe!");
 	20;
@@ -12,7 +12,7 @@ if stuff_goes_right(1, 2, 9) then {
 }
 ---
 
-Ok(
+Some(
     (
         If {
             condition: (
@@ -102,3 +102,7 @@ Ok(
         0..107,
     ),
 )
+
+--- Errors ---
+[]
+---

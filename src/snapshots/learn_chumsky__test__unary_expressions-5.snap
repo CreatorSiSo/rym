@@ -2,11 +2,11 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 !true
 ---
 
-Ok(
+Some(
     (
         Unary(
             Not,
@@ -18,3 +18,7 @@ Ok(
         0..5,
     ),
 )
+
+--- Errors ---
+[]
+---

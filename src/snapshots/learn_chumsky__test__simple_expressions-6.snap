@@ -2,11 +2,11 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 (if true then 1 else 2) + 3
 ---
 
-Ok(
+Some(
     (
         Binary(
             (
@@ -35,3 +35,7 @@ Ok(
         1..27,
     ),
 )
+
+--- Errors ---
+[]
+---

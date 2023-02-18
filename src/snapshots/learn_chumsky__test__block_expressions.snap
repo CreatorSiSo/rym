@@ -2,14 +2,14 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 {
 	testing;
 	testing;
 }
 ---
 
-Ok(
+Some(
     (
         Block(
             [
@@ -30,3 +30,7 @@ Ok(
         0..23,
     ),
 )
+
+--- Errors ---
+[]
+---

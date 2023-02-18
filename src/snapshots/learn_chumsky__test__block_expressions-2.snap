@@ -2,11 +2,11 @@
 source: src/test.rs
 expression: "&snapshot"
 ---
----
+--- Input ---
 { call_me(); and_me(); }
 ---
 
-Ok(
+Some(
     (
         Block(
             [
@@ -39,3 +39,7 @@ Ok(
         0..24,
     ),
 )
+
+--- Errors ---
+[]
+---

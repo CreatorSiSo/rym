@@ -1,0 +1,16 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+---
+{ }
+---
+
+Ok(
+    (
+        Block(
+            [],
+        ),
+        0..3,
+    ),
+)

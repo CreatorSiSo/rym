@@ -1,0 +1,44 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+---
+.{ name: "Record", fields: todo() }
+---
+
+Ok(
+    (
+        Record {
+            name: None,
+            fields: [
+                (
+                    (
+                        "name",
+                        3..7,
+                    ),
+                    (
+                        String("Record"),
+                        9..17,
+                    ),
+                ),
+                (
+                    (
+                        "fields",
+                        19..25,
+                    ),
+                    (
+                        Call(
+                            (
+                                Ident("todo"),
+                                27..31,
+                            ),
+                            [],
+                        ),
+                        27..33,
+                    ),
+                ),
+            ],
+        },
+        0..35,
+    ),
+)

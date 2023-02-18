@@ -54,6 +54,10 @@ pub enum Expr {
 	Float(u64, u64),
 	Char(char),
 	String(String),
+	Record {
+		name: Option<Spanned<String>>,
+		fields: Vec<(Spanned<String>, Spanned<Expr>)>,
+	},
 
 	Ident(String),
 
@@ -80,6 +84,11 @@ impl std::fmt::Debug for Expr {
 			Self::Float(arg0, val1) => f.write_fmt(format_args!("Float({arg0}, {val1})")),
 			Self::Char(val) => f.write_fmt(format_args!("Char('{}')", val.escape_default())),
 			Self::String(val) => f.write_fmt(format_args!("String(\"{}\")", val.escape_default())),
+			Self::Record { name, fields } => f
+				.debug_struct("Record")
+				.field("name", name)
+				.field("fields", fields)
+				.finish(),
 
 			Self::Ident(val) => f.write_fmt(format_args!("Ident(\"{val}\")")),
 

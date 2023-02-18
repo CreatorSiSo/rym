@@ -1,0 +1,17 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+---
+.{ }
+---
+
+Ok(
+    (
+        Record {
+            name: None,
+            fields: [],
+        },
+        0..4,
+    ),
+)

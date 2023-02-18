@@ -37,6 +37,16 @@ fn literal_expressions() {
 }
 
 #[test]
+fn record_expressions() {
+	insta_assert_parser! {
+		expr_parser();
+		r#"Record { name: "Record", fields: todo() }"#,
+		r#".{ name: "Record", fields: todo() }"#,
+		r#".{ }"#,
+	}
+}
+
+#[test]
 fn simple_expressions() {
 	insta_assert_parser! {
 		expr_parser();
@@ -45,6 +55,7 @@ fn simple_expressions() {
 		"func_name(2, \"Do stuff!!\", true)",
 		"(make_func())()()()",
 		"(((wrapped)))()",
+		"(if true then 1 else 2) + 3",
 	}
 }
 
@@ -91,8 +102,8 @@ fn block_expressions() {
 			testing;
 			testing;
 		}"),
-
 		"{ call_me(); and_me(); }",
+		"{ }",
 	}
 }
 

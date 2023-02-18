@@ -8,39 +8,44 @@ use rym_lexer::rich::Lexer;
 
 #[derive(Debug)]
 #[allow(dead_code)]
-struct Report<'a> {
-	label: Option<&'a str>,
+struct Report {
+	label: Option<String>,
 	span: Span,
-	reason: &'a SimpleReason<Token, Span>,
-	expected: Vec<&'a Option<Token>>,
-	found: Option<&'a Token>,
+	reason: SimpleReason<Token, Span>,
+	expected: Vec<Option<Token>>,
+	found: Option<Token>,
 }
 
-impl<'a> From<&'a Simple<Token>> for Report<'a> {
-	fn from(err: &'a Simple<Token>) -> Self {
+impl<'a> From<Simple<Token>> for Report {
+	fn from(err: Simple<Token>) -> Self {
 		Report {
-			label: err.label(),
+			label: err.label().map(|str| str.to_string()),
 			span: err.span(),
-			reason: err.reason(),
+			reason: err.reason().clone(),
 			expected: {
-				let mut expected = err.expected().collect::<Vec<_>>();
+				let mut expected = err.expected().cloned().collect::<Vec<_>>();
 				expected.sort();
 				expected
 			},
-			found: err.found(),
+			found: err.found().map(|token| token.clone()),
 		}
 	}
+}
+
+fn parse_expr(src: &'static str) -> (Option<(Expr, Span)>, Vec<Report>) {
+	let token_stream = Stream::from_iter(0..0, Lexer::new(src));
+	let (ast, mut errors) = expr_parser().parse_recovery(token_stream);
+
+	errors.sort_by(|l, r| l.span().start.cmp(&r.span().start));
+	let reports = errors.into_iter().map(|err| Report::from(err)).collect();
+
+	(ast, reports)
 }
 
 macro_rules! insta_assert_parser {
 	($parser:expr; $($src:expr),+ $(,)?) => {
 		$({
-			let token_stream = Stream::from_iter(0..0, Lexer::new($src));
-			let (ast, mut errors) = expr_parser().parse_recovery(token_stream);
-
-			errors.sort_by(|l, r| l.span().start.cmp(&r.span().start));
-			let reports: Vec<Report> = errors.iter().map(|err| Report::from(err)).collect();
-
+			let (ast, reports) = parse_expr($src);
 			let snapshot = format!(
 				"--- Input ---\n{}\n---\n\n{:#?}\n\n--- Errors ---\n{:#?}\n---",
 				$src, &ast, &reports
@@ -191,8 +196,9 @@ fn recover_block() {
 	insta_assert_parser!(
 		expr_parser();
 		"{ testing }", // missing semicolon
-		// TODO fix unclosed delimiters
-		// "{ (testing; }", // unclosed group
+		"{ (testing; }", // unclosed group
+
+		// TODO: improve error recovery so that it keeps at least one block
 		// "{ {testing; }", // unclosed block
 	);
 }
@@ -205,6 +211,6 @@ fn recover_call() {
 		"testing(,)()()", // missing args
 		"testing(1 2 3)", // missing commas
 		"testing(1 + / 2)", // missing commas
-		// "testing(1, {2, 3)", // unclosed block
+		"testing(1, {2, 3)", // unclosed block
 	);
 }

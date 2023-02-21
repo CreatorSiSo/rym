@@ -76,13 +76,7 @@ impl Iterator for Lexer<'_> {
 	fn next(&mut self) -> Option<Self::Item> {
 		while let Some((primitive_kind, mut span)) = self.bump() {
 			let kind = match primitive_kind {
-				primitive::TokenKind::Whitespace => {
-					if self.src_from_span(&span).contains('\n') {
-						Token::Newline
-					} else {
-						continue;
-					}
-				}
+				primitive::TokenKind::Whitespace => continue,
 				primitive::TokenKind::LineComment => continue,
 				primitive::TokenKind::BlockComment { terminated } => {
 					if terminated {
@@ -113,9 +107,9 @@ impl Iterator for Lexer<'_> {
 				primitive::TokenKind::Comma => Token::Comma,
 
 				// Operator like
-				primitive::TokenKind::Or => self.map_next(&mut span, |kind| match kind {
-					Some(primitive::TokenKind::Or) => Multi(Token::OrOr),
-					_ => Single(Token::Or),
+				primitive::TokenKind::Pipe => self.map_next(&mut span, |kind| match kind {
+					Some(primitive::TokenKind::Pipe) => Multi(Token::PipePipe),
+					_ => Single(Token::Pipe),
 				}),
 				primitive::TokenKind::And => self.map_next(&mut span, |kind| match kind {
 					Some(primitive::TokenKind::And) => Multi(Token::AndAnd),
@@ -183,23 +177,25 @@ impl Iterator for Lexer<'_> {
 						.chars()
 						.filter(|c| c != &'_')
 						.collect::<String>()
-						.parse::<i64>()
+						.parse::<u64>()
 					{
 						Ok(int) => int,
 						Err(err) => unreachable!(
-							"Internal Error: Could not parse <i64> from {0}: `{err}`",
+							"Internal Error: Could not parse <u64> from {0}: `{err}`",
 							self.src_from_span(&span)
 						),
 					},
 				),
 				primitive::TokenKind::Float => {
-					let Some((l, r)) = self.src_from_span(&span).split_once('.') else {
+					let filtered_src: String =
+						self.src_from_span(&span).chars().filter(|c| c != &'_').collect();
+					let Some((l, r)) = filtered_src.split_once('.') else {
 							unreachable!("Internal Error: Float literal does not contain a '.'")
 						};
-					let l_val: u32 = l.parse().expect(&format!(
+					let l_val: u64 = l.parse().expect(&format!(
 						"Internal Error: Left hand side of float literal has invalid value `{l}`"
 					));
-					let r_val: u32 = r.parse().unwrap_or(0);
+					let r_val: u64 = r.parse().unwrap_or(0);
 					Token::Float(l_val, r_val)
 				}
 				primitive::TokenKind::Char { terminated } => {

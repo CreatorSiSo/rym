@@ -76,7 +76,7 @@ fn one_char() {
 			Token::new(Dot, 1),
 			Token::new(Whitespace, 1),
 			// Used
-			Token::new(Or, 1),
+			Token::new(Pipe, 1),
 			Token::new(And, 1),
 			Token::new(Plus, 1),
 			Token::new(Minus, 1),

@@ -34,7 +34,7 @@ pub enum TokenKind {
 
 	// Used one character tokens.
 	/// `|`
-	Or,
+	Pipe,
 	/// `&`
 	And,
 	/// `+`

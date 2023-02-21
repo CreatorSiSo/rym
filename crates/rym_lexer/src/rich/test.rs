@@ -126,8 +126,8 @@ fn operators() {
 	assert_token_kinds(
 		r#"| || & && + += - -= * *= / /= % %= = == ! != < <= > >="#,
 		&[
-			Token::Or,
-			Token::OrOr,
+			Token::Pipe,
+			Token::PipePipe,
 			Token::And,
 			Token::AndAnd,
 			Token::Plus,

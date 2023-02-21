@@ -80,7 +80,7 @@ impl Lexer<'_> {
 			'.' => TokenKind::Dot,
 
 			// One character tokens.
-			'|' => TokenKind::Or,
+			'|' => TokenKind::Pipe,
 			'&' => TokenKind::And,
 			'+' => TokenKind::Plus,
 			'-' => TokenKind::Minus,

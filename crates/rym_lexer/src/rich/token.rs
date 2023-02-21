@@ -1,5 +1,4 @@
 use rym_span::Span;
-use std::fmt::Debug;
 
 #[derive(Debug, PartialEq)]
 pub struct LexerError {
@@ -7,7 +6,7 @@ pub struct LexerError {
 	msg: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum Token {
 	// Punctuation
@@ -26,9 +25,9 @@ pub enum Token {
 
 	// Operator like
 	/// `|`
-	Or,
+	Pipe,
 	/// `||`
-	OrOr,
+	PipePipe,
 	/// `&`
 	And,
 	/// `&&`
@@ -99,6 +98,8 @@ pub enum Token {
 	Mut,
 	/// `struct`
 	Struct,
+	/// `then`
+	Then,
 	/// `trait`
 	Trait,
 	/// `type`
@@ -128,27 +129,97 @@ pub enum Token {
 	Ident(String),
 
 	/// `36_254`
-	Int(i64),
+	Int(u64),
 	/// `0.2346`
-	Float(u32, u32),
+	Float(u64, u64),
 	/// `'a'`, `'\n'`
 	Char(char),
 	/// `"abcde"`, `"Hello World!\n"`
 	String(String),
 
-	/// `\n`
-	Newline,
 	/// Well thats where it ends...
 	Eof,
 }
 
-impl Token {
-	pub const fn is_newline(&self) -> bool {
-		matches!(self, Token::Newline)
+impl std::fmt::Display for Token {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let mut tmp = String::new();
+		fn hoist_up<'a>(tmp: &'a mut String, data: String) -> &'a str {
+			*tmp = data;
+			&*tmp
+		}
+
+		let str = match self {
+			Token::Semi => ";",
+			Token::Colon => ":",
+			Token::ColonColon => "::",
+			Token::Dot => ".",
+			Token::DotDot => "..",
+			Token::Comma => ",",
+			Token::Pipe => "|",
+			Token::PipePipe => "||",
+			Token::And => "&",
+			Token::AndAnd => "&&",
+			Token::Plus => "+",
+			Token::PlusEq => "+=",
+			Token::Minus => "-",
+			Token::MinusEq => "-=",
+			Token::Star => "*",
+			Token::StarEq => "*=",
+			Token::Slash => "/",
+			Token::SlashEq => "/=",
+			Token::Percent => "%",
+			Token::PercentEq => "%=",
+			Token::Bang => "!",
+			Token::BangEq => "!=",
+			Token::Eq => "=",
+			Token::EqEq => "==",
+			Token::LessThan => "<",
+			Token::LessThanEq => "<=",
+			Token::GreaterThan => ">",
+			Token::GreaterThanEq => ">=",
+			Token::ThinArrow => "->",
+			Token::FatArrow => "=>",
+
+			Token::Const => "const",
+			Token::Else => "else",
+			Token::Enum => "enum",
+			Token::For => "for",
+			Token::Func => "func",
+			Token::If => "if",
+			Token::Impl => "impl",
+			Token::In => "in",
+			Token::Loop => "loop",
+			Token::Mod => "mod",
+			Token::Mut => "mut",
+			Token::Struct => "struct",
+			Token::Then => "then",
+			Token::Trait => "trait",
+			Token::Type => "type",
+			Token::Use => "use",
+			Token::While => "while",
+
+			Token::OpenParen => "(",
+			Token::CloseParen => ")",
+
+			Token::OpenBrace => "{",
+			Token::CloseBrace => "",
+
+			Token::OpenBracket => "[",
+			Token::CloseBracket => "]",
+
+			Token::Ident(name) => name,
+			Token::Int(inner) => hoist_up(&mut tmp, inner.to_string()),
+			Token::Float(lhs, rhs) => hoist_up(&mut tmp, format!("{lhs}.{rhs}")),
+			Token::Char(inner) => hoist_up(&mut tmp, inner.to_string()),
+			Token::String(inner) => inner,
+			Token::Eof => "<eof>",
+		};
+		f.write_str(str)
 	}
 }
 
-const KEYWORDS_LEN: usize = 16;
+const KEYWORDS_LEN: usize = 17;
 pub const KEYWORDS_MAP: ([&str; KEYWORDS_LEN], [Token; KEYWORDS_LEN]) = (
 	[
 		// a
@@ -171,7 +242,7 @@ pub const KEYWORDS_MAP: ([&str; KEYWORDS_LEN], [Token; KEYWORDS_LEN]) = (
 		// q
 		// r
 		"struct", // s
-		"trait", "type", // t
+		"then", "trait", "type", // t
 		"use",  // u
 		// v
 		"while", // w
@@ -192,6 +263,7 @@ pub const KEYWORDS_MAP: ([&str; KEYWORDS_LEN], [Token; KEYWORDS_LEN]) = (
 		Token::Mod,
 		Token::Mut,
 		Token::Struct,
+		Token::Then,
 		Token::Trait,
 		Token::Type,
 		Token::Use,

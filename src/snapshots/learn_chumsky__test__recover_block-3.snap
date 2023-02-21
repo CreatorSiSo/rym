@@ -1,0 +1,27 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+--- Input ---
+{ {testing; }
+---
+
+None
+
+--- Errors ---
+[
+    Report {
+        label: Some(
+            "block",
+        ),
+        span: 0..0,
+        reason: Unexpected,
+        expected: [
+            Some(
+                Semi,
+            ),
+        ],
+        found: None,
+    },
+]
+---

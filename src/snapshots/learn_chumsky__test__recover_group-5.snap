@@ -3,19 +3,10 @@ source: src/test.rs
 expression: "&snapshot"
 ---
 --- Input ---
-{ testing }
+(testing}
 ---
 
-Some(
-    (
-        Block(
-            [
-                Error,
-            ],
-        ),
-        0..11,
-    ),
-)
+None
 
 --- Errors ---
 [
@@ -23,12 +14,9 @@ Some(
         label: Some(
             "expression",
         ),
-        span: 10..11,
+        span: 8..9,
         reason: Unexpected,
         expected: [
-            Some(
-                Semi,
-            ),
             Some(
                 Plus,
             ),
@@ -49,6 +37,9 @@ Some(
             ),
             Some(
                 OpenParen,
+            ),
+            Some(
+                CloseParen,
             ),
         ],
         found: Some(

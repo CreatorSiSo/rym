@@ -28,7 +28,7 @@ Some(
 [
     Report {
         label: Some(
-            "identifier",
+            "expression",
         ),
         span: 8..9,
         reason: Unexpected,

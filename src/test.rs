@@ -184,10 +184,17 @@ fn if_expressions() {
 fn recover_group() {
 	insta_assert_parser!(
 		expr_parser();
-		"(testing;)", // invalid semicolon
-		"(1 +)", // missing rhs
-		"( / 888)", // missing rhs
-		// "((testing)", // unclosed inner group
+
+		// invalid semicolon
+		"(testing;)",
+
+		// missing rhs
+		"(1 +)",
+		"( / 888)",
+
+		// unclosed group
+		"((testing)",
+		"(testing}",
 	);
 }
 
@@ -195,11 +202,23 @@ fn recover_group() {
 fn recover_block() {
 	insta_assert_parser!(
 		expr_parser();
-		"{ testing }", // missing semicolon
-		"{ (testing; }", // unclosed group
 
+		// missing semicolon
+		"{ testing }",
+
+		// unclosed
+		"{ (testing; }",
 		// TODO: improve error recovery so that it keeps at least one block
-		// "{ {testing; }", // unclosed block
+		"{ {testing; }",
+
+		// additional closing delimiter
+		"{ testing ]}",
+		"{ testing )}",
+		"{ testing }}",
+
+		// wrong closing delimiter
+		"{ testing ]",
+		"{ testing )",
 	);
 }
 
@@ -207,10 +226,17 @@ fn recover_block() {
 fn recover_call() {
 	insta_assert_parser!(
 		expr_parser();
-		"testing(,)", // missing args
-		"testing(,)()()", // missing args
-		"testing(1 2 3)", // missing commas
-		"testing(1 + / 2)", // missing commas
-		"testing(1, {2, 3)", // unclosed block
+
+		// missing args
+		"testing(,)",
+		"testing(,)(correct_one, 2)(, aerr, \"stuff\")",
+
+		// missing commas
+		"testing(1 2 3)",
+		"testing(1 + / 2)",
+
+		// unclosed
+		"testing(1, {2, 3)",
+		// "testing(1, (2, 3)",
 	);
 }

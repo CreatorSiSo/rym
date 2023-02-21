@@ -47,22 +47,24 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 			// group => "(" expr ")"
 			let group = expr
 				.clone()
-				.delimited_by(just(Token::OpenParen), just(Token::CloseParen));
+				.delimited_by(just(Token::OpenParen), just(Token::CloseParen))
+				// Attempt to recover anything that looks like a group but contains errors
+				.recover_with(nested_delimiters(
+					Token::OpenParen,
+					Token::CloseParen,
+					[
+						(Token::OpenBrace, Token::CloseBrace),
+						(Token::OpenBracket, Token::CloseBracket),
+					],
+					|span| (Expr::Error, span),
+				))
+				.labelled("group");
 
 			// atom => group | literal | IDENT
 			choice((
 				group,
 				literal,
 				ident.map(|(ident, span)| (Expr::Ident(ident), span)),
-			)) // Attempt to recover anything that looks like a group but contains errors
-			.recover_with(nested_delimiters(
-				Token::OpenParen,
-				Token::CloseParen,
-				[
-					(Token::OpenBrace, Token::CloseBrace),
-					(Token::OpenBracket, Token::CloseBracket),
-				],
-				|span| (Expr::Error, span),
 			))
 		};
 
@@ -173,7 +175,8 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 					(Token::OpenParen, Token::CloseParen),
 				],
 				|span| (Expr::Block(vec![Stmt::Error]), span),
-			));
+			))
+			.labelled("block");
 
 		// if => "if" expr "then" expr "else" expr
 		let if_ = recursive(|if_| {
@@ -205,8 +208,9 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 			.map(|ident| Some(ident))
 			.or(just(Token::Dot).map(|_| None))
 			.then(record_fields.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)))
-			.map_with_span(|(name, fields), span| (Expr::Record { name, fields }, span));
+			.map_with_span(|(name, fields), span| (Expr::Record { name, fields }, span))
+			.labelled("record");
 
-		choice((record, raw_expr, block, if_))
+		choice((record, raw_expr, block, if_)).labelled("expression")
 	})
 }

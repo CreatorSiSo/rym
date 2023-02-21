@@ -20,7 +20,9 @@ Some(
 --- Errors ---
 [
     Report {
-        label: None,
+        label: Some(
+            "expression",
+        ),
         span: 10..11,
         reason: Unexpected,
         expected: [

@@ -1,0 +1,41 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+--- Input ---
+{ testing ]}
+---
+
+Some(
+    (
+        Block(
+            [
+                Error,
+            ],
+        ),
+        0..12,
+    ),
+)
+
+--- Errors ---
+[
+    Report {
+        label: Some(
+            "block",
+        ),
+        span: 10..11,
+        reason: Unclosed {
+            span: 0..1,
+            delimiter: OpenBrace,
+        },
+        expected: [
+            Some(
+                CloseBrace,
+            ),
+        ],
+        found: Some(
+            CloseBracket,
+        ),
+    },
+]
+---

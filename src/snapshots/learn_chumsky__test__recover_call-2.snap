@@ -3,7 +3,7 @@ source: src/test.rs
 expression: "&snapshot"
 ---
 --- Input ---
-testing(,)()()
+testing(,)(correct_one, 2)(, aerr, "stuff")
 ---
 
 Some(
@@ -26,13 +26,27 @@ Some(
                         ),
                         0..10,
                     ),
-                    [],
+                    [
+                        (
+                            Ident("correct_one"),
+                            11..22,
+                        ),
+                        (
+                            Int(2),
+                            24..25,
+                        ),
+                    ],
                 ),
-                0..12,
+                0..26,
             ),
-            [],
+            [
+                (
+                    Error,
+                    26..43,
+                ),
+            ],
         ),
-        0..14,
+        0..43,
     ),
 )
 
@@ -40,9 +54,42 @@ Some(
 [
     Report {
         label: Some(
-            "identifier",
+            "expression",
         ),
         span: 8..9,
+        reason: Unexpected,
+        expected: [
+            Some(
+                Dot,
+            ),
+            Some(
+                Minus,
+            ),
+            Some(
+                Bang,
+            ),
+            Some(
+                If,
+            ),
+            Some(
+                OpenParen,
+            ),
+            Some(
+                OpenBrace,
+            ),
+            Some(
+                CloseParen,
+            ),
+        ],
+        found: Some(
+            Comma,
+        ),
+    },
+    Report {
+        label: Some(
+            "expression",
+        ),
+        span: 27..28,
         reason: Unexpected,
         expected: [
             Some(

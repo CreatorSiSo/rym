@@ -16,7 +16,9 @@ Some(
 --- Errors ---
 [
     Report {
-        label: None,
+        label: Some(
+            "expression",
+        ),
         span: 8..9,
         reason: Unexpected,
         expected: [

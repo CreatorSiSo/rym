@@ -3,13 +3,17 @@ source: src/test.rs
 expression: "&snapshot"
 ---
 --- Input ---
-(1 +)
+{ testing )}
 ---
 
 Some(
     (
-        Error,
-        0..5,
+        Block(
+            [
+                Error,
+            ],
+        ),
+        0..12,
     ),
 )
 
@@ -17,19 +21,16 @@ Some(
 [
     Report {
         label: Some(
-            "expression",
+            "block",
         ),
-        span: 4..5,
-        reason: Unexpected,
+        span: 10..11,
+        reason: Unclosed {
+            span: 0..1,
+            delimiter: OpenBrace,
+        },
         expected: [
             Some(
-                Minus,
-            ),
-            Some(
-                Bang,
-            ),
-            Some(
-                OpenParen,
+                CloseBrace,
             ),
         ],
         found: Some(

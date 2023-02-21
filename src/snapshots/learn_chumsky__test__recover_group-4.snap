@@ -12,37 +12,21 @@ None
 [
     Report {
         label: Some(
-            "expression",
+            Expression,
         ),
         span: 0..0,
         reason: Unexpected,
+        found: Eof,
         expected: [
-            Some(
-                Plus,
-            ),
-            Some(
-                Minus,
-            ),
-            Some(
-                Star,
-            ),
-            Some(
-                Slash,
-            ),
-            Some(
-                BangEq,
-            ),
-            Some(
-                EqEq,
-            ),
-            Some(
-                OpenParen,
-            ),
-            Some(
-                CloseParen,
-            ),
+            CloseParen,
+            BangEq,
+            EqEq,
+            Minus,
+            Plus,
+            Slash,
+            Star,
+            OpenParen,
         ],
-        found: None,
     },
 ]
 ---

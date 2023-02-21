@@ -28,44 +28,25 @@ Some(
 [
     Report {
         label: Some(
-            "expression",
+            Expression,
         ),
         span: 10..11,
         reason: Unexpected,
-        expected: [
-            Some(
-                Comma,
-            ),
-            Some(
-                Plus,
-            ),
-            Some(
-                Minus,
-            ),
-            Some(
-                Star,
-            ),
-            Some(
-                Slash,
-            ),
-            Some(
-                BangEq,
-            ),
-            Some(
-                EqEq,
-            ),
-            Some(
-                OpenParen,
-            ),
-            Some(
-                CloseParen,
-            ),
-        ],
-        found: Some(
-            Int(
-                2,
-            ),
+        found: Int(
+            2,
         ),
+        expected: [
+            CloseParen,
+            Comma,
+            Comma,
+            BangEq,
+            EqEq,
+            Minus,
+            Plus,
+            Slash,
+            Star,
+            OpenParen,
+        ],
     },
 ]
 ---

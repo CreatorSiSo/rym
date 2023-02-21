@@ -54,69 +54,37 @@ Some(
 [
     Report {
         label: Some(
-            "expression",
+            Expression,
         ),
         span: 8..9,
         reason: Unexpected,
+        found: Comma,
         expected: [
-            Some(
-                Dot,
-            ),
-            Some(
-                Minus,
-            ),
-            Some(
-                Bang,
-            ),
-            Some(
-                If,
-            ),
-            Some(
-                OpenParen,
-            ),
-            Some(
-                OpenBrace,
-            ),
-            Some(
-                CloseParen,
-            ),
+            CloseParen,
+            If,
+            OpenBrace,
+            OpenParen,
+            Minus,
+            Bang,
+            Dot,
         ],
-        found: Some(
-            Comma,
-        ),
     },
     Report {
         label: Some(
-            "expression",
+            Expression,
         ),
         span: 27..28,
         reason: Unexpected,
+        found: Comma,
         expected: [
-            Some(
-                Dot,
-            ),
-            Some(
-                Minus,
-            ),
-            Some(
-                Bang,
-            ),
-            Some(
-                If,
-            ),
-            Some(
-                OpenParen,
-            ),
-            Some(
-                OpenBrace,
-            ),
-            Some(
-                CloseParen,
-            ),
+            CloseParen,
+            If,
+            OpenBrace,
+            OpenParen,
+            Minus,
+            Bang,
+            Dot,
         ],
-        found: Some(
-            Comma,
-        ),
     },
 ]
 ---

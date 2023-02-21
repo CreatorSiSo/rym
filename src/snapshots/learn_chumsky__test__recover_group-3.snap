@@ -17,33 +17,19 @@ Some(
 [
     Report {
         label: Some(
-            "expression",
+            Expression,
         ),
         span: 2..3,
         reason: Unexpected,
+        found: Slash,
         expected: [
-            Some(
-                Dot,
-            ),
-            Some(
-                Minus,
-            ),
-            Some(
-                Bang,
-            ),
-            Some(
-                If,
-            ),
-            Some(
-                OpenParen,
-            ),
-            Some(
-                OpenBrace,
-            ),
+            If,
+            OpenBrace,
+            OpenParen,
+            Minus,
+            Bang,
+            Dot,
         ],
-        found: Some(
-            Slash,
-        ),
     },
 ]
 ---

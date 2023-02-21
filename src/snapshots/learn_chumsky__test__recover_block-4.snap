@@ -21,21 +21,17 @@ Some(
 [
     Report {
         label: Some(
-            "block",
+            Expression,
         ),
         span: 10..11,
         reason: Unclosed {
             span: 0..1,
             delimiter: OpenBrace,
         },
+        found: CloseBracket,
         expected: [
-            Some(
-                CloseBrace,
-            ),
+            CloseBrace,
         ],
-        found: Some(
-            CloseBracket,
-        ),
     },
 ]
 ---

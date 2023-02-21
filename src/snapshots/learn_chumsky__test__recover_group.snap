@@ -17,39 +17,21 @@ Some(
 [
     Report {
         label: Some(
-            "expression",
+            Expression,
         ),
         span: 8..9,
         reason: Unexpected,
+        found: Semi,
         expected: [
-            Some(
-                Plus,
-            ),
-            Some(
-                Minus,
-            ),
-            Some(
-                Star,
-            ),
-            Some(
-                Slash,
-            ),
-            Some(
-                BangEq,
-            ),
-            Some(
-                EqEq,
-            ),
-            Some(
-                OpenParen,
-            ),
-            Some(
-                CloseParen,
-            ),
+            CloseParen,
+            BangEq,
+            EqEq,
+            Minus,
+            Plus,
+            Slash,
+            Star,
+            OpenParen,
         ],
-        found: Some(
-            Semi,
-        ),
     },
 ]
 ---

@@ -1,42 +1,15 @@
 #![cfg(test)]
 
 use super::*;
-use chumsky::error::SimpleReason;
 use chumsky::Stream;
 use indoc::indoc;
 use rym_lexer::rich::Lexer;
-
-#[derive(Debug)]
-#[allow(dead_code)]
-struct Report {
-	label: Option<String>,
-	span: Span,
-	reason: SimpleReason<Token, Span>,
-	expected: Vec<Option<Token>>,
-	found: Option<Token>,
-}
-
-impl<'a> From<Simple<Token>> for Report {
-	fn from(err: Simple<Token>) -> Self {
-		Report {
-			label: err.label().map(|str| str.to_string()),
-			span: err.span(),
-			reason: err.reason().clone(),
-			expected: {
-				let mut expected = err.expected().cloned().collect::<Vec<_>>();
-				expected.sort();
-				expected
-			},
-			found: err.found().map(|token| token.clone()),
-		}
-	}
-}
 
 fn parse_expr(src: &'static str) -> (Option<(Expr, Span)>, Vec<Report>) {
 	let token_stream = Stream::from_iter(0..0, Lexer::new(src));
 	let (ast, mut errors) = expr_parser().parse_recovery(token_stream);
 
-	errors.sort_by(|l, r| l.span().start.cmp(&r.span().start));
+	errors.sort_by(|l, r| l.span.start.cmp(&r.span.start));
 	let reports = errors.into_iter().map(|err| Report::from(err)).collect();
 
 	(ast, reports)

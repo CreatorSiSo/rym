@@ -17,24 +17,16 @@ Some(
 [
     Report {
         label: Some(
-            "expression",
+            Expression,
         ),
         span: 4..5,
         reason: Unexpected,
+        found: CloseParen,
         expected: [
-            Some(
-                Minus,
-            ),
-            Some(
-                Bang,
-            ),
-            Some(
-                OpenParen,
-            ),
+            OpenParen,
+            Minus,
+            Bang,
         ],
-        found: Some(
-            CloseParen,
-        ),
     },
 ]
 ---

@@ -28,24 +28,16 @@ Some(
 [
     Report {
         label: Some(
-            "expression",
+            Expression,
         ),
         span: 12..13,
         reason: Unexpected,
+        found: Slash,
         expected: [
-            Some(
-                Minus,
-            ),
-            Some(
-                Bang,
-            ),
-            Some(
-                OpenParen,
-            ),
+            OpenParen,
+            Minus,
+            Bang,
         ],
-        found: Some(
-            Slash,
-        ),
     },
 ]
 ---

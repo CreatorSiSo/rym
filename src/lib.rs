@@ -2,23 +2,102 @@ mod ast;
 mod test;
 
 use ast::{BinaryOp, Expr, Stmt, UnaryOp};
-use chumsky::prelude::*;
+use chumsky::{error::SimpleReason, prelude::*};
 use rym_lexer::rich::Token;
 
 type Span = std::ops::Range<usize>;
 type Spanned<T> = (T, Span);
 
-pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>> + Clone {
+#[derive(Debug, Clone)]
+pub enum Label {
+	Block,
+	Expression,
+	Group,
+	Identifier,
+	Record,
+	Either(Box<Label>, Box<Label>),
+}
+
+#[derive(Debug)]
+pub struct Report {
+	pub label: Option<Label>,
+	pub span: Span,
+	pub reason: SimpleReason<Token, Span>,
+	pub found: Token,
+	pub expected: Vec<Token>,
+}
+
+impl chumsky::Error<Token> for Report {
+	type Span = Span;
+	type Label = Label;
+
+	fn expected_input_found<Iter: IntoIterator<Item = Option<Token>>>(
+		span: Self::Span,
+		expected: Iter,
+		found: Option<Token>,
+	) -> Self {
+		Self {
+			label: None,
+			span,
+			reason: SimpleReason::Unexpected,
+			found: found.unwrap_or(Token::Eof),
+			expected: expected
+				.into_iter()
+				.map(|maybe_token| maybe_token.unwrap_or(Token::Eof))
+				.collect::<Vec<Token>>(),
+		}
+	}
+
+	fn unclosed_delimiter(
+		unclosed_span: Self::Span,
+		unclosed: Token,
+		span: Self::Span,
+		expected: Token,
+		found: Option<Token>,
+	) -> Self {
+		Self {
+			reason: SimpleReason::Unclosed {
+				span: unclosed_span,
+				delimiter: unclosed,
+			},
+			..Self::expected_input_found(span, [Some(expected)], found)
+		}
+	}
+
+	fn with_label(self, label: Self::Label) -> Self {
+		Self {
+			label: Some(label),
+			..self
+		}
+	}
+
+	fn merge(mut self, mut other: Self) -> Self {
+		let label = if let (Some(me), Some(other)) = (&self.label, &other.label) {
+			Some(Label::Either(Box::new(me.clone()), Box::new(other.clone())))
+		} else {
+			other.label.or(self.label)
+		};
+
+		debug_assert_eq!(self.reason, other.reason);
+		debug_assert_eq!(self.found, other.found);
+
+		self.label = label;
+		self.expected.append(&mut other.expected);
+		self
+	}
+}
+
+pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Report> + Clone {
 	let ident = select! { Token::Ident(ident) => ident }
 		.map_with_span(|ident, span| (ident, span))
-		.labelled("identifier");
+		.labelled(Label::Identifier);
 
 	recursive(|expr| {
 		let stmt = {
 			let var = just(Token::Const)
 				.to(false)
 				.or(just(Token::Mut).to(true))
-				.then(ident)
+				.then(ident.clone())
 				.then_ignore(just(Token::Eq))
 				.then(expr.clone());
 
@@ -58,13 +137,15 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 					],
 					|span| (Expr::Error, span),
 				))
-				.labelled("group");
+				.labelled(Label::Group);
 
 			// atom => group | literal | IDENT
 			choice((
 				group,
 				literal,
-				ident.map(|(ident, span)| (Expr::Ident(ident), span)),
+				ident
+					.clone()
+					.map(|(ident, span)| (Expr::Ident(ident), span)),
 			))
 		};
 
@@ -176,7 +257,7 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 				],
 				|span| (Expr::Block(vec![Stmt::Error]), span),
 			))
-			.labelled("block");
+			.labelled(Label::Block);
 
 		// if => "if" expr "then" expr "else" expr
 		let if_ = recursive(|if_| {
@@ -200,7 +281,7 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 		// record => (IDENT | ".") "{" record_fields? "}"
 		// record_fields => record_field ("," record_field)* ","?
 		// record_field => IDENT ":" expr
-		let record_field = ident.then_ignore(just(Token::Colon)).then(expr);
+		let record_field = ident.clone().then_ignore(just(Token::Colon)).then(expr);
 		let record_fields = record_field
 			.separated_by(just(Token::Comma))
 			.allow_trailing();
@@ -209,8 +290,8 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 			.or(just(Token::Dot).map(|_| None))
 			.then(record_fields.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)))
 			.map_with_span(|(name, fields), span| (Expr::Record { name, fields }, span))
-			.labelled("record");
+			.labelled(Label::Record);
 
-		choice((record, raw_expr, block, if_)).labelled("expression")
+		choice((record, raw_expr, block, if_)).labelled(Label::Expression)
 	})
 }

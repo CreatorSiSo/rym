@@ -12,16 +12,14 @@ None
 [
     Report {
         label: Some(
-            "block",
+            Expression,
         ),
         span: 0..0,
         reason: Unexpected,
+        found: Eof,
         expected: [
-            Some(
-                Semi,
-            ),
+            Semi,
         ],
-        found: None,
     },
 ]
 ---

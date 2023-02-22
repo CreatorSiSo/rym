@@ -1,0 +1,100 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+--- Input ---
+{
+	loop print("To infinity and beyond!");
+	loop (print("To infinity and beyond!"));
+	loop { print("To infinity and beyond!"); };
+}
+---
+
+Some(
+    (
+        Block(
+            [
+                Expr(
+                    (
+                        Loop(
+                            (
+                                Call(
+                                    (
+                                        Ident("print"),
+                                        8..13,
+                                    ),
+                                    [
+                                        (
+                                            String("To infinity and beyond!"),
+                                            14..39,
+                                        ),
+                                    ],
+                                ),
+                                8..40,
+                            ),
+                        ),
+                        3..40,
+                    ),
+                ),
+                Expr(
+                    (
+                        Loop(
+                            (
+                                Call(
+                                    (
+                                        Ident("print"),
+                                        49..54,
+                                    ),
+                                    [
+                                        (
+                                            String("To infinity and beyond!"),
+                                            55..80,
+                                        ),
+                                    ],
+                                ),
+                                49..81,
+                            ),
+                        ),
+                        43..82,
+                    ),
+                ),
+                Expr(
+                    (
+                        Loop(
+                            (
+                                Block(
+                                    [
+                                        Expr(
+                                            (
+                                                Call(
+                                                    (
+                                                        Ident("print"),
+                                                        92..97,
+                                                    ),
+                                                    [
+                                                        (
+                                                            String("To infinity and beyond!"),
+                                                            98..123,
+                                                        ),
+                                                    ],
+                                                ),
+                                                92..124,
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                                90..127,
+                            ),
+                        ),
+                        85..127,
+                    ),
+                ),
+            ],
+        ),
+        0..130,
+    ),
+)
+
+--- Errors ---
+[]
+---

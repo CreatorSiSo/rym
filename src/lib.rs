@@ -45,7 +45,7 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 				.then(expr.clone());
 
 			choice((
-				var.map(|((mutable, name), init)| Stmt::Var {
+				var.map(|((mutable, name), init)| Stmt::Binding {
 					mutable,
 					name,
 					init,
@@ -174,6 +174,8 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 			let op = choice((
 				just(Token::EqEq).to(BinaryOp::Eq),
 				just(Token::BangEq).to(BinaryOp::Neq),
+				just(Token::GreaterThan).to(BinaryOp::Greater),
+				just(Token::LessThan).to(BinaryOp::Less),
 			));
 			sum.clone()
 				.then(op.then(sum).repeated())
@@ -184,6 +186,21 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 		};
 
 		let raw_expr = comp;
+
+		// assign => IDENT "=" expr
+		let assign = ident
+			.clone()
+			.then_ignore(just(Token::Eq))
+			.then(expr.clone())
+			.map_with_span(|(name, rhs), span| {
+				(
+					Expr::Assign {
+						name,
+						rhs: Box::new(rhs),
+					},
+					span,
+				)
+			});
 
 		// block => "{" stmt* "}"
 		let block = stmt
@@ -202,27 +219,57 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 			))
 			.labelled(Label::Block);
 
-		// if => "if" expr "then" expr ("else" expr)?
-		let if_ = recursive(|if_| {
-			just(Token::If)
+		// control_flow => break | continue | return | loop | if
+		let control_flow = {
+			// break => "break" expr
+			let break_ = just(Token::Break)
+				.ignore_then(expr.clone().or_not())
+				.map(|expr| Expr::Break(Box::new(expr)))
+				.labelled(Label::Break);
+
+			// continue => "continue" expr
+			let continue_ = just(Token::Continue)
+				.map(|_| Expr::Continue)
+				.labelled(Label::Continue);
+
+			// return => "return" expr
+			let return_ = just(Token::Return)
+				.ignore_then(expr.clone().or_not())
+				.map(|expr| Expr::Return(Box::new(expr)))
+				.labelled(Label::Return);
+
+			// loop => "loop" expr
+			let loop_ = just(Token::Loop)
 				.ignore_then(expr.clone())
-				.then_ignore(just(Token::Then))
-				.recover_with(nested_delimiters(Token::If, Token::Then, [], |span| {
-					(Expr::Error, span)
-				}))
-				.then(expr.clone())
-				.then(just(Token::Else).ignore_then(expr.clone()).or(if_).or_not())
-				.map_with_span(|((condition, then_branch), else_branch), span| {
-					(
-						Expr::If {
-							condition: Box::new(condition),
-							then_branch: Box::new(then_branch),
-							else_branch: Box::new(else_branch),
-						},
-						span,
-					)
-				})
-		});
+				.map(|expr| Expr::Loop(Box::new(expr)))
+				.labelled(Label::Loop);
+
+			// if => "if" expr "then" expr ("else" expr)?
+			let if_ = recursive(|if_| {
+				just(Token::If)
+					.ignore_then(expr.clone())
+					.then_ignore(just(Token::Then))
+					.recover_with(nested_delimiters(Token::If, Token::Then, [], |span| {
+						(Expr::Error, span)
+					}))
+					.then(expr.clone())
+					.then(just(Token::Else).ignore_then(expr.clone()).or(if_).or_not())
+					.map_with_span(|((condition, then_branch), else_branch), span| {
+						(
+							Expr::If {
+								condition: Box::new(condition),
+								then_branch: Box::new(then_branch),
+								else_branch: Box::new(else_branch),
+							},
+							span,
+						)
+					})
+			});
+
+			choice((break_, continue_, return_, loop_))
+				.map_with_span(|expr, span| (expr, span))
+				.or(if_)
+		};
 
 		// record => (IDENT | ".") "{" record_fields? "}"
 		// record_fields => record_field ("," record_field)* ","?
@@ -238,6 +285,6 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 			.map_with_span(|(name, fields), span| (Expr::Record { name, fields }, span))
 			.labelled(Label::Record);
 
-		choice((record, raw_expr, block, if_)).labelled(Label::Expression)
+		choice((record, assign, raw_expr, block, control_flow)).labelled(Label::Expression)
 	})
 }

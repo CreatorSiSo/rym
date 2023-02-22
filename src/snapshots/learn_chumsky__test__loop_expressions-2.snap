@@ -1,0 +1,250 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+--- Input ---
+{
+	mut counter = 0;
+
+	loop
+		if counter > 10 then
+			break
+		else
+			counter = counter + 1;
+
+	loop (
+		if (counter > 10) then (break) else (counter = counter + 1)
+	);
+
+	loop {
+		if counter > 10 then {
+			break;
+		} else {
+			counter = counter + 1;
+		};
+	};
+}
+---
+
+Some(
+    (
+        Block(
+            [
+                Binding {
+                    mutable: true,
+                    name: (
+                        "counter",
+                        7..14,
+                    ),
+                    init: (
+                        Int(0),
+                        17..18,
+                    ),
+                },
+                Expr(
+                    (
+                        Loop(
+                            (
+                                If {
+                                    condition: (
+                                        Binary(
+                                            (
+                                                Ident("counter"),
+                                                32..39,
+                                            ),
+                                            Greater,
+                                            (
+                                                Int(10),
+                                                42..44,
+                                            ),
+                                        ),
+                                        32..44,
+                                    ),
+                                    then_branch: (
+                                        Break(
+                                            None,
+                                        ),
+                                        53..58,
+                                    ),
+                                    else_branch: Some(
+                                        (
+                                            Assign {
+                                                name: (
+                                                    "counter",
+                                                    69..76,
+                                                ),
+                                                rhs: (
+                                                    Binary(
+                                                        (
+                                                            Ident("counter"),
+                                                            79..86,
+                                                        ),
+                                                        Add,
+                                                        (
+                                                            Int(1),
+                                                            89..90,
+                                                        ),
+                                                    ),
+                                                    79..90,
+                                                ),
+                                            },
+                                            69..90,
+                                        ),
+                                    ),
+                                },
+                                29..90,
+                            ),
+                        ),
+                        22..90,
+                    ),
+                ),
+                Expr(
+                    (
+                        Loop(
+                            (
+                                If {
+                                    condition: (
+                                        Binary(
+                                            (
+                                                Ident("counter"),
+                                                107..114,
+                                            ),
+                                            Greater,
+                                            (
+                                                Int(10),
+                                                117..119,
+                                            ),
+                                        ),
+                                        107..119,
+                                    ),
+                                    then_branch: (
+                                        Break(
+                                            None,
+                                        ),
+                                        127..132,
+                                    ),
+                                    else_branch: Some(
+                                        (
+                                            Assign {
+                                                name: (
+                                                    "counter",
+                                                    140..147,
+                                                ),
+                                                rhs: (
+                                                    Binary(
+                                                        (
+                                                            Ident("counter"),
+                                                            150..157,
+                                                        ),
+                                                        Add,
+                                                        (
+                                                            Int(1),
+                                                            160..161,
+                                                        ),
+                                                    ),
+                                                    150..161,
+                                                ),
+                                            },
+                                            140..161,
+                                        ),
+                                    ),
+                                },
+                                103..162,
+                            ),
+                        ),
+                        94..165,
+                    ),
+                ),
+                Expr(
+                    (
+                        Loop(
+                            (
+                                Block(
+                                    [
+                                        Expr(
+                                            (
+                                                If {
+                                                    condition: (
+                                                        Binary(
+                                                            (
+                                                                Ident("counter"),
+                                                                181..188,
+                                                            ),
+                                                            Greater,
+                                                            (
+                                                                Int(10),
+                                                                191..193,
+                                                            ),
+                                                        ),
+                                                        181..193,
+                                                    ),
+                                                    then_branch: (
+                                                        Block(
+                                                            [
+                                                                Expr(
+                                                                    (
+                                                                        Break(
+                                                                            None,
+                                                                        ),
+                                                                        204..209,
+                                                                    ),
+                                                                ),
+                                                            ],
+                                                        ),
+                                                        199..214,
+                                                    ),
+                                                    else_branch: Some(
+                                                        (
+                                                            Block(
+                                                                [
+                                                                    Expr(
+                                                                        (
+                                                                            Assign {
+                                                                                name: (
+                                                                                    "counter",
+                                                                                    225..232,
+                                                                                ),
+                                                                                rhs: (
+                                                                                    Binary(
+                                                                                        (
+                                                                                            Ident("counter"),
+                                                                                            235..242,
+                                                                                        ),
+                                                                                        Add,
+                                                                                        (
+                                                                                            Int(1),
+                                                                                            245..246,
+                                                                                        ),
+                                                                                    ),
+                                                                                    235..246,
+                                                                                ),
+                                                                            },
+                                                                            225..246,
+                                                                        ),
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                            220..251,
+                                                        ),
+                                                    ),
+                                                },
+                                                178..251,
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                                174..255,
+                            ),
+                        ),
+                        169..255,
+                    ),
+                ),
+            ],
+        ),
+        0..258,
+    ),
+)
+
+--- Errors ---
+[]
+---

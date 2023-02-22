@@ -155,6 +155,47 @@ fn if_expressions() {
 }
 
 #[test]
+fn loop_expressions() {
+	insta_assert_parser!(
+		expr_parser();
+
+		// infinite
+		indoc! {r#"
+			{
+				loop print("To infinity and beyond!");
+				loop (print("To infinity and beyond!"));
+				loop { print("To infinity and beyond!"); };
+			}"#
+		},
+
+		// counter
+		indoc! {"
+			{
+				mut counter = 0;
+
+				loop
+					if counter > 10 then
+						break
+					else
+						counter = counter + 1;
+
+				loop (
+					if (counter > 10) then (break) else (counter = counter + 1)
+				);
+
+				loop {
+					if counter > 10 then {
+						break;
+					} else {
+						counter = counter + 1;
+					};
+				};
+			}"
+		},
+	);
+}
+
+#[test]
 fn recover_group() {
 	insta_assert_parser!(
 		expr_parser();

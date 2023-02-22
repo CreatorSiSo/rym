@@ -25,6 +25,8 @@ None
             Slash,
             BangEq,
             EqEq,
+            LessThan,
+            GreaterThan,
             OpenParen,
         ],
     },

@@ -29,6 +29,8 @@ Some(
             Slash,
             BangEq,
             EqEq,
+            LessThan,
+            GreaterThan,
             OpenParen,
             CloseParen,
         ],

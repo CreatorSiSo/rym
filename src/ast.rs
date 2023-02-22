@@ -18,7 +18,7 @@ use crate::Spanned;
 
 #[derive(Debug, Clone)]
 pub enum Stmt {
-	Var {
+	Binding {
 		mutable: bool,
 		name: Spanned<String>,
 		init: Spanned<Expr>,
@@ -47,10 +47,14 @@ pub enum BinaryOp {
 	// Comparison
 	Eq,
 	Neq,
+	Greater,
+	Less,
 }
 
 #[derive(Clone)]
 pub enum Expr {
+	Ident(String),
+
 	Int(u64),
 	Float(u64, u64),
 	Char(char),
@@ -60,12 +64,14 @@ pub enum Expr {
 		fields: Vec<(Spanned<String>, Spanned<Expr>)>,
 	},
 
-	Ident(String),
-
 	/// Unary expressions (`!`, `-`)
 	Unary(UnaryOp, Box<Spanned<Expr>>),
 	/// Binary expressions (`+`, `-`, `*`, `/`, `<`, `>`, ..)
 	Binary(Box<Spanned<Expr>>, BinaryOp, Box<Spanned<Expr>>),
+	Assign {
+		name: Spanned<String>,
+		rhs: Box<Spanned<Expr>>,
+	},
 	/// Function call `path(args)`, `returns_fn()()`
 	Call(Box<Spanned<Expr>>, Vec<Spanned<Expr>>),
 
@@ -75,6 +81,10 @@ pub enum Expr {
 		then_branch: Box<Spanned<Expr>>,
 		else_branch: Box<Option<Spanned<Expr>>>,
 	},
+	Loop(Box<Spanned<Expr>>),
+	Break(Box<Option<Spanned<Expr>>>),
+	Continue,
+	Return(Box<Option<Spanned<Expr>>>),
 
 	Error,
 }
@@ -82,6 +92,8 @@ pub enum Expr {
 impl std::fmt::Debug for Expr {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
+			Self::Ident(val) => f.write_fmt(format_args!("Ident(\"{val}\")")),
+
 			Self::Int(val) => f.write_fmt(format_args!("Int({val})")),
 			Self::Float(arg0, val1) => f.write_fmt(format_args!("Float({arg0}, {val1})")),
 			Self::Char(val) => f.write_fmt(format_args!("Char('{}')", val.escape_default())),
@@ -92,8 +104,6 @@ impl std::fmt::Debug for Expr {
 				.field("fields", fields)
 				.finish(),
 
-			Self::Ident(val) => f.write_fmt(format_args!("Ident(\"{val}\")")),
-
 			Self::Unary(op, rhs) => f.debug_tuple("Unary").field(op).field(rhs).finish(),
 			Self::Binary(lhs, op, rhs) => f
 				.debug_tuple("Binary")
@@ -101,7 +111,11 @@ impl std::fmt::Debug for Expr {
 				.field(op)
 				.field(rhs)
 				.finish(),
-
+			Self::Assign { name, rhs } => f
+				.debug_struct("Assign")
+				.field("name", name)
+				.field("rhs", rhs)
+				.finish(),
 			Self::Call(val0, val1) => f.debug_tuple("Call").field(val0).field(val1).finish(),
 
 			Self::Block(val0) => f.debug_tuple("Block").field(val0).finish(),
@@ -115,6 +129,10 @@ impl std::fmt::Debug for Expr {
 				.field("then_branch", then_branch)
 				.field("else_branch", else_branch)
 				.finish(),
+			Self::Loop(val0) => f.debug_tuple("Loop").field(val0).finish(),
+			Self::Break(val0) => f.debug_tuple("Break").field(val0).finish(),
+			Self::Continue => f.write_str("Continue"),
+			Self::Return(val0) => f.debug_tuple("Return").field(val0).finish(),
 
 			Self::Error => write!(f, "Error"),
 		}

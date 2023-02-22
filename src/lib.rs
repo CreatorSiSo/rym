@@ -1,107 +1,33 @@
 mod ast;
+mod error;
 mod test;
 
-use ast::{BinaryOp, Expr, Stmt, UnaryOp};
-use chumsky::error::SimpleReason;
 use chumsky::prelude::*;
-use core::cmp::Ordering;
-use rym_lexer::rich::Token;
-use std::fmt::Display;
+use chumsky::Stream;
+use rym_lexer::rich::Lexer;
 
-type Span = std::ops::Range<usize>;
-type Spanned<T> = (T, Span);
+use ast::{BinaryOp, Expr, Stmt, UnaryOp};
+use error::{Error, Label};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Label {
-	Block,
-	Expression,
-	Group,
-	Identifier,
-	Record,
+pub type Token = rym_lexer::rich::Token;
+pub type Span = std::ops::Range<usize>;
+pub type Spanned<T> = (T, Span);
+
+pub fn parse_expr(src: &str) -> (Option<(Expr, Span)>, Vec<Error>) {
+	parse_recovery(expr_parser(), src)
 }
 
-impl Display for Label {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let data = <&'static str>::from(self);
-		f.write_str(data)
-	}
-}
+pub fn parse_recovery<O>(
+	parser: impl Parser<Token, Spanned<O>, Error = Simple<Token>>,
+	src: &str,
+) -> (Option<(O, Span)>, Vec<Error>) {
+	let token_stream = Stream::from_iter(0..0, Lexer::new(src));
+	let (ast, errors) = parser.parse_recovery(token_stream);
 
-impl From<&Label> for &'static str {
-	fn from(value: &Label) -> Self {
-		match value {
-			Label::Block => "block",
-			Label::Expression => "expression",
-			Label::Group => "group",
-			Label::Identifier => "identifier",
-			Label::Record => "record",
-		}
-	}
-}
+	let mut reports: Vec<Error> = errors.into_iter().map(Error::from).collect();
+	reports.sort();
 
-impl From<Label> for &'static str {
-	fn from(value: Label) -> Self {
-		(&value).into()
-	}
-}
-
-impl From<&'static str> for Label {
-	fn from(value: &'static str) -> Self {
-		match value {
-			"block" => Label::Block,
-			"expression" => Label::Expression,
-			"group" => Label::Group,
-			"identifier" => Label::Identifier,
-			"record" => Label::Record,
-			_ => unreachable!(),
-		}
-	}
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct Error {
-	pub label: Option<Label>,
-	pub span: Span,
-	pub reason: SimpleReason<Token, Span>,
-	pub found: Token,
-	pub expected: Vec<Token>,
-}
-
-impl PartialOrd for Error {
-	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-		Some(self.cmp(other))
-	}
-}
-
-impl Ord for Error {
-	fn cmp(&self, other: &Self) -> Ordering {
-		if self.span == other.span {
-			Ordering::Equal
-		} else if self.span.start < other.span.start {
-			Ordering::Less
-		} else {
-			Ordering::Greater
-		}
-	}
-}
-
-impl From<Simple<Token>> for Error {
-	fn from(value: Simple<Token>) -> Self {
-		let mut expected: Vec<Token> = value
-			.expected()
-			.cloned()
-			.map(|o| o.unwrap_or(Token::Eof))
-			.collect();
-		expected.sort();
-
-		Self {
-			label: value.label().map(Into::into),
-			span: value.span(),
-			reason: value.reason().clone(),
-			found: value.found().cloned().unwrap_or(Token::Eof),
-			expected,
-		}
-	}
+	(ast, reports)
 }
 
 pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>> + Clone {

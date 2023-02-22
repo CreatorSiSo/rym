@@ -1,24 +1,12 @@
 #![cfg(test)]
 
-use super::*;
-use chumsky::Stream;
+use crate::{expr_parser, parse_recovery};
 use indoc::indoc;
-use rym_lexer::rich::Lexer;
-
-fn parse_expr(src: &'static str) -> (Option<(Expr, Span)>, Vec<Error>) {
-	let token_stream = Stream::from_iter(0..0, Lexer::new(src));
-	let (ast, errors) = expr_parser().parse_recovery(token_stream);
-
-	let mut reports: Vec<Error> = errors.into_iter().map(Error::from).collect();
-	reports.sort();
-
-	(ast, reports)
-}
 
 macro_rules! insta_assert_parser {
 	($parser:expr; $($src:expr),+ $(,)?) => {
 		$({
-			let (ast, reports) = parse_expr($src);
+			let (ast, reports) = parse_recovery($parser, $src);
 			let snapshot = format!(
 				"--- Input ---\n{}\n---\n\n{:#?}\n\n--- Errors ---\n{:#?}\n---",
 				$src, &ast, &reports

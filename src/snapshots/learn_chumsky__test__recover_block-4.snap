@@ -19,9 +19,9 @@ Some(
 
 --- Errors ---
 [
-    Report {
+    Error {
         label: Some(
-            Expression,
+            Block,
         ),
         span: 10..11,
         reason: Unclosed {

@@ -26,7 +26,7 @@ Some(
 
 --- Errors ---
 [
-    Report {
+    Error {
         label: Some(
             Expression,
         ),
@@ -34,9 +34,9 @@ Some(
         reason: Unexpected,
         found: Slash,
         expected: [
-            OpenParen,
             Minus,
             Bang,
+            OpenParen,
         ],
     },
 ]

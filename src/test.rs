@@ -5,12 +5,12 @@ use chumsky::Stream;
 use indoc::indoc;
 use rym_lexer::rich::Lexer;
 
-fn parse_expr(src: &'static str) -> (Option<(Expr, Span)>, Vec<Report>) {
+fn parse_expr(src: &'static str) -> (Option<(Expr, Span)>, Vec<Error>) {
 	let token_stream = Stream::from_iter(0..0, Lexer::new(src));
-	let (ast, mut errors) = expr_parser().parse_recovery(token_stream);
+	let (ast, errors) = expr_parser().parse_recovery(token_stream);
 
-	errors.sort_by(|l, r| l.span.start.cmp(&r.span.start));
-	let reports = errors.into_iter().map(|err| Report::from(err)).collect();
+	let mut reports: Vec<Error> = errors.into_iter().map(Error::from).collect();
+	reports.sort();
 
 	(ast, reports)
 }

@@ -2,24 +2,64 @@ mod ast;
 mod test;
 
 use ast::{BinaryOp, Expr, Stmt, UnaryOp};
-use chumsky::{error::SimpleReason, prelude::*};
+use chumsky::error::SimpleReason;
+use chumsky::prelude::*;
+use core::cmp::Ordering;
 use rym_lexer::rich::Token;
+use std::fmt::Display;
 
 type Span = std::ops::Range<usize>;
 type Spanned<T> = (T, Span);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Label {
 	Block,
 	Expression,
 	Group,
 	Identifier,
 	Record,
-	Either(Box<Label>, Box<Label>),
 }
 
-#[derive(Debug)]
-pub struct Report {
+impl Display for Label {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let data = <&'static str>::from(self);
+		f.write_str(data)
+	}
+}
+
+impl From<&Label> for &'static str {
+	fn from(value: &Label) -> Self {
+		match value {
+			Label::Block => "block",
+			Label::Expression => "expression",
+			Label::Group => "group",
+			Label::Identifier => "identifier",
+			Label::Record => "record",
+		}
+	}
+}
+
+impl From<Label> for &'static str {
+	fn from(value: Label) -> Self {
+		(&value).into()
+	}
+}
+
+impl From<&'static str> for Label {
+	fn from(value: &'static str) -> Self {
+		match value {
+			"block" => Label::Block,
+			"expression" => Label::Expression,
+			"group" => Label::Group,
+			"identifier" => Label::Identifier,
+			"record" => Label::Record,
+			_ => unreachable!(),
+		}
+	}
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct Error {
 	pub label: Option<Label>,
 	pub span: Span,
 	pub reason: SimpleReason<Token, Span>,
@@ -27,67 +67,44 @@ pub struct Report {
 	pub expected: Vec<Token>,
 }
 
-impl chumsky::Error<Token> for Report {
-	type Span = Span;
-	type Label = Label;
-
-	fn expected_input_found<Iter: IntoIterator<Item = Option<Token>>>(
-		span: Self::Span,
-		expected: Iter,
-		found: Option<Token>,
-	) -> Self {
-		Self {
-			label: None,
-			span,
-			reason: SimpleReason::Unexpected,
-			found: found.unwrap_or(Token::Eof),
-			expected: expected
-				.into_iter()
-				.map(|maybe_token| maybe_token.unwrap_or(Token::Eof))
-				.collect::<Vec<Token>>(),
-		}
-	}
-
-	fn unclosed_delimiter(
-		unclosed_span: Self::Span,
-		unclosed: Token,
-		span: Self::Span,
-		expected: Token,
-		found: Option<Token>,
-	) -> Self {
-		Self {
-			reason: SimpleReason::Unclosed {
-				span: unclosed_span,
-				delimiter: unclosed,
-			},
-			..Self::expected_input_found(span, [Some(expected)], found)
-		}
-	}
-
-	fn with_label(self, label: Self::Label) -> Self {
-		Self {
-			label: Some(label),
-			..self
-		}
-	}
-
-	fn merge(mut self, mut other: Self) -> Self {
-		let label = if let (Some(me), Some(other)) = (&self.label, &other.label) {
-			Some(Label::Either(Box::new(me.clone()), Box::new(other.clone())))
-		} else {
-			other.label.or(self.label)
-		};
-
-		debug_assert_eq!(self.reason, other.reason);
-		debug_assert_eq!(self.found, other.found);
-
-		self.label = label;
-		self.expected.append(&mut other.expected);
-		self
+impl PartialOrd for Error {
+	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+		Some(self.cmp(other))
 	}
 }
 
-pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Report> + Clone {
+impl Ord for Error {
+	fn cmp(&self, other: &Self) -> Ordering {
+		if self.span == other.span {
+			Ordering::Equal
+		} else if self.span.start < other.span.start {
+			Ordering::Less
+		} else {
+			Ordering::Greater
+		}
+	}
+}
+
+impl From<Simple<Token>> for Error {
+	fn from(value: Simple<Token>) -> Self {
+		let mut expected: Vec<Token> = value
+			.expected()
+			.cloned()
+			.map(|o| o.unwrap_or(Token::Eof))
+			.collect();
+		expected.sort();
+
+		Self {
+			label: value.label().map(Into::into),
+			span: value.span(),
+			reason: value.reason().clone(),
+			found: value.found().cloned().unwrap_or(Token::Eof),
+			expected,
+		}
+	}
+}
+
+pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>> + Clone {
 	let ident = select! { Token::Ident(ident) => ident }
 		.map_with_span(|ident, span| (ident, span))
 		.labelled(Label::Identifier);

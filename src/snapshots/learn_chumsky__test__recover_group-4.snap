@@ -10,7 +10,7 @@ None
 
 --- Errors ---
 [
-    Report {
+    Error {
         label: Some(
             Expression,
         ),
@@ -18,14 +18,14 @@ None
         reason: Unexpected,
         found: Eof,
         expected: [
-            CloseParen,
+            Plus,
+            Minus,
+            Star,
+            Slash,
             BangEq,
             EqEq,
-            Minus,
-            Plus,
-            Slash,
-            Star,
             OpenParen,
+            CloseParen,
         ],
     },
 ]

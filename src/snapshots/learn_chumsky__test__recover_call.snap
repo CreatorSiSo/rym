@@ -26,7 +26,7 @@ Some(
 
 --- Errors ---
 [
-    Report {
+    Error {
         label: Some(
             Expression,
         ),
@@ -34,13 +34,13 @@ Some(
         reason: Unexpected,
         found: Comma,
         expected: [
-            CloseParen,
-            If,
-            OpenBrace,
-            OpenParen,
+            Dot,
             Minus,
             Bang,
-            Dot,
+            If,
+            OpenParen,
+            CloseParen,
+            OpenBrace,
         ],
     },
 ]

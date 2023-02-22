@@ -10,7 +10,7 @@ None
 
 --- Errors ---
 [
-    Report {
+    Error {
         label: Some(
             Expression,
         ),
@@ -19,12 +19,12 @@ None
         found: CloseParen,
         expected: [
             Semi,
+            Plus,
+            Minus,
+            Star,
+            Slash,
             BangEq,
             EqEq,
-            Minus,
-            Plus,
-            Slash,
-            Star,
             OpenParen,
         ],
     },

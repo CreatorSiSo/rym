@@ -19,7 +19,7 @@ Some(
 
 --- Errors ---
 [
-    Report {
+    Error {
         label: Some(
             Expression,
         ),
@@ -27,14 +27,14 @@ Some(
         reason: Unexpected,
         found: Semi,
         expected: [
-            CloseParen,
+            Plus,
+            Minus,
+            Star,
+            Slash,
             BangEq,
             EqEq,
-            Minus,
-            Plus,
-            Slash,
-            Star,
             OpenParen,
+            CloseParen,
         ],
     },
 ]

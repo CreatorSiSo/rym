@@ -19,7 +19,7 @@ Some(
 
 --- Errors ---
 [
-    Report {
+    Error {
         label: Some(
             Expression,
         ),
@@ -28,12 +28,12 @@ Some(
         found: CloseBrace,
         expected: [
             Semi,
+            Plus,
+            Minus,
+            Star,
+            Slash,
             BangEq,
             EqEq,
-            Minus,
-            Plus,
-            Slash,
-            Star,
             OpenParen,
         ],
     },

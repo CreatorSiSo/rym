@@ -26,7 +26,7 @@ Some(
 
 --- Errors ---
 [
-    Report {
+    Error {
         label: Some(
             Expression,
         ),
@@ -36,16 +36,15 @@ Some(
             2,
         ),
         expected: [
-            CloseParen,
             Comma,
-            Comma,
+            Plus,
+            Minus,
+            Star,
+            Slash,
             BangEq,
             EqEq,
-            Minus,
-            Plus,
-            Slash,
-            Star,
             OpenParen,
+            CloseParen,
         ],
     },
 ]

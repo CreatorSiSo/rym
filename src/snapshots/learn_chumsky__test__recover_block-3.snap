@@ -10,9 +10,9 @@ None
 
 --- Errors ---
 [
-    Report {
+    Error {
         label: Some(
-            Expression,
+            Block,
         ),
         span: 0..0,
         reason: Unexpected,

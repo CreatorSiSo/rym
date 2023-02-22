@@ -3,7 +3,7 @@ source: src/test.rs
 expression: "&snapshot"
 ---
 --- Input ---
-if true then print("Hello Universe!") else print("Hello World!")
+if true then print("Hello Universe!")
 ---
 
 Some(
@@ -28,25 +28,9 @@ Some(
                 ),
                 13..37,
             ),
-            else_branch: Some(
-                (
-                    Call(
-                        (
-                            Ident("print"),
-                            43..48,
-                        ),
-                        [
-                            (
-                                String("Hello World!"),
-                                49..63,
-                            ),
-                        ],
-                    ),
-                    43..64,
-                ),
-            ),
+            else_branch: None,
         },
-        0..64,
+        0..37,
     ),
 )
 

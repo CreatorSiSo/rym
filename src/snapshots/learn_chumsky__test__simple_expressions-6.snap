@@ -19,9 +19,11 @@ Some(
                         Int(1),
                         14..15,
                     ),
-                    else_branch: (
-                        Int(2),
-                        21..22,
+                    else_branch: Some(
+                        (
+                            Int(2),
+                            21..22,
+                        ),
                     ),
                 },
                 1..22,

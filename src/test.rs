@@ -136,20 +136,33 @@ fn variables() {
 fn if_expressions() {
 	insta_assert_parser! {
 		expr_parser();
+
+		// conditional function call
 		r#"if true then { print("Hello Universe!"); } else { print("Hello World!"); }"#,
+		r#"if true then print("Hello Universe!") else print("Hello World!")"#,
+
+		// conditional value
 		r#"if (true == false) then ("Hello Universe!") else ("Hello World!")"#,
-		r#"if true then "Hello Universe!" else "Hello World!""#,
+		r#"if true == false then "Hello Universe!" else "Hello World!""#,
+
+		// multiline
 		indoc!(r#"
-			if true then "Hello Universe!"
-			else "Hello World!""#),
+		if true then "Hello Universe!"
+		else "Hello World!""#),
+
+		// multiline with block
 		indoc!(r#"
-			if stuff_goes_right(1, 2, 9) then {
-				print("Hello Universe!");
-				20;
-			} else {
-				print("Hello World!");
-				10;
-			}"#),
+		if stuff_goes_right(1, 2, 9) then {
+			print("Hello Universe!");
+			20;
+		} else {
+			print("Hello World!");
+			10;
+		}"#),
+
+		// without else
+		r#"if true then print("Hello Universe!")"#,
+		r#"if true then { print("Hello Universe!"); }"#,
 	}
 }
 
@@ -211,5 +224,22 @@ fn recover_call() {
 		// unclosed
 		"testing(1, {2, 3)",
 		// "testing(1, (2, 3)",
+	);
+}
+
+#[test]
+fn recover_if() {
+	insta_assert_parser!(
+		expr_parser();
+
+		// missing args
+		"if testing(,) then _",
+
+		// unclosed
+		"if (1} then _",
+		"if (1] then _",
+		"if {1;) then _",
+		"if testing(1, {2, 3) then _",
+		"if testing(1, (2, 3) then _",
 	);
 }

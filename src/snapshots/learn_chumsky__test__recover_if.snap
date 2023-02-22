@@ -1,0 +1,57 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+--- Input ---
+if testing(,) then _
+---
+
+Some(
+    (
+        If {
+            condition: (
+                Call(
+                    (
+                        Ident("testing"),
+                        3..10,
+                    ),
+                    [
+                        (
+                            Error,
+                            10..13,
+                        ),
+                    ],
+                ),
+                3..13,
+            ),
+            then_branch: (
+                Ident("_"),
+                19..20,
+            ),
+            else_branch: None,
+        },
+        0..20,
+    ),
+)
+
+--- Errors ---
+[
+    Error {
+        label: Some(
+            Expression,
+        ),
+        span: 11..12,
+        reason: Unexpected,
+        found: Comma,
+        expected: [
+            Dot,
+            Minus,
+            Bang,
+            If,
+            OpenParen,
+            CloseParen,
+            OpenBrace,
+        ],
+    },
+]
+---

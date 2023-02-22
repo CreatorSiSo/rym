@@ -129,6 +129,7 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 			.then_ignore(just(Token::Semi))
 		};
 
+		// atom => group | literal | IDENT
 		let atom = {
 			// literal => INT | FLOAT | CHAR | STRING
 			let literal = select! {
@@ -156,7 +157,6 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 				))
 				.labelled(Label::Group);
 
-			// atom => group | literal | IDENT
 			choice((
 				group,
 				literal,
@@ -276,13 +276,16 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 			))
 			.labelled(Label::Block);
 
-		// if => "if" expr "then" expr "else" expr
+		// if => "if" expr "then" expr ("else" expr)?
 		let if_ = recursive(|if_| {
 			just(Token::If)
 				.ignore_then(expr.clone())
 				.then_ignore(just(Token::Then))
+				.recover_with(nested_delimiters(Token::If, Token::Then, [], |span| {
+					(Expr::Error, span)
+				}))
 				.then(expr.clone())
-				.then(just(Token::Else).ignore_then(expr.clone()).or(if_))
+				.then(just(Token::Else).ignore_then(expr.clone()).or(if_).or_not())
 				.map_with_span(|((condition, then_branch), else_branch), span| {
 					(
 						Expr::If {

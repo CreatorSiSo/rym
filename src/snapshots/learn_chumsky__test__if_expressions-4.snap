@@ -3,27 +3,38 @@ source: src/test.rs
 expression: "&snapshot"
 ---
 --- Input ---
-if true then "Hello Universe!"
-else "Hello World!"
+if true == false then "Hello Universe!" else "Hello World!"
 ---
 
 Some(
     (
         If {
             condition: (
-                Ident("true"),
-                3..7,
+                Binary(
+                    (
+                        Ident("true"),
+                        3..7,
+                    ),
+                    Eq,
+                    (
+                        Ident("false"),
+                        11..16,
+                    ),
+                ),
+                3..16,
             ),
             then_branch: (
                 String("Hello Universe!"),
-                13..30,
+                22..39,
             ),
-            else_branch: (
-                String("Hello World!"),
-                36..50,
+            else_branch: Some(
+                (
+                    String("Hello World!"),
+                    45..59,
+                ),
             ),
         },
-        0..50,
+        0..59,
     ),
 )
 

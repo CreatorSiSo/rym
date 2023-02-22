@@ -62,19 +62,18 @@ pub enum Expr {
 
 	Ident(String),
 
-	// Unary expressions (!, -)
+	/// Unary expressions (`!`, `-`)
 	Unary(UnaryOp, Box<Spanned<Expr>>),
-
-	// Binary expressions (+, -, *, /, <, >)
+	/// Binary expressions (`+`, `-`, `*`, `/`, `<`, `>`, ..)
 	Binary(Box<Spanned<Expr>>, BinaryOp, Box<Spanned<Expr>>),
-
+	/// Function call `path(args)`, `returns_fn()()`
 	Call(Box<Spanned<Expr>>, Vec<Spanned<Expr>>),
-	Block(Vec<Stmt>),
 
+	Block(Vec<Stmt>),
 	If {
 		condition: Box<Spanned<Expr>>,
 		then_branch: Box<Spanned<Expr>>,
-		else_branch: Box<Spanned<Expr>>,
+		else_branch: Box<Option<Spanned<Expr>>>,
 	},
 
 	Error,

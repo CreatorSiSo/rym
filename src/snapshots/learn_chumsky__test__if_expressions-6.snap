@@ -3,15 +3,40 @@ source: src/test.rs
 expression: "&snapshot"
 ---
 --- Input ---
-if true then { print("Hello Universe!"); } else { print("Hello World!"); }
+if stuff_goes_right(1, 2, 9) then {
+	print("Hello Universe!");
+	20;
+} else {
+	print("Hello World!");
+	10;
+}
 ---
 
 Some(
     (
         If {
             condition: (
-                Ident("true"),
-                3..7,
+                Call(
+                    (
+                        Ident("stuff_goes_right"),
+                        3..19,
+                    ),
+                    [
+                        (
+                            Int(1),
+                            20..21,
+                        ),
+                        (
+                            Int(2),
+                            23..24,
+                        ),
+                        (
+                            Int(9),
+                            26..27,
+                        ),
+                    ],
+                ),
+                3..28,
             ),
             then_branch: (
                 Block(
@@ -21,21 +46,27 @@ Some(
                                 Call(
                                     (
                                         Ident("print"),
-                                        15..20,
+                                        37..42,
                                     ),
                                     [
                                         (
                                             String("Hello Universe!"),
-                                            21..38,
+                                            43..60,
                                         ),
                                     ],
                                 ),
-                                15..39,
+                                37..61,
+                            ),
+                        ),
+                        Expr(
+                            (
+                                Int(20),
+                                64..66,
                             ),
                         ),
                     ],
                 ),
-                13..42,
+                34..69,
             ),
             else_branch: Some(
                 (
@@ -46,25 +77,31 @@ Some(
                                     Call(
                                         (
                                             Ident("print"),
-                                            50..55,
+                                            78..83,
                                         ),
                                         [
                                             (
                                                 String("Hello World!"),
-                                                56..70,
+                                                84..98,
                                             ),
                                         ],
                                     ),
-                                    50..71,
+                                    78..99,
+                                ),
+                            ),
+                            Expr(
+                                (
+                                    Int(10),
+                                    102..104,
                                 ),
                             ),
                         ],
                     ),
-                    48..74,
+                    75..107,
                 ),
             ),
         },
-        0..74,
+        0..107,
     ),
 )
 

@@ -109,19 +109,17 @@ pub enum Token {
 	/// `while`
 	While,
 
-	/// Opening Delimiter token.
+	/// Delimiter token.
 	/// `(`
 	OpenParen,
-	/// `{`
-	OpenBrace,
-	/// `[`
-	OpenBracket,
-
-	/// Closing Delimiter token.
 	/// `)`
 	CloseParen,
+	/// `{`
+	OpenBrace,
 	/// `}`
 	CloseBrace,
+	/// `[`
+	OpenBracket,
 	/// `]`
 	CloseBracket,
 

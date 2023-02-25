@@ -1,28 +1,26 @@
 use crate::Spanned;
 
-// #[derive(Debug, Clone)]
-// pub enum Item {
-// 	Func {
-// 		name: Spanned<String>,
-// 		params: Vec<Spanned<String>>,
-// 		body: Option<Spanned<Expr>>,
-// 	},
-// 	Type {
-// 		name: Spanned<String>,
-// 	},
-// 	Var {
-// 		name: Spanned<String>,
-// 		init: Option<Spanned<Expr>>,
-// 	},
-// }
+#[derive(Debug, Clone)]
+pub enum Item {
+	Module {
+		name: Spanned<String>,
+		items: Vec<Spanned<Item>>,
+	},
+	Func {
+		name: Spanned<String>,
+		params: Vec<Spanned<String>>,
+		rhs: Spanned<Expr>,
+	},
+	Var {
+		mutable: bool,
+		name: Spanned<String>,
+		rhs: Spanned<Expr>,
+	},
+}
 
 #[derive(Debug, Clone)]
 pub enum Stmt {
-	Binding {
-		mutable: bool,
-		name: Spanned<String>,
-		init: Spanned<Expr>,
-	},
+	Item(Spanned<Item>),
 	Expr(Spanned<Expr>),
 	Error,
 }
@@ -83,6 +81,7 @@ pub enum Expr {
 	},
 	Loop(Box<Spanned<Expr>>),
 	Break(Box<Option<Spanned<Expr>>>),
+	NoNewline(Box<Spanned<Expr>>),
 	Continue,
 	Return(Box<Option<Spanned<Expr>>>),
 
@@ -131,6 +130,7 @@ impl std::fmt::Debug for Expr {
 				.finish(),
 			Self::Loop(val0) => f.debug_tuple("Loop").field(val0).finish(),
 			Self::Break(val0) => f.debug_tuple("Break").field(val0).finish(),
+			Self::NoNewline(val0) => f.debug_tuple("NoNewline").field(val0).finish(),
 			Self::Continue => f.write_str("Continue"),
 			Self::Return(val0) => f.debug_tuple("Return").field(val0).finish(),
 

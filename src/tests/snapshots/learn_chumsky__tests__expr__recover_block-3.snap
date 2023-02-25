@@ -1,0 +1,40 @@
+---
+source: src/tests/expr.rs
+expression: "&snapshot"
+---
+--- Input ---
+{ {testing; }
+---
+
+None
+
+--- Errors ---
+[
+    Error {
+        label: Some(
+            Block,
+        ),
+        span: 0..0,
+        reason: Unexpected,
+        found: Eof,
+        expected: [
+            Semi,
+            Dot,
+            Minus,
+            Bang,
+            Break,
+            Const,
+            Continue,
+            Func,
+            If,
+            Loop,
+            Mod,
+            Mut,
+            Return,
+            OpenParen,
+            OpenBrace,
+            CloseBrace,
+        ],
+    },
+]
+---

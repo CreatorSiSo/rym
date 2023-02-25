@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -38,22 +38,35 @@ Some(
 [
     Error {
         label: Some(
-            Expression,
+            Block,
         ),
         span: 16..17,
         reason: Unexpected,
         found: Comma,
         expected: [
             Semi,
+            Dot,
             Plus,
             Minus,
             Star,
             Slash,
+            Bang,
             BangEq,
             EqEq,
             LessThan,
             GreaterThan,
+            Break,
+            Const,
+            Continue,
+            Func,
+            If,
+            Loop,
+            Mod,
+            Mut,
+            Return,
             OpenParen,
+            OpenBrace,
+            CloseBrace,
         ],
     },
 ]

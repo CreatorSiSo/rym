@@ -10,11 +10,14 @@ pub enum Label {
 	Break,
 	Continue,
 	Expression,
+	Function,
 	Group,
 	Identifier,
 	Loop,
+	Module,
 	Record,
 	Return,
+	Variable,
 }
 
 impl Display for Label {
@@ -31,11 +34,14 @@ impl From<&Label> for &'static str {
 			Label::Break => "break",
 			Label::Continue => "continue",
 			Label::Expression => "expression",
+			Label::Function => "function",
 			Label::Group => "group",
 			Label::Identifier => "identifier",
 			Label::Loop => "loop",
+			Label::Module => "module",
 			Label::Record => "record",
 			Label::Return => "return",
+			Label::Variable => "variable",
 		}
 	}
 }
@@ -53,11 +59,14 @@ impl From<&'static str> for Label {
 			"break" => Label::Break,
 			"continue" => Label::Continue,
 			"expression" => Label::Expression,
+			"function" => Label::Function,
 			"group" => Label::Group,
 			"identifier" => Label::Identifier,
 			"loop" => Label::Loop,
+			"module" => Label::Module,
 			"record" => Label::Record,
 			"return" => Label::Return,
+			"variable" => Label::Variable,
 			_ => unreachable!(),
 		}
 	}

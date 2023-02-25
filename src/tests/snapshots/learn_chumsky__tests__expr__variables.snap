@@ -1,0 +1,58 @@
+---
+source: src/test.rs
+expression: "&snapshot"
+---
+--- Input ---
+{
+	const msg = "Hello World!\n";
+	mut counter = 0;
+
+	// TODO: count from 0 to 10 and print f"{counter}: Hello World!\n" every time
+}
+---
+
+Some(
+    (
+        Block(
+            [
+                Item(
+                    (
+                        Var {
+                            mutable: false,
+                            name: (
+                                "msg",
+                                9..12,
+                            ),
+                            rhs: (
+                                String("Hello World!\n"),
+                                15..31,
+                            ),
+                        },
+                        3..31,
+                    ),
+                ),
+                Item(
+                    (
+                        Var {
+                            mutable: true,
+                            name: (
+                                "counter",
+                                38..45,
+                            ),
+                            rhs: (
+                                Int(0),
+                                48..49,
+                            ),
+                        },
+                        34..49,
+                    ),
+                ),
+            ],
+        ),
+        0..132,
+    ),
+)
+
+--- Errors ---
+[]
+---

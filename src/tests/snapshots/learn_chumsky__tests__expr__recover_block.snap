@@ -1,0 +1,48 @@
+---
+source: src/tests/expr.rs
+expression: "&snapshot"
+---
+--- Input ---
+{ /&$/&/$ }
+---
+
+Some(
+    (
+        Block(
+            [
+                Error,
+            ],
+        ),
+        0..11,
+    ),
+)
+
+--- Errors ---
+[
+    Error {
+        label: Some(
+            Block,
+        ),
+        span: 2..3,
+        reason: Unexpected,
+        found: Slash,
+        expected: [
+            Dot,
+            Minus,
+            Bang,
+            Break,
+            Const,
+            Continue,
+            Func,
+            If,
+            Loop,
+            Mod,
+            Mut,
+            Return,
+            OpenParen,
+            OpenBrace,
+            CloseBrace,
+        ],
+    },
+]
+---

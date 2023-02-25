@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -27,7 +27,7 @@ Some(
 [
     Error {
         label: Some(
-            Expression,
+            Block,
         ),
         span: 6..7,
         reason: Unexpected,
@@ -39,8 +39,10 @@ Some(
             Break,
             Const,
             Continue,
+            Func,
             If,
             Loop,
+            Mod,
             Mut,
             Return,
             OpenParen,

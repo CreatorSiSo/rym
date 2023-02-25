@@ -30,17 +30,22 @@ Some(
     (
         Block(
             [
-                Binding {
-                    mutable: true,
-                    name: (
-                        "counter",
-                        7..14,
+                Item(
+                    (
+                        Var {
+                            mutable: true,
+                            name: (
+                                "counter",
+                                7..14,
+                            ),
+                            rhs: (
+                                Int(0),
+                                17..18,
+                            ),
+                        },
+                        3..18,
                     ),
-                    init: (
-                        Int(0),
-                        17..18,
-                    ),
-                },
+                ),
                 Expr(
                     (
                         Loop(

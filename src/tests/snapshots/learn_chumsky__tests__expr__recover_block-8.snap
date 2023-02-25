@@ -3,7 +3,7 @@ source: src/test.rs
 expression: "&snapshot"
 ---
 --- Input ---
-{ testing ]
+{ testing )
 ---
 
 None
@@ -12,22 +12,34 @@ None
 [
     Error {
         label: Some(
-            Expression,
+            Block,
         ),
         span: 10..11,
         reason: Unexpected,
-        found: CloseBracket,
+        found: CloseParen,
         expected: [
             Semi,
+            Dot,
             Plus,
             Minus,
             Star,
             Slash,
+            Bang,
             BangEq,
             EqEq,
             LessThan,
             GreaterThan,
+            Break,
+            Const,
+            Continue,
+            Func,
+            If,
+            Loop,
+            Mut,
+            Return,
             OpenParen,
+            OpenBrace,
+            CloseBrace,
         ],
     },
 ]

@@ -1,20 +1,5 @@
-#![cfg(test)]
-
-use crate::{expr_parser, parse_recovery};
+use crate::{expr_parser, insta_assert_parser};
 use indoc::indoc;
-
-macro_rules! insta_assert_parser {
-	($parser:expr; $($src:expr),+ $(,)?) => {
-		$({
-			let (ast, reports) = parse_recovery($parser, $src);
-			let snapshot = format!(
-				"--- Input ---\n{}\n---\n\n{:#?}\n\n--- Errors ---\n{:#?}\n---",
-				$src, &ast, &reports
-			);
-			insta::assert_snapshot!(&snapshot);
-		})*
-	};
-}
 
 #[test]
 fn literal_expressions() {
@@ -218,8 +203,8 @@ fn recover_block() {
 	insta_assert_parser!(
 		expr_parser();
 
-		// missing semicolon
-		"{ testing }",
+		// gibberish
+		"{ /&$/&/$ }",
 
 		// unclosed
 		"{ (testing; }",
@@ -229,7 +214,6 @@ fn recover_block() {
 		// additional closing delimiter
 		"{ testing ]}",
 		"{ testing )}",
-		"{ testing }}",
 
 		// wrong closing delimiter
 		"{ testing ]",

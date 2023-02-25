@@ -1,0 +1,58 @@
+---
+source: src/tests/modules.rs
+expression: "&snapshot"
+---
+--- Input ---
+mod name {
+	func testing() {}
+	const this = out
+}
+---
+
+Some(
+    (
+        Module {
+            name: (
+                "name",
+                4..8,
+            ),
+            items: [
+                (
+                    Func {
+                        name: (
+                            "testing",
+                            17..24,
+                        ),
+                        params: [],
+                        rhs: (
+                            Block(
+                                [],
+                            ),
+                            27..29,
+                        ),
+                    },
+                    12..29,
+                ),
+                (
+                    Var {
+                        mutable: false,
+                        name: (
+                            "this",
+                            37..41,
+                        ),
+                        rhs: (
+                            Ident("out"),
+                            44..47,
+                        ),
+                    },
+                    31..47,
+                ),
+            ],
+        },
+        0..49,
+    ),
+)
+
+--- Errors ---
+[]
+---

@@ -1,7 +1,8 @@
 mod ast;
 mod error;
-mod test;
+mod tests;
 
+use ast::Item;
 use chumsky::prelude::*;
 use chumsky::Stream;
 use rym_lexer::rich::Lexer;
@@ -13,14 +14,18 @@ pub type Token = rym_lexer::rich::Token;
 pub type Span = std::ops::Range<usize>;
 pub type Spanned<T> = (T, Span);
 
-pub fn parse_expr(src: &str) -> (Option<(Expr, Span)>, Vec<Error>) {
+pub fn parse_module_file(src: &str) -> (Option<Vec<Spanned<Item>>>, Vec<Error>) {
+	parse_recovery(item_parser(expr_parser()).repeated(), src)
+}
+
+pub fn parse_expr(src: &str) -> (Option<Spanned<Expr>>, Vec<Error>) {
 	parse_recovery(expr_parser(), src)
 }
 
 pub fn parse_recovery<O>(
-	parser: impl Parser<Token, Spanned<O>, Error = Simple<Token>>,
+	parser: impl Parser<Token, O, Error = Simple<Token>>,
 	src: &str,
-) -> (Option<(O, Span)>, Vec<Error>) {
+) -> (Option<O>, Vec<Error>) {
 	let token_stream = Stream::from_iter(0..0, Lexer::new(src));
 	let (ast, errors) = parser.parse_recovery(token_stream);
 
@@ -30,29 +35,56 @@ pub fn parse_recovery<O>(
 	(ast, reports)
 }
 
-pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>> + Clone {
-	let ident = select! { Token::Ident(ident) => ident }
-		.map_with_span(|ident, span| (ident, span))
-		.labelled(Label::Identifier);
+fn item_parser(
+	expr_parser: impl Parser<Token, Spanned<Expr>, Error = Simple<Token>> + Clone + 'static,
+) -> impl Parser<Token, Spanned<Item>, Error = Simple<Token>> {
+	recursive(|item| {
+		let module = just(Token::Mod)
+			.ignore_then(ident_parser())
+			.then(
+				item.repeated()
+					.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)),
+			)
+			.map(|(name, items)| Item::Module { name, items })
+			.labelled(Label::Module);
 
+		let function = just(Token::Func)
+			.ignore_then(ident_parser())
+			.then(
+				ident_parser()
+					.separated_by(just(Token::Comma))
+					.allow_trailing()
+					.delimited_by(just(Token::OpenParen), just(Token::CloseParen)),
+			)
+			.then(expr_parser.clone())
+			.map(|((name, params), rhs)| Item::Func { name, params, rhs })
+			.labelled(Label::Function);
+
+		let var = choice((just(Token::Const).to(false), just(Token::Mut).to(true)))
+			.then(ident_parser())
+			.then_ignore(just(Token::Eq))
+			.then(expr_parser)
+			.map(|((mutable, name), rhs)| Item::Var { mutable, name, rhs })
+			.labelled(Label::Variable);
+
+		choice((module, function, var)).map_with_span(|item, span| (item, span))
+	})
+}
+
+pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>> + Clone {
 	recursive(|expr| {
 		let stmt = {
-			let var = just(Token::Const)
-				.to(false)
-				.or(just(Token::Mut).to(true))
-				.then(ident.clone())
-				.then_ignore(just(Token::Eq))
-				.then(expr.clone());
-
 			choice((
-				var.map(|((mutable, name), init)| Stmt::Binding {
-					mutable,
-					name,
-					init,
-				}),
-				expr.clone().map(|expr| Stmt::Expr(expr)),
+				item_parser(expr.clone())
+					.map(|item| Stmt::Item(item))
+					.then_ignore(just(Token::Semi)),
+				expr.clone()
+					.then(just(Token::Semi).or_not())
+					.map(|(expr, semi)| match semi {
+						Some(_) => Stmt::Expr(expr),
+						None => Stmt::Expr((Expr::NoNewline(Box::new(expr.clone())), expr.1)),
+					}),
 			))
-			.then_ignore(just(Token::Semi))
 		};
 
 		// atom => group | literal | IDENT
@@ -86,9 +118,7 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 			choice((
 				group,
 				literal,
-				ident
-					.clone()
-					.map(|(ident, span)| (Expr::Ident(ident), span)),
+				ident_parser().map(|(ident, span)| (Expr::Ident(ident), span)),
 			))
 		};
 
@@ -188,8 +218,7 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 		let raw_expr = comp;
 
 		// assign => IDENT "=" expr
-		let assign = ident
-			.clone()
+		let assign = ident_parser()
 			.then_ignore(just(Token::Eq))
 			.then(expr.clone())
 			.map_with_span(|(name, rhs), span| {
@@ -274,11 +303,11 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 		// record => (IDENT | ".") "{" record_fields? "}"
 		// record_fields => record_field ("," record_field)* ","?
 		// record_field => IDENT ":" expr
-		let record_field = ident.clone().then_ignore(just(Token::Colon)).then(expr);
+		let record_field = ident_parser().then_ignore(just(Token::Colon)).then(expr);
 		let record_fields = record_field
 			.separated_by(just(Token::Comma))
 			.allow_trailing();
-		let record = ident
+		let record = ident_parser()
 			.map(|ident| Some(ident))
 			.or(just(Token::Dot).map(|_| None))
 			.then(record_fields.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)))
@@ -287,4 +316,10 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 
 		choice((record, assign, raw_expr, block, control_flow)).labelled(Label::Expression)
 	})
+}
+
+fn ident_parser() -> impl Parser<Token, Spanned<String>, Error = Simple<Token>> + Clone {
+	select! { Token::Ident(ident) => ident }
+		.map_with_span(|ident, span| (ident, span))
+		.labelled(Label::Identifier)
 }

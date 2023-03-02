@@ -17,7 +17,7 @@ pub enum Label {
 	Module,
 	Record,
 	Return,
-	Variable,
+	Binding,
 }
 
 impl Display for Label {
@@ -30,6 +30,7 @@ impl Display for Label {
 impl From<&Label> for &'static str {
 	fn from(value: &Label) -> Self {
 		match value {
+			Label::Binding => "binding",
 			Label::Block => "block",
 			Label::Break => "break",
 			Label::Continue => "continue",
@@ -41,7 +42,6 @@ impl From<&Label> for &'static str {
 			Label::Module => "module",
 			Label::Record => "record",
 			Label::Return => "return",
-			Label::Variable => "variable",
 		}
 	}
 }
@@ -66,7 +66,7 @@ impl From<&'static str> for Label {
 			"module" => Label::Module,
 			"record" => Label::Record,
 			"return" => Label::Return,
-			"variable" => Label::Variable,
+			"binding" => Label::Binding,
 			_ => unreachable!(),
 		}
 	}

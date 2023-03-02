@@ -5,16 +5,18 @@ expression: "&snapshot"
 --- Input ---
 mod name {
 	func testing() {}
-	const this = out
+	let this = testing();
 }
 ---
 
 Some(
     (
         Module {
-            name: (
-                "name",
-                4..8,
+            name: Some(
+                (
+                    "name",
+                    4..8,
+                ),
             ),
             items: [
                 (
@@ -24,32 +26,39 @@ Some(
                             17..24,
                         ),
                         params: [],
-                        rhs: (
-                            Block(
-                                [],
+                        rhs: Some(
+                            (
+                                Block(
+                                    [],
+                                ),
+                                27..29,
                             ),
-                            27..29,
                         ),
                     },
                     12..29,
                 ),
                 (
-                    Var {
-                        mutable: false,
+                    Binding {
                         name: (
                             "this",
-                            37..41,
+                            35..39,
                         ),
                         rhs: (
-                            Ident("out"),
-                            44..47,
+                            Call(
+                                (
+                                    Ident("testing"),
+                                    42..49,
+                                ),
+                                [],
+                            ),
+                            42..51,
                         ),
                     },
-                    31..47,
+                    31..52,
                 ),
             ],
         },
-        0..49,
+        0..54,
     ),
 )
 

@@ -14,7 +14,7 @@ None
         label: Some(
             Block,
         ),
-        span: 0..0,
+        span: 5..5,
         reason: Unexpected,
         found: Eof,
         expected: [
@@ -23,13 +23,12 @@ None
             Minus,
             Bang,
             Break,
-            Const,
             Continue,
             Func,
             If,
+            Let,
             Loop,
             Mod,
-            Mut,
             Return,
             OpenParen,
             OpenBrace,

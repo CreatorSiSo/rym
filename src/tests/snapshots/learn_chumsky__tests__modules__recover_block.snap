@@ -1,0 +1,40 @@
+---
+source: src/tests/modules.rs
+expression: "&snapshot"
+---
+--- Input ---
+mod out { let in_1 = 0; }
+---
+
+Some(
+    (
+        Module {
+            name: Some(
+                (
+                    "out",
+                    4..7,
+                ),
+            ),
+            items: [
+                (
+                    Binding {
+                        name: (
+                            "in_1",
+                            14..18,
+                        ),
+                        rhs: (
+                            Int(0),
+                            21..22,
+                        ),
+                    },
+                    10..23,
+                ),
+            ],
+        },
+        0..25,
+    ),
+)
+
+--- Errors ---
+[]
+---

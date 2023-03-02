@@ -1,0 +1,34 @@
+---
+source: src/tests/modules.rs
+expression: "&snapshot"
+---
+--- Input ---
+mod
+---
+
+Some(
+    (
+        Module {
+            name: None,
+            items: [],
+        },
+        0..3,
+    ),
+)
+
+--- Errors ---
+[
+    Error {
+        label: Some(
+            Module,
+        ),
+        span: 1..1,
+        reason: Unexpected,
+        found: Eof,
+        expected: [
+            Semi,
+            OpenBrace,
+        ],
+    },
+]
+---

@@ -3,7 +3,7 @@ source: src/tests/modules.rs
 expression: "&snapshot"
 ---
 --- Input ---
-mod name {}
+mod name
 ---
 
 Some(
@@ -17,10 +17,23 @@ Some(
             ),
             items: [],
         },
-        0..11,
+        0..8,
     ),
 )
 
 --- Errors ---
-[]
+[
+    Error {
+        label: Some(
+            Module,
+        ),
+        span: 2..2,
+        reason: Unexpected,
+        found: Eof,
+        expected: [
+            Semi,
+            OpenBrace,
+        ],
+    },
+]
 ---

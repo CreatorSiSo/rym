@@ -3,21 +3,16 @@ source: src/tests/modules.rs
 expression: "&snapshot"
 ---
 --- Input ---
-mod name {}
+mod {}
 ---
 
 Some(
     (
         Module {
-            name: Some(
-                (
-                    "name",
-                    4..8,
-                ),
-            ),
+            name: None,
             items: [],
         },
-        0..11,
+        0..6,
     ),
 )
 

@@ -1,0 +1,60 @@
+---
+source: src/tests/modules.rs
+expression: "&snapshot"
+---
+--- Input ---
+mod out { mod let in_1 = 0; }
+---
+
+Some(
+    (
+        Module {
+            name: Some(
+                (
+                    "out",
+                    4..7,
+                ),
+            ),
+            items: [
+                (
+                    Module {
+                        name: None,
+                        items: [],
+                    },
+                    10..13,
+                ),
+                (
+                    Binding {
+                        name: (
+                            "in_1",
+                            18..22,
+                        ),
+                        rhs: (
+                            Int(0),
+                            25..26,
+                        ),
+                    },
+                    14..27,
+                ),
+            ],
+        },
+        0..29,
+    ),
+)
+
+--- Errors ---
+[
+    Error {
+        label: Some(
+            Module,
+        ),
+        span: 14..17,
+        reason: Unexpected,
+        found: Let,
+        expected: [
+            Semi,
+            OpenBrace,
+        ],
+    },
+]
+---

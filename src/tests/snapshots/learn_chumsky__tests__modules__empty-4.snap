@@ -3,7 +3,7 @@ source: src/tests/modules.rs
 expression: "&snapshot"
 ---
 --- Input ---
-mod name {}
+mod name;
 ---
 
 Some(
@@ -17,7 +17,7 @@ Some(
             ),
             items: [],
         },
-        0..11,
+        0..9,
     ),
 )
 

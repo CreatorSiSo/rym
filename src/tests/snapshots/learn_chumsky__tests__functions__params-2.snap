@@ -1,0 +1,34 @@
+---
+source: src/tests/functions.rs
+expression: "&snapshot"
+---
+--- Input ---
+func params(self, other);
+---
+
+Some(
+    (
+        Func {
+            name: (
+                "params",
+                5..11,
+            ),
+            params: [
+                (
+                    "self",
+                    12..16,
+                ),
+                (
+                    "other",
+                    18..23,
+                ),
+            ],
+            rhs: None,
+        },
+        0..25,
+    ),
+)
+
+--- Errors ---
+[]
+---

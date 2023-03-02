@@ -97,8 +97,8 @@ fn variables() {
 		expr_parser();
 		indoc!(r#"
 		{
-			const msg = "Hello World!\n";
-			mut counter = 0;
+			let msg = "Hello World!\n";
+			let /* mut */ counter = 0;
 
 			// TODO: count from 0 to 10 and print f"{counter}: Hello World!\n" every time
 		}"#),
@@ -156,7 +156,7 @@ fn loop_expressions() {
 		// counter
 		indoc! {"
 			{
-				mut counter = 0;
+				let /* mut */ counter = 0;
 
 				loop
 					if counter > 10 then

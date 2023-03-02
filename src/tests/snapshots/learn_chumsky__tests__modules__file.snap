@@ -1,0 +1,72 @@
+---
+source: src/tests/modules.rs
+expression: "&snapshot"
+---
+--- Input ---
+/// useless function for adding two values together
+func add(x, y) {
+	x + y; // here we add them
+}
+
+pub fn multiply(x, y) {
+	// here we are multiplying x by y
+	x * y;
+}
+
+func main() {
+	print("Hello World!");
+	add(2, 3);
+	multiply(3, 2);
+}
+---
+
+Some(
+    (
+        Func {
+            name: (
+                "add",
+                57..60,
+            ),
+            params: [
+                (
+                    "x",
+                    61..62,
+                ),
+                (
+                    "y",
+                    64..65,
+                ),
+            ],
+            rhs: Some(
+                (
+                    Block(
+                        [
+                            Expr(
+                                (
+                                    Binary(
+                                        (
+                                            Ident("x"),
+                                            70..71,
+                                        ),
+                                        Add,
+                                        (
+                                            Ident("y"),
+                                            74..75,
+                                        ),
+                                    ),
+                                    70..75,
+                                ),
+                            ),
+                        ],
+                    ),
+                    67..98,
+                ),
+            ),
+        },
+        52..98,
+    ),
+)
+
+--- Errors ---
+[]
+---

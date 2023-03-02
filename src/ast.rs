@@ -3,16 +3,15 @@ use crate::Spanned;
 #[derive(Debug, Clone)]
 pub enum Item {
 	Module {
-		name: Spanned<String>,
+		name: Option<Spanned<String>>,
 		items: Vec<Spanned<Item>>,
 	},
 	Func {
 		name: Spanned<String>,
 		params: Vec<Spanned<String>>,
-		rhs: Spanned<Expr>,
+		rhs: Option<Spanned<Expr>>,
 	},
-	Var {
-		mutable: bool,
+	Binding {
 		name: Spanned<String>,
 		rhs: Spanned<Expr>,
 	},

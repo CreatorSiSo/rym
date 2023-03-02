@@ -1,0 +1,104 @@
+---
+source: src/tests/modules.rs
+expression: "&snapshot"
+---
+--- Input ---
+mod out { mod lvl_1 { mod lvl_2 { let in_3 = 0; }   mod lvl_2   let in_2 = 0; } }
+---
+
+Some(
+    (
+        Module {
+            name: Some(
+                (
+                    "out",
+                    4..7,
+                ),
+            ),
+            items: [
+                (
+                    Module {
+                        name: Some(
+                            (
+                                "lvl_1",
+                                14..19,
+                            ),
+                        ),
+                        items: [
+                            (
+                                Module {
+                                    name: Some(
+                                        (
+                                            "lvl_2",
+                                            26..31,
+                                        ),
+                                    ),
+                                    items: [
+                                        (
+                                            Binding {
+                                                name: (
+                                                    "in_3",
+                                                    38..42,
+                                                ),
+                                                rhs: (
+                                                    Int(0),
+                                                    45..46,
+                                                ),
+                                            },
+                                            34..47,
+                                        ),
+                                    ],
+                                },
+                                22..49,
+                            ),
+                            (
+                                Module {
+                                    name: Some(
+                                        (
+                                            "lvl_2",
+                                            56..61,
+                                        ),
+                                    ),
+                                    items: [],
+                                },
+                                52..61,
+                            ),
+                            (
+                                Binding {
+                                    name: (
+                                        "in_2",
+                                        68..72,
+                                    ),
+                                    rhs: (
+                                        Int(0),
+                                        75..76,
+                                    ),
+                                },
+                                64..77,
+                            ),
+                        ],
+                    },
+                    10..79,
+                ),
+            ],
+        },
+        0..81,
+    ),
+)
+
+--- Errors ---
+[
+    Error {
+        label: Some(
+            Module,
+        ),
+        span: 64..67,
+        reason: Unexpected,
+        found: Let,
+        expected: [
+            Semi,
+            OpenBrace,
+        ],
+    },
+]
+---

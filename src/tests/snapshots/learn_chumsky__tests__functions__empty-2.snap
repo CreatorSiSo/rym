@@ -1,0 +1,25 @@
+---
+source: src/tests/functions.rs
+expression: "&snapshot"
+---
+--- Input ---
+func empty();
+---
+
+Some(
+    (
+        Func {
+            name: (
+                "empty",
+                5..10,
+            ),
+            params: [],
+            rhs: None,
+        },
+        0..13,
+    ),
+)
+
+--- Errors ---
+[]
+---

@@ -5,17 +5,16 @@ mod tests;
 use ast::Item;
 use chumsky::prelude::*;
 use chumsky::Stream;
-use rym_lexer::rich::Lexer;
+use rym_lexer::rich::{Lexer, Token};
 
 use ast::{BinaryOp, Expr, Stmt, UnaryOp};
 use error::{Error, Label};
 
-pub type Token = rym_lexer::rich::Token;
 pub type Span = std::ops::Range<usize>;
 pub type Spanned<T> = (T, Span);
 
 pub fn parse_module_file(src: &str) -> (Option<Vec<Spanned<Item>>>, Vec<Error>) {
-	parse_recovery(item_parser(expr_parser()).repeated(), src)
+	parse_recovery(module_file_parser(), src)
 }
 
 pub fn parse_expr(src: &str) -> (Option<Spanned<Expr>>, Vec<Error>) {
@@ -26,7 +25,8 @@ pub fn parse_recovery<O>(
 	parser: impl Parser<Token, O, Error = Simple<Token>>,
 	src: &str,
 ) -> (Option<O>, Vec<Error>) {
-	let token_stream = Stream::from_iter(0..0, Lexer::new(src));
+	let tokens: Vec<Spanned<Token>> = Lexer::new(src).collect();
+	let token_stream = Stream::from_iter(tokens.len()..tokens.len(), tokens.into_iter());
 	let (ast, errors) = parser.parse_recovery(token_stream);
 
 	let mut reports: Vec<Error> = errors.into_iter().map(Error::from).collect();
@@ -35,18 +35,44 @@ pub fn parse_recovery<O>(
 	(ast, reports)
 }
 
+fn module_file_parser() -> impl Parser<Token, Vec<Spanned<Item>>, Error = Simple<Token>> {
+	item_parser(expr_parser()).repeated()
+}
+
 fn item_parser(
 	expr_parser: impl Parser<Token, Spanned<Expr>, Error = Simple<Token>> + Clone + 'static,
 ) -> impl Parser<Token, Spanned<Item>, Error = Simple<Token>> {
+	fn recover_block_or_semi<O>(
+		parser: impl Parser<Token, O, Error = Simple<Token>>,
+		fallback: fn(Span) -> O,
+	) -> impl Parser<Token, O, Error = Simple<Token>> {
+		parser
+			.recover_with(nested_delimiters(
+				Token::OpenBrace,
+				Token::CloseBrace,
+				[
+					(Token::OpenParen, Token::CloseParen),
+					(Token::OpenBracket, Token::CloseBracket),
+				],
+				fallback,
+			))
+			.recover_with(skip_parser(
+				empty().map_with_span(move |_, span| fallback(span)),
+			))
+	}
+
 	recursive(|item| {
 		let module = just(Token::Mod)
-			.ignore_then(ident_parser())
-			.then(
-				item.repeated()
-					.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)),
-			)
-			.map(|(name, items)| Item::Module { name, items })
-			.labelled(Label::Module);
+			.ignore_then(ident_parser().or_not())
+			.then(recover_block_or_semi(
+				choice((
+					just(Token::Semi).to(vec![]),
+					item.repeated()
+						.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)),
+				)),
+				|_| vec![],
+			))
+			.map(|(name, items)| Item::Module { name, items });
 
 		let function = just(Token::Func)
 			.ignore_then(ident_parser())
@@ -56,18 +82,28 @@ fn item_parser(
 					.allow_trailing()
 					.delimited_by(just(Token::OpenParen), just(Token::CloseParen)),
 			)
-			.then(expr_parser.clone())
-			.map(|((name, params), rhs)| Item::Func { name, params, rhs })
-			.labelled(Label::Function);
+			.then(recover_block_or_semi(
+				choice((
+					expr_parser.clone().map(|expr| Some(expr)),
+					just(Token::Semi).to(None),
+				)),
+				|_| None,
+			))
+			.map(|((name, params), rhs)| Item::Func { name, params, rhs });
 
-		let var = choice((just(Token::Const).to(false), just(Token::Mut).to(true)))
-			.then(ident_parser())
+		let binding = just(Token::Let)
+			.ignore_then(ident_parser())
 			.then_ignore(just(Token::Eq))
 			.then(expr_parser)
-			.map(|((mutable, name), rhs)| Item::Var { mutable, name, rhs })
-			.labelled(Label::Variable);
+			.then_ignore(just(Token::Semi))
+			.map(|(name, rhs)| Item::Binding { name, rhs });
 
-		choice((module, function, var)).map_with_span(|item, span| (item, span))
+		choice((
+			module.labelled(Label::Module),
+			function.labelled(Label::Function),
+			binding.labelled(Label::Binding),
+		))
+		.map_with_span(|item, span| (item, span))
 	})
 }
 
@@ -75,9 +111,7 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 	recursive(|expr| {
 		let stmt = {
 			choice((
-				item_parser(expr.clone())
-					.map(|item| Stmt::Item(item))
-					.then_ignore(just(Token::Semi)),
+				item_parser(expr.clone()).map(|item| Stmt::Item(item)),
 				expr.clone()
 					.then(just(Token::Semi).or_not())
 					.map(|(expr, semi)| match semi {

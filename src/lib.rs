@@ -157,7 +157,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, ParserInput<'a>, Spanned<Expr>, Extr
 					],
 					|span| Spanned(Expr::Error, span),
 				)));
-			/* .labelled(Label::Group) */
+			// .labelled(Label::Group)
 
 			choice((
 				group,
@@ -281,8 +281,8 @@ pub fn expr_parser<'a>() -> impl Parser<'a, ParserInput<'a>, Spanned<Expr>, Extr
 			.repeated()
 			.collect()
 			.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace))
-			// Attempt to recover anything that looks like a block but contains errors
 			.map_with_span(|stmts, span| Spanned(Expr::Block(stmts), span))
+			// Attempt to recover anything that looks like a block but contains errors
 			.recover_with(via_parser(nested_delimiters(
 				Token::OpenBrace,
 				Token::CloseBrace,
@@ -298,26 +298,24 @@ pub fn expr_parser<'a>() -> impl Parser<'a, ParserInput<'a>, Spanned<Expr>, Extr
 		let control_flow = {
 			// break => "break" expr
 			let break_ = just(Token::Break)
-						.ignore_then(expr.clone().or_not())
-						.map(|expr| Expr::Break(Box::new(expr)))
-						/* .labelled(Label::Break) */;
+				.ignore_then(expr.clone().or_not())
+				.map(|expr| Expr::Break(Box::new(expr)));
+			// .labelled(Label::Break)
 
 			// continue => "continue" expr
-			let continue_ = just(Token::Continue)
-						.map(|_| Expr::Continue)
-						/* .labelled(Label::Continue) */;
+			let continue_ = just(Token::Continue).map(|_| Expr::Continue); // .labelled(Label::Continue)
 
 			// return => "return" expr
 			let return_ = just(Token::Return)
-						.ignore_then(expr.clone().or_not())
-						.map(|expr| Expr::Return(Box::new(expr)))
-						/* .labelled(Label::Return) */;
+				.ignore_then(expr.clone().or_not())
+				.map(|expr| Expr::Return(Box::new(expr)));
+			// .labelled(Label::Return)
 
 			// loop => "loop" expr
 			let loop_ = just(Token::Loop)
-						.ignore_then(expr.clone())
-						.map(|expr| Expr::Loop(Box::new(expr)))
-						/* .labelled(Label::Loop) */;
+				.ignore_then(expr.clone())
+				.map(|expr| Expr::Loop(Box::new(expr)));
+			// .labelled(Label::Loop)
 
 			// if => "if" expr "then" expr ("else" expr)?
 			let if_ = recursive(|if_| {
@@ -357,11 +355,11 @@ pub fn expr_parser<'a>() -> impl Parser<'a, ParserInput<'a>, Spanned<Expr>, Extr
 			.allow_trailing()
 			.collect::<Vec<_>>();
 		let record = ident_parser()
-					.map(|ident| Some(ident))
-					.or(just(Token::Dot).map(|_| None))
-					.then(record_fields.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)))
-					.map_with_span(|(name, fields), span| Spanned(Expr::Record { name, fields }, span))
-					/* .labelled(Label::Record) */;
+			.map(|ident| Some(ident))
+			.or(just(Token::Dot).map(|_| None))
+			.then(record_fields.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)))
+			.map_with_span(|(name, fields), span| Spanned(Expr::Record { name, fields }, span));
+		// .labelled(Label::Record)
 
 		choice((record, assign, raw_expr, block, control_flow)) /* .labelled(Label::Expression) */
 	})
@@ -370,5 +368,5 @@ pub fn expr_parser<'a>() -> impl Parser<'a, ParserInput<'a>, Spanned<Expr>, Extr
 fn ident_parser<'a>() -> impl Parser<'a, ParserInput<'a>, Spanned<String>, Extra> + Clone {
 	select! { Token::Ident(ident) => ident }
 		.map_with_span(|ident, span: std::ops::Range<usize>| Spanned(ident, span.into()))
-	/* .labelled(Label::Identifier) */
+	// .labelled(Label::Identifier)
 }

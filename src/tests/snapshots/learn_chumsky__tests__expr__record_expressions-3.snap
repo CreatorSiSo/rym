@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,7 +7,7 @@ expression: "&snapshot"
 ---
 
 Some(
-    (
+    Spanned(
         Record {
             name: None,
             fields: [],

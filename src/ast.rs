@@ -80,7 +80,6 @@ pub enum Expr {
 	},
 	Loop(Box<Spanned<Expr>>),
 	Break(Box<Option<Spanned<Expr>>>),
-	NoNewline(Box<Spanned<Expr>>),
 	Continue,
 	Return(Box<Option<Spanned<Expr>>>),
 
@@ -129,7 +128,6 @@ impl std::fmt::Debug for Expr {
 				.finish(),
 			Self::Loop(val0) => f.debug_tuple("Loop").field(val0).finish(),
 			Self::Break(val0) => f.debug_tuple("Break").field(val0).finish(),
-			Self::NoNewline(val0) => f.debug_tuple("NoNewline").field(val0).finish(),
 			Self::Continue => f.write_str("Continue"),
 			Self::Return(val0) => f.debug_tuple("Return").field(val0).finish(),
 

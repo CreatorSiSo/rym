@@ -12,17 +12,17 @@ expression: "&snapshot"
 ---
 
 Some(
-    (
+    Spanned(
         Block(
             [
                 Item(
-                    (
+                    Spanned(
                         Binding {
-                            name: (
+                            name: Spanned(
                                 "msg",
                                 7..10,
                             ),
-                            rhs: (
+                            rhs: Spanned(
                                 String("Hello World!\n"),
                                 13..29,
                             ),
@@ -31,13 +31,13 @@ Some(
                     ),
                 ),
                 Item(
-                    (
+                    Spanned(
                         Binding {
-                            name: (
+                            name: Spanned(
                                 "counter",
                                 46..53,
                             ),
-                            rhs: (
+                            rhs: Spanned(
                                 Int(0),
                                 56..57,
                             ),

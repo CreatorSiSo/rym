@@ -10,24 +10,24 @@ mod name {
 ---
 
 Some(
-    (
+    Spanned(
         Module {
             name: Some(
-                (
+                Spanned(
                     "name",
                     4..8,
                 ),
             ),
             items: [
-                (
+                Spanned(
                     Func {
-                        name: (
+                        name: Spanned(
                             "testing",
                             17..24,
                         ),
                         params: [],
                         rhs: Some(
-                            (
+                            Spanned(
                                 Block(
                                     [],
                                 ),
@@ -37,15 +37,15 @@ Some(
                     },
                     12..29,
                 ),
-                (
+                Spanned(
                     Binding {
-                        name: (
+                        name: Spanned(
                             "this",
                             35..39,
                         ),
-                        rhs: (
+                        rhs: Spanned(
                             Call(
-                                (
+                                Spanned(
                                     Ident("testing"),
                                     42..49,
                                 ),

@@ -1,4 +1,6 @@
 use crate::{expr_parser, insta_assert_parser, item_parser};
+#[allow(unused_imports)]
+use chumsky::Parser;
 use indoc::indoc;
 
 #[test]
@@ -42,7 +44,7 @@ fn file() {
 			x + y; // here we add them
 		}
 
-		pub fn multiply(x, y) {
+		func multiply(x, y) {
 			// here we are multiplying x by y
 			x * y;
 		}
@@ -52,7 +54,7 @@ fn file() {
 			add(2, 3);
 			multiply(3, 2);
 		}"#)
-	)
+	);
 }
 
 #[test]

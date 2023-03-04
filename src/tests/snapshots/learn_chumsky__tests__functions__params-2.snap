@@ -7,18 +7,18 @@ func params(self, other);
 ---
 
 Some(
-    (
+    Spanned(
         Func {
-            name: (
+            name: Spanned(
                 "params",
                 5..11,
             ),
             params: [
-                (
+                Spanned(
                     "self",
                     12..16,
                 ),
-                (
+                Spanned(
                     "other",
                     18..23,
                 ),

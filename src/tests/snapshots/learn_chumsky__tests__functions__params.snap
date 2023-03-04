@@ -7,22 +7,22 @@ func params(one, two, three);
 ---
 
 Some(
-    (
+    Spanned(
         Func {
-            name: (
+            name: Spanned(
                 "params",
                 5..11,
             ),
             params: [
-                (
+                Spanned(
                     "one",
                     12..15,
                 ),
-                (
+                Spanned(
                     "two",
                     17..20,
                 ),
-                (
+                Spanned(
                     "three",
                     22..27,
                 ),

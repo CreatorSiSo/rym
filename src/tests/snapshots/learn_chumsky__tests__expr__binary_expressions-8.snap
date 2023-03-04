@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,30 +7,30 @@ expression: "&snapshot"
 ---
 
 Some(
-    (
+    Spanned(
         Binary(
-            (
+            Spanned(
                 Binary(
-                    (
+                    Spanned(
                         Int(1),
                         0..1,
                     ),
                     Eq,
-                    (
+                    Spanned(
                         Binary(
-                            (
+                            Spanned(
                                 Int(1),
                                 5..6,
                             ),
                             Add,
-                            (
+                            Spanned(
                                 Binary(
-                                    (
+                                    Spanned(
                                         Int(2),
                                         9..10,
                                     ),
                                     Div,
-                                    (
+                                    Spanned(
                                         Int(3),
                                         13..14,
                                     ),
@@ -44,7 +44,7 @@ Some(
                 0..14,
             ),
             Neq,
-            (
+            Spanned(
                 Int(0),
                 18..19,
             ),

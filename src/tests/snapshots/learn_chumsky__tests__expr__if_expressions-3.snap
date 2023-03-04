@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,28 +7,28 @@ if (true == false) then ("Hello Universe!") else ("Hello World!")
 ---
 
 Some(
-    (
+    Spanned(
         If {
-            condition: (
+            condition: Spanned(
                 Binary(
-                    (
+                    Spanned(
                         Ident("true"),
                         4..8,
                     ),
                     Eq,
-                    (
+                    Spanned(
                         Ident("false"),
                         12..17,
                     ),
                 ),
                 4..17,
             ),
-            then_branch: (
+            then_branch: Spanned(
                 String("Hello Universe!"),
                 25..42,
             ),
             else_branch: Some(
-                (
+                Spanned(
                     String("Hello World!"),
                     50..64,
                 ),

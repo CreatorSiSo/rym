@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,20 +7,20 @@ expression: "&snapshot"
 ---
 
 Some(
-    (
+    Spanned(
         Binary(
-            (
+            Spanned(
                 If {
-                    condition: (
+                    condition: Spanned(
                         Ident("true"),
                         4..8,
                     ),
-                    then_branch: (
+                    then_branch: Spanned(
                         Int(1),
                         14..15,
                     ),
                     else_branch: Some(
-                        (
+                        Spanned(
                             Int(2),
                             21..22,
                         ),
@@ -29,7 +29,7 @@ Some(
                 1..22,
             ),
             Add,
-            (
+            Spanned(
                 Int(3),
                 26..27,
             ),

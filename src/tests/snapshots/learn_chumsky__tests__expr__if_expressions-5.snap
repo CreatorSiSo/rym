@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -8,18 +8,18 @@ else "Hello World!"
 ---
 
 Some(
-    (
+    Spanned(
         If {
-            condition: (
+            condition: Spanned(
                 Ident("true"),
                 3..7,
             ),
-            then_branch: (
+            then_branch: Spanned(
                 String("Hello Universe!"),
                 13..30,
             ),
             else_branch: Some(
-                (
+                Spanned(
                     String("Hello World!"),
                     36..50,
                 ),

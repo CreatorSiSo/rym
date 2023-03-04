@@ -7,7 +7,7 @@ mod {}
 ---
 
 Some(
-    (
+    Spanned(
         Module {
             name: None,
             items: [],

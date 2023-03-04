@@ -1,4 +1,6 @@
 use crate::{expr_parser, insta_assert_parser};
+#[allow(unused_imports)]
+use chumsky::Parser;
 use indoc::indoc;
 
 #[test]

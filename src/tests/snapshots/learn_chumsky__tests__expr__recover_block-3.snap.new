@@ -1,0 +1,37 @@
+---
+source: src/tests/expr.rs
+assertion_line: 205
+expression: "&snapshot"
+---
+--- Input ---
+{ {testing; }
+---
+
+None
+
+--- Errors ---
+[
+    ParseError {
+        label: None,
+        span: 12..13,
+        reason: Unexpected,
+        found: CloseBrace,
+        expected: [
+            Semi,
+            Dot,
+            Minus,
+            Bang,
+            Break,
+            Continue,
+            Func,
+            If,
+            Let,
+            Loop,
+            Mod,
+            Return,
+            OpenParen,
+            OpenBrace,
+        ],
+    },
+]
+---

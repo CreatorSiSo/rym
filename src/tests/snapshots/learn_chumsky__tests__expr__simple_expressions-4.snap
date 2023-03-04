@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,15 +7,15 @@ expression: "&snapshot"
 ---
 
 Some(
-    (
+    Spanned(
         Call(
-            (
+            Spanned(
                 Call(
-                    (
+                    Spanned(
                         Call(
-                            (
+                            Spanned(
                                 Call(
-                                    (
+                                    Spanned(
                                         Ident("make_func"),
                                         1..10,
                                     ),

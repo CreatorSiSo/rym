@@ -1,0 +1,47 @@
+---
+source: src/tests/modules.rs
+assertion_line: 62
+expression: "&snapshot"
+---
+--- Input ---
+mod out { mod lvl_1 { mod lvl_2 { let in_3 = 0; )   mod lvl_2   let in_2 = 0; } }
+---
+
+Some(
+    Spanned(
+        Module {
+            name: Some(
+                Spanned(
+                    "out",
+                    4..7,
+                ),
+            ),
+            items: [],
+        },
+        0..7,
+    ),
+)
+
+--- Errors ---
+[
+    ParseError {
+        label: None,
+        span: 20..21,
+        reason: Unexpected,
+        found: OpenBrace,
+        expected: [
+            Func,
+            Let,
+            Mod,
+            CloseBrace,
+        ],
+    },
+    ParseError {
+        label: None,
+        span: 8..9,
+        reason: Unexpected,
+        found: OpenBrace,
+        expected: [],
+    },
+]
+---

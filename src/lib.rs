@@ -2,52 +2,54 @@ mod ast;
 mod error;
 mod tests;
 
-use ast::Item;
-use chumsky::prelude::*;
-use chumsky::Stream;
+use ast::{BinaryOp, Expr, Item, Stmt, UnaryOp};
+use error::ParseResult;
 use rym_lexer::rich::{Lexer, Token};
 
-use ast::{BinaryOp, Expr, Stmt, UnaryOp};
-use error::{Error, Label};
+use chumsky::input::{self, Input};
+use chumsky::prelude::*;
 
-pub type Span = std::ops::Range<usize>;
-pub type Spanned<T> = (T, Span);
+pub(crate) type Span = std::ops::Range<usize>;
+#[derive(Debug, PartialEq, Clone)]
+pub struct Spanned<T>(T, Span);
 
-pub fn parse_module_file(src: &str) -> (Option<Vec<Spanned<Item>>>, Vec<Error>) {
-	parse_recovery(module_file_parser(), src)
+pub(crate) type TokenSlice<'a> = input::Spanned<Token, Span, &'a [(Token, Span)]>;
+pub(crate) type Error<'a> = Rich<'a, TokenSlice<'a>>;
+pub(crate) type Extra<'a> = extra::Full<Error<'a>, (), ()>;
+
+pub fn parse_module_file<'a>(src: &'a str) -> ParseResult<Vec<Spanned<Item>>> {
+	parse_str(|tokens| module_file_parser().parse(tokens).into(), src)
 }
 
-pub fn parse_expr(src: &str) -> (Option<Spanned<Expr>>, Vec<Error>) {
-	parse_recovery(expr_parser(), src)
+pub fn parse_expr<'a>(src: &'a str) -> ParseResult<Spanned<Expr>> {
+	parse_str(|tokens| expr_parser().parse(tokens).into(), src)
 }
 
-pub fn parse_recovery<O>(
-	parser: impl Parser<Token, O, Error = Simple<Token>>,
-	src: &str,
-) -> (Option<O>, Vec<Error>) {
-	let tokens: Vec<Spanned<Token>> = Lexer::new(src).collect();
-	let token_stream = Stream::from_iter(tokens.len()..tokens.len(), tokens.into_iter());
-	let (ast, errors) = parser.parse_recovery(token_stream);
-
-	let mut reports: Vec<Error> = errors.into_iter().map(Error::from).collect();
-	reports.sort();
-
-	(ast, reports)
+pub(crate) fn parse_str<'a, 'b, T>(
+	parse_fn: fn(TokenSlice<'_>) -> ParseResult<T>,
+	src: &'a str,
+) -> ParseResult<T>
+where
+	ParseResult<T>: From<chumsky::prelude::ParseResult<T, Rich<'a, TokenSlice<'a>>>>,
+{
+	let tokens: Vec<(Token, Span)> = Lexer::new(src).collect();
+	parse_fn(tokens.as_slice().spanned(tokens.len()..tokens.len())).into()
 }
 
-fn module_file_parser() -> impl Parser<Token, Vec<Spanned<Item>>, Error = Simple<Token>> {
-	item_parser(expr_parser()).repeated()
+fn module_file_parser<'a>() -> impl Parser<'a, TokenSlice<'a>, Vec<Spanned<Item>>, Extra<'a>> {
+	item_parser(expr_parser()).repeated().collect()
 }
 
-fn item_parser(
-	expr_parser: impl Parser<Token, Spanned<Expr>, Error = Simple<Token>> + Clone + 'static,
-) -> impl Parser<Token, Spanned<Item>, Error = Simple<Token>> {
-	fn recover_block_or_semi<O>(
-		parser: impl Parser<Token, O, Error = Simple<Token>>,
+fn item_parser<'a>(
+	expr_parser: impl Parser<'a, TokenSlice<'a>, Spanned<Expr>, Extra<'a>> + Clone + 'a,
+) -> impl Parser<'a, TokenSlice<'a>, Spanned<Item>, Extra<'a>> + Clone {
+	/// Helper function to recover a parser that expects a block or a semicolon
+	fn recover_block_or_semi<'a, O>(
+		parser: impl Parser<'a, TokenSlice<'a>, O, Extra<'a>> + Clone,
 		fallback: fn(Span) -> O,
-	) -> impl Parser<Token, O, Error = Simple<Token>> {
+	) -> impl Parser<'a, TokenSlice<'a>, O, Extra<'a>> + Clone {
 		parser
-			.recover_with(nested_delimiters(
+			.recover_with(via_parser(nested_delimiters(
 				Token::OpenBrace,
 				Token::CloseBrace,
 				[
@@ -55,8 +57,8 @@ fn item_parser(
 					(Token::OpenBracket, Token::CloseBracket),
 				],
 				fallback,
-			))
-			.recover_with(skip_parser(
+			)))
+			.recover_with(via_parser(
 				empty().map_with_span(move |_, span| fallback(span)),
 			))
 	}
@@ -68,6 +70,7 @@ fn item_parser(
 				choice((
 					just(Token::Semi).to(vec![]),
 					item.repeated()
+						.collect()
 						.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)),
 				)),
 				|_| vec![],
@@ -80,6 +83,7 @@ fn item_parser(
 				ident_parser()
 					.separated_by(just(Token::Comma))
 					.allow_trailing()
+					.collect()
 					.delimited_by(just(Token::OpenParen), just(Token::CloseParen)),
 			)
 			.then(recover_block_or_semi(
@@ -99,25 +103,22 @@ fn item_parser(
 			.map(|(name, rhs)| Item::Binding { name, rhs });
 
 		choice((
-			module.labelled(Label::Module),
-			function.labelled(Label::Function),
-			binding.labelled(Label::Binding),
+			module,   /* .labelled(Label::Module) */
+			function, /* .labelled(Label::Function) */
+			binding,  /* .labelled(Label::Binding) */
 		))
-		.map_with_span(|item, span| (item, span))
+		.map_with_span(|item, span| Spanned(item, span))
 	})
 }
 
-pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>> + Clone {
+pub fn expr_parser<'a>() -> impl Parser<'a, TokenSlice<'a>, Spanned<Expr>, Extra<'a>> + Clone {
 	recursive(|expr| {
 		let stmt = {
 			choice((
 				item_parser(expr.clone()).map(|item| Stmt::Item(item)),
 				expr.clone()
-					.then(just(Token::Semi).or_not())
-					.map(|(expr, semi)| match semi {
-						Some(_) => Stmt::Expr(expr),
-						None => Stmt::Expr((Expr::NoNewline(Box::new(expr.clone())), expr.1)),
-					}),
+					.then_ignore(just(Token::Semi))
+					.map(|expr| Stmt::Expr(expr)),
 			))
 		};
 
@@ -131,28 +132,28 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 				Token::String(val) => Expr::String(val),
 			}
 			// .labelled("literal")
-			.map_with_span(|expr, span: Span| (expr, span));
+			.map_with_span(|expr, span| Spanned(expr, span));
 
 			// group => "(" expr ")"
 			let group = expr
 				.clone()
 				.delimited_by(just(Token::OpenParen), just(Token::CloseParen))
 				// Attempt to recover anything that looks like a group but contains errors
-				.recover_with(nested_delimiters(
+				.recover_with(via_parser(nested_delimiters(
 					Token::OpenParen,
 					Token::CloseParen,
 					[
 						(Token::OpenBrace, Token::CloseBrace),
 						(Token::OpenBracket, Token::CloseBracket),
 					],
-					|span| (Expr::Error, span),
-				))
-				.labelled(Label::Group);
+					|span| Spanned(Expr::Error, span),
+				)));
+			/* .labelled(Label::Group) */
 
 			choice((
 				group,
 				literal,
-				ident_parser().map(|(ident, span)| (Expr::Ident(ident), span)),
+				ident_parser().map(|Spanned(ident, span)| Spanned(Expr::Ident(ident), span)),
 			))
 		};
 
@@ -160,30 +161,29 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 		let items = expr
 			.clone()
 			.separated_by(just(Token::Comma))
-			.allow_trailing();
+			.allow_trailing()
+			.collect::<Vec<_>>();
 
 		// call => atom "(" items? ")"
-		let call = atom
-			.then(
-				items
-					.delimited_by(just(Token::OpenParen), just(Token::CloseParen))
-					// Attempt to recover anything that looks like a call but contains errors
-					.recover_with(nested_delimiters(
-						Token::OpenParen,
-						Token::CloseParen,
-						[
-							(Token::OpenBrace, Token::CloseBrace),
-							(Token::OpenBracket, Token::CloseBracket),
-						],
-						|span| vec![(Expr::Error, span)],
-					))
-					.map_with_span(|args, span: Span| (args, span))
-					.repeated(),
-			)
-			.foldl(|spanned_func, (args, args_span)| {
+		let call = atom.foldl(
+			items
+				.delimited_by(just(Token::OpenParen), just(Token::CloseParen))
+				.recover_with(via_parser(nested_delimiters(
+					Token::OpenParen,
+					Token::CloseParen,
+					[
+						(Token::OpenBrace, Token::CloseBrace),
+						(Token::OpenBracket, Token::CloseBracket),
+					],
+					|span| vec![Spanned(Expr::Error, span)],
+				)))
+				.map_with_span(|args, span| Spanned(args, span))
+				.repeated(),
+			|spanned_func, Spanned(args, args_span)| {
 				let span = spanned_func.1.start..args_span.end;
-				(Expr::Call(Box::new(spanned_func), args), span)
-			});
+				Spanned(Expr::Call(Box::new(spanned_func), args), span)
+			},
+		);
 
 		// Unary operators (not and negate) have equal precedence
 		// unary => ("!" | "-") call
@@ -192,12 +192,13 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 				just(Token::Bang).to(UnaryOp::Not),
 				just(Token::Minus).to(UnaryOp::Neg),
 			))
-			.map_with_span(|op, span: Span| (op, span));
+			.map_with_span(|op, span| Spanned(op, span));
 
-			op.repeated().then(call).foldr(|(op, op_span), rhs| {
-				let span = op_span.start..rhs.1.end;
-				(Expr::Unary(op, Box::new(rhs)), span)
-			})
+			op.repeated()
+				.foldr(call, |Spanned(op, op_span), rhs: Spanned<Expr>| {
+					let span = op_span.start..rhs.1.end;
+					Spanned(Expr::Unary(op, Box::new(rhs)), span)
+				})
 		};
 
 		// Product operators (multiply and divide) have equal precedence
@@ -207,13 +208,13 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 				just(Token::Star).to(BinaryOp::Mul),
 				just(Token::Slash).to(BinaryOp::Div),
 			));
-			unary
-				.clone()
-				.then(op.then(unary).repeated())
-				.foldl(|lhs, (op, rhs)| {
+			unary.clone().foldl(
+				op.then(unary).repeated(),
+				|lhs: Spanned<Expr>, (op, rhs): (_, Spanned<Expr>)| {
 					let span = lhs.1.start..rhs.1.end;
-					(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)
-				})
+					Spanned(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)
+				},
+			)
 		};
 
 		// Sum operators (add and subtract) have equal precedence
@@ -223,13 +224,13 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 				just(Token::Plus).to(BinaryOp::Add),
 				just(Token::Minus).to(BinaryOp::Sub),
 			));
-			product
-				.clone()
-				.then(op.then(product).repeated())
-				.foldl(|lhs, (op, rhs)| {
+			product.clone().foldl(
+				op.then(product).repeated(),
+				|lhs: Spanned<Expr>, (op, rhs): (_, Spanned<Expr>)| {
 					let span = lhs.1.start..rhs.1.end;
-					(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)
-				})
+					Spanned(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)
+				},
+			)
 		};
 
 		// Comparison operators (equal and not-equal) have equal precedence
@@ -241,22 +242,23 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 				just(Token::GreaterThan).to(BinaryOp::Greater),
 				just(Token::LessThan).to(BinaryOp::Less),
 			));
-			sum.clone()
-				.then(op.then(sum).repeated())
-				.foldl(|lhs, (op, rhs)| {
+			sum.clone().foldl(
+				op.then(sum).repeated(),
+				|lhs: Spanned<Expr>, (op, rhs): (_, Spanned<Expr>)| {
 					let span = lhs.1.start..rhs.1.end;
-					(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)
-				})
+					Spanned(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)
+				},
+			)
 		};
 
-		let raw_expr = comp;
+		let raw_expr = comp/* comp */;
 
 		// assign => IDENT "=" expr
 		let assign = ident_parser()
 			.then_ignore(just(Token::Eq))
 			.then(expr.clone())
 			.map_with_span(|(name, rhs), span| {
-				(
+				Spanned(
 					Expr::Assign {
 						name,
 						rhs: Box::new(rhs),
@@ -268,70 +270,70 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 		// block => "{" stmt* "}"
 		let block = stmt
 			.repeated()
+			.collect()
 			.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace))
 			// Attempt to recover anything that looks like a block but contains errors
-			.map_with_span(|stmts, span| (Expr::Block(stmts), span))
-			.recover_with(nested_delimiters(
-				Token::OpenBrace,
-				Token::CloseBrace,
-				[
-					(Token::OpenBracket, Token::CloseBracket),
-					(Token::OpenParen, Token::CloseParen),
-				],
-				|span| (Expr::Block(vec![Stmt::Error]), span),
-			))
-			.labelled(Label::Block);
+			.map_with_span(|stmts, span| Spanned(Expr::Block(stmts), span))
+		.recover_with(via_parser(nested_delimiters(
+			Token::OpenBrace,
+			Token::CloseBrace,
+			[
+				(Token::OpenBracket, Token::CloseBracket),
+				(Token::OpenParen, Token::CloseParen),
+			],
+			|span| Spanned(Expr::Block(vec![Stmt::Error]), span),
+		)))
+		/* .labelled(Label::Block) */;
 
 		// control_flow => break | continue | return | loop | if
 		let control_flow = {
 			// break => "break" expr
 			let break_ = just(Token::Break)
-				.ignore_then(expr.clone().or_not())
-				.map(|expr| Expr::Break(Box::new(expr)))
-				.labelled(Label::Break);
+						.ignore_then(expr.clone().or_not())
+						.map(|expr| Expr::Break(Box::new(expr)))
+						/* .labelled(Label::Break) */;
 
 			// continue => "continue" expr
 			let continue_ = just(Token::Continue)
-				.map(|_| Expr::Continue)
-				.labelled(Label::Continue);
+						.map(|_| Expr::Continue)
+						/* .labelled(Label::Continue) */;
 
 			// return => "return" expr
 			let return_ = just(Token::Return)
-				.ignore_then(expr.clone().or_not())
-				.map(|expr| Expr::Return(Box::new(expr)))
-				.labelled(Label::Return);
+						.ignore_then(expr.clone().or_not())
+						.map(|expr| Expr::Return(Box::new(expr)))
+						/* .labelled(Label::Return) */;
 
 			// loop => "loop" expr
 			let loop_ = just(Token::Loop)
-				.ignore_then(expr.clone())
-				.map(|expr| Expr::Loop(Box::new(expr)))
-				.labelled(Label::Loop);
+						.ignore_then(expr.clone())
+						.map(|expr| Expr::Loop(Box::new(expr)))
+						/* .labelled(Label::Loop) */;
 
 			// if => "if" expr "then" expr ("else" expr)?
 			let if_ = recursive(|if_| {
 				just(Token::If)
 					.ignore_then(expr.clone())
 					.then_ignore(just(Token::Then))
-					.recover_with(nested_delimiters(Token::If, Token::Then, [], |span| {
-						(Expr::Error, span)
-					}))
+					// .recover_with(nested_delimiters(Token::If, Token::Then, [], |span| {
+					// 	(Expr::Error, span)
+					// }))
 					.then(expr.clone())
-					.then(just(Token::Else).ignore_then(expr.clone()).or(if_).or_not())
-					.map_with_span(|((condition, then_branch), else_branch), span| {
-						(
-							Expr::If {
-								condition: Box::new(condition),
-								then_branch: Box::new(then_branch),
-								else_branch: Box::new(else_branch),
-							},
-							span,
-						)
+					.then(
+						just(Token::Else)
+							.ignore_then(expr.clone())
+							.or(if_.map_with_span(Spanned))
+							.or_not(),
+					)
+					.map(|((condition, then_branch), else_branch)| Expr::If {
+						condition: Box::new(condition),
+						then_branch: Box::new(then_branch),
+						else_branch: Box::new(else_branch),
 					})
 			});
 
-			choice((break_, continue_, return_, loop_))
-				.map_with_span(|expr, span| (expr, span))
-				.or(if_)
+			choice((break_, continue_, return_, loop_, if_))
+				.map_with_span(|expr, span| Spanned(expr, span))
 		};
 
 		// record => (IDENT | ".") "{" record_fields? "}"
@@ -340,20 +342,21 @@ pub fn expr_parser() -> impl Parser<Token, Spanned<Expr>, Error = Simple<Token>>
 		let record_field = ident_parser().then_ignore(just(Token::Colon)).then(expr);
 		let record_fields = record_field
 			.separated_by(just(Token::Comma))
-			.allow_trailing();
+			.allow_trailing()
+			.collect::<Vec<_>>();
 		let record = ident_parser()
-			.map(|ident| Some(ident))
-			.or(just(Token::Dot).map(|_| None))
-			.then(record_fields.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)))
-			.map_with_span(|(name, fields), span| (Expr::Record { name, fields }, span))
-			.labelled(Label::Record);
+					.map(|ident| Some(ident))
+					.or(just(Token::Dot).map(|_| None))
+					.then(record_fields.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)))
+					.map_with_span(|(name, fields), span| Spanned(Expr::Record { name, fields }, span))
+					/* .labelled(Label::Record) */;
 
-		choice((record, assign, raw_expr, block, control_flow)).labelled(Label::Expression)
+		choice((record, assign, raw_expr, block, control_flow)) /* .labelled(Label::Expression) */
 	})
 }
 
-fn ident_parser() -> impl Parser<Token, Spanned<String>, Error = Simple<Token>> + Clone {
+fn ident_parser<'a>() -> impl Parser<'a, TokenSlice<'a>, Spanned<String>, Extra<'a>> + Clone {
 	select! { Token::Ident(ident) => ident }
-		.map_with_span(|ident, span| (ident, span))
-		.labelled(Label::Identifier)
+		.map_with_span(|ident, span: std::ops::Range<usize>| Spanned(ident, span.into()))
+	/* .labelled(Label::Identifier) */
 }

@@ -7,9 +7,9 @@ func empty();
 ---
 
 Some(
-    (
+    Spanned(
         Func {
-            name: (
+            name: Spanned(
                 "empty",
                 5..10,
             ),

@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,24 +7,24 @@ if true then { print("Hello Universe!"); } else { print("Hello World!"); }
 ---
 
 Some(
-    (
+    Spanned(
         If {
-            condition: (
+            condition: Spanned(
                 Ident("true"),
                 3..7,
             ),
-            then_branch: (
+            then_branch: Spanned(
                 Block(
                     [
                         Expr(
-                            (
+                            Spanned(
                                 Call(
-                                    (
+                                    Spanned(
                                         Ident("print"),
                                         15..20,
                                     ),
                                     [
-                                        (
+                                        Spanned(
                                             String("Hello Universe!"),
                                             21..38,
                                         ),
@@ -38,18 +38,18 @@ Some(
                 13..42,
             ),
             else_branch: Some(
-                (
+                Spanned(
                     Block(
                         [
                             Expr(
-                                (
+                                Spanned(
                                     Call(
-                                        (
+                                        Spanned(
                                             Ident("print"),
                                             50..55,
                                         ),
                                         [
-                                            (
+                                            Spanned(
                                                 String("Hello World!"),
                                                 56..70,
                                             ),

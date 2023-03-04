@@ -7,15 +7,15 @@ func empty() {}
 ---
 
 Some(
-    (
+    Spanned(
         Func {
-            name: (
+            name: Spanned(
                 "empty",
                 5..10,
             ),
             params: [],
             rhs: Some(
-                (
+                Spanned(
                     Block(
                         [],
                     ),

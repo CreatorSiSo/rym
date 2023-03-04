@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,14 +7,14 @@ testing(,)
 ---
 
 Some(
-    (
+    Spanned(
         Call(
-            (
+            Spanned(
                 Ident("testing"),
                 0..7,
             ),
             [
-                (
+                Spanned(
                     Error,
                     7..10,
                 ),
@@ -26,10 +26,8 @@ Some(
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Expression,
-        ),
+    ParseError {
+        label: None,
         span: 8..9,
         reason: Unexpected,
         found: Comma,

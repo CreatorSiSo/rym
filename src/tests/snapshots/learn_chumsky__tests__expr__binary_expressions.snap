@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,14 +7,14 @@ lhs == rhs
 ---
 
 Some(
-    (
+    Spanned(
         Binary(
-            (
+            Spanned(
                 Ident("lhs"),
                 0..3,
             ),
             Eq,
-            (
+            Spanned(
                 Ident("rhs"),
                 7..10,
             ),

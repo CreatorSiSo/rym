@@ -7,32 +7,32 @@ mod out { let in_1 = 0;   mod test   let in_1 = 0; }
 ---
 
 Some(
-    (
+    Spanned(
         Module {
             name: Some(
-                (
+                Spanned(
                     "out",
                     4..7,
                 ),
             ),
             items: [
-                (
+                Spanned(
                     Binding {
-                        name: (
+                        name: Spanned(
                             "in_1",
                             14..18,
                         ),
-                        rhs: (
+                        rhs: Spanned(
                             Int(0),
                             21..22,
                         ),
                     },
                     10..23,
                 ),
-                (
+                Spanned(
                     Module {
                         name: Some(
-                            (
+                            Spanned(
                                 "test",
                                 30..34,
                             ),
@@ -41,13 +41,13 @@ Some(
                     },
                     26..34,
                 ),
-                (
+                Spanned(
                     Binding {
-                        name: (
+                        name: Spanned(
                             "in_1",
                             41..45,
                         ),
-                        rhs: (
+                        rhs: Spanned(
                             Int(0),
                             48..49,
                         ),
@@ -62,10 +62,8 @@ Some(
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Module,
-        ),
+    ParseError {
+        label: None,
         span: 37..40,
         reason: Unexpected,
         found: Let,

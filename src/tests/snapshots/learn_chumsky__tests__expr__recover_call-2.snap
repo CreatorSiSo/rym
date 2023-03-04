@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,18 +7,18 @@ testing(,)(correct_one, 2)(, aerr, "stuff")
 ---
 
 Some(
-    (
+    Spanned(
         Call(
-            (
+            Spanned(
                 Call(
-                    (
+                    Spanned(
                         Call(
-                            (
+                            Spanned(
                                 Ident("testing"),
                                 0..7,
                             ),
                             [
-                                (
+                                Spanned(
                                     Error,
                                     7..10,
                                 ),
@@ -27,11 +27,11 @@ Some(
                         0..10,
                     ),
                     [
-                        (
+                        Spanned(
                             Ident("correct_one"),
                             11..22,
                         ),
-                        (
+                        Spanned(
                             Int(2),
                             24..25,
                         ),
@@ -40,7 +40,7 @@ Some(
                 0..26,
             ),
             [
-                (
+                Spanned(
                     Error,
                     26..43,
                 ),
@@ -52,10 +52,8 @@ Some(
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Expression,
-        ),
+    ParseError {
+        label: None,
         span: 8..9,
         reason: Unexpected,
         found: Comma,
@@ -73,10 +71,8 @@ Some(
             OpenBrace,
         ],
     },
-    Error {
-        label: Some(
-            Expression,
-        ),
+    ParseError {
+        label: None,
         span: 27..28,
         reason: Unexpected,
         found: Comma,

@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -10,17 +10,17 @@ expression: "&snapshot"
 ---
 
 Some(
-    (
+    Spanned(
         Block(
             [
                 Expr(
-                    (
+                    Spanned(
                         Ident("testing"),
                         3..10,
                     ),
                 ),
                 Expr(
-                    (
+                    Spanned(
                         Ident("testing"),
                         13..20,
                     ),

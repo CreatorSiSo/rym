@@ -1,8 +1,6 @@
-use chumsky::{error::SimpleReason, prelude::Simple};
-use core::cmp::Ordering;
-use std::fmt::Display;
-
 use crate::{Span, Token};
+use chumsky::error::RichReason;
+use std::fmt::Display;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Label {
@@ -72,48 +70,72 @@ impl From<&'static str> for Label {
 	}
 }
 
+pub struct ParseResult<T>(pub Option<T>, pub Vec<ParseError>);
+
+impl<T> From<chumsky::ParseResult<T, crate::Error<'_>>> for ParseResult<T> {
+	fn from(value: chumsky::ParseResult<T, crate::Error<'_>>) -> Self {
+		let (output, errors) = value.into_output_errors();
+		let errors: Vec<ParseError> = errors.into_iter().map(|err| err.into()).collect();
+		Self(output, errors)
+	}
+}
+
 #[derive(Debug, PartialEq, Eq)]
-pub struct Error {
+pub struct ParseError {
 	pub label: Option<Label>,
 	pub span: Span,
-	pub reason: SimpleReason<Token, Span>,
+	pub reason: ErrorReason,
 	pub found: Token,
 	pub expected: Vec<Token>,
 }
 
-impl PartialOrd for Error {
-	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-		Some(self.cmp(other))
-	}
-}
-
-impl Ord for Error {
-	fn cmp(&self, other: &Self) -> Ordering {
-		if self.span == other.span {
-			Ordering::Equal
-		} else if self.span.start < other.span.start {
-			Ordering::Less
-		} else {
-			Ordering::Greater
-		}
-	}
-}
-
-impl From<Simple<Token>> for Error {
-	fn from(value: Simple<Token>) -> Self {
+impl<'a> From<chumsky::prelude::Rich<'a, chumsky::input::Spanned<Token, Span, &'a [(Token, Span)]>>>
+	for ParseError
+{
+	fn from(
+		value: chumsky::prelude::Rich<
+			'a,
+			chumsky::input::Spanned<Token, Span, &'a [(Token, Span)]>,
+		>,
+	) -> Self {
 		let mut expected: Vec<Token> = value
 			.expected()
+			.map(|o| o.unwrap_or(&Token::Eof))
 			.cloned()
-			.map(|o| o.unwrap_or(Token::Eof))
 			.collect();
 		expected.sort();
 
 		Self {
-			label: value.label().map(Into::into),
+			label: /* value.label().map(Into::into) */ None,
 			span: value.span(),
-			reason: value.reason().clone(),
+			// TODO just use clone once it is implemented
+			reason: <&RichReason<'_, chumsky::input::Spanned<Token, Span, &'a [(Token, Span)]>> as Into<ErrorReason>>::into(value.reason()),
 			found: value.found().cloned().unwrap_or(Token::Eof),
 			expected,
+		}
+	}
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum ErrorReason {
+	/// An unexpected input was found
+	Unexpected,
+	/// An error with a custom message
+	Custom(String),
+	/// Multiple unrelated reasons were merged
+	Many(Vec<ErrorReason>),
+}
+
+impl<'a> From<&RichReason<'a, chumsky::input::Spanned<Token, Span, &'a [(Token, Span)]>>>
+	for ErrorReason
+{
+	fn from(
+		value: &RichReason<'a, chumsky::input::Spanned<Token, Span, &'a [(Token, Span)]>>,
+	) -> Self {
+		match value {
+			RichReason::ExpectedFound { .. } => Self::Unexpected,
+			RichReason::Custom(msg) => Self::Custom(msg.clone()),
+			RichReason::Many(reasons) => Self::Many(reasons.into_iter().map(Into::into).collect()),
 		}
 	}
 }

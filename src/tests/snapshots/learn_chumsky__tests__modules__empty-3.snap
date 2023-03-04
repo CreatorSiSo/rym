@@ -7,10 +7,10 @@ mod name
 ---
 
 Some(
-    (
+    Spanned(
         Module {
             name: Some(
-                (
+                Spanned(
                     "name",
                     4..8,
                 ),
@@ -23,11 +23,9 @@ Some(
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Module,
-        ),
-        span: 2..2,
+    ParseError {
+        label: None,
+        span: 2..8,
         reason: Unexpected,
         found: Eof,
         expected: [

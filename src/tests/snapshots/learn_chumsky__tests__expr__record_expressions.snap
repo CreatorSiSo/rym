@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,33 +7,33 @@ Record { name: "Record", fields: todo() }
 ---
 
 Some(
-    (
+    Spanned(
         Record {
             name: Some(
-                (
+                Spanned(
                     "Record",
                     0..6,
                 ),
             ),
             fields: [
                 (
-                    (
+                    Spanned(
                         "name",
                         9..13,
                     ),
-                    (
+                    Spanned(
                         String("Record"),
                         15..23,
                     ),
                 ),
                 (
-                    (
+                    Spanned(
                         "fields",
                         25..31,
                     ),
-                    (
+                    Spanned(
                         Call(
-                            (
+                            Spanned(
                                 Ident("todo"),
                                 33..37,
                             ),

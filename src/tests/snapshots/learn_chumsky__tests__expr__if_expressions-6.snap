@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -13,24 +13,24 @@ if stuff_goes_right(1, 2, 9) then {
 ---
 
 Some(
-    (
+    Spanned(
         If {
-            condition: (
+            condition: Spanned(
                 Call(
-                    (
+                    Spanned(
                         Ident("stuff_goes_right"),
                         3..19,
                     ),
                     [
-                        (
+                        Spanned(
                             Int(1),
                             20..21,
                         ),
-                        (
+                        Spanned(
                             Int(2),
                             23..24,
                         ),
-                        (
+                        Spanned(
                             Int(9),
                             26..27,
                         ),
@@ -38,18 +38,18 @@ Some(
                 ),
                 3..28,
             ),
-            then_branch: (
+            then_branch: Spanned(
                 Block(
                     [
                         Expr(
-                            (
+                            Spanned(
                                 Call(
-                                    (
+                                    Spanned(
                                         Ident("print"),
                                         37..42,
                                     ),
                                     [
-                                        (
+                                        Spanned(
                                             String("Hello Universe!"),
                                             43..60,
                                         ),
@@ -59,7 +59,7 @@ Some(
                             ),
                         ),
                         Expr(
-                            (
+                            Spanned(
                                 Int(20),
                                 64..66,
                             ),
@@ -69,18 +69,18 @@ Some(
                 34..69,
             ),
             else_branch: Some(
-                (
+                Spanned(
                     Block(
                         [
                             Expr(
-                                (
+                                Spanned(
                                     Call(
-                                        (
+                                        Spanned(
                                             Ident("print"),
                                             78..83,
                                         ),
                                         [
-                                            (
+                                            Spanned(
                                                 String("Hello World!"),
                                                 84..98,
                                             ),
@@ -90,7 +90,7 @@ Some(
                                 ),
                             ),
                             Expr(
-                                (
+                                Spanned(
                                     Int(10),
                                     102..104,
                                 ),

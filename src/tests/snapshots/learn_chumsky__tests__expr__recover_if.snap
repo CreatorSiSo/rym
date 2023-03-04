@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,16 +7,16 @@ if testing(,) then _
 ---
 
 Some(
-    (
+    Spanned(
         If {
-            condition: (
+            condition: Spanned(
                 Call(
-                    (
+                    Spanned(
                         Ident("testing"),
                         3..10,
                     ),
                     [
-                        (
+                        Spanned(
                             Error,
                             10..13,
                         ),
@@ -24,7 +24,7 @@ Some(
                 ),
                 3..13,
             ),
-            then_branch: (
+            then_branch: Spanned(
                 Ident("_"),
                 19..20,
             ),
@@ -36,10 +36,8 @@ Some(
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Expression,
-        ),
+    ParseError {
+        label: None,
         span: 11..12,
         reason: Unexpected,
         found: Comma,

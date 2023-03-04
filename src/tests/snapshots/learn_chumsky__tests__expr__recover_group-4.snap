@@ -10,24 +10,24 @@ None
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Expression,
-        ),
-        span: 4..4,
+    ParseError {
+        label: None,
+        span: 9..10,
         reason: Unexpected,
-        found: Eof,
+        found: CloseParen,
         expected: [
             Plus,
             Minus,
             Star,
             Slash,
             BangEq,
+            Eq,
             EqEq,
             LessThan,
             GreaterThan,
             OpenParen,
             CloseParen,
+            OpenBrace,
         ],
     },
 ]

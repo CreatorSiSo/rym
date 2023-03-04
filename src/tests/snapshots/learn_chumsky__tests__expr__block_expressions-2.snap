@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,13 +7,13 @@ expression: "&snapshot"
 ---
 
 Some(
-    (
+    Spanned(
         Block(
             [
                 Expr(
-                    (
+                    Spanned(
                         Call(
-                            (
+                            Spanned(
                                 Ident("call_me"),
                                 2..9,
                             ),
@@ -23,9 +23,9 @@ Some(
                     ),
                 ),
                 Expr(
-                    (
+                    Spanned(
                         Call(
-                            (
+                            Spanned(
                                 Ident("and_me"),
                                 13..19,
                             ),

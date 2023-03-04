@@ -1,0 +1,34 @@
+---
+source: src/tests/expr.rs
+assertion_line: 247
+expression: "&snapshot"
+---
+--- Input ---
+if testing(1, (2, 3) then _
+---
+
+None
+
+--- Errors ---
+[
+    ParseError {
+        label: None,
+        span: 21..25,
+        reason: Unexpected,
+        found: Then,
+        expected: [
+            Comma,
+            Plus,
+            Minus,
+            Star,
+            Slash,
+            BangEq,
+            EqEq,
+            LessThan,
+            GreaterThan,
+            OpenParen,
+            CloseParen,
+        ],
+    },
+]
+---

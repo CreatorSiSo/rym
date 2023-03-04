@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,7 +7,7 @@ expression: "&snapshot"
 ---
 
 Some(
-    (
+    Spanned(
         Error,
         0..10,
     ),
@@ -15,10 +15,8 @@ Some(
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Expression,
-        ),
+    ParseError {
+        label: None,
         span: 8..9,
         reason: Unexpected,
         found: Semi,
@@ -28,11 +26,13 @@ Some(
             Star,
             Slash,
             BangEq,
+            Eq,
             EqEq,
             LessThan,
             GreaterThan,
             OpenParen,
             CloseParen,
+            OpenBrace,
         ],
     },
 ]

@@ -3,16 +3,17 @@
 mod expr;
 mod functions;
 mod modules;
-mod variables;
 
 #[macro_export]
 macro_rules! insta_assert_parser {
 	($parser:expr; $($src:expr),+ $(,)?) => {
+		use chumsky::Parser;
+		use crate::parse_str;
 		$({
-			let (ast, reports) = crate::parse_recovery($parser, $src);
+			let result = parse_str(|tokens| $parser.parse(tokens).into(), $src);
 			let snapshot = format!(
 				"--- Input ---\n{}\n---\n\n{:#?}\n\n--- Errors ---\n{:#?}\n---",
-				$src, &ast, &reports
+				$src, result.0, result.1
 			);
 			insta::assert_snapshot!(&snapshot);
 		})*

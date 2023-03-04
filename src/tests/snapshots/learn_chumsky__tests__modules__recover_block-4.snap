@@ -7,29 +7,29 @@ mod out { mod let in_1 = 0; }
 ---
 
 Some(
-    (
+    Spanned(
         Module {
             name: Some(
-                (
+                Spanned(
                     "out",
                     4..7,
                 ),
             ),
             items: [
-                (
+                Spanned(
                     Module {
                         name: None,
                         items: [],
                     },
                     10..13,
                 ),
-                (
+                Spanned(
                     Binding {
-                        name: (
+                        name: Spanned(
                             "in_1",
                             18..22,
                         ),
-                        rhs: (
+                        rhs: Spanned(
                             Int(0),
                             25..26,
                         ),
@@ -44,10 +44,8 @@ Some(
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Module,
-        ),
+    ParseError {
+        label: None,
         span: 14..17,
         reason: Unexpected,
         found: Let,

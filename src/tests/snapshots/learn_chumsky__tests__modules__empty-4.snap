@@ -7,10 +7,10 @@ mod name;
 ---
 
 Some(
-    (
+    Spanned(
         Module {
             name: Some(
-                (
+                Spanned(
                     "name",
                     4..8,
                 ),

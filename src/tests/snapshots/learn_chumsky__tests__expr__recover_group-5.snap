@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -10,10 +10,8 @@ None
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Expression,
-        ),
+    ParseError {
+        label: None,
         span: 8..9,
         reason: Unexpected,
         found: CloseBrace,
@@ -23,11 +21,13 @@ None
             Star,
             Slash,
             BangEq,
+            Eq,
             EqEq,
             LessThan,
             GreaterThan,
             OpenParen,
             CloseParen,
+            OpenBrace,
         ],
     },
 ]

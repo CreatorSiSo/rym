@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -7,22 +7,22 @@ func_name(2, "Do stuff!!", true)
 ---
 
 Some(
-    (
+    Spanned(
         Call(
-            (
+            Spanned(
                 Ident("func_name"),
                 0..9,
             ),
             [
-                (
+                Spanned(
                     Int(2),
                     10..11,
                 ),
-                (
+                Spanned(
                     String("Do stuff!!"),
                     13..25,
                 ),
-                (
+                Spanned(
                     Ident("true"),
                     27..31,
                 ),

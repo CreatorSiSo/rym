@@ -1,5 +1,5 @@
 ---
-source: src/test.rs
+source: src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -11,20 +11,20 @@ expression: "&snapshot"
 ---
 
 Some(
-    (
+    Spanned(
         Block(
             [
                 Expr(
-                    (
+                    Spanned(
                         Loop(
-                            (
+                            Spanned(
                                 Call(
-                                    (
+                                    Spanned(
                                         Ident("print"),
                                         8..13,
                                     ),
                                     [
-                                        (
+                                        Spanned(
                                             String("To infinity and beyond!"),
                                             14..39,
                                         ),
@@ -37,16 +37,16 @@ Some(
                     ),
                 ),
                 Expr(
-                    (
+                    Spanned(
                         Loop(
-                            (
+                            Spanned(
                                 Call(
-                                    (
+                                    Spanned(
                                         Ident("print"),
                                         49..54,
                                     ),
                                     [
-                                        (
+                                        Spanned(
                                             String("To infinity and beyond!"),
                                             55..80,
                                         ),
@@ -59,20 +59,20 @@ Some(
                     ),
                 ),
                 Expr(
-                    (
+                    Spanned(
                         Loop(
-                            (
+                            Spanned(
                                 Block(
                                     [
                                         Expr(
-                                            (
+                                            Spanned(
                                                 Call(
-                                                    (
+                                                    Spanned(
                                                         Ident("print"),
                                                         92..97,
                                                     ),
                                                     [
-                                                        (
+                                                        Spanned(
                                                             String("To infinity and beyond!"),
                                                             98..123,
                                                         ),

@@ -10,36 +10,24 @@ None
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Block,
-        ),
+    ParseError {
+        label: None,
         span: 10..11,
         reason: Unexpected,
         found: CloseParen,
         expected: [
             Semi,
-            Dot,
             Plus,
             Minus,
             Star,
             Slash,
-            Bang,
             BangEq,
+            Eq,
             EqEq,
             LessThan,
             GreaterThan,
-            Break,
-            Continue,
-            Func,
-            If,
-            Let,
-            Loop,
-            Mod,
-            Return,
             OpenParen,
             OpenBrace,
-            CloseBrace,
         ],
     },
 ]

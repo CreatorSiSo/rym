@@ -70,16 +70,6 @@ impl From<&'static str> for Label {
 	}
 }
 
-pub struct ParseResult<T>(pub Option<T>, pub Vec<ParseError>);
-
-impl<T> From<chumsky::ParseResult<T, crate::Error<'_>>> for ParseResult<T> {
-	fn from(value: chumsky::ParseResult<T, crate::Error<'_>>) -> Self {
-		let (output, errors) = value.into_output_errors();
-		let errors: Vec<ParseError> = errors.into_iter().map(|err| err.into()).collect();
-		Self(output, errors)
-	}
-}
-
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseError {
 	pub label: Option<Label>,
@@ -89,15 +79,8 @@ pub struct ParseError {
 	pub expected: Vec<Token>,
 }
 
-impl<'a> From<chumsky::prelude::Rich<'a, chumsky::input::Spanned<Token, Span, &'a [(Token, Span)]>>>
-	for ParseError
-{
-	fn from(
-		value: chumsky::prelude::Rich<
-			'a,
-			chumsky::input::Spanned<Token, Span, &'a [(Token, Span)]>,
-		>,
-	) -> Self {
+impl<'a> From<chumsky::prelude::Rich<Token, Span>> for ParseError {
+	fn from(value: chumsky::prelude::Rich<Token, Span>) -> Self {
 		let mut expected: Vec<Token> = value
 			.expected()
 			.map(|o| o.unwrap_or(&Token::Eof))
@@ -107,9 +90,9 @@ impl<'a> From<chumsky::prelude::Rich<'a, chumsky::input::Spanned<Token, Span, &'
 
 		Self {
 			label: /* value.label().map(Into::into) */ None,
-			span: value.span(),
+			span: value.span().clone(),
 			// TODO just use clone once it is implemented
-			reason: <&RichReason<'_, chumsky::input::Spanned<Token, Span, &'a [(Token, Span)]>> as Into<ErrorReason>>::into(value.reason()),
+			reason: value.reason().into(),
 			found: value.found().cloned().unwrap_or(Token::Eof),
 			expected,
 		}
@@ -126,12 +109,8 @@ pub enum ErrorReason {
 	Many(Vec<ErrorReason>),
 }
 
-impl<'a> From<&RichReason<'a, chumsky::input::Spanned<Token, Span, &'a [(Token, Span)]>>>
-	for ErrorReason
-{
-	fn from(
-		value: &RichReason<'a, chumsky::input::Spanned<Token, Span, &'a [(Token, Span)]>>,
-	) -> Self {
+impl<'a> From<&RichReason<Token>> for ErrorReason {
+	fn from(value: &RichReason<Token>) -> Self {
 		match value {
 			RichReason::ExpectedFound { .. } => Self::Unexpected,
 			RichReason::Custom(msg) => Self::Custom(msg.clone()),

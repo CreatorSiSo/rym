@@ -1,6 +1,6 @@
 use crate::Spanned;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Item {
 	Module {
 		name: Option<Spanned<String>>,
@@ -17,20 +17,20 @@ pub enum Item {
 	},
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Stmt {
 	Item(Spanned<Item>),
 	Expr(Spanned<Expr>),
 	Error,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UnaryOp {
 	Not,
 	Neg,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BinaryOp {
 	// Sum
 	Add,
@@ -48,7 +48,7 @@ pub enum BinaryOp {
 	Less,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Expr {
 	Ident(String),
 

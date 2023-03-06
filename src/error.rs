@@ -1,8 +1,8 @@
-use crate::{Span, Token};
+use crate::{ErrorAlias, Span, Token};
 use chumsky::error::RichReason;
 use std::fmt::Display;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Label {
 	Block,
 	Break,
@@ -16,13 +16,6 @@ pub enum Label {
 	Record,
 	Return,
 	Binding,
-}
-
-impl Display for Label {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let data = <&'static str>::from(self);
-		f.write_str(data)
-	}
 }
 
 impl From<&Label> for &'static str {
@@ -44,77 +37,52 @@ impl From<&Label> for &'static str {
 	}
 }
 
-impl From<Label> for &'static str {
-	fn from(value: Label) -> Self {
-		(&value).into()
-	}
-}
-
-impl From<&'static str> for Label {
-	fn from(value: &'static str) -> Self {
-		match value {
-			"block" => Label::Block,
-			"break" => Label::Break,
-			"continue" => Label::Continue,
-			"expression" => Label::Expression,
-			"function" => Label::Function,
-			"group" => Label::Group,
-			"identifier" => Label::Identifier,
-			"loop" => Label::Loop,
-			"module" => Label::Module,
-			"record" => Label::Record,
-			"return" => Label::Return,
-			"binding" => Label::Binding,
-			_ => unreachable!(),
-		}
+impl Display for Label {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let data = <&'static str>::from(self);
+		f.write_str(data)
 	}
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ParseError {
-	pub label: Option<Label>,
+pub struct ParseError<'a> {
 	pub span: Span,
-	pub reason: ErrorReason,
-	pub found: Token,
-	pub expected: Vec<Token>,
+	pub reason: RichReason<'a, Token, Label>,
 }
 
-impl<'a> From<chumsky::prelude::Rich<Token, Span>> for ParseError {
-	fn from(value: chumsky::prelude::Rich<Token, Span>) -> Self {
-		let mut expected: Vec<Token> = value
-			.expected()
-			.map(|o| o.unwrap_or(&Token::Eof))
-			.cloned()
-			.collect();
-		expected.sort();
+impl<'a> From<ErrorAlias<'a>> for ParseError<'a> {
+	fn from(value: ErrorAlias<'a>) -> ParseError<'a> {
+		fn deep_clone_sort_reason(reason: RichReason<Token, Label>) -> RichReason<Token, Label> {
+			match reason {
+				RichReason::ExpectedFound {
+					mut expected,
+					found,
+				} => {
+					expected.sort();
+					RichReason::ExpectedFound { expected, found }
+				}
+				RichReason::Many(mut reasons) => {
+					reasons.sort();
+					RichReason::Many(reasons.into_iter().map(deep_clone_sort_reason).collect())
+				}
+				reason => reason,
+			}
+		}
 
 		Self {
-			label: /* value.label().map(Into::into) */ None,
 			span: value.span().clone(),
-			// TODO just use clone once it is implemented
-			reason: value.reason().into(),
-			found: value.found().cloned().unwrap_or(Token::Eof),
-			expected,
+			reason: deep_clone_sort_reason(value.reason().clone()),
 		}
 	}
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum ErrorReason {
-	/// An unexpected input was found
-	Unexpected,
-	/// An error with a custom message
-	Custom(String),
-	/// Multiple unrelated reasons were merged
-	Many(Vec<ErrorReason>),
-}
+pub struct ParseResult<'a, T>(pub Option<T>, pub Vec<ParseError<'a>>);
 
-impl<'a> From<&RichReason<Token>> for ErrorReason {
-	fn from(value: &RichReason<Token>) -> Self {
-		match value {
-			RichReason::ExpectedFound { .. } => Self::Unexpected,
-			RichReason::Custom(msg) => Self::Custom(msg.clone()),
-			RichReason::Many(reasons) => Self::Many(reasons.into_iter().map(Into::into).collect()),
-		}
+impl<'a, T> From<chumsky::ParseResult<T, ErrorAlias<'a>>> for ParseResult<'a, T> {
+	fn from(value: chumsky::ParseResult<T, ErrorAlias<'a>>) -> Self {
+		let (output, errors) = value.into_output_errors();
+		let errors: Vec<_> = errors.into_iter().map(|err| err.into()).collect();
+		Self(output, errors)
 	}
 }

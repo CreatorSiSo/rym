@@ -3,28 +3,19 @@ mod error;
 mod tests;
 
 use ast::{BinaryOp, Expr, Item, Stmt, UnaryOp};
-use error::ParseError;
+use error::{Label, ParseResult};
 
-use chumsky::input::{Input, SpannedInput};
+use chumsky::input::SpannedInput;
 use chumsky::prelude::*;
 use rym_lexer::rich::{Lexer, Token};
 
 pub(crate) type Span = std::ops::Range<usize>;
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Spanned<T>(T, Span);
 
-pub(crate) type ParserInput<'tokens> = SpannedInput<Token, Span, &'tokens [(Token, Span)]>;
-pub(crate) type Extra = extra::Err<Rich<Token, Span>>;
-
-pub struct ParseResult<T>(pub Option<T>, pub Vec<ParseError>);
-
-impl<T> From<chumsky::ParseResult<T, Rich<Token, Span>>> for ParseResult<T> {
-	fn from(value: chumsky::ParseResult<T, Rich<Token, Span>>) -> Self {
-		let (output, errors) = value.into_output_errors();
-		let errors: Vec<ParseError> = errors.into_iter().map(|err| err.into()).collect();
-		Self(output, errors)
-	}
-}
+pub(crate) type InputAlias<'a> = SpannedInput<Token, Span, &'a [(Token, Span)]>;
+pub(crate) type ExtraAlias<'a> = extra::Err<ErrorAlias<'a>>;
+pub(crate) type ErrorAlias<'a> = Rich<'a, Token, Span, Label>;
 
 pub fn parse_module_file<'a>(src: &'a str) -> ParseResult<Vec<Spanned<Item>>> {
 	parse_str(|tokens| module_file_parser().parse(tokens).into(), src)
@@ -34,29 +25,30 @@ pub fn parse_expr<'a>(src: &'a str) -> ParseResult<Spanned<Expr>> {
 	parse_str(|tokens| expr_parser().parse(tokens).into(), src)
 }
 
-pub(crate) fn parse_str<'a, 'b, T>(
-	parse_fn: fn(ParserInput<'_>) -> ParseResult<T>,
+pub(crate) fn parse_str<'a, T>(
+	parse_fn: fn(InputAlias) -> ParseResult<T>,
 	src: &'a str,
 ) -> ParseResult<T>
 where
-	ParseResult<T>: From<chumsky::prelude::ParseResult<T, Rich<Token, Span>>>,
+	ParseResult<'a, T>: From<chumsky::prelude::ParseResult<T, ErrorAlias<'a>>>,
 {
-	let tokens: Vec<(Token, Span)> = Lexer::new(src).collect();
-	parse_fn(tokens.as_slice().spanned(tokens.len()..tokens.len())).into()
+	// TODO Fix the leak
+	let tokens = Lexer::new(src).collect::<Vec<(Token, Span)>>().leak();
+	parse_fn(tokens.spanned(tokens.len()..tokens.len())).into()
 }
 
-fn module_file_parser<'a>() -> impl Parser<'a, ParserInput<'a>, Vec<Spanned<Item>>, Extra> {
+fn module_file_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Vec<Spanned<Item>>, ExtraAlias<'a>> {
 	item_parser(expr_parser()).repeated().collect()
 }
 
 fn item_parser<'a>(
-	expr_parser: impl Parser<'a, ParserInput<'a>, Spanned<Expr>, Extra> + Clone + 'a,
-) -> impl Parser<'a, ParserInput<'a>, Spanned<Item>, Extra> + Clone {
+	expr_parser: impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlias<'a>> + Clone + 'a,
+) -> impl Parser<'a, InputAlias<'a>, Spanned<Item>, ExtraAlias<'a>> + Clone {
 	/// Helper function to recover a parser that expects a block or a semicolon
 	fn recover_block_or_semi<'a, O>(
-		parser: impl Parser<'a, ParserInput<'a>, O, Extra> + Clone,
+		parser: impl Parser<'a, InputAlias<'a>, O, ExtraAlias<'a>> + Clone,
 		fallback: fn(Span) -> O,
-	) -> impl Parser<'a, ParserInput<'a>, O, Extra> + Clone {
+	) -> impl Parser<'a, InputAlias<'a>, O, ExtraAlias<'a>> + Clone {
 		parser
 			.recover_with(via_parser(nested_delimiters(
 				Token::OpenBrace,
@@ -120,7 +112,7 @@ fn item_parser<'a>(
 	})
 }
 
-pub fn expr_parser<'a>() -> impl Parser<'a, ParserInput<'a>, Spanned<Expr>, Extra> + Clone {
+pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlias<'a>> + Clone {
 	recursive(|expr| {
 		let stmt = {
 			choice((
@@ -365,7 +357,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, ParserInput<'a>, Spanned<Expr>, Extr
 	})
 }
 
-fn ident_parser<'a>() -> impl Parser<'a, ParserInput<'a>, Spanned<String>, Extra> + Clone {
+fn ident_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<String>, ExtraAlias<'a>> + Clone {
 	select! { Token::Ident(ident) => ident }
 		.map_with_span(|ident, span: std::ops::Range<usize>| Spanned(ident, span.into()))
 	// .labelled(Label::Identifier)

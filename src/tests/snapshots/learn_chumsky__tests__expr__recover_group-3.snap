@@ -16,22 +16,15 @@ Some(
 --- Errors ---
 [
     ParseError {
-        label: None,
         span: 2..3,
-        reason: Unexpected,
-        found: Slash,
-        expected: [
-            Dot,
-            Minus,
-            Bang,
-            Break,
-            Continue,
-            If,
-            Loop,
-            Return,
-            OpenParen,
-            OpenBrace,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                Expression,
+            ],
+            found: Some(
+                Slash,
+            ),
+        },
     },
 ]
 ---

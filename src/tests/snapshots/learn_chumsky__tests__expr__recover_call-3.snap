@@ -27,25 +27,27 @@ Some(
 --- Errors ---
 [
     ParseError {
-        label: None,
         span: 10..11,
-        reason: Unexpected,
-        found: Int(
-            2,
-        ),
-        expected: [
-            Comma,
-            Plus,
-            Minus,
-            Star,
-            Slash,
-            BangEq,
-            EqEq,
-            LessThan,
-            GreaterThan,
-            OpenParen,
-            CloseParen,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                Comma,
+                Plus,
+                Minus,
+                Star,
+                Slash,
+                BangEq,
+                EqEq,
+                LessThan,
+                GreaterThan,
+                OpenParen,
+                CloseParen,
+            ],
+            found: Some(
+                Int(
+                    2,
+                ),
+            ),
+        },
     },
 ]
 ---

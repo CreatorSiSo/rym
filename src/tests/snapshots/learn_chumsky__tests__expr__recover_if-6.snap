@@ -26,23 +26,25 @@ Some(
 --- Errors ---
 [
     ParseError {
-        label: None,
         span: 21..25,
-        reason: Unexpected,
-        found: Then,
-        expected: [
-            Comma,
-            Plus,
-            Minus,
-            Star,
-            Slash,
-            BangEq,
-            EqEq,
-            LessThan,
-            GreaterThan,
-            OpenParen,
-            CloseParen,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                Comma,
+                Plus,
+                Minus,
+                Star,
+                Slash,
+                BangEq,
+                EqEq,
+                LessThan,
+                GreaterThan,
+                OpenParen,
+                CloseParen,
+            ],
+            found: Some(
+                Then,
+            ),
+        },
     },
 ]
 ---

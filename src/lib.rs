@@ -7,6 +7,7 @@ use error::{Label, ParseResult};
 
 use chumsky::input::SpannedInput;
 use chumsky::prelude::*;
+use chumsky::util::MaybeRef;
 use rym_lexer::rich::{Lexer, Token};
 
 pub(crate) type Span = std::ops::Range<usize>;
@@ -104,9 +105,9 @@ fn item_parser<'a>(
 			.map(|(name, rhs)| Item::Binding { name, rhs });
 
 		choice((
-			module,   /* .labelled(Label::Module) */
-			function, /* .labelled(Label::Function) */
-			binding,  /* .labelled(Label::Binding) */
+			module.labelled(Label::Module),
+			function.labelled(Label::Function),
+			binding.labelled(Label::Binding),
 		))
 		.map_with_span(|item, span| Spanned(item, span))
 	})
@@ -132,15 +133,15 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 				Token::Char(val) => Expr::Char(val),
 				Token::String(val) => Expr::String(val),
 			}
-			// .labelled("literal")
-			.map_with_span(|expr, span| Spanned(expr, span));
+			.map_with_span(|expr, span| Spanned(expr, span))
+			.labelled(Label::Literal);
 
 			// group => "(" expr ")"
 			let group = expr
 				.clone()
 				.delimited_by(just(Token::OpenParen), just(Token::CloseParen))
 				// Attempt to recover anything that looks like a group but contains errors
-				.recover_with(via_parser(nested_delimiters(
+				.recover_with(via_parser(custom_nested_delims(
 					Token::OpenParen,
 					Token::CloseParen,
 					[
@@ -148,14 +149,11 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 						(Token::OpenBracket, Token::CloseBracket),
 					],
 					|span| Spanned(Expr::Error, span),
-				)));
-			// .labelled(Label::Group)
+				)))
+				.labelled(Label::Group);
 
-			choice((
-				group,
-				literal,
-				ident_parser().map(|Spanned(ident, span)| Spanned(Expr::Ident(ident), span)),
-			))
+			group.or(literal
+				.or(ident_parser().map(|Spanned(ident, span)| Spanned(Expr::Ident(ident), span))))
 		};
 
 		// items => expr (expr ",")* ","?
@@ -169,7 +167,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 		let call = atom.foldl(
 			items
 				.delimited_by(just(Token::OpenParen), just(Token::CloseParen))
-				.recover_with(via_parser(nested_delimiters(
+				.recover_with(via_parser(custom_nested_delims(
 					Token::OpenParen,
 					Token::CloseParen,
 					[
@@ -252,7 +250,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 			)
 		};
 
-		let raw_expr = comp/* comp */;
+		let raw_expr = comp;
 
 		// assign => IDENT "=" expr
 		let assign = ident_parser()
@@ -275,7 +273,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 			.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace))
 			.map_with_span(|stmts, span| Spanned(Expr::Block(stmts), span))
 			// Attempt to recover anything that looks like a block but contains errors
-			.recover_with(via_parser(nested_delimiters(
+			.recover_with(via_parser(custom_nested_delims(
 				Token::OpenBrace,
 				Token::CloseBrace,
 				[
@@ -283,16 +281,16 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 					(Token::OpenParen, Token::CloseParen),
 				],
 				|span| Spanned(Expr::Block(vec![Stmt::Error]), span),
-			)));
-		// .labelled(Label::Block)
+			)))
+			.labelled(Label::Block);
 
 		// control_flow => break | continue | return | loop | if
 		let control_flow = {
 			// break => "break" expr
 			let break_ = just(Token::Break)
 				.ignore_then(expr.clone().or_not())
-				.map(|expr| Expr::Break(Box::new(expr)));
-			// .labelled(Label::Break)
+				.map(|expr| Expr::Break(Box::new(expr)))
+				.labelled(Label::Break);
 
 			// continue => "continue" expr
 			let continue_ = just(Token::Continue).map(|_| Expr::Continue); // .labelled(Label::Continue)
@@ -300,21 +298,21 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 			// return => "return" expr
 			let return_ = just(Token::Return)
 				.ignore_then(expr.clone().or_not())
-				.map(|expr| Expr::Return(Box::new(expr)));
-			// .labelled(Label::Return)
+				.map(|expr| Expr::Return(Box::new(expr)))
+				.labelled(Label::Return);
 
 			// loop => "loop" expr
 			let loop_ = just(Token::Loop)
 				.ignore_then(expr.clone())
-				.map(|expr| Expr::Loop(Box::new(expr)));
-			// .labelled(Label::Loop)
+				.map(|expr| Expr::Loop(Box::new(expr)))
+				.labelled(Label::Loop);
 
 			// if => "if" expr "then" expr ("else" expr)?
 			let if_ = recursive(|if_| {
 				just(Token::If)
 					.ignore_then(expr.clone())
 					.then_ignore(just(Token::Then))
-					.recover_with(via_parser(nested_delimiters(
+					.recover_with(via_parser(custom_nested_delims(
 						Token::If,
 						Token::Then,
 						[],
@@ -350,15 +348,91 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 			.map(|ident| Some(ident))
 			.or(just(Token::Dot).map(|_| None))
 			.then(record_fields.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)))
-			.map_with_span(|(name, fields), span| Spanned(Expr::Record { name, fields }, span));
-		// .labelled(Label::Record)
+			.map_with_span(|(name, fields), span| Spanned(Expr::Record { name, fields }, span))
+			.labelled(Label::Record);
 
-		choice((record, assign, raw_expr, block, control_flow)) /* .labelled(Label::Expression) */
+		choice((record, assign, raw_expr, block, control_flow)).labelled(Label::Expression)
+	})
+}
+
+pub(crate) fn custom_nested_delims<'a, O, const N: usize>(
+	start: Token,
+	end: Token,
+	others: [(Token, Token); N],
+	fallback: impl Fn(Span) -> O + Clone,
+) -> impl Parser<'a, InputAlias<'a>, O, ExtraAlias<'a>> + Clone {
+	custom(move |input_ref| {
+		let err_unexpected = chumsky::error::Error::<InputAlias<'a>>::expected_found;
+
+		let all_delims_map: Vec<(&Token, &Token)> = [(&start, &end)]
+			.into_iter()
+			.chain(others.iter().map(|(s, e)| (s, e)))
+			.collect();
+
+		let start_delims: Vec<&Token> = all_delims_map.iter().map(|(s, _)| *s).collect();
+		let end_delims: Vec<&Token> = all_delims_map.iter().map(|(_, e)| *e).collect();
+
+		let all_delim_tokens: Vec<&Token> =
+			all_delims_map.iter().flat_map(|(s, e)| [*s, *e]).collect();
+
+		let first_offset = input_ref.offset();
+		// SAFETY: first_offset was obtained via input_ref.offset() => is a valid offset of input_ref
+		let first_span = unsafe { input_ref.span_since(first_offset) };
+
+		let mut delim_stack = vec![{
+			let first_token = input_ref.next_token();
+			if first_token != Some(start.clone()) {
+				return Err(err_unexpected(
+					[Some(MaybeRef::Val(start.clone()))],
+					first_token.map(|tok| MaybeRef::Val(tok)),
+					first_span,
+				));
+			}
+			first_token.unwrap()
+		}];
+
+		// consumes input until delimiter or eof is found
+		let mut consume_input = || {
+			while let Some(token) = input_ref.next_token() {
+				if all_delim_tokens.contains(&&token) {
+					return Some(token);
+				}
+			}
+			None
+		};
+
+		while !delim_stack.is_empty() {
+			let Some(delim) = consume_input() else {
+				return Err(err_unexpected(
+					[Some(MaybeRef::Val(end.clone()))],
+					None,
+					unsafe { input_ref.span_since(first_offset) },
+				));
+			};
+			delim_stack.push(delim);
+
+			let [.., l, r] = &delim_stack[..] else {
+				continue;
+			};
+			let (l, r) = (l.clone(), r.clone());
+
+			// remove last two delimiters from the stack if
+			//   - they belong to a pair eg. ( + ), { + }, [ + ], ..
+			//   - the right one is a closing delimiter eg. ( + }, ( + ], { + ), ..
+			if all_delims_map.iter().any(|(s, e)| s == &&l && e == &&r) || end_delims.contains(&&r)
+			{
+				delim_stack.pop();
+				delim_stack.pop();
+			}
+		}
+
+		// SAFETY: see first_span
+		Ok(fallback(unsafe { input_ref.span_since(first_offset) }))
 	})
 }
 
 fn ident_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<String>, ExtraAlias<'a>> + Clone {
 	select! { Token::Ident(ident) => ident }
 		.map_with_span(|ident, span: std::ops::Range<usize>| Spanned(ident, span.into()))
-	// .labelled(Label::Identifier)
+		.labelled(Label::Identifier)
 }

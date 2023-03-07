@@ -10,8 +10,12 @@ Some(
     Spanned(
         If {
             condition: Spanned(
-                Error,
-                0..12,
+                Block(
+                    [
+                        Error,
+                    ],
+                ),
+                3..7,
             ),
             then_branch: Spanned(
                 Ident("_"),
@@ -26,26 +30,16 @@ Some(
 --- Errors ---
 [
     ParseError {
-        label: None,
         span: 6..7,
-        reason: Unexpected,
-        found: CloseParen,
-        expected: [
-            Dot,
-            Minus,
-            Bang,
-            Break,
-            Continue,
-            Func,
-            If,
-            Let,
-            Loop,
-            Mod,
-            Return,
-            OpenParen,
-            OpenBrace,
-            CloseBrace,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                CloseBrace,
+                Expression,
+            ],
+            found: Some(
+                CloseParen,
+            ),
+        },
     },
 ]
 ---

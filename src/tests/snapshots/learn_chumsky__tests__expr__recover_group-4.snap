@@ -11,24 +11,26 @@ None
 --- Errors ---
 [
     ParseError {
-        label: None,
         span: 9..10,
-        reason: Unexpected,
-        found: CloseParen,
-        expected: [
-            Plus,
-            Minus,
-            Star,
-            Slash,
-            BangEq,
-            Eq,
-            EqEq,
-            LessThan,
-            GreaterThan,
-            OpenParen,
-            CloseParen,
-            OpenBrace,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                Plus,
+                Minus,
+                Star,
+                Slash,
+                BangEq,
+                Eq,
+                EqEq,
+                LessThan,
+                GreaterThan,
+                OpenParen,
+                CloseParen,
+                OpenBrace,
+            ],
+            found: Some(
+                CloseParen,
+            ),
+        },
     },
 ]
 ---

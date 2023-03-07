@@ -63,14 +63,16 @@ Some(
 --- Errors ---
 [
     ParseError {
-        label: None,
         span: 37..40,
-        reason: Unexpected,
-        found: Let,
-        expected: [
-            Semi,
-            OpenBrace,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                Semi,
+                OpenBrace,
+            ],
+            found: Some(
+                Let,
+            ),
+        },
     },
 ]
 ---

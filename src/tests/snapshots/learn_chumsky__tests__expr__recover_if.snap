@@ -37,23 +37,16 @@ Some(
 --- Errors ---
 [
     ParseError {
-        label: None,
         span: 11..12,
-        reason: Unexpected,
-        found: Comma,
-        expected: [
-            Dot,
-            Minus,
-            Bang,
-            Break,
-            Continue,
-            If,
-            Loop,
-            Return,
-            OpenParen,
-            CloseParen,
-            OpenBrace,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                CloseParen,
+                Expression,
+            ],
+            found: Some(
+                Comma,
+            ),
+        },
     },
 ]
 ---

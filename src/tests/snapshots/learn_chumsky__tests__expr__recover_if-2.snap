@@ -11,7 +11,7 @@ Some(
         If {
             condition: Spanned(
                 Error,
-                0..11,
+                3..6,
             ),
             then_branch: Spanned(
                 Ident("_"),
@@ -26,22 +26,24 @@ Some(
 --- Errors ---
 [
     ParseError {
-        label: None,
         span: 5..6,
-        reason: Unexpected,
-        found: CloseBrace,
-        expected: [
-            Plus,
-            Minus,
-            Star,
-            Slash,
-            BangEq,
-            EqEq,
-            LessThan,
-            GreaterThan,
-            OpenParen,
-            CloseParen,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                Plus,
+                Minus,
+                Star,
+                Slash,
+                BangEq,
+                EqEq,
+                LessThan,
+                GreaterThan,
+                OpenParen,
+                CloseParen,
+            ],
+            found: Some(
+                CloseBrace,
+            ),
+        },
     },
 ]
 ---

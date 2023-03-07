@@ -6,29 +6,36 @@ expression: "&snapshot"
 (testing}
 ---
 
-None
+Some(
+    Spanned(
+        Error,
+        0..9,
+    ),
+)
 
 --- Errors ---
 [
     ParseError {
-        label: None,
         span: 8..9,
-        reason: Unexpected,
-        found: CloseBrace,
-        expected: [
-            Plus,
-            Minus,
-            Star,
-            Slash,
-            BangEq,
-            Eq,
-            EqEq,
-            LessThan,
-            GreaterThan,
-            OpenParen,
-            CloseParen,
-            OpenBrace,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                Plus,
+                Minus,
+                Star,
+                Slash,
+                BangEq,
+                Eq,
+                EqEq,
+                LessThan,
+                GreaterThan,
+                OpenParen,
+                CloseParen,
+                OpenBrace,
+            ],
+            found: Some(
+                CloseBrace,
+            ),
+        },
     },
 ]
 ---

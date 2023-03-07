@@ -24,14 +24,14 @@ Some(
 --- Errors ---
 [
     ParseError {
-        label: None,
         span: 2..8,
-        reason: Unexpected,
-        found: Eof,
-        expected: [
-            Semi,
-            OpenBrace,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                Semi,
+                OpenBrace,
+            ],
+            found: None,
+        },
     },
 ]
 ---

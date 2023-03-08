@@ -18,11 +18,11 @@ pub(crate) type InputAlias<'a> = SpannedInput<Token, Span, &'a [(Token, Span)]>;
 pub(crate) type ExtraAlias<'a> = extra::Err<ErrorAlias<'a>>;
 pub(crate) type ErrorAlias<'a> = Rich<'a, Token, Span, Label>;
 
-pub fn parse_module_file<'a>(src: &'a str) -> ParseResult<Vec<Spanned<Item>>> {
+pub fn parse_module_file(src: &str) -> ParseResult<Vec<Spanned<Item>>> {
 	parse_str(|tokens| module_file_parser().parse(tokens).into(), src)
 }
 
-pub fn parse_expr<'a>(src: &'a str) -> ParseResult<Spanned<Expr>> {
+pub fn parse_expr(src: &str) -> ParseResult<Spanned<Expr>> {
 	parse_str(|tokens| expr_parser().parse(tokens).into(), src)
 }
 
@@ -35,7 +35,7 @@ where
 {
 	// TODO Fix the leak
 	let tokens = Lexer::new(src).collect::<Vec<(Token, Span)>>().leak();
-	parse_fn(tokens.spanned(tokens.len()..tokens.len())).into()
+	parse_fn(tokens.spanned(tokens.len()..tokens.len()))
 }
 
 fn module_file_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Vec<Spanned<Item>>, ExtraAlias<'a>> {
@@ -89,10 +89,7 @@ fn item_parser<'a>(
 					.delimited_by(just(Token::OpenParen), just(Token::CloseParen)),
 			)
 			.then(recover_block_or_semi(
-				choice((
-					expr_parser.clone().map(|expr| Some(expr)),
-					just(Token::Semi).to(None),
-				)),
+				choice((expr_parser.clone().map(Some), just(Token::Semi).to(None))),
 				|_| None,
 			))
 			.map(|((name, params), rhs)| Item::Func { name, params, rhs });
@@ -109,7 +106,7 @@ fn item_parser<'a>(
 			function.labelled(Label::Function),
 			binding.labelled(Label::Binding),
 		))
-		.map_with_span(|item, span| Spanned(item, span))
+		.map_with_span(Spanned)
 	})
 }
 
@@ -117,10 +114,8 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 	recursive(|expr| {
 		let stmt = {
 			choice((
-				item_parser(expr.clone()).map(|item| Stmt::Item(item)),
-				expr.clone()
-					.then_ignore(just(Token::Semi))
-					.map(|expr| Stmt::Expr(expr)),
+				item_parser(expr.clone()).map(Stmt::Item),
+				expr.clone().then_ignore(just(Token::Semi)).map(Stmt::Expr),
 			))
 		};
 
@@ -133,7 +128,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 				Token::Char(val) => Expr::Char(val),
 				Token::String(val) => Expr::String(val),
 			}
-			.map_with_span(|expr, span| Spanned(expr, span))
+			.map_with_span(Spanned)
 			.labelled(Label::Literal);
 
 			// group => "(" expr ")"
@@ -176,7 +171,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 					],
 					|span| vec![Spanned(Expr::Error, span)],
 				)))
-				.map_with_span(|args, span| Spanned(args, span))
+				.map_with_span(Spanned)
 				.repeated(),
 			|spanned_func, Spanned(args, args_span)| {
 				let span = spanned_func.1.start..args_span.end;
@@ -191,7 +186,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 				just(Token::Bang).to(UnaryOp::Not),
 				just(Token::Minus).to(UnaryOp::Neg),
 			))
-			.map_with_span(|op, span| Spanned(op, span));
+			.map_with_span(Spanned);
 
 			op.repeated()
 				.foldr(call, |Spanned(op, op_span), rhs: Spanned<Expr>| {
@@ -338,8 +333,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 					})
 			});
 
-			choice((break_, continue_, return_, loop_, if_))
-				.map_with_span(|expr, span| Spanned(expr, span))
+			choice((break_, continue_, return_, loop_, if_)).map_with_span(Spanned)
 		};
 
 		// record => (IDENT | ".") "{" record_fields? "}"
@@ -351,7 +345,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 			.allow_trailing()
 			.collect::<Vec<_>>();
 		let record = ident_parser()
-			.map(|ident| Some(ident))
+			.map(Some)
 			.or(just(Token::Dot).map(|_| None))
 			.then(record_fields.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)))
 			.map_with_span(|(name, fields), span| Spanned(Expr::Record { name, fields }, span))
@@ -452,6 +446,6 @@ pub(crate) fn custom_nested_delimiters<'a, O, const N: usize>(
 
 fn ident_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<String>, ExtraAlias<'a>> + Clone {
 	select! { Token::Ident(ident) => ident }
-		.map_with_span(|ident, span: std::ops::Range<usize>| Spanned(ident, span.into()))
+		.map_with_span(Spanned)
 		.labelled(Label::Identifier)
 }

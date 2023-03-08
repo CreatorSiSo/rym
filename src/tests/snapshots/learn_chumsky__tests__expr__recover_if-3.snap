@@ -11,7 +11,7 @@ Some(
         If {
             condition: Spanned(
                 Error,
-                3..6,
+                0..11,
             ),
             then_branch: Spanned(
                 Ident("_"),

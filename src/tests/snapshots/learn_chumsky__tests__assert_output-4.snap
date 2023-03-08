@@ -3,7 +3,7 @@ source: src/tests/mod.rs
 expression: "format!(\"---\\n{src}\\n---\\n\\n{result:?}\")"
 ---
 ---
-{ let testing = 23 + 0; }
+{ let testing = 23 + 0; }       ()
 ---
 
 ParseResult(Some(Spanned(Block([Error]), 0..25)), [])

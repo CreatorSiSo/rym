@@ -8,7 +8,7 @@ expression: "format!(\"---\\n{src}\\n---\\n\\n{result:?}\")"
 		get_fn[](arg0, { 0 });
 		{ inside }(arg1)(arg2);
 	}
-}
+}                                              ()
 ---
 
 ParseResult(Some(Spanned(Block([Error]), 0..69)), [])

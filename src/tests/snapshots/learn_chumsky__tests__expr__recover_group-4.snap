@@ -6,7 +6,12 @@ expression: "&snapshot"
 ((testing)
 ---
 
-None
+Some(
+    Spanned(
+        Error,
+        0..10,
+    ),
+)
 
 --- Errors ---
 [

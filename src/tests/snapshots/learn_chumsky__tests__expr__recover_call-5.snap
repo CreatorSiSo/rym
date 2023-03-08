@@ -7,14 +7,14 @@ testing(1, {2, 3)
 ---
 
 Some(
-    (
+    Spanned(
         Call(
-            (
+            Spanned(
                 Ident("testing"),
                 0..7,
             ),
             [
-                (
+                Spanned(
                     Error,
                     7..17,
                 ),
@@ -26,37 +26,25 @@ Some(
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Block,
-        ),
+    ParseError {
         span: 13..14,
-        reason: Unexpected,
-        found: Comma,
-        expected: [
-            Semi,
-            Dot,
-            Plus,
-            Minus,
-            Star,
-            Slash,
-            Bang,
-            BangEq,
-            EqEq,
-            LessThan,
-            GreaterThan,
-            Break,
-            Continue,
-            Func,
-            If,
-            Let,
-            Loop,
-            Mod,
-            Return,
-            OpenParen,
-            OpenBrace,
-            CloseBrace,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                Semi,
+                Plus,
+                Minus,
+                Star,
+                Slash,
+                BangEq,
+                EqEq,
+                LessThan,
+                GreaterThan,
+                OpenParen,
+            ],
+            found: Some(
+                Comma,
+            ),
+        },
     },
 ]
 ---

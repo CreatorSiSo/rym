@@ -8,7 +8,7 @@ func add(x, y) {
 	x + y; // here we add them
 }
 
-pub fn multiply(x, y) {
+func multiply(x, y) {
 	// here we are multiplying x by y
 	x * y;
 }
@@ -21,50 +21,174 @@ func main() {
 ---
 
 Some(
-    (
-        Func {
-            name: (
-                "add",
-                57..60,
-            ),
-            params: [
-                (
-                    "x",
-                    61..62,
+    [
+        Spanned(
+            Func {
+                name: Spanned(
+                    "add",
+                    57..60,
                 ),
-                (
-                    "y",
-                    64..65,
-                ),
-            ],
-            rhs: Some(
-                (
-                    Block(
-                        [
-                            Expr(
-                                (
-                                    Binary(
-                                        (
-                                            Ident("x"),
-                                            70..71,
-                                        ),
-                                        Add,
-                                        (
-                                            Ident("y"),
-                                            74..75,
-                                        ),
-                                    ),
-                                    70..75,
-                                ),
-                            ),
-                        ],
+                params: [
+                    Spanned(
+                        "x",
+                        61..62,
                     ),
-                    67..98,
+                    Spanned(
+                        "y",
+                        64..65,
+                    ),
+                ],
+                rhs: Some(
+                    Spanned(
+                        Block(
+                            [
+                                Expr(
+                                    Spanned(
+                                        Binary(
+                                            Spanned(
+                                                Ident("x"),
+                                                70..71,
+                                            ),
+                                            Add,
+                                            Spanned(
+                                                Ident("y"),
+                                                74..75,
+                                            ),
+                                        ),
+                                        70..75,
+                                    ),
+                                ),
+                            ],
+                        ),
+                        67..98,
+                    ),
                 ),
-            ),
-        },
-        52..98,
-    ),
+            },
+            52..98,
+        ),
+        Spanned(
+            Func {
+                name: Spanned(
+                    "multiply",
+                    105..113,
+                ),
+                params: [
+                    Spanned(
+                        "x",
+                        114..115,
+                    ),
+                    Spanned(
+                        "y",
+                        117..118,
+                    ),
+                ],
+                rhs: Some(
+                    Spanned(
+                        Block(
+                            [
+                                Expr(
+                                    Spanned(
+                                        Binary(
+                                            Spanned(
+                                                Ident("x"),
+                                                158..159,
+                                            ),
+                                            Mul,
+                                            Spanned(
+                                                Ident("y"),
+                                                162..163,
+                                            ),
+                                        ),
+                                        158..163,
+                                    ),
+                                ),
+                            ],
+                        ),
+                        120..166,
+                    ),
+                ),
+            },
+            100..166,
+        ),
+        Spanned(
+            Func {
+                name: Spanned(
+                    "main",
+                    173..177,
+                ),
+                params: [],
+                rhs: Some(
+                    Spanned(
+                        Block(
+                            [
+                                Expr(
+                                    Spanned(
+                                        Call(
+                                            Spanned(
+                                                Ident("print"),
+                                                183..188,
+                                            ),
+                                            [
+                                                Spanned(
+                                                    String("Hello World!"),
+                                                    189..203,
+                                                ),
+                                            ],
+                                        ),
+                                        183..204,
+                                    ),
+                                ),
+                                Expr(
+                                    Spanned(
+                                        Call(
+                                            Spanned(
+                                                Ident("add"),
+                                                207..210,
+                                            ),
+                                            [
+                                                Spanned(
+                                                    Int(2),
+                                                    211..212,
+                                                ),
+                                                Spanned(
+                                                    Int(3),
+                                                    214..215,
+                                                ),
+                                            ],
+                                        ),
+                                        207..216,
+                                    ),
+                                ),
+                                Expr(
+                                    Spanned(
+                                        Call(
+                                            Spanned(
+                                                Ident("multiply"),
+                                                219..227,
+                                            ),
+                                            [
+                                                Spanned(
+                                                    Int(3),
+                                                    228..229,
+                                                ),
+                                                Spanned(
+                                                    Int(2),
+                                                    231..232,
+                                                ),
+                                            ],
+                                        ),
+                                        219..233,
+                                    ),
+                                ),
+                            ],
+                        ),
+                        180..236,
+                    ),
+                ),
+            },
+            168..236,
+        ),
+    ],
 )
 
 --- Errors ---

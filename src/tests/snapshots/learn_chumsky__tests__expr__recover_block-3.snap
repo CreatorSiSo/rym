@@ -10,30 +10,17 @@ None
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Block,
-        ),
-        span: 5..5,
-        reason: Unexpected,
-        found: Eof,
-        expected: [
-            Semi,
-            Dot,
-            Minus,
-            Bang,
-            Break,
-            Continue,
-            Func,
-            If,
-            Let,
-            Loop,
-            Mod,
-            Return,
-            OpenParen,
-            OpenBrace,
-            CloseBrace,
-        ],
+    ParseError {
+        span: 12..13,
+        reason: ExpectedFound {
+            expected: [
+                Semi,
+                Module,
+            ],
+            found: Some(
+                CloseBrace,
+            ),
+        },
     },
 ]
 ---

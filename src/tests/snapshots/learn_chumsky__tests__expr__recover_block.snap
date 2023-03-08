@@ -24,7 +24,7 @@ Some(
         reason: ExpectedFound {
             expected: [
                 CloseBrace,
-                Expression,
+                Module,
             ],
             found: Some(
                 Slash,

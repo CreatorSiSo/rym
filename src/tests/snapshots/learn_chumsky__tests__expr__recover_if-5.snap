@@ -7,16 +7,16 @@ if testing(1, {2, 3) then _
 ---
 
 Some(
-    (
+    Spanned(
         If {
-            condition: (
+            condition: Spanned(
                 Call(
-                    (
+                    Spanned(
                         Ident("testing"),
                         3..10,
                     ),
                     [
-                        (
+                        Spanned(
                             Error,
                             10..20,
                         ),
@@ -24,7 +24,7 @@ Some(
                 ),
                 3..20,
             ),
-            then_branch: (
+            then_branch: Spanned(
                 Ident("_"),
                 26..27,
             ),
@@ -36,37 +36,25 @@ Some(
 
 --- Errors ---
 [
-    Error {
-        label: Some(
-            Block,
-        ),
+    ParseError {
         span: 16..17,
-        reason: Unexpected,
-        found: Comma,
-        expected: [
-            Semi,
-            Dot,
-            Plus,
-            Minus,
-            Star,
-            Slash,
-            Bang,
-            BangEq,
-            EqEq,
-            LessThan,
-            GreaterThan,
-            Break,
-            Continue,
-            Func,
-            If,
-            Let,
-            Loop,
-            Mod,
-            Return,
-            OpenParen,
-            OpenBrace,
-            CloseBrace,
-        ],
+        reason: ExpectedFound {
+            expected: [
+                Semi,
+                Plus,
+                Minus,
+                Star,
+                Slash,
+                BangEq,
+                EqEq,
+                LessThan,
+                GreaterThan,
+                OpenParen,
+            ],
+            found: Some(
+                Comma,
+            ),
+        },
     },
 ]
 ---

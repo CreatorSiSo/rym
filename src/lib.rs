@@ -51,7 +51,7 @@ fn item_parser<'a>(
 		fallback: fn(Span) -> O,
 	) -> impl Parser<'a, InputAlias<'a>, O, ExtraAlias<'a>> + Clone {
 		parser
-			.recover_with(via_parser(nested_delimiters(
+			.recover_with(via_parser(custom_nested_delimiters(
 				Token::OpenBrace,
 				Token::CloseBrace,
 				[
@@ -141,7 +141,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 				.clone()
 				.delimited_by(just(Token::OpenParen), just(Token::CloseParen))
 				// Attempt to recover anything that looks like a group but contains errors
-				.recover_with(via_parser(custom_nested_delims(
+				.recover_with(via_parser(custom_nested_delimiters(
 					Token::OpenParen,
 					Token::CloseParen,
 					[
@@ -167,7 +167,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 		let call = atom.foldl(
 			items
 				.delimited_by(just(Token::OpenParen), just(Token::CloseParen))
-				.recover_with(via_parser(custom_nested_delims(
+				.recover_with(via_parser(custom_nested_delimiters(
 					Token::OpenParen,
 					Token::CloseParen,
 					[
@@ -273,7 +273,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 			.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace))
 			.map_with_span(|stmts, span| Spanned(Expr::Block(stmts), span))
 			// Attempt to recover anything that looks like a block but contains errors
-			.recover_with(via_parser(custom_nested_delims(
+			.recover_with(via_parser(custom_nested_delimiters(
 				Token::OpenBrace,
 				Token::CloseBrace,
 				[
@@ -293,7 +293,9 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 				.labelled(Label::Break);
 
 			// continue => "continue" expr
-			let continue_ = just(Token::Continue).map(|_| Expr::Continue); // .labelled(Label::Continue)
+			let continue_ = just(Token::Continue)
+				.map(|_| Expr::Continue)
+				.labelled(Label::Continue);
 
 			// return => "return" expr
 			let return_ = just(Token::Return)
@@ -312,10 +314,14 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 				just(Token::If)
 					.ignore_then(expr.clone())
 					.then_ignore(just(Token::Then))
-					.recover_with(via_parser(custom_nested_delims(
+					.recover_with(via_parser(custom_nested_delimiters(
 						Token::If,
 						Token::Then,
-						[],
+						[
+							(Token::OpenParen, Token::CloseParen),
+							(Token::OpenBrace, Token::CloseBrace),
+							(Token::OpenBracket, Token::CloseBracket),
+						],
 						|span| Spanned(Expr::Error, span),
 					)))
 					.then(expr.clone())
@@ -355,79 +361,92 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 	})
 }
 
-pub(crate) fn custom_nested_delims<'a, O, const N: usize>(
+pub(crate) fn custom_nested_delimiters<'a, O, const N: usize>(
 	start: Token,
 	end: Token,
 	others: [(Token, Token); N],
 	fallback: impl Fn(Span) -> O + Clone,
 ) -> impl Parser<'a, InputAlias<'a>, O, ExtraAlias<'a>> + Clone {
 	custom(move |input_ref| {
+		// TODO Make this work properly
+		use std::cmp::Ordering;
 		let err_unexpected = chumsky::error::Error::<InputAlias<'a>>::expected_found;
 
-		let all_delims_map: Vec<(&Token, &Token)> = [(&start, &end)]
-			.into_iter()
-			.chain(others.iter().map(|(s, e)| (s, e)))
-			.collect();
+		let mut balance = 0;
+		let mut balance_others = [0; N];
+		let start_offset = input_ref.offset();
+		let mut starts = vec![];
+		let mut error = None;
+		let pre_state = input_ref.save();
 
-		let start_delims: Vec<&Token> = all_delims_map.iter().map(|(s, _)| *s).collect();
-		let end_delims: Vec<&Token> = all_delims_map.iter().map(|(_, e)| *e).collect();
-
-		let all_delim_tokens: Vec<&Token> =
-			all_delims_map.iter().flat_map(|(s, e)| [*s, *e]).collect();
-
-		let first_offset = input_ref.offset();
-		// SAFETY: first_offset was obtained via input_ref.offset() => is a valid offset of input_ref
-		let first_span = unsafe { input_ref.span_since(first_offset) };
-
-		let mut delim_stack = vec![{
-			let first_token = input_ref.next_token();
-			if first_token != Some(start.clone()) {
-				return Err(err_unexpected(
-					[Some(MaybeRef::Val(start.clone()))],
-					first_token.map(|tok| MaybeRef::Val(tok)),
-					first_span,
-				));
-			}
-			first_token.unwrap()
-		}];
-
-		// consumes input until delimiter or eof is found
-		let mut consume_input = || {
-			while let Some(token) = input_ref.next_token() {
-				if all_delim_tokens.contains(&&token) {
-					return Some(token);
+		let recovered = loop {
+			if match input_ref.next() {
+				Some(token) if token == start => {
+					balance += 1;
+					starts.push(input_ref.span_since(start_offset));
+					true
 				}
+				Some(token) if token == end => {
+					balance -= 1;
+					starts.pop();
+					true
+				}
+				Some(token) => {
+					for (balance_other, others) in balance_others.iter_mut().zip(others.iter()) {
+						if token == others.0 {
+							*balance_other += 1;
+						} else if token == others.1 {
+							*balance_other -= 1;
+
+							if *balance_other < 0 && balance == 1 {
+								input_ref.rewind(pre_state);
+								return Err(err_unexpected(
+									[Some(MaybeRef::Val(start.clone()))],
+									None,
+									input_ref.span_since(start_offset),
+								));
+							}
+						}
+					}
+					false
+				}
+				None => {
+					if balance > 0 && balance == 1 {
+						error.get_or_insert_with(|| match starts.pop() {
+							Some(span) => {
+								err_unexpected([Some(MaybeRef::Val(start.clone()))], None, span)
+							}
+							None => {
+								err_unexpected([Some(MaybeRef::Val(start.clone()))], None, 0..0)
+							}
+						});
+					}
+					break false;
+				}
+			} {
+				match balance.cmp(&0) {
+					Ordering::Equal => break true,
+					// The end of a delimited section is not a valid recovery pattern
+					Ordering::Less => break false,
+					Ordering::Greater => (),
+				}
+			} else if balance == 0 {
+				// A non-delimiter input before anything else is not a valid recovery pattern
+				break false;
 			}
-			None
 		};
 
-		while !delim_stack.is_empty() {
-			let Some(delim) = consume_input() else {
-				return Err(err_unexpected(
-					[Some(MaybeRef::Val(end.clone()))],
-					None,
-					unsafe { input_ref.span_since(first_offset) },
-				));
-			};
-			delim_stack.push(delim);
+		let complete_span = input_ref.span_since(start_offset);
 
-			let [.., l, r] = &delim_stack[..] else {
-				continue;
-			};
-			let (l, r) = (l.clone(), r.clone());
-
-			// remove last two delimiters from the stack if
-			//   - they belong to a pair eg. ( + ), { + }, [ + ], ..
-			//   - the right one is a closing delimiter eg. ( + }, ( + ], { + ), ..
-			if all_delims_map.iter().any(|(s, e)| s == &&l && e == &&r) || end_delims.contains(&&r)
-			{
-				delim_stack.pop();
-				delim_stack.pop();
-			}
+		if recovered {
+			Ok(fallback(complete_span))
+		} else {
+			Err(err_unexpected(
+				[Some(MaybeRef::Val(start.clone()))],
+				None,
+				complete_span,
+			))
 		}
-
-		// SAFETY: see first_span
-		Ok(fallback(unsafe { input_ref.span_since(first_offset) }))
 	})
 }
 

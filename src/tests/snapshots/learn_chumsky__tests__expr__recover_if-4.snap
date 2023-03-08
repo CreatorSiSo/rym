@@ -10,12 +10,8 @@ Some(
     Spanned(
         If {
             condition: Spanned(
-                Block(
-                    [
-                        Error,
-                    ],
-                ),
-                3..7,
+                Error,
+                0..12,
             ),
             then_branch: Spanned(
                 Ident("_"),
@@ -34,7 +30,7 @@ Some(
         reason: ExpectedFound {
             expected: [
                 CloseBrace,
-                Expression,
+                Module,
             ],
             found: Some(
                 CloseParen,

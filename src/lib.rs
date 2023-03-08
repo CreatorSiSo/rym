@@ -368,38 +368,44 @@ pub(crate) fn custom_nested_delimiters<'a, O, const N: usize>(
 
 		let mut balance = 0;
 		let mut balance_others = [0; N];
-		let start_offset = input_ref.offset();
-		let mut starts = vec![];
+		let mut starts = Vec::new();
 		let mut error = None;
-		let pre_state = input_ref.save();
+		let start_offset = input_ref.offset();
 
 		let recovered = loop {
 			if match input_ref.next() {
-				Some(token) if token == start => {
+				Some(t) if t == start => {
 					balance += 1;
-					starts.push(input_ref.span_since(start_offset));
+					starts.push(input_ref.offset());
 					true
 				}
-				Some(token) if token == end => {
+				Some(t) if t == end => {
 					balance -= 1;
 					starts.pop();
 					true
 				}
-				Some(token) => {
+				Some(t) => {
 					for (balance_other, others) in balance_others.iter_mut().zip(others.iter()) {
-						if token == others.0 {
+						if t == others.0 {
 							*balance_other += 1;
-						} else if token == others.1 {
+						} else if t == others.1 {
 							*balance_other -= 1;
 
-							if *balance_other < 0 && balance == 1 {
-								input_ref.rewind(pre_state);
-								return Err(err_unexpected(
-									[Some(MaybeRef::Val(start.clone()))],
-									None,
-									input_ref.span_since(start_offset),
-								));
-							}
+							// if *balance_other < 0 && balance == 1 {
+							// input_ref.rewind(pre_state);
+							// error.get_or_insert_with(|| {
+							// 	Located::at(
+							// 		at,
+							// 		P::Error::unclosed_delimiter(
+							// 			starts.pop().unwrap(),
+							// 			start.clone(),
+							// 			span.clone(),
+							// 			end.clone(),
+							// 			Some(t.clone()),
+							// 		),
+							// 	)
+							// });
+							// }
 						}
 					}
 					false
@@ -407,12 +413,30 @@ pub(crate) fn custom_nested_delimiters<'a, O, const N: usize>(
 				None => {
 					if balance > 0 && balance == 1 {
 						error.get_or_insert_with(|| match starts.pop() {
-							Some(span) => {
-								err_unexpected([Some(MaybeRef::Val(start.clone()))], None, span)
-							}
-							None => {
-								err_unexpected([Some(MaybeRef::Val(start.clone()))], None, 0..0)
-							}
+							Some(start_offset) => err_unexpected(
+								[Some(MaybeRef::Val(end.clone()))],
+								None,
+								input_ref.span_since(start_offset),
+							),
+							None => err_unexpected(
+								[Some(MaybeRef::Val(end.clone()))],
+								None,
+								input_ref.span_since(input_ref.offset()),
+							),
+							// Some(start) => Located::at(
+							// 	at,
+							// 	P::Error::unclosed_delimiter(
+							// 		start,
+							// 		start.clone(),
+							// 		span,
+							// 		end.clone(),
+							// 		None,
+							// 	),
+							// ),
+							// None => Located::at(
+							// 	at,
+							// 	P::Error::expected_input_found(span, Some(Some(end.clone())), None),
+							// ),
 						});
 					}
 					break false;
@@ -435,11 +459,15 @@ pub(crate) fn custom_nested_delimiters<'a, O, const N: usize>(
 		if recovered {
 			Ok(fallback(complete_span))
 		} else {
-			Err(err_unexpected(
-				[Some(MaybeRef::Val(start.clone()))],
-				None,
-				complete_span,
-			))
+			if let Some(error) = error {
+				Err(error)
+			} else {
+				Err(err_unexpected(
+					[Some(MaybeRef::Val(end.clone()))],
+					input_ref.next().map(|token| MaybeRef::Val(token)),
+					input_ref.span_since(input_ref.offset()),
+				))
+			}
 		}
 	})
 }

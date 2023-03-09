@@ -45,38 +45,26 @@ fn module_file_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Vec<Spanned<Item>
 fn item_parser<'a>(
 	expr_parser: impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlias<'a>> + Clone + 'a,
 ) -> impl Parser<'a, InputAlias<'a>, Spanned<Item>, ExtraAlias<'a>> + Clone {
-	/// Helper function to recover a parser that expects a block or a semicolon
-	fn recover_block_or_semi<'a, O>(
-		parser: impl Parser<'a, InputAlias<'a>, O, ExtraAlias<'a>> + Clone,
-		fallback: fn(Span) -> O,
-	) -> impl Parser<'a, InputAlias<'a>, O, ExtraAlias<'a>> + Clone {
-		parser
-			.recover_with(via_parser(custom_nested_delimiters(
-				Token::OpenBrace,
-				Token::CloseBrace,
-				[
-					(Token::OpenParen, Token::CloseParen),
-					(Token::OpenBracket, Token::CloseBracket),
-				],
-				fallback,
-			)))
-			.recover_with(via_parser(
-				empty().map_with_span(move |_, span| fallback(span)),
-			))
-	}
-
 	recursive(|item| {
 		let module = just(Token::Mod)
 			.ignore_then(ident_parser().or_not())
-			.then(recover_block_or_semi(
-				choice((
-					just(Token::Semi).to(vec![]),
-					item.repeated()
-						.collect()
-						.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace)),
-				)),
-				|_| vec![],
-			))
+			.then(
+				item.repeated()
+					.collect()
+					.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace))
+					.or(just(Token::Semi)
+						.to(vec![])
+						.recover_with(via_parser(empty().to(vec![]))))
+					.recover_with(via_parser(custom_nested_delimiters(
+						Token::OpenBrace,
+						Token::CloseBrace,
+						[
+							(Token::OpenParen, Token::CloseParen),
+							(Token::OpenBracket, Token::CloseBracket),
+						],
+						|_| vec![],
+					))),
+			)
 			.map(|(name, items)| Item::Module { name, items });
 
 		let function = just(Token::Func)
@@ -88,10 +76,12 @@ fn item_parser<'a>(
 					.collect()
 					.delimited_by(just(Token::OpenParen), just(Token::CloseParen)),
 			)
-			.then(recover_block_or_semi(
-				choice((expr_parser.clone().map(Some), just(Token::Semi).to(None))),
-				|_| None,
-			))
+			.then(choice((
+				expr_parser.clone().map(Some),
+				just(Token::Semi)
+					.to(None)
+					.recover_with(via_parser(any().rewind().to(None))),
+			)))
 			.map(|((name, params), rhs)| Item::Func { name, params, rhs });
 
 		let binding = just(Token::Let)

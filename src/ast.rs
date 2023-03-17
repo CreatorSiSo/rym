@@ -72,7 +72,7 @@ pub enum Expr {
 	/// Function call `path(args)`, `returns_fn()()`
 	Call(Box<Spanned<Expr>>, Vec<Spanned<Expr>>),
 
-	Block(Vec<Stmt>),
+	Block(Vec<Spanned<Stmt>>),
 	If {
 		condition: Box<Spanned<Expr>>,
 		then_branch: Box<Spanned<Expr>>,

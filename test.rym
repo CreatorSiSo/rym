@@ -1,9 +1,8 @@
-```rym
 const arr: [1, 2, 3] = [1, 2, 3]
-const item: 1 = arr[0]
+const item: 1 = arr.get(0)
 
 mod core {
-	type Bool = true | false;
+	type Bool = True | False;
 
 	type Int;
 	type Isize;
@@ -46,8 +45,8 @@ mod core {
 		const maybe_num = Some 2;
 
 		match maybe_num with
-			| Some num => print(f"got {num}"),
-			| None => print(f"got nothing");
+			Some num => print(f"got {num}"),
+			None => print(f"got nothing");
 	}
 }
 
@@ -146,4 +145,83 @@ impl Add for Uint {
 		panic("compiler internal")
 	}
 }
-```
+
+// ---
+
+pub type Label =
+	| Block,
+	| Break,
+	| Continue,
+	| Expression,
+	| Function,
+	| Group,
+	| Identifier,
+	| Literal,
+	| Loop,
+	| Module,
+	| Record,
+	| Return,
+	| Binding,
+
+impl From[Label] for String {
+	func from(value: Label) -> Self {
+		match value with
+			|	.Binding => "binding",
+			|	.Block => "block",
+			|	.Break => "break",
+			|	.Continue => "continue",
+			|	.Expression => "expression",
+			|	.Function => "function",
+			|	.Group => "group",
+			|	.Identifier => "identifier",
+			|	.Literal => "literal",
+			|	.Loop => "loop",
+			|	.Module => "module",
+			|	.Record => "record",
+			|	.Return => "return",
+	}
+}
+
+pub type Span = todo()
+
+pub type Spanned[T] = {
+	value: T,
+	span: Span
+}
+
+pub type Item =
+	| Module {
+			name: Option[Spanned[String]],
+			items: Vec[Spanned[Item]],
+		},
+	| Func {
+			name: Spanned[String],
+			params: Vec[Spanned[String]],
+			rhs: Option[Spanned[Expr]],
+		},
+	| Binding {
+			name: Spanned[String],
+			rhs: Spanned[Expr],
+		},
+
+func filter_items(items: List[Item]) -> List[Item.{Module | Func}] {
+	items.iter().filter(item => match item with
+		.Module | .Func => True,
+		_ => False,
+	)
+}
+
+func filter_items(items: List[Item]) -> List[Item.{Module | Func}] {
+	items.iter().filter(|item| match item with {
+		.Module | .Func => True,
+		_ => False,
+	})
+}
+
+func build_array(nums: List[Uint, @len]) -> List[Uint, len] {
+	nums.iter().flat_map(num => nums.get(num)).collect()
+}
+
+func build_array(nums: Arr[Uint, @len]) -> Arr[Uint, len] {
+	nums.iter().flat_map(num => nums.get(num)).collect()
+}

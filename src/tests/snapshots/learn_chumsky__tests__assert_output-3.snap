@@ -6,4 +6,4 @@ expression: "format!(\"---\\n{src}\\n---\\n\\n{result:?}\")"
 {()[]({}){}()()}                ()
 ---
 
-ParseResult(Some(Spanned(Block([Error]), 0..16)), [])
+ParseResult(Some(Spanned(Block([]), 0..16)), [])

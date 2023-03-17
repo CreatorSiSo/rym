@@ -15,35 +15,41 @@ Some(
     Spanned(
         Block(
             [
-                Item(
-                    Spanned(
-                        Binding {
-                            name: Spanned(
-                                "msg",
-                                7..10,
-                            ),
-                            rhs: Spanned(
-                                String("Hello World!\n"),
-                                13..29,
-                            ),
-                        },
-                        3..30,
+                Spanned(
+                    Item(
+                        Spanned(
+                            Binding {
+                                name: Spanned(
+                                    "msg",
+                                    7..10,
+                                ),
+                                rhs: Spanned(
+                                    String("Hello World!\n"),
+                                    13..29,
+                                ),
+                            },
+                            3..30,
+                        ),
                     ),
+                    3..30,
                 ),
-                Item(
-                    Spanned(
-                        Binding {
-                            name: Spanned(
-                                "counter",
-                                46..53,
-                            ),
-                            rhs: Spanned(
-                                Int(0),
-                                56..57,
-                            ),
-                        },
-                        32..58,
+                Spanned(
+                    Item(
+                        Spanned(
+                            Binding {
+                                name: Spanned(
+                                    "counter",
+                                    46..53,
+                                ),
+                                rhs: Spanned(
+                                    Int(0),
+                                    56..57,
+                                ),
+                            },
+                            32..58,
+                        ),
                     ),
+                    32..58,
                 ),
             ],
         ),

@@ -1,0 +1,151 @@
+---
+source: src/tests/examples.rs
+expression: "&snapshot"
+---
+--- Input ---
+let name = readLine(stdin);
+if name == "" then
+	print("Poor soul, you lost your name?")
+else if name == "name" then
+	print("Very funny, your name is name.")
+else
+	print("Hi, ", name, "!");
+---
+
+Some(
+    [
+        Spanned(
+            Item(
+                Spanned(
+                    Binding {
+                        name: Spanned(
+                            "name",
+                            4..8,
+                        ),
+                        rhs: Spanned(
+                            Call(
+                                Spanned(
+                                    Ident("readLine"),
+                                    11..19,
+                                ),
+                                [
+                                    Spanned(
+                                        Ident("stdin"),
+                                        20..25,
+                                    ),
+                                ],
+                            ),
+                            11..26,
+                        ),
+                    },
+                    0..27,
+                ),
+            ),
+            0..27,
+        ),
+        Spanned(
+            Expr(
+                Spanned(
+                    If {
+                        condition: Spanned(
+                            Binary(
+                                Spanned(
+                                    Ident("name"),
+                                    31..35,
+                                ),
+                                Eq,
+                                Spanned(
+                                    String(""),
+                                    39..41,
+                                ),
+                            ),
+                            31..41,
+                        ),
+                        then_branch: Spanned(
+                            Call(
+                                Spanned(
+                                    Ident("print"),
+                                    48..53,
+                                ),
+                                [
+                                    Spanned(
+                                        String("Poor soul, you lost your name?"),
+                                        54..86,
+                                    ),
+                                ],
+                            ),
+                            48..87,
+                        ),
+                        else_branch: Some(
+                            Spanned(
+                                If {
+                                    condition: Spanned(
+                                        Binary(
+                                            Spanned(
+                                                Ident("name"),
+                                                96..100,
+                                            ),
+                                            Eq,
+                                            Spanned(
+                                                String("name"),
+                                                104..110,
+                                            ),
+                                        ),
+                                        96..110,
+                                    ),
+                                    then_branch: Spanned(
+                                        Call(
+                                            Spanned(
+                                                Ident("print"),
+                                                117..122,
+                                            ),
+                                            [
+                                                Spanned(
+                                                    String("Very funny, your name is name."),
+                                                    123..155,
+                                                ),
+                                            ],
+                                        ),
+                                        117..156,
+                                    ),
+                                    else_branch: Some(
+                                        Spanned(
+                                            Call(
+                                                Spanned(
+                                                    Ident("print"),
+                                                    163..168,
+                                                ),
+                                                [
+                                                    Spanned(
+                                                        String("Hi, "),
+                                                        169..175,
+                                                    ),
+                                                    Spanned(
+                                                        Ident("name"),
+                                                        177..181,
+                                                    ),
+                                                    Spanned(
+                                                        String("!"),
+                                                        183..186,
+                                                    ),
+                                                ],
+                                            ),
+                                            163..187,
+                                        ),
+                                    ),
+                                },
+                                93..187,
+                            ),
+                        ),
+                    },
+                    28..187,
+                ),
+            ),
+            28..188,
+        ),
+    ],
+)
+
+--- Errors ---
+[]
+---

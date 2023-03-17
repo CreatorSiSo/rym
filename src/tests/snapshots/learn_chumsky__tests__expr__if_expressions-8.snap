@@ -16,22 +16,25 @@ Some(
             then_branch: Spanned(
                 Block(
                     [
-                        Expr(
-                            Spanned(
-                                Call(
-                                    Spanned(
-                                        Ident("print"),
-                                        15..20,
-                                    ),
-                                    [
+                        Spanned(
+                            Expr(
+                                Spanned(
+                                    Call(
                                         Spanned(
-                                            String("Hello Universe!"),
-                                            21..38,
+                                            Ident("print"),
+                                            15..20,
                                         ),
-                                    ],
+                                        [
+                                            Spanned(
+                                                String("Hello Universe!"),
+                                                21..38,
+                                            ),
+                                        ],
+                                    ),
+                                    15..39,
                                 ),
-                                15..39,
                             ),
+                            15..40,
                         ),
                     ],
                 ),

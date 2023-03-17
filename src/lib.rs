@@ -22,6 +22,10 @@ pub fn parse_module_file(src: &str) -> ParseResult<Vec<Spanned<Item>>> {
 	parse_str(|tokens| module_file_parser().parse(tokens).into(), src)
 }
 
+pub fn parse_script_file(src: &str) -> ParseResult<Vec<Spanned<Stmt>>> {
+	parse_str(|tokens| script_file_parser().parse(tokens).into(), src)
+}
+
 pub fn parse_expr(src: &str) -> ParseResult<Spanned<Expr>> {
 	parse_str(|tokens| expr_parser().parse(tokens).into(), src)
 }
@@ -42,8 +46,12 @@ fn module_file_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Vec<Spanned<Item>
 	item_parser(expr_parser()).repeated().collect()
 }
 
+fn script_file_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Vec<Spanned<Stmt>>, ExtraAlias<'a>> {
+	stmt_parser(expr_parser()).repeated().collect()
+}
+
 fn item_parser<'a>(
-	expr_parser: impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlias<'a>> + Clone + 'a,
+	expr: impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlias<'a>> + Clone + 'a,
 ) -> impl Parser<'a, InputAlias<'a>, Spanned<Item>, ExtraAlias<'a>> + Clone {
 	recursive(|item| {
 		let module = just(Token::Mod)
@@ -77,7 +85,7 @@ fn item_parser<'a>(
 					.delimited_by(just(Token::OpenParen), just(Token::CloseParen)),
 			)
 			.then(choice((
-				expr_parser.clone().map(Some),
+				expr.clone().map(Some),
 				just(Token::Semi)
 					.to(None)
 					.recover_with(via_parser(any().rewind().to(None))),
@@ -86,8 +94,9 @@ fn item_parser<'a>(
 
 		let binding = just(Token::Let)
 			.ignore_then(ident_parser())
+			.then_ignore(just(Token::Colon).then(ident_parser()).or_not())
 			.then_ignore(just(Token::Eq))
-			.then(expr_parser)
+			.then(expr)
 			.then_ignore(just(Token::Semi))
 			.map(|(name, rhs)| Item::Binding { name, rhs });
 
@@ -100,15 +109,18 @@ fn item_parser<'a>(
 	})
 }
 
+pub fn stmt_parser<'a>(
+	expr: impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlias<'a>> + Clone + 'a,
+) -> impl Parser<'a, InputAlias<'a>, Spanned<Stmt>, ExtraAlias<'a>> + Clone {
+	choice((
+		item_parser(expr.clone()).map(Stmt::Item),
+		expr.then_ignore(just(Token::Semi)).map(Stmt::Expr),
+	))
+	.map_with_span(Spanned)
+}
+
 pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlias<'a>> + Clone {
 	recursive(|expr| {
-		let stmt = {
-			choice((
-				item_parser(expr.clone()).map(Stmt::Item),
-				expr.clone().then_ignore(just(Token::Semi)).map(Stmt::Expr),
-			))
-		};
-
 		// atom => group | literal | IDENT
 		let atom = {
 			// literal => INT | FLOAT | CHAR | STRING
@@ -252,7 +264,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 			});
 
 		// block => "{" stmt* "}"
-		let block = stmt
+		let block = stmt_parser(expr.clone())
 			.repeated()
 			.collect()
 			.delimited_by(just(Token::OpenBrace), just(Token::CloseBrace))
@@ -265,7 +277,7 @@ pub fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, Extra
 					(Token::OpenBracket, Token::CloseBracket),
 					(Token::OpenParen, Token::CloseParen),
 				],
-				|span| Spanned(Expr::Block(vec![Stmt::Error]), span),
+				|span| Spanned(Expr::Block(vec![]), span),
 			)))
 			.labelled(Label::Block);
 

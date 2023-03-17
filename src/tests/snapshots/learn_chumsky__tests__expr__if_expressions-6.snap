@@ -41,28 +41,34 @@ Some(
             then_branch: Spanned(
                 Block(
                     [
-                        Expr(
-                            Spanned(
-                                Call(
-                                    Spanned(
-                                        Ident("print"),
-                                        37..42,
-                                    ),
-                                    [
+                        Spanned(
+                            Expr(
+                                Spanned(
+                                    Call(
                                         Spanned(
-                                            String("Hello Universe!"),
-                                            43..60,
+                                            Ident("print"),
+                                            37..42,
                                         ),
-                                    ],
+                                        [
+                                            Spanned(
+                                                String("Hello Universe!"),
+                                                43..60,
+                                            ),
+                                        ],
+                                    ),
+                                    37..61,
                                 ),
-                                37..61,
                             ),
+                            37..62,
                         ),
-                        Expr(
-                            Spanned(
-                                Int(20),
-                                64..66,
+                        Spanned(
+                            Expr(
+                                Spanned(
+                                    Int(20),
+                                    64..66,
+                                ),
                             ),
+                            64..67,
                         ),
                     ],
                 ),
@@ -72,28 +78,34 @@ Some(
                 Spanned(
                     Block(
                         [
-                            Expr(
-                                Spanned(
-                                    Call(
-                                        Spanned(
-                                            Ident("print"),
-                                            78..83,
-                                        ),
-                                        [
+                            Spanned(
+                                Expr(
+                                    Spanned(
+                                        Call(
                                             Spanned(
-                                                String("Hello World!"),
-                                                84..98,
+                                                Ident("print"),
+                                                78..83,
                                             ),
-                                        ],
+                                            [
+                                                Spanned(
+                                                    String("Hello World!"),
+                                                    84..98,
+                                                ),
+                                            ],
+                                        ),
+                                        78..99,
                                     ),
-                                    78..99,
                                 ),
+                                78..100,
                             ),
-                            Expr(
-                                Spanned(
-                                    Int(10),
-                                    102..104,
+                            Spanned(
+                                Expr(
+                                    Spanned(
+                                        Int(10),
+                                        102..104,
+                                    ),
                                 ),
+                                102..105,
                             ),
                         ],
                     ),

@@ -9,9 +9,7 @@ expression: "&snapshot"
 Some(
     Spanned(
         Block(
-            [
-                Error,
-            ],
+            [],
         ),
         0..12,
     ),

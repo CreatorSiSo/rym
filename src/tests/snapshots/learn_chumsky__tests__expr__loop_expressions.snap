@@ -14,80 +14,92 @@ Some(
     Spanned(
         Block(
             [
-                Expr(
-                    Spanned(
-                        Loop(
-                            Spanned(
-                                Call(
-                                    Spanned(
-                                        Ident("print"),
-                                        8..13,
-                                    ),
-                                    [
+                Spanned(
+                    Expr(
+                        Spanned(
+                            Loop(
+                                Spanned(
+                                    Call(
                                         Spanned(
-                                            String("To infinity and beyond!"),
-                                            14..39,
+                                            Ident("print"),
+                                            8..13,
                                         ),
-                                    ],
-                                ),
-                                8..40,
-                            ),
-                        ),
-                        3..40,
-                    ),
-                ),
-                Expr(
-                    Spanned(
-                        Loop(
-                            Spanned(
-                                Call(
-                                    Spanned(
-                                        Ident("print"),
-                                        49..54,
-                                    ),
-                                    [
-                                        Spanned(
-                                            String("To infinity and beyond!"),
-                                            55..80,
-                                        ),
-                                    ],
-                                ),
-                                49..81,
-                            ),
-                        ),
-                        43..82,
-                    ),
-                ),
-                Expr(
-                    Spanned(
-                        Loop(
-                            Spanned(
-                                Block(
-                                    [
-                                        Expr(
+                                        [
                                             Spanned(
-                                                Call(
-                                                    Spanned(
-                                                        Ident("print"),
-                                                        92..97,
-                                                    ),
-                                                    [
-                                                        Spanned(
-                                                            String("To infinity and beyond!"),
-                                                            98..123,
-                                                        ),
-                                                    ],
-                                                ),
-                                                92..124,
+                                                String("To infinity and beyond!"),
+                                                14..39,
                                             ),
-                                        ),
-                                    ],
+                                        ],
+                                    ),
+                                    8..40,
                                 ),
-                                90..127,
                             ),
+                            3..40,
                         ),
-                        85..127,
                     ),
+                    3..41,
+                ),
+                Spanned(
+                    Expr(
+                        Spanned(
+                            Loop(
+                                Spanned(
+                                    Call(
+                                        Spanned(
+                                            Ident("print"),
+                                            49..54,
+                                        ),
+                                        [
+                                            Spanned(
+                                                String("To infinity and beyond!"),
+                                                55..80,
+                                            ),
+                                        ],
+                                    ),
+                                    49..81,
+                                ),
+                            ),
+                            43..82,
+                        ),
+                    ),
+                    43..83,
+                ),
+                Spanned(
+                    Expr(
+                        Spanned(
+                            Loop(
+                                Spanned(
+                                    Block(
+                                        [
+                                            Spanned(
+                                                Expr(
+                                                    Spanned(
+                                                        Call(
+                                                            Spanned(
+                                                                Ident("print"),
+                                                                92..97,
+                                                            ),
+                                                            [
+                                                                Spanned(
+                                                                    String("To infinity and beyond!"),
+                                                                    98..123,
+                                                                ),
+                                                            ],
+                                                        ),
+                                                        92..124,
+                                                    ),
+                                                ),
+                                                92..125,
+                                            ),
+                                        ],
+                                    ),
+                                    90..127,
+                                ),
+                            ),
+                            85..127,
+                        ),
+                    ),
+                    85..128,
                 ),
             ],
         ),

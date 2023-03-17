@@ -10,29 +10,35 @@ Some(
     Spanned(
         Block(
             [
-                Expr(
-                    Spanned(
-                        Call(
-                            Spanned(
-                                Ident("call_me"),
-                                2..9,
+                Spanned(
+                    Expr(
+                        Spanned(
+                            Call(
+                                Spanned(
+                                    Ident("call_me"),
+                                    2..9,
+                                ),
+                                [],
                             ),
-                            [],
+                            2..11,
                         ),
-                        2..11,
                     ),
+                    2..12,
                 ),
-                Expr(
-                    Spanned(
-                        Call(
-                            Spanned(
-                                Ident("and_me"),
-                                13..19,
+                Spanned(
+                    Expr(
+                        Spanned(
+                            Call(
+                                Spanned(
+                                    Ident("and_me"),
+                                    13..19,
+                                ),
+                                [],
                             ),
-                            [],
+                            13..21,
                         ),
-                        13..21,
                     ),
+                    13..22,
                 ),
             ],
         ),

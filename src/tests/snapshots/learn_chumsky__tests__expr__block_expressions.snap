@@ -13,17 +13,23 @@ Some(
     Spanned(
         Block(
             [
-                Expr(
-                    Spanned(
-                        Ident("testing"),
-                        3..10,
+                Spanned(
+                    Expr(
+                        Spanned(
+                            Ident("testing"),
+                            3..10,
+                        ),
                     ),
+                    3..11,
                 ),
-                Expr(
-                    Spanned(
-                        Ident("testing"),
-                        13..20,
+                Spanned(
+                    Expr(
+                        Spanned(
+                            Ident("testing"),
+                            13..20,
+                        ),
                     ),
+                    13..21,
                 ),
             ],
         ),

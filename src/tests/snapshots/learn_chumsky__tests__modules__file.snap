@@ -42,21 +42,24 @@ Some(
                     Spanned(
                         Block(
                             [
-                                Expr(
-                                    Spanned(
-                                        Binary(
-                                            Spanned(
-                                                Ident("x"),
-                                                70..71,
+                                Spanned(
+                                    Expr(
+                                        Spanned(
+                                            Binary(
+                                                Spanned(
+                                                    Ident("x"),
+                                                    70..71,
+                                                ),
+                                                Add,
+                                                Spanned(
+                                                    Ident("y"),
+                                                    74..75,
+                                                ),
                                             ),
-                                            Add,
-                                            Spanned(
-                                                Ident("y"),
-                                                74..75,
-                                            ),
+                                            70..75,
                                         ),
-                                        70..75,
                                     ),
+                                    70..76,
                                 ),
                             ],
                         ),
@@ -86,21 +89,24 @@ Some(
                     Spanned(
                         Block(
                             [
-                                Expr(
-                                    Spanned(
-                                        Binary(
-                                            Spanned(
-                                                Ident("x"),
-                                                158..159,
+                                Spanned(
+                                    Expr(
+                                        Spanned(
+                                            Binary(
+                                                Spanned(
+                                                    Ident("x"),
+                                                    158..159,
+                                                ),
+                                                Mul,
+                                                Spanned(
+                                                    Ident("y"),
+                                                    162..163,
+                                                ),
                                             ),
-                                            Mul,
-                                            Spanned(
-                                                Ident("y"),
-                                                162..163,
-                                            ),
+                                            158..163,
                                         ),
-                                        158..163,
                                     ),
+                                    158..164,
                                 ),
                             ],
                         ),
@@ -121,64 +127,73 @@ Some(
                     Spanned(
                         Block(
                             [
-                                Expr(
-                                    Spanned(
-                                        Call(
-                                            Spanned(
-                                                Ident("print"),
-                                                183..188,
-                                            ),
-                                            [
+                                Spanned(
+                                    Expr(
+                                        Spanned(
+                                            Call(
                                                 Spanned(
-                                                    String("Hello World!"),
-                                                    189..203,
+                                                    Ident("print"),
+                                                    183..188,
                                                 ),
-                                            ],
+                                                [
+                                                    Spanned(
+                                                        String("Hello World!"),
+                                                        189..203,
+                                                    ),
+                                                ],
+                                            ),
+                                            183..204,
                                         ),
-                                        183..204,
                                     ),
+                                    183..205,
                                 ),
-                                Expr(
-                                    Spanned(
-                                        Call(
-                                            Spanned(
-                                                Ident("add"),
-                                                207..210,
+                                Spanned(
+                                    Expr(
+                                        Spanned(
+                                            Call(
+                                                Spanned(
+                                                    Ident("add"),
+                                                    207..210,
+                                                ),
+                                                [
+                                                    Spanned(
+                                                        Int(2),
+                                                        211..212,
+                                                    ),
+                                                    Spanned(
+                                                        Int(3),
+                                                        214..215,
+                                                    ),
+                                                ],
                                             ),
-                                            [
-                                                Spanned(
-                                                    Int(2),
-                                                    211..212,
-                                                ),
-                                                Spanned(
-                                                    Int(3),
-                                                    214..215,
-                                                ),
-                                            ],
+                                            207..216,
                                         ),
-                                        207..216,
                                     ),
+                                    207..217,
                                 ),
-                                Expr(
-                                    Spanned(
-                                        Call(
-                                            Spanned(
-                                                Ident("multiply"),
-                                                219..227,
+                                Spanned(
+                                    Expr(
+                                        Spanned(
+                                            Call(
+                                                Spanned(
+                                                    Ident("multiply"),
+                                                    219..227,
+                                                ),
+                                                [
+                                                    Spanned(
+                                                        Int(3),
+                                                        228..229,
+                                                    ),
+                                                    Spanned(
+                                                        Int(2),
+                                                        231..232,
+                                                    ),
+                                                ],
                                             ),
-                                            [
-                                                Spanned(
-                                                    Int(3),
-                                                    228..229,
-                                                ),
-                                                Spanned(
-                                                    Int(2),
-                                                    231..232,
-                                                ),
-                                            ],
+                                            219..233,
                                         ),
-                                        219..233,
                                     ),
+                                    219..234,
                                 ),
                             ],
                         ),

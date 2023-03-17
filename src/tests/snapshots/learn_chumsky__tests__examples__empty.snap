@@ -1,0 +1,96 @@
+---
+source: src/tests/examples.rs
+expression: "&snapshot"
+---
+--- Input ---
+// This is a comment
+print("What's your name?");
+let name: String = read_line(stdin);
+print("Hi, ", name, "!");
+---
+
+Some(
+    [
+        Spanned(
+            Expr(
+                Spanned(
+                    Call(
+                        Spanned(
+                            Ident("print"),
+                            21..26,
+                        ),
+                        [
+                            Spanned(
+                                String("What\'s your name?"),
+                                27..46,
+                            ),
+                        ],
+                    ),
+                    21..47,
+                ),
+            ),
+            21..48,
+        ),
+        Spanned(
+            Item(
+                Spanned(
+                    Binding {
+                        name: Spanned(
+                            "name",
+                            53..57,
+                        ),
+                        rhs: Spanned(
+                            Call(
+                                Spanned(
+                                    Ident("read_line"),
+                                    68..77,
+                                ),
+                                [
+                                    Spanned(
+                                        Ident("stdin"),
+                                        78..83,
+                                    ),
+                                ],
+                            ),
+                            68..84,
+                        ),
+                    },
+                    49..85,
+                ),
+            ),
+            49..85,
+        ),
+        Spanned(
+            Expr(
+                Spanned(
+                    Call(
+                        Spanned(
+                            Ident("print"),
+                            86..91,
+                        ),
+                        [
+                            Spanned(
+                                String("Hi, "),
+                                92..98,
+                            ),
+                            Spanned(
+                                Ident("name"),
+                                100..104,
+                            ),
+                            Spanned(
+                                String("!"),
+                                106..109,
+                            ),
+                        ],
+                    ),
+                    86..110,
+                ),
+            ),
+            86..111,
+        ),
+    ],
+)
+
+--- Errors ---
+[]
+---

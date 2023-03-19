@@ -337,12 +337,6 @@ name = "rym_parser"
 version = "0.0.0"
 dependencies = [
  "indoc",
- "rym_errors",
- "rym_lexer",
- "rym_span",
- "rym_unescape",
- "smol_str",
- "stringx",
 ]
 
 [[package]]

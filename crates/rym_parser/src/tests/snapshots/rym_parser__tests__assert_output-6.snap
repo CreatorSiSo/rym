@@ -1,5 +1,5 @@
 ---
-source: src/tests/mod.rs
+source: crates/rym_parser/src/tests/mod.rs
 expression: "format!(\"---\\n{src}\\n---\\n\\n{result:?}\")"
 ---
 ---
@@ -11,4 +11,4 @@ expression: "format!(\"---\\n{src}\\n---\\n\\n{result:?}\")"
 }                                              ()
 ---
 
-ParseResult(Some(Spanned(Block([]), 0..69)), [])
+ParseResult { ast: Some(Spanned(Block([]), 0..69)), errors: [] }

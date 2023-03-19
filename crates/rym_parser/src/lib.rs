@@ -430,16 +430,14 @@ pub(crate) fn custom_nested_delimiters<'a, O, const N: usize>(
 
 		if recovered {
 			Ok(fallback(complete_span))
+		} else if let Some(error) = error {
+			Err(error)
 		} else {
-			if let Some(error) = error {
-				Err(error)
-			} else {
-				Err(err_unexpected(
-					[Some(MaybeRef::Val(end.clone()))],
-					input_ref.next().map(|token| MaybeRef::Val(token)),
-					input_ref.span_since(input_ref.offset()),
-				))
-			}
+			Err(err_unexpected(
+				[Some(MaybeRef::Val(end.clone()))],
+				input_ref.next().map(MaybeRef::Val),
+				input_ref.span_since(input_ref.offset()),
+			))
 		}
 	})
 }

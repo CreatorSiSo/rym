@@ -130,7 +130,7 @@ pub enum Token {
 impl std::fmt::Display for Token {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		let mut tmp = String::new();
-		fn hoist_up<'a>(tmp: &'a mut String, data: String) -> &'a str {
+		fn hoist_up(tmp: &mut String, data: String) -> &str {
 			*tmp = data;
 			&*tmp
 		}

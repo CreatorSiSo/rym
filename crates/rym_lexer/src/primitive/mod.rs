@@ -8,7 +8,7 @@ pub fn lex(input: &str) -> impl Iterator<Item = Token> + '_ {
 	std::iter::from_fn(move || lexer.next_token())
 }
 
-///	Iterator that turns `char`s into `Token`s
+/// Iterator that turns `char`s into `Token`s
 ///
 /// ## Internals
 ///

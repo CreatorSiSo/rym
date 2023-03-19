@@ -74,39 +74,27 @@ pub enum Token {
 	FatArrow,
 
 	// Keywords
-	/// `const`
+	Break,
 	Const,
-	/// `else`
+	Continue,
+	Do,
 	Else,
-	/// `enum`
 	Enum,
-	/// `for`
 	For,
-	/// `func`
 	Func,
-	/// `if`
 	If,
-	/// `impl`
 	Impl,
-	/// `in`
 	In,
-	/// `loop`
+	Let,
 	Loop,
-	/// `mod`
 	Mod,
-	/// `mut`
 	Mut,
-	/// `struct`
+	Return,
 	Struct,
-	/// `then`
 	Then,
-	/// `trait`
 	Trait,
-	/// `type`
 	Type,
-	/// `use`
 	Use,
-	/// `while`
 	While,
 
 	/// Delimiter token.
@@ -179,7 +167,10 @@ impl std::fmt::Display for Token {
 			Token::ThinArrow => "->",
 			Token::FatArrow => "=>",
 
+			Token::Break => "break",
 			Token::Const => "const",
+			Token::Continue => "continue",
+			Token::Do => "do",
 			Token::Else => "else",
 			Token::Enum => "enum",
 			Token::For => "for",
@@ -187,9 +178,11 @@ impl std::fmt::Display for Token {
 			Token::If => "if",
 			Token::Impl => "impl",
 			Token::In => "in",
+			Token::Let => "let",
 			Token::Loop => "loop",
 			Token::Mod => "mod",
 			Token::Mut => "mut",
+			Token::Return => "return",
 			Token::Struct => "struct",
 			Token::Then => "then",
 			Token::Trait => "trait",
@@ -217,28 +210,29 @@ impl std::fmt::Display for Token {
 	}
 }
 
-const KEYWORDS_LEN: usize = 17;
+// TODO implement and use ConstMap<&'static str, Token, 22>
+const KEYWORDS_LEN: usize = 22;
 pub const KEYWORDS_MAP: ([&str; KEYWORDS_LEN], [Token; KEYWORDS_LEN]) = (
 	[
 		// a
-		// b
-		"const", // c
-		// d
-		"else", // e
-		"enum", // e
+		"break", // b
+		"const", "continue", // c
+		"do",       // d
+		"else",     // e
+		"enum",     // e
 		"for", "func", // f
 		// g
 		// h
 		"if", "impl", "in", // i
 		// j
 		// k
-		"loop", // l
+		"let", "loop", // l
 		"mod", "mut", // m
 		// n
 		// o
 		// p
 		// q
-		// r
+		"return", // r
 		"struct", // s
 		"then", "trait", "type", // t
 		"use",  // u
@@ -249,7 +243,10 @@ pub const KEYWORDS_MAP: ([&str; KEYWORDS_LEN], [Token; KEYWORDS_LEN]) = (
 		         // z
 	],
 	[
+		Token::Break,
 		Token::Const,
+		Token::Continue,
+		Token::Do,
 		Token::Else,
 		Token::Enum,
 		Token::For,
@@ -257,10 +254,12 @@ pub const KEYWORDS_MAP: ([&str; KEYWORDS_LEN], [Token; KEYWORDS_LEN]) = (
 		Token::If,
 		Token::Impl,
 		Token::In,
+		Token::Let,
 		Token::Loop,
 		Token::Mod,
 		Token::Mut,
 		Token::Struct,
+		Token::Return,
 		Token::Then,
 		Token::Trait,
 		Token::Type,

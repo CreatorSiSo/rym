@@ -6,10 +6,10 @@
 	"patterns": [
 		{ "include": "#block-comments" },
 		{ "include": "#comments" },
-		{ "include": "#primitive_types" },
 		{ "include": "#keywords" },
 		{ "include": "#punctuation" },
 		{ "include": "#strings" },
+		{ "include": "#chars" },
 		{ "include": "#constants" },
 		{ "include": "#function_declaration" },
 		{ "include": "#function_name" },
@@ -72,7 +72,7 @@
 				},
 				{
 					"comment": "booleans",
-					"match": "\\b(true|false)\\b",
+					"match": "\\b(True|False)\\b",
 					"name": "constant.language.bool.rym keyword.other.rym"
 				}
 			]
@@ -132,21 +132,21 @@
 			"patterns": [
 				{
 					"name": "keyword.other.rym",
-					"match": "\\b(func|proc|test|use|pub|self|Self|super|as|move)\\b"
+					"match": "\\b(func|proc|use|mod|pub|self|Self|as|move)\\b"
 				},
 				{
 					"name": "keyword.control keyword.other.rym",
-					"match": "\\b(impl|trait|struct|enum|type)\\b"
+					"match": "\\b(impl|trait|type)\\b"
 				},
 				{
 					"comment": "control flow keywords",
 					"name": "keyword.control.rym",
-					"match": "\\b(loop|while|for|in|match|if|then|else|return|break|continue)\\b"
+					"match": "\\b(loop|while|do|for|in|match|with|if|then|else|return|break|continue)\\b"
 				},
 				{
 					"comment": "storage keywords",
 					"name": "keyword.other.rym storage.type.rym",
-					"match": "\\b(mut|const)\\b"
+					"match": "\\b(let|mut|const)\\b"
 				},
 				{
 					"comment": "logical operators",
@@ -180,16 +180,6 @@
 						"6": { "name": "punctuation.brackets.square.rym" },
 						"7": { "name": "punctuation.brackets.curly.rym" }
 					}
-				}
-			]
-		},
-
-		"primitive_types": {
-			"patterns": [
-				{
-					"comment": "primitive types",
-					"name": "entity.name.type.rym",
-					"match": "\\b(bool|int|isize|uint|usize|char|string)\\b"
 				}
 			]
 		},
@@ -264,6 +254,18 @@
 			"name": "string.quoted.double.rym",
 			"begin": "\"",
 			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.rym",
+					"match": "\\\\."
+				}
+			]
+		},
+
+		"chars": {
+			"name": "string.quoted.single.rym",
+			"begin": "'",
+			"end": "'",
 			"patterns": [
 				{
 					"name": "constant.character.escape.rym",

@@ -16,12 +16,12 @@ use indoc::indoc;
 macro_rules! insta_assert_parser {
 	($parser:expr; $($src:expr),+ $(,)?) => {
 		use chumsky::Parser;
-		use crate::parse_str;
+		use crate::{parse_str, ParseResult};
 		$({
-			let result = parse_str(|tokens| $parser.parse(tokens).into(), $src);
+			let ParseResult { ast, errors } = parse_str(|tokens| $parser.parse(tokens).into(), $src);
 			let snapshot = format!(
 				"--- Input ---\n{}\n---\n\n{:#?}\n\n--- Errors ---\n{:#?}\n---",
-				$src, result.0, result.1
+				$src, ast, errors
 			);
 			insta::assert_snapshot!(&snapshot);
 		})*
@@ -37,10 +37,7 @@ fn nested() {
 				custom_nested_delimiters(
 					Token::OpenBrace,
 					Token::CloseBrace,
-					[
-						(Token::OpenBracket, Token::CloseBracket),
-						(Token::OpenParen, Token::CloseParen),
-					],
+					[(Token::OpenBracket, Token::CloseBracket), (Token::OpenParen, Token::CloseParen)],
 					|span| Spanned(Expr::Block(vec![]), span),
 				)
 				.then_ignore(any().repeated())

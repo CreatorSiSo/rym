@@ -1,0 +1,36 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+members = [
+	# Global
+	"crates/ast",
+	"crates/rym_errors",
+	"crates/rym_span",
+	"crates/rym_unescape",
+
+	# Parsing
+	"crates/rym_lexer",
+	"crates/rym_parser",
+
+	# Evaluation
+	"crates/tree_walk",
+
+	# Cli
+	"crates/rymx",
+]
+
+[workspace.dependencies]
+rym_errors = { path = "crates/rym_errors" }
+rym_lexer = { path = "crates/rym_lexer" }
+rym_span = { path = "crates/rym_span" }
+rym_unescape = { path = "crates/rym_unescape" }
+indoc = "1.0.7"
+smol_str = "0.1.23"
+stringx = "0.1.1"
+
+[profile.dist]
+inherits = "release"
+lto = "fat"
+
+[profile.dev.package]
+smol_str.opt-level = 3

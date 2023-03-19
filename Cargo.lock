@@ -3,6 +3,17 @@
 version = 3
 
 [[package]]
+name = "ahash"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c99f64d1e06488f620f932677e24bc6e2897582980441ae90a671415bd7ec2f"
+dependencies = [
+ "cfg-if",
+ "once_cell",
+ "version_check",
+]
+
+[[package]]
 name = "annotate-snippets"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -49,6 +60,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chumsky"
+version = "1.0.0-alpha.3"
+source = "git+https://github.com/zesterer/chumsky?rev=635cb2f33582a69bdf52395a30f13a93d3a9540c#635cb2f33582a69bdf52395a30f13a93d3a9540c"
+dependencies = [
+ "hashbrown",
+ "stacker",
+]
+
+[[package]]
 name = "clipboard-win"
 version = "4.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -71,6 +91,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "console"
+version = "0.15.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3d79fbe8970a77e3e34151cc13d3b3e248aa0faaecb9f6091fa07ebefe5ad60"
+dependencies = [
+ "encode_unicode",
+ "lazy_static",
+ "libc",
+ "windows-sys",
+]
+
+[[package]]
 name = "dirs-next"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -90,6 +122,12 @@ dependencies = [
  "redox_users",
  "winapi",
 ]
+
+[[package]]
+name = "encode_unicode"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a357d28ed41a50f9c765dbfe56cbc04a64e53e5fc58ba79fbc34c10ef3df831f"
 
 [[package]]
 name = "endian-type"
@@ -151,6 +189,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "hashbrown"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
+dependencies = [
+ "ahash",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -161,9 +208,22 @@ dependencies = [
 
 [[package]]
 name = "indoc"
-version = "1.0.7"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adab1eaa3408fb7f0c777a73e7465fd5656136fc93b670eb6df3c88c2c1344e3"
+checksum = "9f2cb48b81b1dc9f39676bf99f5499babfec7cd8fe14307f7b3d747208fb5690"
+
+[[package]]
+name = "insta"
+version = "1.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fea5b3894afe466b4bcf0388630fc15e11938a6074af0cd637c825ba2ec8a099"
+dependencies = [
+ "console",
+ "lazy_static",
+ "linked-hash-map",
+ "similar",
+ "yaml-rust",
+]
 
 [[package]]
 name = "io-lifetimes"
@@ -186,6 +246,12 @@ name = "libc"
 version = "0.2.137"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7fcc620a3bff7cdd7a365be3376c97191aeaccc2a603e600951e452615bf89"
+
+[[package]]
+name = "linked-hash-map"
+version = "0.5.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0717cef1bc8b636c6e1c1bbdefc09e6322da8a9321966e8928ef80d20f7f770f"
 
 [[package]]
 name = "linux-raw-sys"
@@ -229,12 +295,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "once_cell"
+version = "1.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7e5500299e16ebb147ae15a00a942af264cf3688f47923b8fc2cd5858f23ad3"
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ea3d908b0e36316caf9e9e2c4625cdde190a7e6f440d794667ed17a1855e725"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "psm"
+version = "0.1.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5787f7cda34e3033a72192c018bc5883100330f362ef279a8cbccfce8bb4e874"
+dependencies = [
+ "cc",
 ]
 
 [[package]]
@@ -334,9 +415,12 @@ dependencies = [
 
 [[package]]
 name = "rym_parser"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
+ "chumsky",
  "indoc",
+ "insta",
+ "rym_lexer",
 ]
 
 [[package]]
@@ -378,6 +462,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e53f64bb4ba0191d6d0676e1b141ca55047d83b74f5607e6d8eb88126c52c2dc"
 
 [[package]]
+name = "similar"
+version = "2.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "420acb44afdae038210c99e69aae24109f32f15500aa708e81d46c9f29d55fcf"
+
+[[package]]
 name = "smallvec"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -400,6 +490,19 @@ checksum = "ebd1b177894da2a2d9120208c3386066af06a488255caabc5de8ddca22dbc3ce"
 dependencies = [
  "quote",
  "syn",
+]
+
+[[package]]
+name = "stacker"
+version = "0.1.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c886bd4480155fd3ef527d45e9ac8dd7118a898a46530b7b94c3e21866259fce"
+dependencies = [
+ "cc",
+ "cfg-if",
+ "libc",
+ "psm",
+ "winapi",
 ]
 
 [[package]]
@@ -477,6 +580,12 @@ name = "utf8parse"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "936e4b492acfd135421d8dca4b1aa80a7bfc26e702ef3af710e0752684df5372"
+
+[[package]]
+name = "version_check"
+version = "0.9.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "wasi"
@@ -562,6 +671,15 @@ name = "windows_x86_64_msvc"
 version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f40009d85759725a34da6d89a94e63d7bdc50a862acf0dbc7c8e488f1edcb6f5"
+
+[[package]]
+name = "yaml-rust"
+version = "0.4.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
+dependencies = [
+ "linked-hash-map",
+]
 
 [[package]]
 name = "yansi-term"

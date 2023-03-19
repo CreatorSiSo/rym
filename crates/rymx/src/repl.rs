@@ -1,7 +1,6 @@
-// use crate::log;
+use rym_lexer::rich::Lexer;
+use rym_parser::parse_expr;
 // use colored::Colorize;
-// use lex::Lexer;
-// use parse::Parser;
 use tree_walk::Interpreter;
 
 use rustyline::error::ReadlineError;
@@ -52,15 +51,15 @@ impl Repl {
 	}
 
 	fn eval_line(&mut self, line: String) {
-		// let (tokens, errors) = Lexer::lex(&line);
-		// log::block("Lexer", || {
-		// 	log::tokens(&tokens);
-		// 	log::errors(&errors);
-		// 	errors.is_empty()
-		// });
+		let tokens: Vec<_> = Lexer::new(&line).collect();
+		let rym_parser::ParseResult { ast, errors } = parse_expr(&tokens);
+		let correct_syntax = errors.is_empty();
 
-		// let (ast, errors) = Parser::parse(tokens);
-		// let correct_syntax = errors.is_empty();
+		println!("--- Ast --- \n{ast:?}\n---");
+		if !correct_syntax {
+			println!("--- Errors --- \n{errors:?}\n---");
+		}
+
 		// log::block("Parser", || {
 		// 	log::ast(&ast);
 		// 	log::errors(&errors);

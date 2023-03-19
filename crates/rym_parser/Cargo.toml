@@ -1,36 +1,21 @@
+[package]
+name = "rym_parser"
+version = "0.1.0"
+edition = "2021"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = [
-	# Global
-	"crates/ast",
-	"crates/rym_errors",
-	"crates/rym_span",
-	"crates/rym_unescape",
+[dependencies]
+chumsky = { git = "https://github.com/zesterer/chumsky", rev = "635cb2f33582a69bdf52395a30f13a93d3a9540c", features = [
+	"label",
+] }
+rym_lexer = { workspace = true }
 
-	# Parsing
-	"crates/rym_lexer",
-	"crates/rym_parser",
+[dev-dependencies]
+insta = "1.26"
+indoc = "2.0.0"
 
-	# Evaluation
-	"crates/tree_walk",
-
-	# Cli
-	"crates/rymx",
-]
-
-[workspace.dependencies]
-rym_errors = { path = "crates/rym_errors" }
-rym_lexer = { path = "crates/rym_lexer" }
-rym_span = { path = "crates/rym_span" }
-rym_unescape = { path = "crates/rym_unescape" }
-indoc = "1.0.7"
-smol_str = "0.1.23"
-stringx = "0.1.1"
-
-[profile.dist]
+# smallest binary without compromising on speed
+[profile.tiny]
 inherits = "release"
 lto = "fat"
-
-[profile.dev.package]
-smol_str.opt-level = 3

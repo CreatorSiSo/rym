@@ -60,17 +60,13 @@ impl PartialEq for NativeFunction {
 #[derive(Clone, PartialEq, Debug)]
 pub struct RymFunction {
 	arity: Arity,
-	params: Vec<String>,
-	body: Spanned<Expr>,
+	params: Vec<Spanned<String>>,
+	rhs: Spanned<Expr>,
 }
 
 impl RymFunction {
-	pub const fn new(arity: Arity, params: Vec<String>, body: Spanned<Expr>) -> Self {
-		Self {
-			arity,
-			params,
-			body,
-		}
+	pub const fn new(arity: Arity, params: Vec<Spanned<String>>, rhs: Spanned<Expr>) -> Self {
+		Self { arity, params, rhs }
 	}
 }
 
@@ -93,9 +89,9 @@ impl Callable for RymFunction {
 		interpreter.env.push_env();
 		let return_val = {
 			for (idx, param) in self.params.iter().enumerate() {
-				interpreter.env.declare(param, args[idx].clone(), true)
+				interpreter.env.declare(&param.0, args[idx].clone(), true)
 			}
-			interpreter.walk_expr(&self.body.as_ref())
+			interpreter.walk_expr(self.rhs.as_ref())
 		};
 		interpreter.env.pop_env();
 
@@ -104,11 +100,11 @@ impl Callable for RymFunction {
 				Inter::Return(val) | Inter::None(val) => Ok(val),
 				Inter::Break(_) => spanned_err(
 					LogicError::ForbiddenInter("Using `break` outside of a loop is not allowed".into()),
-					self.body.0.clone(),
+					self.rhs.1.clone(),
 				),
 				Inter::Continue => spanned_err(
 					LogicError::ForbiddenInter("Using `continue` outside of a loop is not allowed".into()),
-					self.body.0.clone(),
+					self.rhs.1.clone(),
 				),
 			},
 			Err(err) => Err(err),

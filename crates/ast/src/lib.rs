@@ -9,60 +9,58 @@ pub use visitor::AstVisitor;
 pub type Span = Range<usize>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Spanned<T>(pub Span, pub T);
+pub struct Spanned<T>(pub T, pub Span);
 
 impl<T> Spanned<T> {
 	pub fn map<F, R>(self, f: F) -> Spanned<R>
 	where
 		F: FnOnce(T) -> R,
 	{
-		Spanned(self.0, f(self.1))
+		Spanned(f(self.0), self.1)
 	}
 
 	pub fn as_ref(&self) -> Spanned<&T> {
-		Spanned(self.0.clone(), &self.1)
+		Spanned(&self.0, self.1.clone())
 	}
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
-	/// Variable or function declaration
-	Decl(Decl),
-
-	/// Expr with trailing semicolon or newline
+	/// let, func, type declarations
+	Item(Spanned<Item>),
 	Expr(Spanned<Expr>),
-
-	// TODO: Is this really needed?
-	/// Just a trailing semicolon
-	Empty,
+	Error,
 }
 
-impl From<Spanned<Expr>> for Stmt {
-	fn from(val: Spanned<Expr>) -> Self {
-		Stmt::Expr(val)
-	}
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum Decl {
-	/// A function declaration `fn name(param_1, param_2) { .. }`
-	Fn {
-		name: String,
-		params: Vec<String>,
-		body: Spanned<Expr>,
-	},
-
-	/// A constant binding `const a = 0`
-	Const(String, Expr),
-
-	/// A mutable binding `mut b = "hi"`
-	Mut(String, Expr),
+#[derive(Debug, Clone, PartialEq)]
+pub enum Item {
+	Module { name: Option<Spanned<String>>, items: Vec<Spanned<Item>> },
+	Func { name: Spanned<String>, params: Vec<Spanned<String>>, rhs: Option<Spanned<Expr>> },
+	Binding { name: Spanned<String>, rhs: Spanned<Expr> },
 }
 
 pub type Block = Vec<Spanned<Stmt>>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
+	/// A literal `true`, `2`, `"Hello"`
+	Ident(String),
+
+	/// A literal `true`, `2`, `"Hello"`
+	Literal(Literal),
+
+	// A record `Record { name: Spanned[String]?, fields: List[(Spanned[String], Spanned)] }`
+	Record {
+		name: Option<Spanned<String>>,
+		fields: Vec<(Spanned<String>, Spanned<Expr>)>,
+	},
+
+	/// `(9 - 2) * 4`
+	Group(Box<Spanned<Expr>>),
+
+	/// A block `{ .. }`
+	Block(Spanned<Block>),
+
 	/// An array `[a, b, c, d]`
 	Array(Vec<Expr>),
 
@@ -81,9 +79,6 @@ pub enum Expr {
 	///
 	/// `loop { block }`
 	Loop(Spanned<Block>),
-
-	/// A block `{ .. }`
-	Block(Spanned<Block>),
 
 	/// A `break`, with an optional expression
 	Break(Option<Box<Spanned<Expr>>>),
@@ -111,15 +106,6 @@ pub enum Expr {
 		callee: Box<Spanned<Expr>>,
 		args: Vec<Spanned<Expr>>,
 	},
-
-	/// `(9 - 2) * 4`
-	Group(Box<Spanned<Expr>>),
-
-	/// A literal `true`, `2`, `"Hello"`
-	Literal(Literal),
-
-	/// A literal `true`, `2`, `"Hello"`
-	Identifier(String),
 }
 
 impl From<Literal> for Expr {
@@ -130,7 +116,7 @@ impl From<Literal> for Expr {
 
 impl From<String> for Expr {
 	fn from(val: String) -> Self {
-		Expr::Identifier(val)
+		Expr::Ident(val)
 	}
 }
 

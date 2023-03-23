@@ -93,7 +93,7 @@ fn literals() {
 		r#"999_999_999 1.284_324_68 'c' '\n' '\x41' '\u24B6' '\u8DEF' "Hello World!\n""#,
 		&[
 			Token::Int(999_999_999),
-			Token::Float(1, 284_324_68),
+			Token::Float("1.284_324_68".into()),
 			Token::Char('c'),
 			Token::Char('\n'),
 			Token::Char('A'),
@@ -183,29 +183,51 @@ fn invalid_char() {
 fn unterminated() {
 	assert_diagnostics(
 		"/* *",
-		&[Diagnostic::new_spanned(Level::Error, "Unterminated block comment", Span::new(0, 4))
-			.sub_diagnostic(Level::Note, None, "Missing trailing `*/` to terminate the block comment")],
+		&[
+			Diagnostic::new_spanned(Level::Error, "Unterminated block comment", Span::new(0, 4))
+				.sub_diagnostic(
+					Level::Note,
+					None,
+					"Missing trailing `*/` to terminate the block comment",
+				),
+		],
 	);
 	assert_diagnostics(
 		"\"Hello World\n",
-		&[Diagnostic::new_spanned(Level::Error, "Unterminated string literal", Span::new(0, 13))
-			.sub_diagnostic(Level::Note, None, "Missing trailing `\"` to terminate the string literal")],
+		&[Diagnostic::new_spanned(
+			Level::Error,
+			"Unterminated string literal",
+			Span::new(0, 13),
+		)
+		.sub_diagnostic(
+			Level::Note,
+			None,
+			"Missing trailing `\"` to terminate the string literal",
+		)],
 	);
 	assert_diagnostics(
 		"'\n'",
 		&[
-			Diagnostic::new_spanned(Level::Error, "Unterminated character literal", Span::new(0, 2))
-				.sub_diagnostic(
-					Level::Note,
-					None,
-					"Missing trailing `'` to terminate the character literal",
-				),
-			Diagnostic::new_spanned(Level::Error, "Unterminated character literal", Span::new(2, 3))
-				.sub_diagnostic(
-					Level::Note,
-					None,
-					"Missing trailing `'` to terminate the character literal",
-				),
+			Diagnostic::new_spanned(
+				Level::Error,
+				"Unterminated character literal",
+				Span::new(0, 2),
+			)
+			.sub_diagnostic(
+				Level::Note,
+				None,
+				"Missing trailing `'` to terminate the character literal",
+			),
+			Diagnostic::new_spanned(
+				Level::Error,
+				"Unterminated character literal",
+				Span::new(2, 3),
+			)
+			.sub_diagnostic(
+				Level::Note,
+				None,
+				"Missing trailing `'` to terminate the character literal",
+			),
 		],
 	);
 }

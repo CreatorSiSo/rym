@@ -142,7 +142,7 @@ fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlia
 			// literal => INT | FLOAT | CHAR | STRING
 			let literal = select! {
 				Token::Int(val) => Literal::Int(val),
-				Token::Float(r_val, l_val) => Literal::Float(r_val, l_val),
+				Token::Float(val) => Literal::Float(val.parse().unwrap()),
 				Token::Char(val) => Literal::Char(val),
 				Token::String(val) => Literal::String(val),
 			}

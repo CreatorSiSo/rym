@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use crate::Type;
-use ast::{Span, UnaryOp};
+use rym_ast::{Span, UnaryOp};
 
 #[derive(thiserror::Error, Debug)]
 #[error("{0:?}: {0}")]
@@ -35,7 +35,7 @@ pub enum TypeError {
 	#[error("Expected `{0}` got `{1}`")]
 	Expected(Type, Type),
 
-	#[error("Cannot apply unary operator `{0}` to `{1}`")]
+	#[error("Cannot apply unary operator `{0:?}` to `{1}`")]
 	Unary(UnaryOp, Type),
 
 	#[error("Cannot compare `{0}` with `{1}`")]

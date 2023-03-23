@@ -3,7 +3,8 @@ use std::fmt::Display;
 use colored::Colorize;
 use stringx::Join;
 
-use ast::{Spanned, Stmt, Token};
+use rym_ast::{Spanned, Stmt};
+use rym_lexer::rich::Token;
 
 // TODO Improve the print block api and add a properly colored `│` character infront of each line
 pub(crate) fn block<F>(title: &str, mut f: F)
@@ -26,7 +27,7 @@ pub(crate) fn tokens(tokens: &[Token]) {
 		"{}",
 		tokens
 			.iter()
-			.join_format(" ", |token| { token.typ.to_string() })
+			.join_format(" ", |token| { token.to_string() })
 	)
 }
 

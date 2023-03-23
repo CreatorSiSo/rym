@@ -1,4 +1,4 @@
-use ast::Literal;
+use rym_ast::Literal;
 
 use crate::callable::{NativeFunction, RymFunction};
 
@@ -84,10 +84,15 @@ impl core::fmt::Display for Value {
 
 impl From<Literal> for Value {
 	fn from(lit: Literal) -> Self {
+		fn num_digits(num: u64, base: u32) -> u32 {
+			(num as f64).log(base as f64).ceil() as u32
+		}
+
 		match lit {
 			Literal::Unit => Self::Unit,
-			Literal::Bool(bool) => Self::Bool(bool),
-			Literal::Number(num) => Self::Number(num),
+			Literal::Int(int) => Self::Number(int as f64),
+			Literal::Float(float) => Self::Number(float),
+			Literal::Char(chr) => Self::String(chr.into()),
 			Literal::String(str) => Self::String(str),
 		}
 	}

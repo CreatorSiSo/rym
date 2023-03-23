@@ -56,7 +56,10 @@ impl<'a> From<ErrorAlias<'a>> for ParseError<'a> {
 	fn from(value: ErrorAlias<'a>) -> ParseError<'a> {
 		fn deep_clone_sort_reason(reason: RichReason<Token, Label>) -> RichReason<Token, Label> {
 			match reason {
-				RichReason::ExpectedFound { mut expected, found } => {
+				RichReason::ExpectedFound {
+					mut expected,
+					found,
+				} => {
 					expected.sort();
 					RichReason::ExpectedFound { expected, found }
 				}
@@ -68,6 +71,9 @@ impl<'a> From<ErrorAlias<'a>> for ParseError<'a> {
 			}
 		}
 
-		Self { span: value.span().clone(), reason: deep_clone_sort_reason(value.reason().clone()) }
+		Self {
+			span: value.span().clone(),
+			reason: deep_clone_sort_reason(value.reason().clone()),
+		}
 	}
 }

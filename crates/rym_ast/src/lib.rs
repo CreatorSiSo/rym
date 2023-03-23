@@ -18,7 +18,7 @@ impl<T> Spanned<T> {
 	}
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq)]
 pub enum Item {
 	Module(Spanned<Module>),
 	Func(Spanned<Func>),
@@ -35,26 +35,26 @@ impl Debug for Item {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Module {
 	pub name: Spanned<String>,
 	pub items: Vec<Spanned<Item>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Func {
 	pub name: Spanned<String>,
 	pub params: Vec<Spanned<String>>,
 	pub rhs: Option<Spanned<Expr>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Var {
 	pub name: Spanned<String>,
 	pub rhs: Spanned<Expr>,
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq)]
 pub enum Stmt {
 	Item(Spanned<Item>),
 	Expr(Spanned<Expr>),
@@ -71,7 +71,7 @@ impl Debug for Stmt {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
 	/// An identifier `name`, `True`, `Iterator`
 	Ident(Spanned<String>),
@@ -175,10 +175,11 @@ pub enum UnaryOp {
 	Neg,
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq)]
 pub enum Literal {
+	Unit,
 	Int(u64),
-	Float(u64, u64),
+	Float(f64),
 	Char(char),
 	String(String),
 }
@@ -186,8 +187,9 @@ pub enum Literal {
 impl Debug for Literal {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
+			Self::Unit => f.write_str("Unit"),
 			Self::Int(arg0) => f.write_fmt(format_args!("Int({arg0})")),
-			Self::Float(arg0, arg1) => f.write_fmt(format_args!("Float({arg0}, {arg1})")),
+			Self::Float(arg0) => f.write_fmt(format_args!("Float({arg0})")),
 			Self::Char(arg0) => f.write_fmt(format_args!("Char({arg0:?})")),
 			Self::String(arg0) => f.write_fmt(format_args!("String({arg0:?})")),
 		}

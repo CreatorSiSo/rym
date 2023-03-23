@@ -117,7 +117,7 @@ pub enum Token {
 	/// `36_254`
 	Int(u64),
 	/// `0.2346`
-	Float(u64, u64),
+	Float(String),
 	/// `'a'`, `'\n'`
 	Char(char),
 	/// `"abcde"`, `"Hello World!\n"`
@@ -201,7 +201,7 @@ impl std::fmt::Display for Token {
 
 			Token::Ident(name) => name,
 			Token::Int(inner) => hoist_up(&mut tmp, inner.to_string()),
-			Token::Float(lhs, rhs) => hoist_up(&mut tmp, format!("{lhs}.{rhs}")),
+			Token::Float(inner) => hoist_up(&mut tmp, inner.to_string()),
 			Token::Char(inner) => hoist_up(&mut tmp, inner.to_string()),
 			Token::String(inner) => inner,
 			Token::Eof => "<eof>",

@@ -11,9 +11,9 @@ pub use callable::{CallableFn, NativeFunction};
 pub use error::{spanned_err, LogicError, SpannedError, TypeError};
 pub use value::{Type, Value};
 
-use ast::{AstVisitor, BinaryOp, Block, Expr, Item, LogicalOp, Span, Spanned, Stmt, UnaryOp};
 use callable::{Callable, RymFunction};
 use env::GlobalEnv;
+use rym_ast::{BinaryOp, Expr, Item, Literal, LogicalOp, MutVisitor, Span, Spanned, Stmt, UnaryOp};
 
 #[derive(Debug)]
 pub enum Inter {
@@ -31,7 +31,9 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 		}
 		// TODO fix print() for repl
 		print!("{string}");
-		std::io::stdout().flush().expect("Internal Error: Could not flush stout");
+		std::io::stdout()
+			.flush()
+			.expect("Internal Error: Could not flush stout");
 		Ok(Value::Unit)
 	});
 
@@ -46,7 +48,11 @@ pub fn global_values<'a>() -> Vec<(&'a str, Value)> {
 
 	let panic_fn = NativeFunction::new(None, &|_: _, args: &[Value]| {
 		spanned_err(
-			LogicError::Panic(args.iter().fold(String::new(), |accum, arg| accum + &arg.to_string())),
+			LogicError::Panic(
+				args
+					.iter()
+					.fold(String::new(), |accum, arg| accum + &arg.to_string()),
+			),
 			0..0,
 		)
 	});
@@ -112,16 +118,18 @@ impl Default for Interpreter {
 impl Interpreter {
 	pub fn with_globals(globals: Vec<(&str, Value)>) -> Self {
 		Self {
-			env: globals.into_iter().fold(GlobalEnv::new(), |mut global_env, (name, val)| {
-				global_env.env.declare(name, val, true);
-				global_env
-			}),
+			env: globals
+				.into_iter()
+				.fold(GlobalEnv::new(), |mut global_env, (name, val)| {
+					global_env.env.declare(name, val, true);
+					global_env
+				}),
 		}
 	}
 
 	pub fn eval(&mut self, ast: &[Spanned<Stmt>]) -> Result<(), SpannedError> {
 		for stmt in ast {
-			self.walk_stmt(stmt.as_ref())?;
+			self.walk_stmt(stmt)?;
 		}
 		Ok(())
 	}
@@ -129,7 +137,7 @@ impl Interpreter {
 	fn cmp_bool<F>(
 		&mut self,
 		Spanned(val_l, span_l): Spanned<Value>,
-		expr_r: Spanned<&Expr>,
+		expr_r: &Spanned<Expr>,
 		f: F,
 		short_circuit_if: bool,
 	) -> Result<Inter, SpannedError>
@@ -155,44 +163,44 @@ impl Interpreter {
 	}
 }
 
-impl AstVisitor for Interpreter {
+impl MutVisitor for Interpreter {
 	type Result = Result<Inter, SpannedError>;
 
-	fn visit_item(&mut self, Spanned(item, _): Spanned<&ast::Item>) -> Self::Result {
-		match item {
-			Item::Module { .. } => {
-				todo!()
-			}
-			Item::Func { name, params, rhs } => {
-				let Some(rhs) = rhs else {
-					todo!()
-				};
-				let val = RymFunction::new(Some(params.len()), params.clone(), rhs.clone());
-				self.env.declare(&name.0, val.into(), true);
-			}
-			Item::Binding { name, rhs } => {
-				let val: Value = match self.walk_expr(rhs.as_ref())? {
-					Inter::None(val) => val,
-					inter => return Ok(inter),
-				};
-				self.env.declare(&name.0, val, true);
-			}
-		}
-		Ok(Inter::None(Value::Unit))
-	}
+	// fn visit_item(&mut self, Spanned(item, _): Spanned<&rym_ast::Item>) -> Self::Result {
+	// 	match item {
+	// 		Item::Module { .. } => {
+	// 			todo!()
+	// 		}
+	// 		Item::Func(func) => {
+	// 			let Some(rhs) = rhs else {
+	// 				todo!()
+	// 			};
+	// 			let val = RymFunction::new(Some(params.len()), params.clone(), rhs.clone());
+	// 			self.env.declare(&name.0, val.into(), true);
+	// 		}
+	// 		Item::Binding { name, rhs } => {
+	// 			let val: Value = match self.walk_expr(rhs.as_ref())? {
+	// 				Inter::None(val) => val,
+	// 				inter => return Ok(inter),
+	// 			};
+	// 			self.env.declare(&name.0, val, true);
+	// 		}
+	// 	}
+	// 	Ok(Inter::None(Value::Unit))
+	// }
 
-	fn visit_ident(&mut self, ident: &str, span: Span) -> Self::Result {
+	fn visit_ident(&mut self, Spanned(ident, span): &Spanned<String>) -> Self::Result {
 		match self.env.get(ident) {
 			Ok(val) => Ok(Inter::None(val.clone())),
-			Err(err) => spanned_err(err, span),
+			Err(err) => spanned_err(err, span.clone()),
 		}
 	}
 
-	fn visit_literal(&mut self, lit: &ast::Literal) -> Self::Result {
+	fn visit_literal(&mut self, Spanned(lit, _): &Spanned<Literal>) -> Self::Result {
 		Ok(Inter::None(lit.clone().into()))
 	}
 
-	fn visit_assign(&mut self, expr_l: Spanned<&Expr>, expr_r: Spanned<&Expr>) -> Self::Result {
+	fn visit_assign(&mut self, expr_l: &Spanned<Expr>, expr_r: &Spanned<Expr>) -> Self::Result {
 		let span_l = expr_l.1.clone();
 		let span_r = expr_r.1.clone();
 
@@ -216,14 +224,18 @@ impl AstVisitor for Interpreter {
 			Inter::None(val) => val,
 			inter => return Ok(inter),
 		};
-		if let Err(err) = self.env.set(name, value) {
+		if let Err(err) = self.env.set(&name.0, value) {
 			return spanned_err(err, span_r);
 		}
 
 		Ok(Inter::None(Value::Unit))
 	}
 
-	fn visit_call(&mut self, callee_expr: Spanned<&Expr>, args: &[Spanned<Expr>]) -> Self::Result {
+	fn visit_call(
+		&mut self,
+		callee_expr: &Spanned<Expr>,
+		Spanned(args, _): &Spanned<Vec<Spanned<Expr>>>,
+	) -> Self::Result {
 		let callee_span = callee_expr.1.clone();
 		let callee: Value = match self.walk_expr(callee_expr)? {
 			Inter::None(val) => val,
@@ -232,7 +244,7 @@ impl AstVisitor for Interpreter {
 		let args: Vec<Value> = {
 			let mut vec = Vec::new();
 			for arg in args {
-				vec.push(match self.walk_expr(arg.as_ref())? {
+				vec.push(match self.walk_expr(arg)? {
 					Inter::None(val) => val,
 					inter => return Ok(inter),
 				})
@@ -249,7 +261,10 @@ impl AstVisitor for Interpreter {
 		if let Some(arity) = f.arity() {
 			if arity != args.len() {
 				return spanned_err(
-					LogicError::NumArgsMismatch { expected: arity, got: args.len() },
+					LogicError::NumArgsMismatch {
+						expected: arity,
+						got: args.len(),
+					},
 					0..0, /* TODO span args.first().1.start  */
 				);
 			}
@@ -258,7 +273,7 @@ impl AstVisitor for Interpreter {
 		Ok(Inter::None(f.call(self, &args)?))
 	}
 
-	fn visit_unary(&mut self, op: &UnaryOp, expr: Spanned<&Expr>) -> Self::Result {
+	fn visit_unary(&mut self, op: UnaryOp, expr: &Spanned<Expr>) -> Self::Result {
 		let val = match self.walk_expr(expr)? {
 			Inter::None(val) => val,
 			inter => return Ok(inter),
@@ -267,33 +282,43 @@ impl AstVisitor for Interpreter {
 		match (op, val) {
 			(UnaryOp::Not, Value::Bool(val)) => Ok(Inter::None(Value::Bool(!val))),
 			(UnaryOp::Neg, Value::Number(val)) => Ok(Inter::None(Value::Number(-val))),
-			(op, val) => spanned_err(TypeError::Unary(*op, val.typ()), 0..0),
+			(op, val) => spanned_err(TypeError::Unary(op, val.typ()), 0..0),
 		}
 	}
 
 	fn visit_logical(
 		&mut self,
-		expr_l: Spanned<&Expr>,
-		op: &LogicalOp,
-		expr_r: Spanned<&Expr>,
+		expr_l: &Spanned<Expr>,
+		op: LogicalOp,
+		expr_r: &Spanned<Expr>,
 	) -> Self::Result {
-		let val_l = match self.walk_expr(expr_l.clone()) {
+		let val_l = match self.walk_expr(expr_l) {
 			Ok(Inter::None(val_l)) => val_l,
 			other => return other,
 		};
 
-		if op == &LogicalOp::And {
-			self.cmp_bool(expr_l.map(|_| val_l), expr_r, |val_l, val_r| val_l && val_r, false)
+		if op == LogicalOp::And {
+			self.cmp_bool(
+				expr_l.as_ref().map(|_| val_l),
+				expr_r,
+				|val_l, val_r| val_l && val_r,
+				false,
+			)
 		} else {
-			self.cmp_bool(expr_l.map(|_| val_l), expr_r, |val_l, val_r| val_l || val_r, true)
+			self.cmp_bool(
+				expr_l.as_ref().map(|_| val_l),
+				expr_r,
+				|val_l, val_r| val_l || val_r,
+				true,
+			)
 		}
 	}
 
 	fn visit_binary(
 		&mut self,
-		expr_l: Spanned<&Expr>,
-		op: &BinaryOp,
-		expr_r: Spanned<&Expr>,
+		expr_l: &Spanned<Expr>,
+		op: BinaryOp,
+		expr_r: &Spanned<Expr>,
 	) -> Self::Result {
 		let span = expr_l.1.start..expr_r.1.end;
 
@@ -347,7 +372,7 @@ impl AstVisitor for Interpreter {
 				span,
 				|val_l, val_r| val_l / val_r,
 			)?,
-			BinaryOp::Mod => apply_num_fn(
+			BinaryOp::Rem => apply_num_fn(
 				Some(TypeError::Modulate(val_l.typ(), val_r.typ())),
 				(val_l, val_r),
 				span,
@@ -375,7 +400,7 @@ impl AstVisitor for Interpreter {
 		}))
 	}
 
-	fn visit_block(&mut self, Spanned(stmts, _): Spanned<&Block>) -> Self::Result {
+	fn visit_block(&mut self, Spanned(stmts, _): &Spanned<Vec<Spanned<Stmt>>>) -> Self::Result {
 		self.env.push_scope();
 
 		let mut stmts = stmts.iter();
@@ -385,7 +410,7 @@ impl AstVisitor for Interpreter {
 				None => break Inter::None(Value::Unit),
 			};
 
-			let inter = self.walk_stmt(stmt.as_ref())?;
+			let inter = self.walk_stmt(stmt)?;
 			match inter {
 				Inter::Return(val) => break Inter::Return(val),
 				Inter::Break(val) => break Inter::Break(val),
@@ -405,9 +430,9 @@ impl AstVisitor for Interpreter {
 	}
 
 	// TODO: Implement break, continue and return
-	fn visit_loop(&mut self, block: Spanned<&Block>) -> Self::Result {
+	fn visit_loop(&mut self, expr: &Spanned<Expr>) -> Self::Result {
 		loop {
-			match self.visit_block(block.clone())? {
+			match self.walk_expr(expr)? {
 				Inter::Continue | Inter::None(_) => continue,
 				Inter::Break(val) => break Ok(Inter::None(val)),
 				inter_return => return Ok(inter_return),
@@ -417,9 +442,9 @@ impl AstVisitor for Interpreter {
 
 	fn visit_if(
 		&mut self,
-		expr: Spanned<&Expr>,
-		then_block: Spanned<&Block>,
-		else_block: &Option<Spanned<Block>>,
+		expr: &Spanned<Expr>,
+		then_branch: &Spanned<Expr>,
+		else_branch: &Option<Spanned<Expr>>,
 	) -> Self::Result {
 		let span = expr.1.clone();
 		let bool = match self.walk_expr(expr)? {
@@ -431,22 +456,24 @@ impl AstVisitor for Interpreter {
 		};
 
 		if bool {
-			self.visit_block(then_block)
-		} else if let Some(block) = else_block {
-			self.visit_block(block.as_ref())
+			self.walk_expr(then_branch)
+		} else if let Some(else_expr) = else_branch {
+			self.walk_expr(else_expr)
 		} else {
 			Ok(Inter::None(Value::Unit))
 		}
 	}
 
-	fn visit_return(&mut self, expr: Spanned<&Expr>) -> Self::Result {
-		match self.walk_expr(expr)? {
-			Inter::None(val) => Ok(Inter::Return(val)),
-			inter => Ok(inter),
-		}
+	fn visit_return(&mut self, maybe_expr: &Option<Spanned<Expr>>) -> Self::Result {
+		// let val = match maybe_expr {
+		// 	Some(expr) => self.walk_expr(expr)?,
+		// 	None => Inter::None(Value::Unit),
+		// };
+		// Ok(Inter::Return(val))
+		todo!()
 	}
 
-	fn visit_break(&mut self, expr: Option<Spanned<&Expr>>) -> Self::Result {
+	fn visit_break(&mut self, expr: &Option<Spanned<Expr>>) -> Self::Result {
 		Ok(Inter::Break(match expr {
 			// TODO: Do loops work inside of break expr?
 			Some(expr) => match self.walk_expr(expr)? {
@@ -457,7 +484,35 @@ impl AstVisitor for Interpreter {
 		}))
 	}
 
-	fn visit_continue(&mut self) -> Self::Result {
+	fn visit_continue(&mut self, span: Span) -> Self::Result {
 		Ok(Inter::Continue)
+	}
+
+	fn visit_module(&mut self, module: &Spanned<rym_ast::Module>) -> Self::Result {
+		todo!()
+	}
+
+	fn visit_func(&mut self, func: &Spanned<rym_ast::Func>) -> Self::Result {
+		todo!()
+	}
+
+	fn visit_var(&mut self, var: &Spanned<rym_ast::Var>) -> Self::Result {
+		todo!()
+	}
+
+	fn visit_record(
+		&mut self,
+		name: &Option<Spanned<String>>,
+		fields: &[(Spanned<String>, Spanned<Expr>)],
+	) -> Self::Result {
+		todo!()
+	}
+
+	fn visit_group(&mut self, group: &Spanned<Expr>) -> Self::Result {
+		todo!()
+	}
+
+	fn visit_error(&mut self, span: Span) -> Self::Result {
+		todo!()
 	}
 }

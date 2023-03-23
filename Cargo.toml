@@ -3,7 +3,6 @@
 [workspace]
 members = [
 	# Global
-	"crates/ast",
 	"crates/rym_ast",
 	"crates/rym_errors",
 	"crates/rym_span",

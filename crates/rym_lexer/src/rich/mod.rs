@@ -21,7 +21,11 @@ pub struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
 	pub fn new(src: &'a str) -> Self {
-		Self { pos: 0, src, primitive_lexer: primitive::Lexer::new(src) }
+		Self {
+			pos: 0,
+			src,
+			primitive_lexer: primitive::Lexer::new(src),
+		}
 	}
 
 	fn bump(&mut self) -> Option<(primitive::TokenKind, Span)> {
@@ -187,16 +191,13 @@ impl Iterator for Lexer<'_> {
 					},
 				),
 				primitive::TokenKind::Float => {
-					let filtered_src: String =
-						self.src_from_span(&span).chars().filter(|c| c != &'_').collect();
-					let Some((l, r)) = filtered_src.split_once('.') else {
-							unreachable!("Internal Error: Float literal does not contain a '.'")
-						};
-					let l_val: u64 = l.parse().unwrap_or_else(|_| {
-						panic!("Internal Error: Left hand side of float literal has invalid value `{l}`")
-					});
-					let r_val: u64 = r.parse().unwrap_or(0);
-					Token::Float(l_val, r_val)
+					let filtered_src: String = self
+						.src_from_span(&span)
+						.chars()
+						.filter(|c| c != &'_')
+						.collect();
+
+					Token::Float(filtered_src)
 				}
 				primitive::TokenKind::Char { terminated } => {
 					if !terminated {

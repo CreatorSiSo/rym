@@ -1,6 +1,8 @@
+use rym_ast::Visitor;
 use rym_lexer::rich::Lexer;
 use rym_parser::parse_expr;
 // use colored::Colorize;
+use rym_ast_passes::NodeCounter;
 use tree_walk::Interpreter;
 
 use rustyline::error::ReadlineError;
@@ -22,7 +24,10 @@ impl Repl {
 		if editor.load_history(".history").is_err() {
 			println!("No previous history.");
 		}
-		Ok(Self { interpreter: Interpreter::default(), editor })
+		Ok(Self {
+			interpreter: Interpreter::default(),
+			editor,
+		})
 	}
 
 	fn watch(mut self) {
@@ -53,11 +58,18 @@ impl Repl {
 	fn eval_line(&mut self, line: String) {
 		let tokens: Vec<_> = Lexer::new(&line).collect();
 		let rym_parser::ParseResult { ast, errors } = parse_expr(&tokens);
+
 		let correct_syntax = errors.is_empty();
 
 		println!("--- Ast --- \n{ast:?}\n---");
 		if !correct_syntax {
 			println!("--- Errors --- \n{errors:?}\n---");
+		}
+
+		if let Some(expr) = ast {
+			let mut counter = NodeCounter::new();
+			counter.walk_expr(&expr);
+			println!("--- {} ---", counter.count)
 		}
 
 		// log::block("Parser", || {

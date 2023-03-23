@@ -392,6 +392,13 @@ name = "rym_ast"
 version = "0.0.0"
 
 [[package]]
+name = "rym_ast_passes"
+version = "0.0.0"
+dependencies = [
+ "rym_ast",
+]
+
+[[package]]
 name = "rym_errors"
 version = "0.0.0"
 dependencies = [
@@ -412,7 +419,7 @@ dependencies = [
 
 [[package]]
 name = "rym_parser"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "chumsky",
  "indoc",
@@ -440,6 +447,7 @@ dependencies = [
  "colored",
  "rustyline",
  "rym_ast",
+ "rym_ast_passes",
  "rym_errors",
  "rym_lexer",
  "rym_parser",

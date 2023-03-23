@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -9,38 +9,47 @@ expression: "&snapshot"
 Some(
     Spanned(
         Block(
-            [
-                Spanned(
-                    Expr(
-                        Spanned(
-                            Call(
-                                Spanned(
-                                    Ident("call_me"),
-                                    2..9,
+            Spanned(
+                [
+                    Spanned(
+                        Call {
+                            func: Spanned(
+                                Ident(
+                                    Spanned(
+                                        "call_me",
+                                        2..9,
+                                    ),
                                 ),
-                                [],
+                                2..9,
                             ),
-                            2..11,
-                        ),
+                            args: Spanned(
+                                [],
+                                9..11,
+                            ),
+                        },
+                        2..12,
                     ),
-                    2..12,
-                ),
-                Spanned(
-                    Expr(
-                        Spanned(
-                            Call(
-                                Spanned(
-                                    Ident("and_me"),
-                                    13..19,
+                    Spanned(
+                        Call {
+                            func: Spanned(
+                                Ident(
+                                    Spanned(
+                                        "and_me",
+                                        13..19,
+                                    ),
                                 ),
-                                [],
+                                13..19,
                             ),
-                            13..21,
-                        ),
+                            args: Spanned(
+                                [],
+                                19..21,
+                            ),
+                        },
+                        13..22,
                     ),
-                    13..22,
-                ),
-            ],
+                ],
+                0..24,
+            ),
         ),
         0..24,
     ),

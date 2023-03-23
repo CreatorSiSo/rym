@@ -62,7 +62,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "chumsky"
 version = "1.0.0-alpha.3"
-source = "git+https://github.com/zesterer/chumsky?rev=6d7e992df6d344ec94d7407a913d952526022105#6d7e992df6d344ec94d7407a913d952526022105"
+source = "git+https://github.com/zesterer/chumsky?rev=4145fcf5bf1323d1accae5d7ba50ff9b799dbe43#4145fcf5bf1323d1accae5d7ba50ff9b799dbe43"
 dependencies = [
  "hashbrown",
  "stacker",
@@ -395,6 +395,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "rym_ast"
+version = "0.0.0"
+
+[[package]]
 name = "rym_errors"
 version = "0.0.0"
 dependencies = [
@@ -420,6 +424,7 @@ dependencies = [
  "chumsky",
  "indoc",
  "insta",
+ "rym_ast",
  "rym_lexer",
 ]
 

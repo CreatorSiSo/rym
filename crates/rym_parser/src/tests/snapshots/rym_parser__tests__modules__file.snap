@@ -1,5 +1,5 @@
 ---
-source: src/tests/modules.rs
+source: crates/rym_parser/src/tests/modules.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -41,27 +41,35 @@ Some(
                 rhs: Some(
                     Spanned(
                         Block(
-                            [
-                                Spanned(
-                                    Expr(
-                                        Spanned(
-                                            Binary(
-                                                Spanned(
-                                                    Ident("x"),
-                                                    70..71,
+                            Spanned(
+                                [
+                                    Spanned(
+                                        Binary(
+                                            Spanned(
+                                                Ident(
+                                                    Spanned(
+                                                        "x",
+                                                        70..71,
+                                                    ),
                                                 ),
-                                                Add,
-                                                Spanned(
-                                                    Ident("y"),
-                                                    74..75,
-                                                ),
+                                                70..71,
                                             ),
-                                            70..75,
+                                            Add,
+                                            Spanned(
+                                                Ident(
+                                                    Spanned(
+                                                        "y",
+                                                        74..75,
+                                                    ),
+                                                ),
+                                                74..75,
+                                            ),
                                         ),
+                                        70..76,
                                     ),
-                                    70..76,
-                                ),
-                            ],
+                                ],
+                                67..98,
+                            ),
                         ),
                         67..98,
                     ),
@@ -88,27 +96,35 @@ Some(
                 rhs: Some(
                     Spanned(
                         Block(
-                            [
-                                Spanned(
-                                    Expr(
-                                        Spanned(
-                                            Binary(
-                                                Spanned(
-                                                    Ident("x"),
-                                                    158..159,
+                            Spanned(
+                                [
+                                    Spanned(
+                                        Binary(
+                                            Spanned(
+                                                Ident(
+                                                    Spanned(
+                                                        "x",
+                                                        158..159,
+                                                    ),
                                                 ),
-                                                Mul,
-                                                Spanned(
-                                                    Ident("y"),
-                                                    162..163,
-                                                ),
+                                                158..159,
                                             ),
-                                            158..163,
+                                            Mul,
+                                            Spanned(
+                                                Ident(
+                                                    Spanned(
+                                                        "y",
+                                                        162..163,
+                                                    ),
+                                                ),
+                                                162..163,
+                                            ),
                                         ),
+                                        158..164,
                                     ),
-                                    158..164,
-                                ),
-                            ],
+                                ],
+                                120..166,
+                            ),
                         ),
                         120..166,
                     ),
@@ -126,76 +142,113 @@ Some(
                 rhs: Some(
                     Spanned(
                         Block(
-                            [
-                                Spanned(
-                                    Expr(
-                                        Spanned(
-                                            Call(
-                                                Spanned(
-                                                    Ident("print"),
-                                                    183..188,
+                            Spanned(
+                                [
+                                    Spanned(
+                                        Call {
+                                            func: Spanned(
+                                                Ident(
+                                                    Spanned(
+                                                        "print",
+                                                        183..188,
+                                                    ),
                                                 ),
+                                                183..188,
+                                            ),
+                                            args: Spanned(
                                                 [
                                                     Spanned(
-                                                        String("Hello World!"),
+                                                        Literal(
+                                                            Spanned(
+                                                                String("Hello World!"),
+                                                                189..203,
+                                                            ),
+                                                        ),
                                                         189..203,
                                                     ),
                                                 ],
+                                                188..204,
                                             ),
-                                            183..204,
-                                        ),
+                                        },
+                                        183..205,
                                     ),
-                                    183..205,
-                                ),
-                                Spanned(
-                                    Expr(
-                                        Spanned(
-                                            Call(
-                                                Spanned(
-                                                    Ident("add"),
-                                                    207..210,
+                                    Spanned(
+                                        Call {
+                                            func: Spanned(
+                                                Ident(
+                                                    Spanned(
+                                                        "add",
+                                                        207..210,
+                                                    ),
                                                 ),
+                                                207..210,
+                                            ),
+                                            args: Spanned(
                                                 [
                                                     Spanned(
-                                                        Int(2),
+                                                        Literal(
+                                                            Spanned(
+                                                                Int(2),
+                                                                211..212,
+                                                            ),
+                                                        ),
                                                         211..212,
                                                     ),
                                                     Spanned(
-                                                        Int(3),
+                                                        Literal(
+                                                            Spanned(
+                                                                Int(3),
+                                                                214..215,
+                                                            ),
+                                                        ),
                                                         214..215,
                                                     ),
                                                 ],
+                                                210..216,
                                             ),
-                                            207..216,
-                                        ),
+                                        },
+                                        207..217,
                                     ),
-                                    207..217,
-                                ),
-                                Spanned(
-                                    Expr(
-                                        Spanned(
-                                            Call(
-                                                Spanned(
-                                                    Ident("multiply"),
-                                                    219..227,
+                                    Spanned(
+                                        Call {
+                                            func: Spanned(
+                                                Ident(
+                                                    Spanned(
+                                                        "multiply",
+                                                        219..227,
+                                                    ),
                                                 ),
+                                                219..227,
+                                            ),
+                                            args: Spanned(
                                                 [
                                                     Spanned(
-                                                        Int(3),
+                                                        Literal(
+                                                            Spanned(
+                                                                Int(3),
+                                                                228..229,
+                                                            ),
+                                                        ),
                                                         228..229,
                                                     ),
                                                     Spanned(
-                                                        Int(2),
+                                                        Literal(
+                                                            Spanned(
+                                                                Int(2),
+                                                                231..232,
+                                                            ),
+                                                        ),
                                                         231..232,
                                                     ),
                                                 ],
+                                                227..233,
                                             ),
-                                            219..233,
-                                        ),
+                                        },
+                                        219..234,
                                     ),
-                                    219..234,
-                                ),
-                            ],
+                                ],
+                                180..236,
+                            ),
                         ),
                         180..236,
                     ),

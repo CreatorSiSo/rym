@@ -4,6 +4,7 @@
 members = [
 	# Global
 	"crates/ast",
+	"crates/rym_ast",
 	"crates/rym_errors",
 	"crates/rym_span",
 	"crates/rym_unescape",
@@ -20,6 +21,8 @@ members = [
 ]
 
 [workspace.dependencies]
+ast = { path = "crates/ast" }
+rym_ast = { path = "crates/rym_ast" }
 rym_errors = { path = "crates/rym_errors" }
 rym_lexer = { path = "crates/rym_lexer" }
 rym_span = { path = "crates/rym_span" }

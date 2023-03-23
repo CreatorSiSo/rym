@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -15,7 +15,10 @@ None
         reason: ExpectedFound {
             expected: [
                 Semi,
+                Expression,
+                Function,
                 Module,
+                Binding,
             ],
             found: Some(
                 CloseBrace,

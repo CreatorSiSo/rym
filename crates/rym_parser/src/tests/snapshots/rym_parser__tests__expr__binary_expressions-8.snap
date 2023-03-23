@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -12,26 +12,46 @@ Some(
             Spanned(
                 Binary(
                     Spanned(
-                        Int(1),
+                        Literal(
+                            Spanned(
+                                Int(1),
+                                0..1,
+                            ),
+                        ),
                         0..1,
                     ),
                     Eq,
                     Spanned(
                         Binary(
                             Spanned(
-                                Int(1),
+                                Literal(
+                                    Spanned(
+                                        Int(1),
+                                        5..6,
+                                    ),
+                                ),
                                 5..6,
                             ),
                             Add,
                             Spanned(
                                 Binary(
                                     Spanned(
-                                        Int(2),
+                                        Literal(
+                                            Spanned(
+                                                Int(2),
+                                                9..10,
+                                            ),
+                                        ),
                                         9..10,
                                     ),
                                     Div,
                                     Spanned(
-                                        Int(3),
+                                        Literal(
+                                            Spanned(
+                                                Int(3),
+                                                13..14,
+                                            ),
+                                        ),
                                         13..14,
                                     ),
                                 ),
@@ -43,9 +63,14 @@ Some(
                 ),
                 0..14,
             ),
-            Neq,
+            Ne,
             Spanned(
-                Int(0),
+                Literal(
+                    Spanned(
+                        Int(0),
+                        18..19,
+                    ),
+                ),
                 18..19,
             ),
         ),

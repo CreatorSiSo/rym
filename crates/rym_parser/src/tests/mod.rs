@@ -5,8 +5,8 @@ mod expr;
 mod functions;
 mod modules;
 
-use crate::ast::Expr;
 use crate::{custom_nested_delimiters, parse_str, Spanned};
+use rym_ast::Expr;
 use rym_lexer::rich::Token;
 
 use chumsky::prelude::*;
@@ -37,8 +37,11 @@ fn nested() {
 				custom_nested_delimiters(
 					Token::OpenBrace,
 					Token::CloseBrace,
-					[(Token::OpenBracket, Token::CloseBracket), (Token::OpenParen, Token::CloseParen)],
-					|span| Spanned(Expr::Block(vec![]), span),
+					[
+						(Token::OpenBracket, Token::CloseBracket),
+						(Token::OpenParen, Token::CloseParen),
+					],
+					|span| Spanned(Expr::Block(Spanned(vec![], span.clone())), span),
 				)
 				.then_ignore(any().repeated())
 				.parse(tokens)

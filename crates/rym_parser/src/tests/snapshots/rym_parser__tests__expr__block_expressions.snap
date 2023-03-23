@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -12,26 +12,29 @@ expression: "&snapshot"
 Some(
     Spanned(
         Block(
-            [
-                Spanned(
-                    Expr(
-                        Spanned(
-                            Ident("testing"),
-                            3..10,
+            Spanned(
+                [
+                    Spanned(
+                        Ident(
+                            Spanned(
+                                "testing",
+                                3..10,
+                            ),
                         ),
+                        3..11,
                     ),
-                    3..11,
-                ),
-                Spanned(
-                    Expr(
-                        Spanned(
-                            Ident("testing"),
-                            13..20,
+                    Spanned(
+                        Ident(
+                            Spanned(
+                                "testing",
+                                13..20,
+                            ),
                         ),
+                        13..21,
                     ),
-                    13..21,
-                ),
-            ],
+                ],
+                0..23,
+            ),
         ),
         0..23,
     ),

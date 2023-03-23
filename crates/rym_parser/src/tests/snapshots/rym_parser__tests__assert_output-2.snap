@@ -6,4 +6,4 @@ expression: "format!(\"---\\n{src}\\n---\\n\\n{result:?}\")"
 {()}                            ()
 ---
 
-ParseResult { ast: Some(Spanned(Block([]), 0..4)), errors: [] }
+ParseResult { ast: Some(Spanned(Block(Spanned([], 0..4)), 0..4)), errors: [] }

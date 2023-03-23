@@ -34,9 +34,19 @@ pub enum Stmt {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Item {
-	Module { name: Option<Spanned<String>>, items: Vec<Spanned<Item>> },
-	Func { name: Spanned<String>, params: Vec<Spanned<String>>, rhs: Option<Spanned<Expr>> },
-	Binding { name: Spanned<String>, rhs: Spanned<Expr> },
+	Module {
+		name: Option<Spanned<String>>,
+		items: Vec<Spanned<Item>>,
+	},
+	Func {
+		name: Spanned<String>,
+		params: Vec<Spanned<String>>,
+		rhs: Option<Spanned<Expr>>,
+	},
+	Binding {
+		name: Spanned<String>,
+		rhs: Spanned<Expr>,
+	},
 }
 
 pub type Block = Vec<Spanned<Stmt>>;

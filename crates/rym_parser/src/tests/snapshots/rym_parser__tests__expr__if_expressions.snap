@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -10,61 +10,88 @@ Some(
     Spanned(
         If {
             condition: Spanned(
-                Ident("true"),
+                Ident(
+                    Spanned(
+                        "true",
+                        3..7,
+                    ),
+                ),
                 3..7,
             ),
             then_branch: Spanned(
                 Block(
-                    [
-                        Spanned(
-                            Expr(
-                                Spanned(
-                                    Call(
-                                        Spanned(
-                                            Ident("print"),
-                                            15..20,
+                    Spanned(
+                        [
+                            Spanned(
+                                Call {
+                                    func: Spanned(
+                                        Ident(
+                                            Spanned(
+                                                "print",
+                                                15..20,
+                                            ),
                                         ),
+                                        15..20,
+                                    ),
+                                    args: Spanned(
                                         [
                                             Spanned(
-                                                String("Hello Universe!"),
+                                                Literal(
+                                                    Spanned(
+                                                        String("Hello Universe!"),
+                                                        21..38,
+                                                    ),
+                                                ),
                                                 21..38,
                                             ),
                                         ],
+                                        20..39,
                                     ),
-                                    15..39,
-                                ),
+                                },
+                                15..40,
                             ),
-                            15..40,
-                        ),
-                    ],
+                        ],
+                        13..42,
+                    ),
                 ),
                 13..42,
             ),
             else_branch: Some(
                 Spanned(
                     Block(
-                        [
-                            Spanned(
-                                Expr(
-                                    Spanned(
-                                        Call(
-                                            Spanned(
-                                                Ident("print"),
-                                                50..55,
+                        Spanned(
+                            [
+                                Spanned(
+                                    Call {
+                                        func: Spanned(
+                                            Ident(
+                                                Spanned(
+                                                    "print",
+                                                    50..55,
+                                                ),
                                             ),
+                                            50..55,
+                                        ),
+                                        args: Spanned(
                                             [
                                                 Spanned(
-                                                    String("Hello World!"),
+                                                    Literal(
+                                                        Spanned(
+                                                            String("Hello World!"),
+                                                            56..70,
+                                                        ),
+                                                    ),
                                                     56..70,
                                                 ),
                                             ],
+                                            55..71,
                                         ),
-                                        50..71,
-                                    ),
+                                    },
+                                    50..72,
                                 ),
-                                50..72,
-                            ),
-                        ],
+                            ],
+                            48..74,
+                        ),
                     ),
                     48..74,
                 ),

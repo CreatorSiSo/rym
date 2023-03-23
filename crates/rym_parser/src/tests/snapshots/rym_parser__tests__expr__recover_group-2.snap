@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -21,6 +21,9 @@ Some(
             expected: [
                 Minus,
                 Bang,
+                Group,
+                Identifier,
+                Literal,
             ],
             found: Some(
                 CloseParen,

@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -8,44 +8,68 @@ testing(,)(correct_one, 2)(, aerr, "stuff")
 
 Some(
     Spanned(
-        Call(
-            Spanned(
-                Call(
-                    Spanned(
-                        Call(
-                            Spanned(
-                                Ident("testing"),
+        Call {
+            func: Spanned(
+                Call {
+                    func: Spanned(
+                        Call {
+                            func: Spanned(
+                                Ident(
+                                    Spanned(
+                                        "testing",
+                                        0..7,
+                                    ),
+                                ),
                                 0..7,
                             ),
-                            [
-                                Spanned(
-                                    Error,
-                                    7..10,
-                                ),
-                            ],
-                        ),
+                            args: Spanned(
+                                [
+                                    Spanned(
+                                        Error,
+                                        7..10,
+                                    ),
+                                ],
+                                7..10,
+                            ),
+                        },
                         0..10,
                     ),
-                    [
-                        Spanned(
-                            Ident("correct_one"),
-                            11..22,
-                        ),
-                        Spanned(
-                            Int(2),
-                            24..25,
-                        ),
-                    ],
-                ),
+                    args: Spanned(
+                        [
+                            Spanned(
+                                Ident(
+                                    Spanned(
+                                        "correct_one",
+                                        11..22,
+                                    ),
+                                ),
+                                11..22,
+                            ),
+                            Spanned(
+                                Literal(
+                                    Spanned(
+                                        Int(2),
+                                        24..25,
+                                    ),
+                                ),
+                                24..25,
+                            ),
+                        ],
+                        10..26,
+                    ),
+                },
                 0..26,
             ),
-            [
-                Spanned(
-                    Error,
-                    26..43,
-                ),
-            ],
-        ),
+            args: Spanned(
+                [
+                    Spanned(
+                        Error,
+                        26..43,
+                    ),
+                ],
+                26..43,
+            ),
+        },
         0..43,
     ),
 )

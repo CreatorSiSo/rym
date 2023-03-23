@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -12,12 +12,22 @@ Some(
             Spanned(
                 Binary(
                     Spanned(
-                        Int(1),
+                        Literal(
+                            Spanned(
+                                Int(1),
+                                0..1,
+                            ),
+                        ),
                         0..1,
                     ),
                     Add,
                     Spanned(
-                        Int(2),
+                        Literal(
+                            Spanned(
+                                Int(2),
+                                4..5,
+                            ),
+                        ),
                         4..5,
                     ),
                 ),
@@ -29,12 +39,22 @@ Some(
                     Spanned(
                         Binary(
                             Spanned(
-                                Int(3),
+                                Literal(
+                                    Spanned(
+                                        Int(3),
+                                        8..9,
+                                    ),
+                                ),
                                 8..9,
                             ),
                             Mul,
                             Spanned(
-                                Int(4),
+                                Literal(
+                                    Spanned(
+                                        Int(4),
+                                        12..13,
+                                    ),
+                                ),
                                 12..13,
                             ),
                         ),
@@ -42,7 +62,12 @@ Some(
                     ),
                     Div,
                     Spanned(
-                        Int(5),
+                        Literal(
+                            Spanned(
+                                Int(5),
+                                16..17,
+                            ),
+                        ),
                         16..17,
                     ),
                 ),

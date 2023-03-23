@@ -1,21 +1,25 @@
 ---
-source: src/tests/modules.rs
+source: crates/rym_parser/src/tests/modules.rs
 expression: "&snapshot"
 ---
 --- Input ---
 mod {}
 ---
 
-Some(
-    Spanned(
-        Module {
-            name: None,
-            items: [],
-        },
-        0..6,
-    ),
-)
+None
 
 --- Errors ---
-[]
+[
+    ParseError {
+        span: 4..5,
+        reason: ExpectedFound {
+            expected: [
+                Identifier,
+            ],
+            found: Some(
+                OpenBrace,
+            ),
+        },
+    },
+]
 ---

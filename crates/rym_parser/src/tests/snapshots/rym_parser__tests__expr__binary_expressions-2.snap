@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -10,12 +10,22 @@ Some(
     Spanned(
         Binary(
             Spanned(
-                Ident("lhs"),
+                Ident(
+                    Spanned(
+                        "lhs",
+                        0..3,
+                    ),
+                ),
                 0..3,
             ),
-            Neq,
+            Ne,
             Spanned(
-                Ident("rhs"),
+                Ident(
+                    Spanned(
+                        "rhs",
+                        7..10,
+                    ),
+                ),
                 7..10,
             ),
         ),

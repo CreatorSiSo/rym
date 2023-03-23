@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -8,18 +8,26 @@ testing(1 + / 2)
 
 Some(
     Spanned(
-        Call(
-            Spanned(
-                Ident("testing"),
+        Call {
+            func: Spanned(
+                Ident(
+                    Spanned(
+                        "testing",
+                        0..7,
+                    ),
+                ),
                 0..7,
             ),
-            [
-                Spanned(
-                    Error,
-                    7..16,
-                ),
-            ],
-        ),
+            args: Spanned(
+                [
+                    Spanned(
+                        Error,
+                        7..16,
+                    ),
+                ],
+                7..16,
+            ),
+        },
         0..16,
     ),
 )
@@ -32,6 +40,9 @@ Some(
             expected: [
                 Minus,
                 Bang,
+                Group,
+                Identifier,
+                Literal,
             ],
             found: Some(
                 Slash,

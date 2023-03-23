@@ -6,4 +6,4 @@ expression: "format!(\"---\\n{src}\\n---\\n\\n{result:?}\")"
 { 200 + (66 - 9) * 33 }         ()
 ---
 
-ParseResult { ast: Some(Spanned(Block([]), 0..23)), errors: [] }
+ParseResult { ast: Some(Spanned(Block(Spanned([], 0..23)), 0..23)), errors: [] }

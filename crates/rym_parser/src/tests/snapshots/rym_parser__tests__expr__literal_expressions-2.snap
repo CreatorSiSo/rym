@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -8,7 +8,12 @@ expression: "&snapshot"
 
 Some(
     Spanned(
-        Int(823472340983273327),
+        Literal(
+            Spanned(
+                Int(823472340983273327),
+                0..23,
+            ),
+        ),
         0..23,
     ),
 )

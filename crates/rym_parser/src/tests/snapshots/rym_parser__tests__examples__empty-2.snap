@@ -1,5 +1,5 @@
 ---
-source: src/tests/examples.rs
+source: crates/rym_parser/src/tests/examples.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -15,132 +15,204 @@ else
 Some(
     [
         Spanned(
-            Item(
-                Spanned(
-                    Binding {
-                        name: Spanned(
-                            "name",
-                            4..8,
-                        ),
-                        rhs: Spanned(
-                            Call(
+            Var {
+                name: Spanned(
+                    "name",
+                    4..8,
+                ),
+                rhs: Spanned(
+                    Call {
+                        func: Spanned(
+                            Ident(
                                 Spanned(
-                                    Ident("readLine"),
+                                    "readLine",
                                     11..19,
                                 ),
-                                [
-                                    Spanned(
-                                        Ident("stdin"),
-                                        20..25,
-                                    ),
-                                ],
                             ),
-                            11..26,
+                            11..19,
+                        ),
+                        args: Spanned(
+                            [
+                                Spanned(
+                                    Ident(
+                                        Spanned(
+                                            "stdin",
+                                            20..25,
+                                        ),
+                                    ),
+                                    20..25,
+                                ),
+                            ],
+                            19..26,
                         ),
                     },
-                    0..27,
+                    11..26,
                 ),
-            ),
+            },
             0..27,
         ),
         Spanned(
-            Expr(
-                Spanned(
-                    If {
-                        condition: Spanned(
-                            Binary(
+            If {
+                condition: Spanned(
+                    Binary(
+                        Spanned(
+                            Ident(
                                 Spanned(
-                                    Ident("name"),
+                                    "name",
                                     31..35,
                                 ),
-                                Eq,
+                            ),
+                            31..35,
+                        ),
+                        Eq,
+                        Spanned(
+                            Literal(
                                 Spanned(
                                     String(""),
                                     39..41,
                                 ),
                             ),
-                            31..41,
+                            39..41,
                         ),
-                        then_branch: Spanned(
-                            Call(
+                    ),
+                    31..41,
+                ),
+                then_branch: Spanned(
+                    Call {
+                        func: Spanned(
+                            Ident(
                                 Spanned(
-                                    Ident("print"),
+                                    "print",
                                     48..53,
                                 ),
-                                [
-                                    Spanned(
-                                        String("Poor soul, you lost your name?"),
-                                        54..86,
-                                    ),
-                                ],
                             ),
-                            48..87,
+                            48..53,
                         ),
-                        else_branch: Some(
-                            Spanned(
-                                If {
-                                    condition: Spanned(
-                                        Binary(
+                        args: Spanned(
+                            [
+                                Spanned(
+                                    Literal(
+                                        Spanned(
+                                            String("Poor soul, you lost your name?"),
+                                            54..86,
+                                        ),
+                                    ),
+                                    54..86,
+                                ),
+                            ],
+                            53..87,
+                        ),
+                    },
+                    48..87,
+                ),
+                else_branch: Some(
+                    Spanned(
+                        If {
+                            condition: Spanned(
+                                Binary(
+                                    Spanned(
+                                        Ident(
                                             Spanned(
-                                                Ident("name"),
+                                                "name",
                                                 96..100,
                                             ),
-                                            Eq,
+                                        ),
+                                        96..100,
+                                    ),
+                                    Eq,
+                                    Spanned(
+                                        Literal(
                                             Spanned(
                                                 String("name"),
                                                 104..110,
                                             ),
                                         ),
-                                        96..110,
+                                        104..110,
                                     ),
-                                    then_branch: Spanned(
-                                        Call(
+                                ),
+                                96..110,
+                            ),
+                            then_branch: Spanned(
+                                Call {
+                                    func: Spanned(
+                                        Ident(
                                             Spanned(
-                                                Ident("print"),
+                                                "print",
                                                 117..122,
                                             ),
-                                            [
-                                                Spanned(
-                                                    String("Very funny, your name is name."),
-                                                    123..155,
-                                                ),
-                                            ],
                                         ),
-                                        117..156,
+                                        117..122,
                                     ),
-                                    else_branch: Some(
-                                        Spanned(
-                                            Call(
-                                                Spanned(
-                                                    Ident("print"),
-                                                    163..168,
+                                    args: Spanned(
+                                        [
+                                            Spanned(
+                                                Literal(
+                                                    Spanned(
+                                                        String("Very funny, your name is name."),
+                                                        123..155,
+                                                    ),
                                                 ),
-                                                [
-                                                    Spanned(
-                                                        String("Hi, "),
-                                                        169..175,
-                                                    ),
-                                                    Spanned(
-                                                        Ident("name"),
-                                                        177..181,
-                                                    ),
-                                                    Spanned(
-                                                        String("!"),
-                                                        183..186,
-                                                    ),
-                                                ],
+                                                123..155,
                                             ),
-                                            163..187,
-                                        ),
+                                        ],
+                                        122..156,
                                     ),
                                 },
-                                93..187,
+                                117..156,
                             ),
-                        ),
-                    },
-                    28..187,
+                            else_branch: Some(
+                                Spanned(
+                                    Call {
+                                        func: Spanned(
+                                            Ident(
+                                                Spanned(
+                                                    "print",
+                                                    163..168,
+                                                ),
+                                            ),
+                                            163..168,
+                                        ),
+                                        args: Spanned(
+                                            [
+                                                Spanned(
+                                                    Literal(
+                                                        Spanned(
+                                                            String("Hi, "),
+                                                            169..175,
+                                                        ),
+                                                    ),
+                                                    169..175,
+                                                ),
+                                                Spanned(
+                                                    Ident(
+                                                        Spanned(
+                                                            "name",
+                                                            177..181,
+                                                        ),
+                                                    ),
+                                                    177..181,
+                                                ),
+                                                Spanned(
+                                                    Literal(
+                                                        Spanned(
+                                                            String("!"),
+                                                            183..186,
+                                                        ),
+                                                    ),
+                                                    183..186,
+                                                ),
+                                            ],
+                                            168..187,
+                                        ),
+                                    },
+                                    163..187,
+                                ),
+                            ),
+                        },
+                        93..187,
+                    ),
                 ),
-            ),
+            },
             28..188,
         ),
     ],

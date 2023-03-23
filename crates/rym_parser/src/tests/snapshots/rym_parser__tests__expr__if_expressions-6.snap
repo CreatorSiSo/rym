@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -16,98 +16,143 @@ Some(
     Spanned(
         If {
             condition: Spanned(
-                Call(
-                    Spanned(
-                        Ident("stuff_goes_right"),
+                Call {
+                    func: Spanned(
+                        Ident(
+                            Spanned(
+                                "stuff_goes_right",
+                                3..19,
+                            ),
+                        ),
                         3..19,
                     ),
-                    [
-                        Spanned(
-                            Int(1),
-                            20..21,
-                        ),
-                        Spanned(
-                            Int(2),
-                            23..24,
-                        ),
-                        Spanned(
-                            Int(9),
-                            26..27,
-                        ),
-                    ],
-                ),
+                    args: Spanned(
+                        [
+                            Spanned(
+                                Literal(
+                                    Spanned(
+                                        Int(1),
+                                        20..21,
+                                    ),
+                                ),
+                                20..21,
+                            ),
+                            Spanned(
+                                Literal(
+                                    Spanned(
+                                        Int(2),
+                                        23..24,
+                                    ),
+                                ),
+                                23..24,
+                            ),
+                            Spanned(
+                                Literal(
+                                    Spanned(
+                                        Int(9),
+                                        26..27,
+                                    ),
+                                ),
+                                26..27,
+                            ),
+                        ],
+                        19..28,
+                    ),
+                },
                 3..28,
             ),
             then_branch: Spanned(
                 Block(
-                    [
-                        Spanned(
-                            Expr(
-                                Spanned(
-                                    Call(
-                                        Spanned(
-                                            Ident("print"),
-                                            37..42,
+                    Spanned(
+                        [
+                            Spanned(
+                                Call {
+                                    func: Spanned(
+                                        Ident(
+                                            Spanned(
+                                                "print",
+                                                37..42,
+                                            ),
                                         ),
+                                        37..42,
+                                    ),
+                                    args: Spanned(
                                         [
                                             Spanned(
-                                                String("Hello Universe!"),
+                                                Literal(
+                                                    Spanned(
+                                                        String("Hello Universe!"),
+                                                        43..60,
+                                                    ),
+                                                ),
                                                 43..60,
                                             ),
                                         ],
+                                        42..61,
                                     ),
-                                    37..61,
-                                ),
+                                },
+                                37..62,
                             ),
-                            37..62,
-                        ),
-                        Spanned(
-                            Expr(
-                                Spanned(
-                                    Int(20),
-                                    64..66,
+                            Spanned(
+                                Literal(
+                                    Spanned(
+                                        Int(20),
+                                        64..66,
+                                    ),
                                 ),
+                                64..67,
                             ),
-                            64..67,
-                        ),
-                    ],
+                        ],
+                        34..69,
+                    ),
                 ),
                 34..69,
             ),
             else_branch: Some(
                 Spanned(
                     Block(
-                        [
-                            Spanned(
-                                Expr(
-                                    Spanned(
-                                        Call(
-                                            Spanned(
-                                                Ident("print"),
-                                                78..83,
+                        Spanned(
+                            [
+                                Spanned(
+                                    Call {
+                                        func: Spanned(
+                                            Ident(
+                                                Spanned(
+                                                    "print",
+                                                    78..83,
+                                                ),
                                             ),
+                                            78..83,
+                                        ),
+                                        args: Spanned(
                                             [
                                                 Spanned(
-                                                    String("Hello World!"),
+                                                    Literal(
+                                                        Spanned(
+                                                            String("Hello World!"),
+                                                            84..98,
+                                                        ),
+                                                    ),
                                                     84..98,
                                                 ),
                                             ],
+                                            83..99,
                                         ),
-                                        78..99,
-                                    ),
+                                    },
+                                    78..100,
                                 ),
-                                78..100,
-                            ),
-                            Spanned(
-                                Expr(
-                                    Spanned(
-                                        Int(10),
-                                        102..104,
+                                Spanned(
+                                    Literal(
+                                        Spanned(
+                                            Int(10),
+                                            102..104,
+                                        ),
                                     ),
+                                    102..105,
                                 ),
-                                102..105,
-                            ),
-                        ],
+                            ],
+                            75..107,
+                        ),
                     ),
                     75..107,
                 ),

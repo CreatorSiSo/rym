@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -10,38 +10,69 @@ Some(
     Spanned(
         If {
             condition: Spanned(
-                Ident("true"),
+                Ident(
+                    Spanned(
+                        "true",
+                        3..7,
+                    ),
+                ),
                 3..7,
             ),
             then_branch: Spanned(
-                Call(
-                    Spanned(
-                        Ident("print"),
+                Call {
+                    func: Spanned(
+                        Ident(
+                            Spanned(
+                                "print",
+                                13..18,
+                            ),
+                        ),
                         13..18,
                     ),
-                    [
-                        Spanned(
-                            String("Hello Universe!"),
-                            19..36,
-                        ),
-                    ],
-                ),
+                    args: Spanned(
+                        [
+                            Spanned(
+                                Literal(
+                                    Spanned(
+                                        String("Hello Universe!"),
+                                        19..36,
+                                    ),
+                                ),
+                                19..36,
+                            ),
+                        ],
+                        18..37,
+                    ),
+                },
                 13..37,
             ),
             else_branch: Some(
                 Spanned(
-                    Call(
-                        Spanned(
-                            Ident("print"),
+                    Call {
+                        func: Spanned(
+                            Ident(
+                                Spanned(
+                                    "print",
+                                    43..48,
+                                ),
+                            ),
                             43..48,
                         ),
-                        [
-                            Spanned(
-                                String("Hello World!"),
-                                49..63,
-                            ),
-                        ],
-                    ),
+                        args: Spanned(
+                            [
+                                Spanned(
+                                    Literal(
+                                        Spanned(
+                                            String("Hello World!"),
+                                            49..63,
+                                        ),
+                                    ),
+                                    49..63,
+                                ),
+                            ],
+                            48..64,
+                        ),
+                    },
                     43..64,
                 ),
             ),

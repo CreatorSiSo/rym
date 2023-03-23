@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -17,7 +17,12 @@ Some(
                         3..7,
                     ),
                     Spanned(
-                        String("Record"),
+                        Literal(
+                            Spanned(
+                                String("Record"),
+                                9..17,
+                            ),
+                        ),
                         9..17,
                     ),
                 ),
@@ -27,13 +32,21 @@ Some(
                         19..25,
                     ),
                     Spanned(
-                        Call(
-                            Spanned(
-                                Ident("todo"),
+                        Call {
+                            func: Spanned(
+                                Ident(
+                                    Spanned(
+                                        "todo",
+                                        27..31,
+                                    ),
+                                ),
                                 27..31,
                             ),
-                            [],
-                        ),
+                            args: Spanned(
+                                [],
+                                31..33,
+                            ),
+                        },
                         27..33,
                     ),
                 ),

@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -29,242 +29,299 @@ expression: "&snapshot"
 Some(
     Spanned(
         Block(
-            [
-                Spanned(
-                    Item(
-                        Spanned(
-                            Binding {
-                                name: Spanned(
-                                    "counter",
-                                    17..24,
-                                ),
-                                rhs: Spanned(
-                                    Int(0),
-                                    27..28,
-                                ),
-                            },
-                            3..29,
-                        ),
-                    ),
-                    3..29,
-                ),
-                Spanned(
-                    Expr(
-                        Spanned(
-                            Loop(
-                                Spanned(
-                                    If {
-                                        condition: Spanned(
-                                            Binary(
-                                                Spanned(
-                                                    Ident("counter"),
-                                                    42..49,
-                                                ),
-                                                Greater,
-                                                Spanned(
-                                                    Int(10),
-                                                    52..54,
-                                                ),
-                                            ),
-                                            42..54,
-                                        ),
-                                        then_branch: Spanned(
-                                            Break(
-                                                None,
-                                            ),
-                                            63..68,
-                                        ),
-                                        else_branch: Some(
-                                            Spanned(
-                                                Assign {
-                                                    name: Spanned(
-                                                        "counter",
-                                                        79..86,
-                                                    ),
-                                                    rhs: Spanned(
-                                                        Binary(
-                                                            Spanned(
-                                                                Ident("counter"),
-                                                                89..96,
-                                                            ),
-                                                            Add,
-                                                            Spanned(
-                                                                Int(1),
-                                                                99..100,
-                                                            ),
-                                                        ),
-                                                        89..100,
-                                                    ),
-                                                },
-                                                79..100,
-                                            ),
-                                        ),
-                                    },
-                                    39..100,
-                                ),
+            Spanned(
+                [
+                    Spanned(
+                        Var {
+                            name: Spanned(
+                                "counter",
+                                17..24,
                             ),
-                            32..100,
-                        ),
-                    ),
-                    32..101,
-                ),
-                Spanned(
-                    Expr(
-                        Spanned(
-                            Loop(
-                                Spanned(
-                                    If {
-                                        condition: Spanned(
-                                            Binary(
-                                                Spanned(
-                                                    Ident("counter"),
-                                                    117..124,
-                                                ),
-                                                Greater,
-                                                Spanned(
-                                                    Int(10),
-                                                    127..129,
-                                                ),
-                                            ),
-                                            117..129,
-                                        ),
-                                        then_branch: Spanned(
-                                            Break(
-                                                None,
-                                            ),
-                                            137..142,
-                                        ),
-                                        else_branch: Some(
-                                            Spanned(
-                                                Assign {
-                                                    name: Spanned(
-                                                        "counter",
-                                                        150..157,
-                                                    ),
-                                                    rhs: Spanned(
-                                                        Binary(
-                                                            Spanned(
-                                                                Ident("counter"),
-                                                                160..167,
-                                                            ),
-                                                            Add,
-                                                            Spanned(
-                                                                Int(1),
-                                                                170..171,
-                                                            ),
-                                                        ),
-                                                        160..171,
-                                                    ),
-                                                },
-                                                150..171,
-                                            ),
-                                        ),
-                                    },
-                                    113..172,
+                            rhs: Spanned(
+                                Literal(
+                                    Spanned(
+                                        Int(0),
+                                        27..28,
+                                    ),
                                 ),
+                                27..28,
                             ),
-                            104..175,
-                        ),
+                        },
+                        3..29,
                     ),
-                    104..176,
-                ),
-                Spanned(
-                    Expr(
-                        Spanned(
-                            Loop(
-                                Spanned(
-                                    Block(
+                    Spanned(
+                        Loop(
+                            Spanned(
+                                If {
+                                    condition: Spanned(
+                                        Binary(
+                                            Spanned(
+                                                Ident(
+                                                    Spanned(
+                                                        "counter",
+                                                        42..49,
+                                                    ),
+                                                ),
+                                                42..49,
+                                            ),
+                                            Gt,
+                                            Spanned(
+                                                Literal(
+                                                    Spanned(
+                                                        Int(10),
+                                                        52..54,
+                                                    ),
+                                                ),
+                                                52..54,
+                                            ),
+                                        ),
+                                        42..54,
+                                    ),
+                                    then_branch: Spanned(
+                                        Break(
+                                            None,
+                                        ),
+                                        63..68,
+                                    ),
+                                    else_branch: Some(
+                                        Spanned(
+                                            Assign(
+                                                Spanned(
+                                                    Ident(
+                                                        Spanned(
+                                                            "counter",
+                                                            79..86,
+                                                        ),
+                                                    ),
+                                                    79..86,
+                                                ),
+                                                Spanned(
+                                                    Binary(
+                                                        Spanned(
+                                                            Ident(
+                                                                Spanned(
+                                                                    "counter",
+                                                                    89..96,
+                                                                ),
+                                                            ),
+                                                            89..96,
+                                                        ),
+                                                        Add,
+                                                        Spanned(
+                                                            Literal(
+                                                                Spanned(
+                                                                    Int(1),
+                                                                    99..100,
+                                                                ),
+                                                            ),
+                                                            99..100,
+                                                        ),
+                                                    ),
+                                                    89..100,
+                                                ),
+                                            ),
+                                            79..100,
+                                        ),
+                                    ),
+                                },
+                                39..100,
+                            ),
+                        ),
+                        32..101,
+                    ),
+                    Spanned(
+                        Loop(
+                            Spanned(
+                                If {
+                                    condition: Spanned(
+                                        Binary(
+                                            Spanned(
+                                                Ident(
+                                                    Spanned(
+                                                        "counter",
+                                                        117..124,
+                                                    ),
+                                                ),
+                                                117..124,
+                                            ),
+                                            Gt,
+                                            Spanned(
+                                                Literal(
+                                                    Spanned(
+                                                        Int(10),
+                                                        127..129,
+                                                    ),
+                                                ),
+                                                127..129,
+                                            ),
+                                        ),
+                                        117..129,
+                                    ),
+                                    then_branch: Spanned(
+                                        Break(
+                                            None,
+                                        ),
+                                        137..142,
+                                    ),
+                                    else_branch: Some(
+                                        Spanned(
+                                            Assign(
+                                                Spanned(
+                                                    Ident(
+                                                        Spanned(
+                                                            "counter",
+                                                            150..157,
+                                                        ),
+                                                    ),
+                                                    150..157,
+                                                ),
+                                                Spanned(
+                                                    Binary(
+                                                        Spanned(
+                                                            Ident(
+                                                                Spanned(
+                                                                    "counter",
+                                                                    160..167,
+                                                                ),
+                                                            ),
+                                                            160..167,
+                                                        ),
+                                                        Add,
+                                                        Spanned(
+                                                            Literal(
+                                                                Spanned(
+                                                                    Int(1),
+                                                                    170..171,
+                                                                ),
+                                                            ),
+                                                            170..171,
+                                                        ),
+                                                    ),
+                                                    160..171,
+                                                ),
+                                            ),
+                                            150..171,
+                                        ),
+                                    ),
+                                },
+                                113..172,
+                            ),
+                        ),
+                        104..176,
+                    ),
+                    Spanned(
+                        Loop(
+                            Spanned(
+                                Block(
+                                    Spanned(
                                         [
                                             Spanned(
-                                                Expr(
-                                                    Spanned(
-                                                        If {
-                                                            condition: Spanned(
-                                                                Binary(
+                                                If {
+                                                    condition: Spanned(
+                                                        Binary(
+                                                            Spanned(
+                                                                Ident(
                                                                     Spanned(
-                                                                        Ident("counter"),
+                                                                        "counter",
                                                                         191..198,
                                                                     ),
-                                                                    Greater,
+                                                                ),
+                                                                191..198,
+                                                            ),
+                                                            Gt,
+                                                            Spanned(
+                                                                Literal(
                                                                     Spanned(
                                                                         Int(10),
                                                                         201..203,
                                                                     ),
                                                                 ),
-                                                                191..203,
+                                                                201..203,
                                                             ),
-                                                            then_branch: Spanned(
-                                                                Block(
-                                                                    [
-                                                                        Spanned(
-                                                                            Expr(
-                                                                                Spanned(
-                                                                                    Break(
-                                                                                        None,
-                                                                                    ),
-                                                                                    214..219,
-                                                                                ),
-                                                                            ),
-                                                                            214..220,
+                                                        ),
+                                                        191..203,
+                                                    ),
+                                                    then_branch: Spanned(
+                                                        Block(
+                                                            Spanned(
+                                                                [
+                                                                    Spanned(
+                                                                        Break(
+                                                                            None,
                                                                         ),
-                                                                    ],
-                                                                ),
+                                                                        214..220,
+                                                                    ),
+                                                                ],
                                                                 209..224,
                                                             ),
-                                                            else_branch: Some(
+                                                        ),
+                                                        209..224,
+                                                    ),
+                                                    else_branch: Some(
+                                                        Spanned(
+                                                            Block(
                                                                 Spanned(
-                                                                    Block(
-                                                                        [
-                                                                            Spanned(
-                                                                                Expr(
-                                                                                    Spanned(
-                                                                                        Assign {
-                                                                                            name: Spanned(
-                                                                                                "counter",
-                                                                                                235..242,
-                                                                                            ),
-                                                                                            rhs: Spanned(
-                                                                                                Binary(
-                                                                                                    Spanned(
-                                                                                                        Ident("counter"),
-                                                                                                        245..252,
-                                                                                                    ),
-                                                                                                    Add,
-                                                                                                    Spanned(
-                                                                                                        Int(1),
-                                                                                                        255..256,
-                                                                                                    ),
-                                                                                                ),
-                                                                                                245..256,
-                                                                                            ),
-                                                                                        },
-                                                                                        235..256,
+                                                                    [
+                                                                        Spanned(
+                                                                            Assign(
+                                                                                Spanned(
+                                                                                    Ident(
+                                                                                        Spanned(
+                                                                                            "counter",
+                                                                                            235..242,
+                                                                                        ),
                                                                                     ),
+                                                                                    235..242,
                                                                                 ),
-                                                                                235..257,
+                                                                                Spanned(
+                                                                                    Binary(
+                                                                                        Spanned(
+                                                                                            Ident(
+                                                                                                Spanned(
+                                                                                                    "counter",
+                                                                                                    245..252,
+                                                                                                ),
+                                                                                            ),
+                                                                                            245..252,
+                                                                                        ),
+                                                                                        Add,
+                                                                                        Spanned(
+                                                                                            Literal(
+                                                                                                Spanned(
+                                                                                                    Int(1),
+                                                                                                    255..256,
+                                                                                                ),
+                                                                                            ),
+                                                                                            255..256,
+                                                                                        ),
+                                                                                    ),
+                                                                                    245..256,
+                                                                                ),
                                                                             ),
-                                                                        ],
-                                                                    ),
+                                                                            235..257,
+                                                                        ),
+                                                                    ],
                                                                     230..261,
                                                                 ),
                                                             ),
-                                                        },
-                                                        188..261,
+                                                            230..261,
+                                                        ),
                                                     ),
-                                                ),
+                                                },
                                                 188..262,
                                             ),
                                         ],
+                                        184..265,
                                     ),
-                                    184..265,
                                 ),
+                                184..265,
                             ),
-                            179..265,
                         ),
+                        179..266,
                     ),
-                    179..266,
-                ),
-            ],
+                ],
+                0..268,
+            ),
         ),
         0..268,
     ),

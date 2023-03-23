@@ -1,5 +1,5 @@
 ---
-source: src/tests/modules.rs
+source: crates/rym_parser/src/tests/modules.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -9,11 +9,9 @@ mod name
 Some(
     Spanned(
         Module {
-            name: Some(
-                Spanned(
-                    "name",
-                    4..8,
-                ),
+            name: Spanned(
+                "name",
+                4..8,
             ),
             items: [],
         },

@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -12,24 +12,44 @@ Some(
             condition: Spanned(
                 Binary(
                     Spanned(
-                        Ident("true"),
+                        Ident(
+                            Spanned(
+                                "true",
+                                3..7,
+                            ),
+                        ),
                         3..7,
                     ),
                     Eq,
                     Spanned(
-                        Ident("false"),
+                        Ident(
+                            Spanned(
+                                "false",
+                                11..16,
+                            ),
+                        ),
                         11..16,
                     ),
                 ),
                 3..16,
             ),
             then_branch: Spanned(
-                String("Hello Universe!"),
+                Literal(
+                    Spanned(
+                        String("Hello Universe!"),
+                        22..39,
+                    ),
+                ),
                 22..39,
             ),
             else_branch: Some(
                 Spanned(
-                    String("Hello World!"),
+                    Literal(
+                        Spanned(
+                            String("Hello World!"),
+                            45..59,
+                        ),
+                    ),
                     45..59,
                 ),
             ),

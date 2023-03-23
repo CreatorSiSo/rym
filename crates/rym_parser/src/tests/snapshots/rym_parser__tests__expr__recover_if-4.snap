@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -14,7 +14,12 @@ Some(
                 0..12,
             ),
             then_branch: Spanned(
-                Ident("_"),
+                Ident(
+                    Spanned(
+                        "_",
+                        13..14,
+                    ),
+                ),
                 13..14,
             ),
             else_branch: None,
@@ -30,7 +35,10 @@ Some(
         reason: ExpectedFound {
             expected: [
                 CloseBrace,
+                Expression,
+                Function,
                 Module,
+                Binding,
             ],
             found: Some(
                 CloseParen,

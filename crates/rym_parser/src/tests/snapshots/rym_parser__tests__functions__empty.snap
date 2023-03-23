@@ -1,5 +1,5 @@
 ---
-source: src/tests/functions.rs
+source: crates/rym_parser/src/tests/functions.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -17,7 +17,10 @@ Some(
             rhs: Some(
                 Spanned(
                     Block(
-                        [],
+                        Spanned(
+                            [],
+                            13..15,
+                        ),
                     ),
                     13..15,
                 ),

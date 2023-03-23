@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -14,7 +14,12 @@ Some(
                 0..25,
             ),
             then_branch: Spanned(
-                Ident("_"),
+                Ident(
+                    Spanned(
+                        "_",
+                        26..27,
+                    ),
+                ),
                 26..27,
             ),
             else_branch: None,
@@ -34,10 +39,7 @@ Some(
                 Minus,
                 Star,
                 Slash,
-                BangEq,
-                EqEq,
-                LessThan,
-                GreaterThan,
+                Eq,
                 OpenParen,
                 CloseParen,
             ],

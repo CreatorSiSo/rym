@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -23,11 +23,7 @@ Some(
                 Minus,
                 Star,
                 Slash,
-                BangEq,
                 Eq,
-                EqEq,
-                LessThan,
-                GreaterThan,
                 OpenParen,
                 CloseParen,
                 OpenBrace,

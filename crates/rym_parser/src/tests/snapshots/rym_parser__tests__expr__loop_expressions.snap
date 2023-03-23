@@ -1,5 +1,5 @@
 ---
-source: src/tests/expr.rs
+source: crates/rym_parser/src/tests/expr.rs
 expression: "&snapshot"
 ---
 --- Input ---
@@ -13,95 +13,120 @@ expression: "&snapshot"
 Some(
     Spanned(
         Block(
-            [
-                Spanned(
-                    Expr(
-                        Spanned(
-                            Loop(
-                                Spanned(
-                                    Call(
-                                        Spanned(
-                                            Ident("print"),
-                                            8..13,
+            Spanned(
+                [
+                    Spanned(
+                        Loop(
+                            Spanned(
+                                Call {
+                                    func: Spanned(
+                                        Ident(
+                                            Spanned(
+                                                "print",
+                                                8..13,
+                                            ),
                                         ),
+                                        8..13,
+                                    ),
+                                    args: Spanned(
                                         [
                                             Spanned(
-                                                String("To infinity and beyond!"),
+                                                Literal(
+                                                    Spanned(
+                                                        String("To infinity and beyond!"),
+                                                        14..39,
+                                                    ),
+                                                ),
                                                 14..39,
                                             ),
                                         ],
+                                        13..40,
                                     ),
-                                    8..40,
-                                ),
+                                },
+                                8..40,
                             ),
-                            3..40,
                         ),
+                        3..41,
                     ),
-                    3..41,
-                ),
-                Spanned(
-                    Expr(
-                        Spanned(
-                            Loop(
-                                Spanned(
-                                    Call(
-                                        Spanned(
-                                            Ident("print"),
-                                            49..54,
+                    Spanned(
+                        Loop(
+                            Spanned(
+                                Call {
+                                    func: Spanned(
+                                        Ident(
+                                            Spanned(
+                                                "print",
+                                                49..54,
+                                            ),
                                         ),
+                                        49..54,
+                                    ),
+                                    args: Spanned(
                                         [
                                             Spanned(
-                                                String("To infinity and beyond!"),
+                                                Literal(
+                                                    Spanned(
+                                                        String("To infinity and beyond!"),
+                                                        55..80,
+                                                    ),
+                                                ),
                                                 55..80,
                                             ),
                                         ],
+                                        54..81,
                                     ),
-                                    49..81,
-                                ),
+                                },
+                                49..81,
                             ),
-                            43..82,
                         ),
+                        43..83,
                     ),
-                    43..83,
-                ),
-                Spanned(
-                    Expr(
-                        Spanned(
-                            Loop(
-                                Spanned(
-                                    Block(
+                    Spanned(
+                        Loop(
+                            Spanned(
+                                Block(
+                                    Spanned(
                                         [
                                             Spanned(
-                                                Expr(
-                                                    Spanned(
-                                                        Call(
+                                                Call {
+                                                    func: Spanned(
+                                                        Ident(
                                                             Spanned(
-                                                                Ident("print"),
+                                                                "print",
                                                                 92..97,
                                                             ),
-                                                            [
-                                                                Spanned(
-                                                                    String("To infinity and beyond!"),
-                                                                    98..123,
-                                                                ),
-                                                            ],
                                                         ),
-                                                        92..124,
+                                                        92..97,
                                                     ),
-                                                ),
+                                                    args: Spanned(
+                                                        [
+                                                            Spanned(
+                                                                Literal(
+                                                                    Spanned(
+                                                                        String("To infinity and beyond!"),
+                                                                        98..123,
+                                                                    ),
+                                                                ),
+                                                                98..123,
+                                                            ),
+                                                        ],
+                                                        97..124,
+                                                    ),
+                                                },
                                                 92..125,
                                             ),
                                         ],
+                                        90..127,
                                     ),
-                                    90..127,
                                 ),
+                                90..127,
                             ),
-                            85..127,
                         ),
+                        85..128,
                     ),
-                    85..128,
-                ),
-            ],
+                ],
+                0..130,
+            ),
         ),
         0..130,
     ),

@@ -13,7 +13,7 @@ pub use value::{Type, Value};
 
 use callable::{Callable, RymFunction};
 use env::GlobalEnv;
-use rym_ast::{BinaryOp, Expr, Item, Literal, LogicalOp, MutVisitor, Span, Spanned, Stmt, UnaryOp};
+use rym_ast::{BinaryOp, Expr, Item, Literal, LogicalOp, Span, Spanned, Stmt, UnaryOp, Visitor};
 
 #[derive(Debug)]
 pub enum Inter {
@@ -163,7 +163,7 @@ impl Interpreter {
 	}
 }
 
-impl MutVisitor for Interpreter {
+impl Visitor for Interpreter {
 	type Result = Result<Inter, SpannedError>;
 
 	// fn visit_item(&mut self, Spanned(item, _): Spanned<&rym_ast::Item>) -> Self::Result {

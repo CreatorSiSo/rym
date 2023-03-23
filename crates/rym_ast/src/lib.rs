@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 mod visitor;
-pub use visitor::MutVisitor;
+pub use visitor::{MutVisitor, Visitor};
 
 pub type Span = std::ops::Range<usize>;
 

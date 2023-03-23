@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::error::{spanned_err, LogicError, SpannedError};
 use crate::{Inter, Interpreter, Value};
-use rym_ast::{Expr, MutVisitor, Spanned};
+use rym_ast::{Expr, Spanned, Visitor};
 
 type Arity = Option<usize>;
 pub type CallableFn = dyn Fn(&mut Interpreter, &[Value]) -> Result<Value, SpannedError>;

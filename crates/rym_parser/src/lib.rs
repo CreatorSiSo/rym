@@ -7,7 +7,7 @@ use rym_ast::{BinaryOp, Expr, Func, Item, Literal, Module, Span, Spanned, Stmt, 
 use chumsky::input::SpannedInput;
 use chumsky::prelude::*;
 use chumsky::util::MaybeRef;
-use rym_lexer::rich::{Lexer, Token};
+use rym_lexer::rich::Token;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseResult<'a, T> {
@@ -27,38 +27,30 @@ pub(crate) type InputAlias<'a> = SpannedInput<Token, Span, &'a [(Token, Span)]>;
 pub(crate) type ExtraAlias<'a> = extra::Err<ErrorAlias<'a>>;
 pub(crate) type ErrorAlias<'a> = Rich<'a, Token, Span, Label>;
 
-pub fn parse_module_file(src: &str) -> ParseResult<Vec<Spanned<Item>>> {
-	parse_str(|tokens| module_file_parser().parse(tokens).into(), src)
-}
-
-pub fn parse_script_file(src: &str) -> ParseResult<Vec<Spanned<Stmt>>> {
-	parse_str(|tokens| script_file_parser().parse(tokens).into(), src)
-}
-
-pub fn parse_expr(tokens: &[(Token, Span)]) -> ParseResult<Spanned<Expr>> {
-	expr_parser()
+pub fn parse_module_file(tokens: &[(Token, Span)]) -> ParseResult<Vec<Spanned<Item>>> {
+	module_file_parser()
 		.parse(tokens.spanned(tokens.len()..tokens.len()))
 		.into()
-}
-
-pub(crate) fn parse_str<'a, T>(
-	parse_fn: fn(InputAlias) -> ParseResult<T>,
-	src: &'a str,
-) -> ParseResult<T>
-where
-	ParseResult<'a, T>: From<chumsky::prelude::ParseResult<T, ErrorAlias<'a>>>,
-{
-	// TODO Fix the leak
-	let tokens = Lexer::new(src).collect::<Vec<(Token, Span)>>().leak();
-	parse_fn(tokens.spanned(tokens.len()..tokens.len()))
 }
 
 fn module_file_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Vec<Spanned<Item>>, ExtraAlias<'a>> {
 	item_parser(expr_parser()).repeated().collect()
 }
 
+pub fn parse_script_file(tokens: &[(Token, Span)]) -> ParseResult<Vec<Spanned<Stmt>>> {
+	script_file_parser()
+		.parse(tokens.spanned(tokens.len()..tokens.len()))
+		.into()
+}
+
 fn script_file_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Vec<Spanned<Stmt>>, ExtraAlias<'a>> {
 	stmt_parser(expr_parser()).repeated().collect()
+}
+
+pub fn parse_item(tokens: &[(Token, Span)]) -> ParseResult<Spanned<Item>> {
+	item_parser(expr_parser())
+		.parse(tokens.spanned(tokens.len()..tokens.len()))
+		.into()
 }
 
 fn item_parser<'a>(
@@ -133,6 +125,12 @@ fn stmt_parser<'a>(
 		expr.then_ignore(just(Token::Semi)).map(Stmt::Expr),
 	))
 	.map_with_span(Spanned)
+}
+
+pub fn parse_expr(tokens: &[(Token, Span)]) -> ParseResult<Spanned<Expr>> {
+	expr_parser()
+		.parse(tokens.spanned(tokens.len()..tokens.len()))
+		.into()
 }
 
 fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlias<'a>> + Clone {

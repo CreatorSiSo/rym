@@ -1,10 +1,10 @@
-use crate::{insta_assert_parser, script_file_parser};
+use crate::{insta_assert_parser, parse_script_file};
 use indoc::indoc;
 
 #[test]
 fn empty() {
 	insta_assert_parser! {
-		script_file_parser();
+		parse_script_file;
 
 		indoc!(r#"
 		// This is a comment

@@ -7,8 +7,11 @@ default-run = "rymx"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0"
+clap = { version = "4.2", features = ["cargo"] }
 owo-colors = "3"
 rustyline = "11"
+termsize = "0.1"
 stringx.workspace = true
 rym_ast.workspace = true
 rym_lexer.workspace = true

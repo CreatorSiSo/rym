@@ -1,4 +1,4 @@
-use crate::{expr_parser, insta_assert_parser};
+use crate::{insta_assert_parser, parse_expr};
 #[allow(unused_imports)]
 use chumsky::Parser;
 use indoc::indoc;
@@ -6,7 +6,7 @@ use indoc::indoc;
 #[test]
 fn literal_expressions() {
 	insta_assert_parser! {
-		expr_parser();
+		parse_expr;
 		"823_472_340",
 		"823_472_340_983_273_327",
 		"1.0",
@@ -26,7 +26,7 @@ fn literal_expressions() {
 #[test]
 fn record_expressions() {
 	insta_assert_parser! {
-		expr_parser();
+		parse_expr;
 		r#"Record { name: "Record", fields: todo() }"#,
 		r#".{ name: "Record", fields: todo() }"#,
 		r#".{ }"#,
@@ -36,7 +36,7 @@ fn record_expressions() {
 #[test]
 fn simple_expressions() {
 	insta_assert_parser! {
-		expr_parser();
+		parse_expr;
 		"indentifier_1",
 		"(grouped_ident)",
 		"func_name(2, \"Do stuff!!\", true)",
@@ -49,7 +49,7 @@ fn simple_expressions() {
 #[test]
 fn unary_expressions() {
 	insta_assert_parser! {
-		expr_parser();
+		parse_expr;
 		"-255",
 		"-1.0",
 		"-0.",
@@ -66,7 +66,7 @@ fn unary_expressions() {
 #[test]
 fn binary_expressions() {
 	insta_assert_parser! {
-		expr_parser();
+		parse_expr;
 		"lhs == rhs",
 		"lhs != rhs",
 		"lhs + rhs",
@@ -83,7 +83,7 @@ fn binary_expressions() {
 #[test]
 fn block_expressions() {
 	insta_assert_parser! {
-		expr_parser();
+		parse_expr;
 		indoc!("
 		{
 			testing;
@@ -97,7 +97,7 @@ fn block_expressions() {
 #[test]
 fn variables() {
 	insta_assert_parser! {
-		expr_parser();
+		parse_expr;
 		indoc!(r#"
 		{
 			let msg = "Hello World!\n";
@@ -111,7 +111,7 @@ fn variables() {
 #[test]
 fn if_expressions() {
 	insta_assert_parser! {
-		expr_parser();
+		parse_expr;
 
 		// conditional function call
 		r#"if true then { print("Hello Universe!"); } else { print("Hello World!"); }"#,
@@ -145,7 +145,7 @@ fn if_expressions() {
 #[test]
 fn loop_expressions() {
 	insta_assert_parser!(
-		expr_parser();
+		parse_expr;
 
 		// infinite
 		indoc! {r#"
@@ -186,7 +186,7 @@ fn loop_expressions() {
 #[test]
 fn recover_group() {
 	insta_assert_parser!(
-		expr_parser();
+		parse_expr;
 
 		// invalid semicolon
 		"(testing;)",
@@ -205,7 +205,7 @@ fn recover_group() {
 #[test]
 fn recover_block() {
 	insta_assert_parser!(
-		expr_parser();
+		parse_expr;
 
 		// gibberish
 		"{ /&$/&/$ }",
@@ -230,7 +230,7 @@ fn recover_block() {
 #[test]
 fn recover_call() {
 	insta_assert_parser!(
-		expr_parser();
+		parse_expr;
 
 		// missing args
 		"testing(,)",
@@ -249,7 +249,7 @@ fn recover_call() {
 #[test]
 fn recover_if() {
 	insta_assert_parser!(
-		expr_parser();
+		parse_expr;
 
 		// missing args
 		"if testing(,) then _",

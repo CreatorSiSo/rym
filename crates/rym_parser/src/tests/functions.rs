@@ -1,11 +1,11 @@
-use crate::{expr_parser, insta_assert_parser, item_parser};
+use crate::{insta_assert_parser, parse_item};
 #[allow(unused_imports)]
 use chumsky::Parser;
 
 #[test]
 fn empty() {
 	insta_assert_parser! {
-		item_parser(expr_parser());
+		parse_item;
 
 		"func empty() {}",
 		"func empty();",
@@ -16,7 +16,7 @@ fn empty() {
 #[test]
 fn params() {
 	insta_assert_parser! {
-		item_parser(expr_parser());
+		parse_item;
 
 		"func params(one, two, three);",
 		"func params(self, other);",

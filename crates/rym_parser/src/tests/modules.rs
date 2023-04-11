@@ -1,4 +1,4 @@
-use crate::{expr_parser, insta_assert_parser, item_parser, module_file_parser};
+use crate::{insta_assert_parser, parse_item, parse_module_file};
 #[allow(unused_imports)]
 use chumsky::Parser;
 use indoc::indoc;
@@ -6,23 +6,23 @@ use indoc::indoc;
 #[test]
 fn empty() {
 	insta_assert_parser! {
-	item_parser(expr_parser());
+		parse_item;
 
-	"mod name {}",
-	"mod {}",
+		"mod name {}",
+		"mod {}",
 
-	"mod name",
-	"mod name;",
+		"mod name",
+		"mod name;",
 
-	"mod",
-	"mod;",
+		"mod",
+		"mod;",
 	}
 }
 
 #[test]
 fn mixed() {
 	insta_assert_parser! {
-		item_parser(expr_parser());
+		parse_item;
 
 		indoc! {r#"
 		mod name {
@@ -36,7 +36,7 @@ fn mixed() {
 #[test]
 fn file() {
 	insta_assert_parser!(
-		module_file_parser();
+		parse_module_file;
 
 		indoc!(r#"
 		/// useless function for adding two values together

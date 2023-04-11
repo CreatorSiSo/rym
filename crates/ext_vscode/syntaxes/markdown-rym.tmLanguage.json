@@ -1,6 +1,8 @@
 {
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+
 	"fileTypes": [],
-	"injectionSelector": "L:text.html.markdown, L:text.html.quarto",
+	"injectionSelector": "L:text.html.markdown, L:text.html.quarto, L:source.typst",
 	"patterns": [{ "include": "#rym-code-block" }],
 	"repository": {
 		"rym-code-block": {
@@ -25,5 +27,5 @@
 			]
 		}
 	},
-	"scopeName": "markdown.rym.codeblock"
+	"scopeName": "source.rym.codeblock"
 }

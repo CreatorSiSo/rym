@@ -1,0 +1,165 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/syntax.html
+name: Rym
+scope: source.rym
+contexts:
+  main:
+    - include: block-comments
+    - include: comments
+    - include: keywords
+    - include: punctuation
+    - include: strings
+    - include: chars
+    - include: constants
+    - include: function_declaration
+    - include: function_name
+    - include: ident
+  block-comments:
+    - match: /\*\*/
+      comment: empty block comments
+      scope: comment.block.rym
+    - match: /\*\*
+      comment: block documentation comments
+      push:
+        - meta_scope: comment.block.documentation.rym
+        - match: \*/
+          pop: true
+        - include: block-comments
+    - match: /\*(?!\*)
+      comment: block comments
+      push:
+        - meta_scope: comment.block.rym
+        - match: \*/
+          pop: true
+        - include: block-comments
+  chars:
+    - match: "'"
+      push:
+        - meta_scope: string.quoted.single.rym
+        - match: "'"
+          pop: true
+        - match: \\.
+          scope: constant.character.escape.rym
+  comments:
+    - match: ^\s*///.*
+      comment: documentation comments
+      scope: comment.line.documentation.rym
+    - match: \s*//.*
+      comment: line comments
+      scope: comment.line.double-slash.rym
+  constants:
+    - match: '\b\d[\d_]*(\.?)[\d_]*(?:(E)([+-])([\d_]+))?(f\d+|i\d+|isize|u\d+|usize)?\b'
+      comment: decimal integers and floats
+      scope: constant.numeric.decimal.rym
+      captures:
+        1: punctuation.separator.dot.decimal.rym
+        2: keyword.operator.exponent.rym
+        3: keyword.operator.exponent.sign.rym
+        4: constant.numeric.decimal.exponent.mantissa.rym
+        5: entity.name.type.numeric.rym
+    - match: \b(True|False)\b
+      comment: booleans
+      scope: constant.language.bool.rym keyword.other.rym
+  function_declaration:
+    - match: \b(func|proc)\b
+      captures:
+        1: storage.type.fn.rym keyword.other.rym
+      push:
+        - meta_scope: meta.function.signature.rym
+        - match: '(\{)|(?=\/\/|\n|\r)'
+          captures:
+            1: punctuation.definition.block.begin.rym
+          pop: true
+        - include: function_declaration
+        - include: function_name
+  function_name:
+    - match: '([_a-z][_a-zA-Z0-9]*)(?=\s*\()'
+      scope: entity.name.function.rym
+    - match: '([_a-z][_a-zA-Z0-9]*)\s*((?=<.*>\()|(?=\())'
+      captures:
+        1: entity.name.function.rym
+        2: keyword.operator.assignment.rym
+  ident:
+    - match: '([A-Z]|_+[A-Z])[_a-zA-Z0-9]*'
+      scope: entity.name.rym
+    - match: '[_a-z][_a-zA-Z0-9]*'
+      scope: variable.name
+  keywords:
+    - match: \b(func|proc|use|mod|pub|self|Self|as|move)\b
+      scope: keyword.other.rym
+    - match: \b(impl|trait|type)\b
+      scope: keyword.control keyword.other.rym
+    - match: \b(loop|while|do|for|in|match|with|if|then|else|return|break|continue)\b
+      comment: control flow keywords
+      scope: keyword.control.rym
+    - match: \b(let|mut|const)\b
+      comment: storage keywords
+      scope: keyword.other.rym storage.type.rym
+    - match: (\||\|\||&|&&|<<|>>|!)(?!=)
+      comment: logical operators
+      scope: keyword.operator.logical.rym
+    - match: '(?<![<>])=(?!=|>)'
+      comment: single equal
+      scope: keyword.operator.assignment.equal.rym
+    - match: (=(=)?(?!>)|!=|<=|(?<!=)>=)
+      comment: comparison operators
+      scope: keyword.operator.comparison.rym
+    - match: '[+\-*/%]=?'
+      comment: math operators
+      scope: keyword.operator.math.rym
+    - match: '(?:\b|(?:(\))|(\])|(\})))[ \t]+([<>])[ \t]+(?:\b|(?:(\()|(\[)|(\{)))'
+      comment: less than, greater than (special case)
+      captures:
+        1: punctuation.brackets.round.rym
+        2: punctuation.brackets.square.rym
+        3: punctuation.brackets.curly.rym
+        4: keyword.operator.comparison.rym
+        5: punctuation.brackets.round.rym
+        6: punctuation.brackets.square.rym
+        7: punctuation.brackets.curly.rym
+  punctuation:
+    - match: \.
+      comment: dot
+      scope: punctuation.dot.rym
+    - match: ','
+      comment: comma
+      scope: punctuation.comma.rym
+    - match: ':'
+      comment: colon
+      scope: punctuation.colon.rym
+    - match: ;
+      comment: semicolon
+      scope: punctuation.semi.rym
+    - match: '@'
+      comment: at
+      scope: punctuation.at.rym
+    - match: \?
+      comment: question mark
+      scope: punctuation.question.rym
+    - match: '->'
+      comment: thin arrow
+      scope: punctuation.rym
+    - match: '=>'
+      comment: fat arrow
+      scope: punctuation.rym
+    - match: '[{}]'
+      comment: curly braces
+      scope: punctuation.brackets.curly.rym
+    - match: '[()]'
+      comment: parentheses, round brackets
+      scope: punctuation.brackets.round.rym
+    - match: '[\[\]]'
+      comment: square brackets
+      scope: punctuation.brackets.square.rym
+    - match: '(?<!=)[<>]'
+      comment: angle brackets
+      scope: punctuation.brackets.angle.rym
+  strings:
+    - match: '"'
+      push:
+        - meta_scope: string.quoted.double.rym
+        - match: '"'
+          pop: true
+        - match: \\.
+          scope: constant.character.escape.rym

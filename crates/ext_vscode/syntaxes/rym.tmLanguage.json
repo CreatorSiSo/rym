@@ -92,8 +92,7 @@
 					"name": "meta.function.signature.rym",
 					"patterns": [
 						{ "include": "#function_declaration" },
-						{ "include": "#function_name" },
-						{ "include": "#parameters" }
+						{ "include": "#function_name" }
 					]
 				}
 			]

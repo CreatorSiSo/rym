@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use colored::Colorize;
+use owo_colors::OwoColorize;
 use stringx::Join;
 
 use rym_ast::{Spanned, Stmt};
@@ -12,14 +12,11 @@ where
 	F: FnMut() -> bool,
 {
 	println!("\n{} {}", "╭──".bright_blue(), title.bright_blue().bold());
-	println!(
-		"{}",
-		if f() {
-			"╰── ✓".green()
-		} else {
-			"╰── ✗".red()
-		}
-	);
+	if f() {
+		println!("{}", "╰── ✓".green());
+	} else {
+		println!("{}", "╰── ✗".red());
+	}
 }
 
 pub(crate) fn tokens(tokens: &[Token]) {

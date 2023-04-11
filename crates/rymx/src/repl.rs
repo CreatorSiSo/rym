@@ -1,9 +1,9 @@
+use rustyline::history::FileHistory;
 use rym_ast::Visitor;
+use rym_ast_passes::NodeCounter;
 use rym_lexer::rich::Lexer;
 use rym_parser::parse_expr;
-// use colored::Colorize;
-use rym_ast_passes::NodeCounter;
-use tree_walk::Interpreter;
+// use tree_walk::Interpreter;
 
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
@@ -14,8 +14,8 @@ pub fn exec() -> rustyline::Result<()> {
 }
 
 struct Repl {
-	interpreter: Interpreter,
-	editor: Editor<()>,
+	// interpreter: Interpreter,
+	editor: Editor<(), FileHistory>,
 }
 
 impl Repl {
@@ -25,7 +25,7 @@ impl Repl {
 			println!("No previous history.");
 		}
 		Ok(Self {
-			interpreter: Interpreter::default(),
+			// interpreter: Interpreter::default(),
 			editor,
 		})
 	}
@@ -35,7 +35,7 @@ impl Repl {
 			let readline = self.editor.readline(" ➤ ");
 			match readline {
 				Ok(line) => {
-					self.editor.add_history_entry(line.as_str());
+					self.editor.add_history_entry(line.as_str()).unwrap();
 					self.eval_line(line);
 				}
 				Err(ReadlineError::Interrupted) => {

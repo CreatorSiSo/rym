@@ -11,14 +11,9 @@ rym_lexer.workspace = true
 
 [dependencies.chumsky]
 git = "https://github.com/zesterer/chumsky"
-rev = "4145fcf5bf1323d1accae5d7ba50ff9b799dbe43"
+rev = "f664d7d7f36205bca58842233431927c14be69c0"
 features = ["label"]
 
 [dev-dependencies]
-insta = "1.26"
-indoc = "2.0.0"
-
-# smallest binary without compromising on speed
-[profile.tiny]
-inherits = "release"
-lto = "fat"
+insta = "1.29"
+indoc = "2.0"

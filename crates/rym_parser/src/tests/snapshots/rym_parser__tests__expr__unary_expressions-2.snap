@@ -13,7 +13,7 @@ Some(
             Spanned(
                 Literal(
                     Spanned(
-                        Float(1, 0),
+                        Float(1),
                         1..4,
                     ),
                 ),

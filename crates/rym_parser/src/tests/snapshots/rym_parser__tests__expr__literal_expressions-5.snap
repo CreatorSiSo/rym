@@ -10,7 +10,7 @@ Some(
     Spanned(
         Literal(
             Spanned(
-                Float(444, 444),
+                Float(444.444),
                 0..7,
             ),
         ),

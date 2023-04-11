@@ -6,6 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rym_ast = { path = "../rym_ast" }
-rym_parser = { path = "../rym_parser" }
-thiserror = "1.0.37"
+rym_ast.workspace = true
+rym_parser.workspace = true
+thiserror.workspace = true

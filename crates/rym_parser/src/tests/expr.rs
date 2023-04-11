@@ -12,6 +12,7 @@ fn literal_expressions() {
 		"1.0",
 		"0.",
 		"444.444",
+		// TODO This should actually store 9999999999999.999999999 instead of 10000000000000.0
 		"9_999_999_999_999.999_999_999",
 		"'a'",
 		"'\\n'",

@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-unicode-ident = "1.0.5"
-stringx = { version = "0.1", optional = true }
+unicode-ident = "1.0.8"
+stringx = { workspace = true, optional = true }
 rym_errors = { workspace = true, optional = true }
 rym_span = { workspace = true, optional = true }
 rym_unescape = { workspace = true, optional = true }

@@ -2,7 +2,7 @@ use std::fs::read_to_string;
 
 use clap::{arg, command, ArgMatches, Command};
 use rustyline::{error::ReadlineError, Editor};
-use rym_ast::Visitor;
+use rym_ast::visitor::Visitor;
 use rym_ast_passes::NodeCounter;
 use rym_lexer::rich::Lexer;
 use rym_parser::{parse_script_file, ParseResult};
@@ -97,15 +97,9 @@ fn eval_src(src: String) {
 	}
 
 	if let Some(stmts) = ast {
-		let mut counter = NodeCounter::new();
+		let mut counter = NodeCounter;
 		// TODO NodeCounter should return the amount of nodes for each .walk / .visit call
-		let counts = stmts
-			.iter()
-			.map(|stmt| {
-				counter.walk_stmt(stmt);
-				counter.count
-			})
-			.join(", ");
+		let counts = stmts.iter().map(|stmt| counter.visit_stmt(stmt)).join(", ");
 		println!("{}", render_box(cols, "Node Counts", &counts));
 	}
 }

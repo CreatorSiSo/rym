@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::error::{spanned_err, LogicError, SpannedError};
 use crate::{Inter, Interpreter, Value};
-use rym_ast::{Expr, Spanned, Visitor};
+use rym_ast::{visitor::Visitor, Expr, Spanned};
 
 type Arity = Option<usize>;
 pub type CallableFn = dyn Fn(&mut Interpreter, &[Value]) -> Result<Value, SpannedError>;
@@ -91,7 +91,7 @@ impl Callable for RymFunction {
 			for (idx, param) in self.params.iter().enumerate() {
 				interpreter.env.declare(&param.0, args[idx].clone(), true)
 			}
-			interpreter.walk_expr(&self.rhs)
+			interpreter.visit_expr(&self.rhs)
 		};
 		interpreter.env.pop_env();
 

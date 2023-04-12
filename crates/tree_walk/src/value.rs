@@ -84,7 +84,7 @@ impl core::fmt::Display for Value {
 
 impl From<Literal> for Value {
 	fn from(lit: Literal) -> Self {
-		fn num_digits(num: u64, base: u32) -> u32 {
+		fn _num_digits(num: u64, base: u32) -> u32 {
 			(num as f64).log(base as f64).ceil() as u32
 		}
 

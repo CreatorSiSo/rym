@@ -2,8 +2,8 @@ use std::fs::read_to_string;
 
 use clap::{arg, command, ArgMatches, Command};
 use rustyline::{error::ReadlineError, Editor};
-use rym_ast::visitor::Visitor;
-use rym_ast_passes::NodeCounter;
+use rym_ast::{mut_visitor, visitor};
+use rym_ast_passes::{NodeCounter, ValidationPass};
 use rym_lexer::rich::Lexer;
 use rym_parser::{parse_script_file, ParseResult};
 use stringx::Join;
@@ -96,10 +96,21 @@ fn eval_src(src: String) {
 		println!("{}", render_box(cols, "Errors", &err_str));
 	}
 
-	if let Some(stmts) = ast {
+	let mut ast = ast;
+	if let Some(stmts) = &mut ast {
 		let mut counter = NodeCounter;
-		// TODO NodeCounter should return the amount of nodes for each .walk / .visit call
-		let counts = stmts.iter().map(|stmt| counter.visit_stmt(stmt)).join(", ");
+
+		let counts = visitor::walk_stmts(&mut counter, stmts).join(", ");
+		println!("{}", render_box(cols, "Node Counts", &counts));
+
+		let mut pass = ValidationPass::new();
+		mut_visitor::walk_stmts(&mut pass, stmts);
+		println!(
+			"{}",
+			render_box(cols, "Simplified Ast", &format!("{:?}", stmts))
+		);
+
+		let counts = visitor::walk_stmts(&mut counter, stmts).join(", ");
 		println!("{}", render_box(cols, "Node Counts", &counts));
 	}
 }

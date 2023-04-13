@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+pub mod mut_visitor;
 pub mod visitor;
 
 pub type Span = std::ops::Range<usize>;

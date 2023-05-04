@@ -1,6 +1,4 @@
-use crate::{
-	BinaryOp, Expr, Func, Item, Literal, LogicalOp, Module, Span, Spanned, Stmt, UnaryOp, Var,
-};
+use crate::{BinaryOp, Expr, Func, Item, Literal, Module, Span, Spanned, Stmt, UnaryOp, Var};
 
 pub trait Visitor: Sized {
 	type Result;
@@ -52,12 +50,6 @@ pub trait Visitor: Sized {
 		op: BinaryOp,
 		expr_r: &Spanned<Expr>,
 	) -> Self::Result;
-	fn visit_logical(
-		&mut self,
-		expr_l: &Spanned<Expr>,
-		op: LogicalOp,
-		expr_r: &Spanned<Expr>,
-	) -> Self::Result;
 	fn visit_assign(&mut self, expr_l: &Spanned<Expr>, expr_r: &Spanned<Expr>) -> Self::Result;
 
 	fn visit_call(
@@ -69,6 +61,7 @@ pub trait Visitor: Sized {
 	fn visit_error(&mut self, span: Span) -> Self::Result;
 }
 
+#[must_use]
 pub fn walk_items<'a, V: Visitor>(
 	visitor: &'a mut V,
 	items: &'a [Spanned<Item>],
@@ -84,11 +77,12 @@ pub fn walk_item<V: Visitor>(visitor: &mut V, Spanned(item, _): &Spanned<Item>) 
 	}
 }
 
+#[must_use]
 pub fn walk_stmts<'a, V: Visitor>(
 	visitor: &'a mut V,
 	stmts: &'a [Spanned<Stmt>],
 ) -> impl Iterator<Item = V::Result> + 'a {
-	stmts.iter().map(|stmt| walk_stmt(visitor, stmt))
+	stmts.iter().map(|stmt| visitor.visit_stmt(stmt))
 }
 
 pub fn walk_stmt<V: Visitor>(visitor: &mut V, stmt: &Spanned<Stmt>) -> V::Result {
@@ -123,7 +117,6 @@ pub fn walk_expr<V: Visitor>(visitor: &mut V, expr: &Spanned<Expr>) -> V::Result
 
 		Expr::Unary(op, expr) => visitor.visit_unary(*op, expr),
 		Expr::Binary(expr_l, op, expr_r) => visitor.visit_binary(expr_l, *op, expr_r),
-		Expr::Logical(expr_l, op, expr_r) => visitor.visit_logical(expr_l, *op, expr_r),
 		Expr::Assign(expr_l, expr_r) => visitor.visit_assign(expr_l, expr_r),
 
 		Expr::Call { func, args } => visitor.visit_call(func, args),

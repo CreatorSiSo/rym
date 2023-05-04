@@ -1,0 +1,108 @@
+pub trait Visitor {
+	type Result;
+
+	func visit_item(mut self, item: Spanned<Item>) -> Self.Result {
+		walk_item(self, item)
+	}
+
+	func visit_module(mut self, module: Spanned<Module>) -> Self.Result;
+	func visit_func(mut self, fn: Spanned<Func>) -> Self.Result;
+	func visit_var(mut self, var: Spanned<Var>) -> Self.Result;
+
+	func visit_stmt(mut self, stmt: Spanned<Stmt>) -> Self.Result {
+		walk_stmt(self, stmt)
+	}
+
+	func visit_expr(mut self, expr: Spanned<Expr>) -> Self.Result {
+		walk_expr(self, expr)
+	}
+
+	func visit_ident(mut self, ident: Spanned<String>) -> Self.Result;
+	func visit_literal(mut self, literal: Spanned<Literal>) -> Self.Result;
+
+	func visit_record(
+		mut self,
+		name: Option<Spanned<String>>,
+		fields: [(Spanned<String>, Spanned<Expr>)],
+	) -> Self.Result;
+
+	func visit_group(mut self, expr: Spanned<Expr.Group>) -> Self.Result;
+
+	func visit_block(mut self, expr: Spanned<Expr.Block>) -> Self.Result;
+	func visit_if(mut self, expr: Spanned<Expr.If>) -> Self.Result;
+	func visit_loop(mut self, expr: Spanned<Expr.Loop>) -> Self.Result;
+
+	func visit_continue(mut self, expr: Spanned<Expr.Continue>) -> Self.Result;
+	func visit_break(mut self, expr: Spanned<Expr.Break>) -> Self.Result;
+	func visit_return(mut self, expr: Spanned<Expr.Return>) -> Self.Result;
+
+	func visit_unary(mut self, expr: Spanned<Expr.Unary>) -> Self.Result;
+	func visit_binary(mut self, expr: Spanned<Expr.Binary>) -> Self.Result;
+	func visit_logical(mut self, expr: Spanned<Expr.Logical>) -> Self.Result;
+	func visit_assign(mut self, expr: Spanned<Expr.Assign>) -> Self.Result;
+
+	func visit_call(mut self, expr: Spanned<Expr.Call>) -> Self.Result;
+
+	func visit_error(mut self, expr: Spanned<Expr.Error>) -> Self.Result;
+}
+
+pub func walk_expr<V: Visitor>(visitor: mut V, expr: Spanned<Expr>) -> V::Result {
+	match expr.0 {
+		.Ident(ident) => visitor.visit_ident(ident),
+		.Literal(literal) => visitor.visit_literal(literal),
+		.Record { name, fields } => visitor.visit_record(name, fields),
+
+		.Group(..) => visitor.visit_group(expr),
+		.Block(..) => visitor.visit_block(expr),
+		.If { .. } => visitor.visit_if(expr),
+		.Loop(..) => visitor.visit_loop(expr),
+
+		.Continue => visitor.visit_continue(expr),
+		.Break(..) => visitor.visit_break(expr),
+		.Return(..) => visitor.visit_return(expr),
+
+		.Unary(..) => visitor.visit_unary(expr),
+		.Binary(..) => visitor.visit_binary(expr),
+		.Logical(..) => visitor.visit_logical(expr),
+		.Assign(..) => visitor.visit_assign(expr),
+
+		.Call { .. } => visitor.visit_call(expr),
+
+		.Error => visitor.visit_error(expr),
+	}
+}
+
+const func make_walk_expr(mutable: Bool) {
+
+	func walk_expr<V: if mutable { MutVisitor } else { Visitor }>(
+		visitor: mut V,
+		expr: if mutable { mut Spanned<Expr> } else { Spanned<Expr> },
+	) -> V::Result {
+
+		match expr.0 {
+			.Ident(ident) => visitor.visit_ident(ident),
+			.Literal(literal) => visitor.visit_literal(literal),
+			.Record { name, fields } => visitor.visit_record(name, fields),
+
+			.Group(..) => visitor.visit_group(expr),
+			.Block(..) => visitor.visit_block(expr),
+			.If { .. } => visitor.visit_if(expr),
+			.Loop(..) => visitor.visit_loop(expr),
+
+			.Continue => visitor.visit_continue(expr),
+			.Break(..) => visitor.visit_break(expr),
+			.Return(..) => visitor.visit_return(expr),
+
+			.Unary(..) => visitor.visit_unary(expr),
+			.Binary(..) => visitor.visit_binary(expr),
+			.Logical(..) => visitor.visit_logical(expr),
+			.Assign(..) => visitor.visit_assign(expr),
+
+			.Call { .. } => visitor.visit_call(expr),
+
+			.Error => visitor.visit_error(expr),
+		}
+	}
+
+	return walk_expr;
+}

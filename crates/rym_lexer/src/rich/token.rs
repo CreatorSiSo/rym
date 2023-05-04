@@ -26,12 +26,8 @@ pub enum Token {
 	// Operator like
 	/// `|`
 	Pipe,
-	/// `||`
-	PipePipe,
 	/// `&`
-	And,
-	/// `&&`
-	AndAnd,
+	Ampersand,
 	/// `+`
 	Plus,
 	/// `+=`
@@ -74,6 +70,7 @@ pub enum Token {
 	FatArrow,
 
 	// Keywords
+	And,
 	Break,
 	Const,
 	Continue,
@@ -89,6 +86,8 @@ pub enum Token {
 	Loop,
 	Mod,
 	Mut,
+	Not,
+	Or,
 	Return,
 	Struct,
 	Then,
@@ -143,9 +142,7 @@ impl std::fmt::Display for Token {
 			Token::DotDot => "..",
 			Token::Comma => ",",
 			Token::Pipe => "|",
-			Token::PipePipe => "||",
-			Token::And => "&",
-			Token::AndAnd => "&&",
+			Token::Ampersand => "&",
 			Token::Plus => "+",
 			Token::PlusEq => "+=",
 			Token::Minus => "-",
@@ -167,6 +164,7 @@ impl std::fmt::Display for Token {
 			Token::ThinArrow => "->",
 			Token::FatArrow => "=>",
 
+			Token::And => "and",
 			Token::Break => "break",
 			Token::Const => "const",
 			Token::Continue => "continue",
@@ -182,6 +180,8 @@ impl std::fmt::Display for Token {
 			Token::Loop => "loop",
 			Token::Mod => "mod",
 			Token::Mut => "mut",
+			Token::Not => "not",
+			Token::Or => "or",
 			Token::Return => "return",
 			Token::Struct => "struct",
 			Token::Then => "then",
@@ -211,10 +211,10 @@ impl std::fmt::Display for Token {
 }
 
 // TODO implement and use ConstMap<&'static str, Token, 22>
-const KEYWORDS_LEN: usize = 22;
+const KEYWORDS_LEN: usize = 25;
 pub const KEYWORDS_MAP: ([&str; KEYWORDS_LEN], [Token; KEYWORDS_LEN]) = (
 	[
-		// a
+		"and",   // a
 		"break", // b
 		"const", "continue", // c
 		"do",       // d
@@ -228,8 +228,8 @@ pub const KEYWORDS_MAP: ([&str; KEYWORDS_LEN], [Token; KEYWORDS_LEN]) = (
 		// k
 		"let", "loop", // l
 		"mod", "mut", // m
-		// n
-		// o
+		"not", // n
+		"or",  // o
 		// p
 		// q
 		"return", // r
@@ -243,6 +243,7 @@ pub const KEYWORDS_MAP: ([&str; KEYWORDS_LEN], [Token; KEYWORDS_LEN]) = (
 		         // z
 	],
 	[
+		Token::And,
 		Token::Break,
 		Token::Const,
 		Token::Continue,
@@ -258,6 +259,8 @@ pub const KEYWORDS_MAP: ([&str; KEYWORDS_LEN], [Token; KEYWORDS_LEN]) = (
 		Token::Loop,
 		Token::Mod,
 		Token::Mut,
+		Token::Not,
+		Token::Or,
 		Token::Return,
 		Token::Struct,
 		Token::Then,

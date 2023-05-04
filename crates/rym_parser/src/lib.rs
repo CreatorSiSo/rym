@@ -255,8 +255,24 @@ fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlia
 			)
 		};
 
+		// Logical operators (and and or) have equal precedence
+		// logical => sum ("and" | "or") sum
+		let logical = {
+			let op = select! {
+				Token::And => BinaryOp::And,
+				Token::Or => BinaryOp::Or,
+			};
+			sum.clone().foldl(
+				op.then(sum).repeated(),
+				|lhs: Spanned<Expr>, (op, rhs): (_, Spanned<Expr>)| {
+					let span = lhs.1.start..rhs.1.end;
+					Spanned(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)
+				},
+			)
+		};
+
 		// Comparison operators (equal and not-equal) have equal precedence
-		// comp => sum ("==" | "!=") sum
+		// comp => logical ("==" | "!=") logical
 		let comp = {
 			let op = select! {
 				Token::EqEq => BinaryOp::Eq,
@@ -264,8 +280,8 @@ fn expr_parser<'a>() -> impl Parser<'a, InputAlias<'a>, Spanned<Expr>, ExtraAlia
 				Token::GreaterThan => BinaryOp::Gt,
 				Token::LessThan => BinaryOp::Lt,
 			};
-			sum.clone().foldl(
-				op.then(sum).repeated(),
+			logical.clone().foldl(
+				op.then(logical).repeated(),
 				|lhs: Spanned<Expr>, (op, rhs): (_, Spanned<Expr>)| {
 					let span = lhs.1.start..rhs.1.end;
 					Spanned(Expr::Binary(Box::new(lhs), op, Box::new(rhs)), span)

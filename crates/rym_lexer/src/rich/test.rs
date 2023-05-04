@@ -124,12 +124,10 @@ fn path() {
 #[test]
 fn operators() {
 	assert_token_kinds(
-		r#"| || & && + += - -= * *= / /= % %= = == ! != < <= > >="#,
+		r#"| or & and + += - -= * *= / /= % %= = == not ! != < <= > >="#,
 		&[
 			Token::Pipe,
-			Token::PipePipe,
 			Token::And,
-			Token::AndAnd,
 			Token::Plus,
 			Token::PlusEq,
 			Token::Minus,
@@ -142,6 +140,7 @@ fn operators() {
 			Token::PercentEq,
 			Token::Eq,
 			Token::EqEq,
+			Token::Not,
 			Token::Bang,
 			Token::BangEq,
 			Token::LessThan,

@@ -13,7 +13,7 @@ pub use value::{Type, Value};
 
 use callable::Callable;
 use env::GlobalEnv;
-use rym_ast::{visitor::Visitor, BinaryOp, Expr, Literal, LogicalOp, Span, Spanned, Stmt, UnaryOp};
+use rym_ast::{visitor::Visitor, *};
 
 #[derive(Debug)]
 pub enum Inter {
@@ -286,34 +286,6 @@ impl Visitor for Interpreter {
 		}
 	}
 
-	fn visit_logical(
-		&mut self,
-		expr_l: &Spanned<Expr>,
-		op: LogicalOp,
-		expr_r: &Spanned<Expr>,
-	) -> Self::Result {
-		let val_l = match self.visit_expr(expr_l) {
-			Ok(Inter::None(val_l)) => val_l,
-			other => return other,
-		};
-
-		if op == LogicalOp::And {
-			self.cmp_bool(
-				expr_l.as_ref().map(|_| val_l),
-				expr_r,
-				|val_l, val_r| val_l && val_r,
-				false,
-			)
-		} else {
-			self.cmp_bool(
-				expr_l.as_ref().map(|_| val_l),
-				expr_r,
-				|val_l, val_r| val_l || val_r,
-				true,
-			)
-		}
-	}
-
 	fn visit_binary(
 		&mut self,
 		expr_l: &Spanned<Expr>,
@@ -397,6 +369,20 @@ impl Visitor for Interpreter {
 
 				(val_l, val_r) => return spanned_err(TypeError::Add(val_l.typ(), val_r.typ()), span),
 			},
+			BinaryOp::And => {
+				if let (Value::Bool(val_l), Value::Bool(val_r)) = (&val_l, &val_r) {
+					Ok(Value::from(*val_l && *val_r))
+				} else {
+					spanned_err(TypeError::Expected(Type::Bool, val_l.typ()), span)
+				}
+			}?,
+			BinaryOp::Or => {
+				if let (Value::Bool(val_l), Value::Bool(val_r)) = (&val_l, &val_r) {
+					Ok(Value::from(*val_l || *val_r))
+				} else {
+					spanned_err(TypeError::Expected(Type::Bool, val_l.typ()), span)
+				}
+			}?,
 		}))
 	}
 

@@ -85,15 +85,6 @@ impl Visitor for NodeCounter {
 		1 + walk_expr(self, expr_l) + walk_expr(self, expr_r)
 	}
 
-	fn visit_logical(
-		&mut self,
-		expr_l: &Spanned<Expr>,
-		_op: LogicalOp,
-		expr_r: &Spanned<Expr>,
-	) -> usize {
-		1 + walk_expr(self, expr_l) + walk_expr(self, expr_r)
-	}
-
 	fn visit_assign(&mut self, expr_l: &Spanned<Expr>, expr_r: &Spanned<Expr>) -> usize {
 		1 + walk_expr(self, expr_l) + walk_expr(self, expr_r)
 	}

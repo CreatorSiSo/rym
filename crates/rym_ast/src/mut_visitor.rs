@@ -1,4 +1,4 @@
-use crate::{BinaryOp, Expr, Func, Item, Literal, LogicalOp, Module, Span, Spanned, Stmt, Var};
+use crate::{BinaryOp, Expr, Func, Item, Literal, Module, Span, Spanned, Stmt, Var};
 
 pub trait MutVisitor: Sized {
 	type Result;
@@ -85,15 +85,7 @@ pub trait MutVisitor: Sized {
 		walk_expr(self, expr_l);
 		walk_expr(self, expr_r);
 	}
-	fn visit_logical(
-		&mut self,
-		expr_l: &mut Spanned<Expr>,
-		_op: LogicalOp,
-		expr_r: &mut Spanned<Expr>,
-	) {
-		walk_expr(self, expr_l);
-		walk_expr(self, expr_r);
-	}
+
 	fn visit_assign(&mut self, expr_l: &mut Spanned<Expr>, expr_r: &mut Spanned<Expr>) {
 		walk_expr(self, expr_l);
 		walk_expr(self, expr_r);
@@ -161,7 +153,6 @@ pub fn walk_expr<V: MutVisitor>(visitor: &mut V, outer_expr: &mut Spanned<Expr>)
 
 		Expr::Unary(..) => visitor.visit_unary(outer_expr),
 		Expr::Binary(expr_l, op, expr_r) => visitor.visit_binary(expr_l, *op, expr_r),
-		Expr::Logical(expr_l, op, expr_r) => visitor.visit_logical(expr_l, *op, expr_r),
 		Expr::Assign(expr_l, expr_r) => visitor.visit_assign(expr_l, expr_r),
 
 		Expr::Call { func, args } => visitor.visit_call(func, args),

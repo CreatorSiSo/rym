@@ -3,7 +3,7 @@ use std::fs::read_to_string;
 use clap::{arg, command, ArgMatches, Command};
 use rustyline::{error::ReadlineError, Editor};
 use rym_ast::{mut_visitor, visitor};
-use rym_ast_passes::{NodeCounter, ValidationPass};
+use rym_ast_passes::{NodeCounter, ToCPass, ValidationPass};
 use rym_lexer::rich::Lexer;
 use rym_parser::{parse_script_file, ParseResult};
 use stringx::Join;
@@ -112,5 +112,19 @@ fn eval_src(src: String) {
 
 		let counts = visitor::walk_stmts(&mut counter, stmts).join(", ");
 		println!("{}", render_box(cols, "Node Counts", &counts));
+
+		let mut pass = ToCPass::new();
+		visitor::walk_stmts(&mut pass, stmts).for_each(drop);
+
+		let wrapped_c_src = format!(
+			"int main() {{\n{}\n}}",
+			pass
+				.out
+				.lines()
+				.map(|line| String::from("  ") + line)
+				.join("\n")
+		);
+		// println!("{}", render_box(cols, "C Output", &wrapped_c_src));
+		println!("{}", &wrapped_c_src);
 	}
 }

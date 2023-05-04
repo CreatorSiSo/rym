@@ -111,14 +111,8 @@ impl Iterator for Lexer<'_> {
 				primitive::TokenKind::Comma => Token::Comma,
 
 				// Operator like
-				primitive::TokenKind::Pipe => self.map_next(&mut span, |kind| match kind {
-					Some(primitive::TokenKind::Pipe) => Multi(Token::PipePipe),
-					_ => Single(Token::Pipe),
-				}),
-				primitive::TokenKind::And => self.map_next(&mut span, |kind| match kind {
-					Some(primitive::TokenKind::And) => Multi(Token::AndAnd),
-					_ => Single(Token::And),
-				}),
+				primitive::TokenKind::Pipe => Token::Pipe,
+				primitive::TokenKind::And => Token::And,
 				primitive::TokenKind::Plus => self.map_next(&mut span, |kind| match kind {
 					Some(primitive::TokenKind::Eq) => Multi(Token::PlusEq),
 					_ => Single(Token::Plus),

@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display, Write};
 
 pub mod mut_visitor;
 pub mod visitor;
@@ -111,14 +111,12 @@ pub enum Expr {
 	Break(Box<Option<Spanned<Expr>>>),
 	Return(Box<Option<Spanned<Expr>>>),
 
-	/// A unary operation `!x`, `*x`
+	// TODO Use `not x`
+	/// A unary expression `!x`, `*x`
 	Unary(UnaryOp, Box<Spanned<Expr>>),
 
-	/// A binary operation `a + b`, `a * b`
+	/// A binary expression `a + b`, `a * b`, `True and False`, `a or b`
 	Binary(Box<Spanned<Expr>>, BinaryOp, Box<Spanned<Expr>>),
-
-	/// A logical operation `True and False`, `a or b`
-	Logical(Box<Spanned<Expr>>, LogicalOp, Box<Spanned<Expr>>),
 
 	/// An assignment `a = 20`
 	Assign(Box<Spanned<Expr>>, Box<Spanned<Expr>>),
@@ -157,10 +155,7 @@ pub enum BinaryOp {
 	Lt,
 	/// The `<=` operator (less than or equal)
 	Le,
-}
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum LogicalOp {
 	/// The `and` operator (logical and)
 	And,
 	/// The `or` operator (logical or)
@@ -182,6 +177,18 @@ pub enum Literal {
 	Float(f64),
 	Char(char),
 	String(String),
+}
+
+impl Display for Literal {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Literal::Unit => f.write_str("()"),
+			Literal::Int(val) => f.write_str(&val.to_string()),
+			Literal::Float(val) => f.write_str(&val.to_string()),
+			Literal::Char(val) => f.write_char(*val),
+			Literal::String(val) => f.write_str(&val),
+		}
+	}
 }
 
 impl Debug for Literal {

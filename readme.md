@@ -1,7 +1,7 @@
 # Rym
 
-**Rym Lang** or just **Rym** is a modern, statically typed programming language inspired by Rust, Swift, Python and others that focuses on ease of use and safety.
-Big thanks go to Robert Nystrom who made his book [crafting interpreters](http://craftinginterpreters.com) open source which enabled me to read it and learn a lot :).
+**Rym** is a statically typed programming language inspired by Rust, Swift, Python and others that focuses on **ease of use** and **should just work™**.
+Big thanks go to Robert Nystrom and his book [crafting interpreters](http://craftinginterpreters.com) open source which inspired me to continue working on this language.
 
 ## Content
 
@@ -28,63 +28,51 @@ Big thanks go to Robert Nystrom who made his book [crafting interpreters](http:/
 
 ### Goals
 
-- **MVP**
-  - Safety
-    - No `null` `nil` `undefined`
-    - Optionals wrapped in `Option<T>` enum
-    - Errors wrapped in `Result<T>`
-    - Statically typed
-- **1.0**
-  - Nice DX (Development Experience)
-    - Inferred types
-    - Informative errors and warnings
-    - Builtin tools
-  - Great interoperabilty with Rust
-    - Should just work out of the box
-- **Past 1.0**
-  - Ui and Apps programming
+- Features
+  - Static types
+  - Complex types (structs, enums, ..)
+  - Iterators
+  - Inferred types
+  - Constant evaluation context
+  - Tryable chaining?
+- Nice Development Experience
+  - Informative errors and warnings
+  - Builtin tools
+    - First party REPL
+    - Package manager
 
 ## Examples
 
 ```rust
-func main() -> Result<(), Error>, ?Io {
-	const msg = "Hello World"
-	print(msg)
+fn main() -> Result<(), Error>, ?Io => {
+	const msg = "Hello World";
+	print(msg);
 
-	mut num = 2/4 * (10 - 1)
-	print("Number:", num)
+	let mut num = 2/4 * (10 - 1);
+	print("Number:", num);
 
-	const msg = msg + "!"
-	print("Combined:", msg, num)
+	const msg = msg + "!";
+	print("Combined:", msg, num);
 }
-```
-
-In Rym you can unwrap `Tryable` values like `Option`s or `Result`s
-
-```rust
-const inner = maybe_value()!
-
-// Same as
-const inner = maybe_value().unwrap()
 ```
 
 Early returns when unwrapping `Tryable`s
 
 ```rust
-func main() -> Result<Number, String> {
-	const number = maybe_error()?
-	print(number)
+fn main() -> Result<Number, String> => {
+	const number = maybe_error()?;
+	print(number);
 
 	// Same as
 	const inner = match maybe_error() {
 		Ok(val) => val,
 		err => return err,
-	}
-	print(inner)
+	};
+	print(inner);
 }
 ```
 
-Tryable chaining
+<!-- Tryable chaining
 
 ```rust
 const chained = maybe_error()&.to_string()
@@ -96,7 +84,7 @@ const chained = match maybe_error() {
 }
 // or:
 const chained = maybe_error().and_then(|val| Ok(val.to_string()))
-```
+``` -->
 
 ## How to install
 
@@ -104,11 +92,11 @@ const chained = maybe_error().and_then(|val| Ok(val.to_string()))
 
 ## Inspirational projects
 
+- [Rust](https://github.com/rust-lang/rust): Empowering everyone to build reliable and efficient software.
+- [Swift](https://github.com/apple/swift): A Swift is a high-performance system programming language.
 - [HVM](https://github.com/Kindelia/HVM): A massively parallel, optimal functional runtime in Rust
 - [Unison](https://www.unison-lang.org/): A friendly programming language from the future (statically-typed, functional)
 - [Fused Effects](https://github.com/fused-effects/fused-effects): A fast, flexible, fused effect system for Haskell
-- [Rust](https://github.com/rust-lang/rust): Empowering everyone to build reliable and efficient software.
-- [Swift](https://github.com/apple/swift): A Swift is a high-performance system programming language.
 
 ## Similar projects
 
@@ -122,45 +110,13 @@ const chained = maybe_error().and_then(|val| Ok(val.to_string()))
 
 The project is split into many crates that are part of one Cargo workspace:
 
-`crates/rym_span` ⇒ Span
-`crates/rym_tt` ⇒ TokenTree, TokenStream
-`crates/rym_lexer` ⇒ Isolated initial lexer
-
-`crates/ast` ⇒ Ast Types: Spanned<T>, AstVisitor<T>, Token, ...
-`crates/lex` ⇒ produce Tokens from source
-`crates/parse` ⇒ produce ast from tokens
-`crates/code_gen` ⇒ generate optimized code (dead code analysis, ...) or give warnings
-`crates/tree_walk` ⇒ evaluate ast
-`crates/tests` ⇒ integration tests
 `crates/rymx` ⇒ command line tool for executing `.rym` files
-
-And some other scripts located in the root directory:
-
-`bench.sh` ⇒ builds and runs various benchmarks
-`test.py` ⇒ updates and runs all tests
 
 ### Tests
 
-Run `python test.py` to update and execute all tests.
-
-This internally runs `cargo r --bin gen -- ./crates/tests/src/integration` which includes the source code for all tests into `crates/tests/src/integration/mod.rs`.
+**TODO**
 
 # Todos
 
 - [ ] use insta snapshot testing crate
 - [ ] add benchmarking capabilities
-- [ ] use arena allocator for scopes?
-  - [ ] benchmark before & after
-- [ ] use logos lexer generator?
-- [ ] errors
-  - [ ] use `Spanned<T>` where possible
-  - [ ] implement error recovery to jump to next safe expr/stmt
-  - [ ] use error codes that link to a more detailed explanation (https://github.com/rust-lang/rust/tree/master/compiler/rustc_error_codes)
-  - [ ] `true && (break)` currently only returns `Error: Expected Literal got RightParen, Span: 14..14`, it should also say something along the lines of: `Tip: insert expression or semicolon after break`
-- [ ] data types
-  - [ ] `number`s, `string`, `char`, `bool`
-  - [ ] (literal) values that come from source code directly:
-    - [ ] `Literal<u8>`, `Literal<f32>`, `Literal<string>`, `Literal<char>`, `Literal<bool>`
-    - [ ] `1`, `2.2`, `"Hello World!"`, `'\n'`, `false`
-  - [ ] type unions: `0 | 1 | bool`
-  - [ ] type functions [docs/functions.md](docs/functions.md#type_functions)?

@@ -1,6 +1,6 @@
 [package]
 name = "rymx"
-version = "0.0.1"
+version = "0.0.3"
 edition = "2021"
 default-run = "rymx"
 
@@ -10,9 +10,7 @@ default-run = "rymx"
 anyhow = "1.0"
 clap = { version = "4.2", features = ["cargo"] }
 owo-colors = "3"
-rustyline = "11"
-termsize = "0.1"
-stringx.workspace = true
+rustyline = "12"
 
 [features]
 expand = []

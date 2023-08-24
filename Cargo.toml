@@ -2,35 +2,11 @@
 
 [workspace]
 members = [
-	# Global
-	"crates/rym_ast",
-	"crates/rym_errors",
-	"crates/rym_span",
-	"crates/rym_unescape",
-
-	# Parsing
-	"crates/rym_lexer",
-	"crates/rym_parser",
-
-	# Lowering
-	"crates/rym_ast_passes",
-
-	# Evaluation
-	"crates/tree_walk",
-
 	# Cli
 	"crates/rymx",
 ]
 
 [workspace.dependencies]
-rym_ast = { path = "crates/rym_ast" }
-rym_errors = { path = "crates/rym_errors" }
-rym_lexer = { path = "crates/rym_lexer" }
-rym_parser = { path = "crates/rym_parser" }
-rym_span = { path = "crates/rym_span" }
-rym_unescape = { path = "crates/rym_unescape" }
-rym_ast_passes = { path = "crates/rym_ast_passes" }
-tree_walk = { path = "crates/tree_walk" }
 smol_str = "0.2"
 stringx = "0.1"
 thiserror = "1"

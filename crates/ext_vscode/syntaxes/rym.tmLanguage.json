@@ -131,7 +131,7 @@
 			"patterns": [
 				{
 					"name": "keyword.other.rym",
-					"match": "\\b(func|proc|use|mod|pub|self|Self|as|move)\\b"
+					"match": "\\b(func|fn|proc|pr|use|mod|pub|self|Self|as|move)\\b"
 				},
 				{
 					"name": "keyword.control keyword.other.rym",

@@ -13,12 +13,6 @@ owo-colors = "3"
 rustyline = "11"
 termsize = "0.1"
 stringx.workspace = true
-rym_ast.workspace = true
-rym_lexer.workspace = true
-rym_parser.workspace = true
-rym_errors.workspace = true
-rym_ast_passes.workspace = true
-tree_walk.workspace = true
 
 [features]
 expand = []

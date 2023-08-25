@@ -1,10 +1,11 @@
 use clap::{arg, command, ArgMatches, Command};
 use rustyline::{error::ReadlineError, Editor};
-use std::fs::read_to_string;
+use rymx::Span;
+use std::{fs::read_to_string, path::PathBuf};
 
 mod parse;
 mod tokenize;
-use tokenize::{tokenize, Token};
+use tokenize::tokenize;
 
 fn main() -> anyhow::Result<()> {
 	let mut command = command!()
@@ -19,15 +20,15 @@ fn main() -> anyhow::Result<()> {
 	let matches = command.get_matches();
 
 	match matches.subcommand() {
-		Some(("repl", matches)) => repl(matches)?,
-		Some(("run", matches)) => run(read_to_string(matches.get_one::<String>("file").unwrap())?),
+		Some(("repl", matches)) => cmd_repl(matches)?,
+		Some(("run", matches)) => cmd_run(matches.get_one::<String>("file").unwrap().into())?,
 		_ => print!("{}", help_str.ansi()),
 	}
 
 	Ok(())
 }
 
-fn repl(_matches: &ArgMatches) -> anyhow::Result<()> {
+fn cmd_repl(_matches: &ArgMatches) -> anyhow::Result<()> {
 	let mut editor: Editor<(), _> = Editor::new()?;
 	if editor.load_history(".history").is_err() {
 		println!("No previous history.");
@@ -38,7 +39,7 @@ fn repl(_matches: &ArgMatches) -> anyhow::Result<()> {
 		match readline {
 			Ok(line) => {
 				editor.add_history_entry(line.as_str()).unwrap();
-				run(line);
+				compile(Diagnostics::default(), line);
 			}
 			Err(ReadlineError::Interrupted) => {
 				println!("CTRL-C");
@@ -59,20 +60,51 @@ fn repl(_matches: &ArgMatches) -> anyhow::Result<()> {
 	Ok(())
 }
 
-fn run(src: String) {
-	match tokenize(&src) {
-		Ok(tokens) => println!(
-			"{:?}",
+fn cmd_run(path: PathBuf) -> anyhow::Result<()> {
+	let src = read_to_string(&path)?;
+	compile(Diagnostics::new(path), src);
+	Ok(())
+}
+
+fn compile(mut diag: Diagnostics, src: String) {
+	let (stage_data, maybe_tokens) = match tokenize(&src) {
+		Ok(tokens) => (
 			tokens
-				.into_iter()
-				.map(|Token { kind, span }| format!("{kind:?}({})", &src[span.as_range()]))
-				.collect::<Vec<_>>()
+				.iter()
+				.map(|token| token.debug_string(&src) + "\n")
+				.collect(),
+			Some(tokens),
 		),
-		Err(span) => println!(
-			"Error [{}..{}]: \"{}\"",
-			span.start,
-			span.end,
-			&src[span.as_range()]
+		Err(span @ Span { start, end }) => (
+			format!("Error [{start}..{end}]: \"{}\"", &src[span.as_range()]),
+			None,
 		),
 	};
+	diag.debug_stage("tokenize", stage_data);
+	let Some(tokens) = maybe_tokens else {
+		return;
+	};
+}
+
+#[derive(Debug, Default)]
+struct Diagnostics {
+	path: Option<PathBuf>,
+	stages: Vec<(&'static str, String)>,
+}
+
+impl Diagnostics {
+	pub fn new(path: PathBuf) -> Self {
+		Self {
+			path: Some(path),
+			stages: vec![],
+		}
+	}
+
+	pub fn debug_stage(&mut self, stage: &'static str, data: String) {
+		println!(">==> {stage} >==>");
+		print!("{data}");
+		println!("<==< {stage} <==<");
+
+		self.stages.push((stage, data));
+	}
 }

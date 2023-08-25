@@ -1,4 +1,4 @@
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 
 use logos::{Lexer, Logos};
 use rymx::Span;
@@ -13,23 +13,19 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>, Span<u32>> {
 	Ok(result)
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Token {
 	pub kind: TokenKind,
 	pub span: Span<u32>,
 }
 
-impl Debug for Token {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.write_fmt(format_args!("{self}"))
+impl Token {
+	pub fn debug_string(self, src: &str) -> String {
+		format!("{:?} \"{}\"", self.kind, self.src(src).escape_debug())
 	}
-}
 
-impl Display for Token {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.write_fmt(format_args!(
-			"{:?}({}..{})",
-			self.kind, self.span.start, self.span.end
-		))
+	pub fn src<'src>(self, src: &'src str) -> &'src str {
+		&src[self.span.as_range()]
 	}
 }
 
@@ -41,7 +37,7 @@ fn line_comment(lexer: &mut Lexer<TokenKind>) {
 	}
 }
 
-#[derive(Debug, Logos, PartialEq)]
+#[derive(Debug, Clone, Copy, Logos, PartialEq)]
 pub enum TokenKind {
 	#[regex("(\n|\r\n)+")]
 	VSpace,

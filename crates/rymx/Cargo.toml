@@ -9,6 +9,7 @@ default-run = "rymx"
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.2", features = ["cargo"] }
+logos = "0.13.0"
 owo-colors = "3"
 rustyline = "12"
 

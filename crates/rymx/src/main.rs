@@ -1,7 +1,10 @@
-use std::fs::read_to_string;
-
 use clap::{arg, command, ArgMatches, Command};
 use rustyline::{error::ReadlineError, Editor};
+use std::fs::read_to_string;
+
+mod parse;
+mod tokenize;
+use tokenize::{tokenize, Token};
 
 fn main() -> anyhow::Result<()> {
 	let mut command = command!()
@@ -56,4 +59,20 @@ fn repl(_matches: &ArgMatches) -> anyhow::Result<()> {
 	Ok(())
 }
 
-fn run(path: String) {}
+fn run(src: String) {
+	match tokenize(&src) {
+		Ok(tokens) => println!(
+			"{:?}",
+			tokens
+				.into_iter()
+				.map(|Token { kind, span }| format!("{kind:?}({})", &src[span.as_range()]))
+				.collect::<Vec<_>>()
+		),
+		Err(span) => println!(
+			"Error [{}..{}]: \"{}\"",
+			span.start,
+			span.end,
+			&src[span.as_range()]
+		),
+	};
+}

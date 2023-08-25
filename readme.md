@@ -31,6 +31,7 @@ Big thanks go to Robert Nystrom and his book [crafting interpreters](http://craf
 - Features
   - Static types
   - Complex types (structs, enums, ..)
+  - Union types
   - Iterators
   - Inferred types
   - Constant evaluation context

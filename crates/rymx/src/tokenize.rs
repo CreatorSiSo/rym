@@ -1,16 +1,19 @@
 use std::fmt::Debug;
 
+use crate::Span;
 use logos::{Lexer, Logos};
-use rymx::Span;
 
-pub fn tokenize(src: &str) -> Result<Vec<Token>, Span<u32>> {
+pub fn tokenize(src: &str) -> Vec<Result<Token, Span<u32>>> {
 	let mut result = vec![];
 	for (maybe_kind, span) in TokenKind::lexer(src).spanned() {
 		let span = span.try_into().expect("Internal Error: File too long");
-		let kind = maybe_kind.map_err(|_| span)?;
-		result.push(Token { span, kind })
+		result.push(
+			maybe_kind
+				.map(|kind| Token { span, kind })
+				.map_err(|_| span),
+		);
 	}
-	Ok(result)
+	result
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -21,7 +24,7 @@ pub struct Token {
 
 impl Token {
 	pub fn debug_string(self, src: &str) -> String {
-		format!("{:?} \"{}\"", self.kind, self.src(src).escape_debug())
+		format!("{:?} [{}]", self.kind, self.src(src).escape_debug())
 	}
 
 	pub fn src<'src>(self, src: &'src str) -> &'src str {
@@ -39,25 +42,25 @@ fn line_comment(lexer: &mut Lexer<TokenKind>) {
 
 #[derive(Debug, Clone, Copy, Logos, PartialEq)]
 pub enum TokenKind {
+	#[regex(r"-?[0-9][0-9_]*")]
+	Int,
+	#[regex(r"-?[0-9][0-9_]*\.[0-9_]+")]
+	Float,
+	#[regex(r#""(\\"|[^"])*""#)]
+	String,
+	#[regex(r#"'(\\'|[^'])*'"#)]
+	Char,
+
+	#[regex("[a-zA-Z_][a-zA-Z1-9_]*")]
+	Ident,
 	#[regex("(\n|\r\n)+")]
+	#[token("///", line_comment)]
+	DocComment,
+	#[token("//", line_comment)]
+	Comment,
 	VSpace,
 	#[regex("[ \t]+")]
 	HSpace,
-	#[token("//", line_comment)]
-	Comment,
-	#[token("///", line_comment)]
-	DocComment,
-	#[regex("[a-zA-Z_][a-zA-Z1-9_]*")]
-	Ident,
-	#[regex("-?[0-9][0-9_]*")]
-	Int,
-	#[regex("-?[0-9][0-9_]*.[0-9_]*")]
-	Float,
-
-	#[regex(r#""([\s\S]|\\")*""#)]
-	String,
-	#[regex(r"'([\s\S]|\\')*'")]
-	Char,
 
 	// keywords
 	#[token("as")]
@@ -104,6 +107,8 @@ pub enum TokenKind {
 	Comma,
 	#[token(".")]
 	Dot,
+	#[token("..")]
+	DotDot,
 	#[token("+")]
 	Plus,
 	#[token("|")]
@@ -114,6 +119,8 @@ pub enum TokenKind {
 	Star,
 	#[token("/")]
 	Slash,
+	#[token("%")]
+	Percent,
 	#[token("#")]
 	Pound,
 	#[token(";")]

@@ -1,0 +1,5 @@
+const long = "Hello World!"
+	+ "\" --- ' --- \" --- ’ --- \""
+	+ 'c'
+	+ '\''
+	+ 'invalid';

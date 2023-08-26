@@ -8,10 +8,17 @@ default-run = "rymx"
 
 [dependencies]
 anyhow = "1.0"
-clap = { version = "4.2", features = ["cargo"] }
+clap = { version = "4.4", features = ["cargo"] }
+insta = { version = "1.31.0", features = ["glob"] }
 logos = "0.13.0"
-owo-colors = "3"
+owo-colors = "3.5"
 rustyline = "12"
 
 [features]
 expand = []
+
+[profile.dev.package.insta]
+opt-level = 3
+
+[profile.dev.package.similar]
+opt-level = 3

@@ -1,0 +1,37 @@
+---
+source: crates/rymx/tests/full.rs
+expression: diag.dump_stages()
+input_file: crates/rymx/tests/mini/strings.rym
+---
+>==> tokenize >==>
+Const [const]
+HSpace [ ]
+Ident [long]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+String [\"Hello World!\"]
+VSpace [\n]
+HSpace [\t]
+Plus [+]
+HSpace [ ]
+String [\"\\\" --- \' --- \\\" --- ’ --- \\\"\"]
+VSpace [\n]
+HSpace [\t]
+Plus [+]
+HSpace [ ]
+Char [\'c\']
+VSpace [\n]
+HSpace [\t]
+Plus [+]
+HSpace [ ]
+Char [\'\\\'\']
+VSpace [\n]
+HSpace [\t]
+Plus [+]
+HSpace [ ]
+Char [\'invalid\']
+Semi [;]
+VSpace [\n]
+<==< tokenize <==<
+

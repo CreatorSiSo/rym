@@ -1,0 +1,3 @@
+const println = fn(fmt: String, ..args: [impl Display]) => {
+	// TODO
+};

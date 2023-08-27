@@ -1,0 +1,44 @@
+---
+source: crates/rymx/tests/full.rs
+expression: diag.dump_stages()
+input_file: crates/rymx/tests/mini/prelude.rym
+---
+>==> tokenize >==>
+Const [const]
+HSpace [ ]
+Ident [println]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Ident [fn]
+ParenOpen [(]
+Ident [fmt]
+Colon [:]
+HSpace [ ]
+Ident [String]
+Comma [,]
+HSpace [ ]
+DotDot [..]
+Ident [args]
+Colon [:]
+HSpace [ ]
+BracketOpen [[]
+Impl [impl]
+HSpace [ ]
+Ident [Display]
+BracketClose []]
+ParenClose [)]
+HSpace [ ]
+Assign [=]
+GreaterThan [>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [\t]
+Comment [// TODO]
+VSpace [\n]
+BraceClose [}]
+Semi [;]
+VSpace [\n]
+<==< tokenize <==<
+

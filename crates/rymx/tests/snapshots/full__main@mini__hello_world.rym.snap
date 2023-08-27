@@ -1,0 +1,27 @@
+---
+source: crates/rymx/tests/full.rs
+expression: diag.dump_stages()
+input_file: crates/rymx/tests/mini/hello_world.rym
+---
+>==> tokenize >==>
+Const [const]
+HSpace [ ]
+Ident [main]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Ident [fn]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+Assign [=]
+GreaterThan [>]
+HSpace [ ]
+Ident [println]
+ParenOpen [(]
+String [\"Hello World!\"]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+<==< tokenize <==<
+

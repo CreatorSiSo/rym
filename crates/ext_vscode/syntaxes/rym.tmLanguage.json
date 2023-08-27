@@ -81,9 +81,9 @@
 		"function_declaration": {
 			"patterns": [
 				{
-					"begin": "\\b(func|proc)\\b",
+					"begin": "\\b(func|proc|fn|pr)\\b",
 					"beginCaptures": {
-						"1": { "name": "storage.type.fn.rym keyword.other.rym" }
+						"1": { "name": "keyword.other.rym storage.type.fn.rym" }
 					},
 					"end": "(\\{)|(?=\\/\\/|\\n|\\r)",
 					"endCaptures": {
@@ -91,8 +91,16 @@
 					},
 					"name": "meta.function.signature.rym",
 					"patterns": [
+						{ "include": "#block-comments" },
+						{ "include": "#comments" },
+						{ "include": "#keywords" },
+						{ "include": "#punctuation" },
+						{ "include": "#strings" },
+						{ "include": "#chars" },
+						{ "include": "#constants" },
 						{ "include": "#function_declaration" },
-						{ "include": "#function_name" }
+						{ "include": "#function_name" },
+						{ "include": "#ident" }
 					]
 				}
 			]
@@ -131,10 +139,10 @@
 			"patterns": [
 				{
 					"name": "keyword.other.rym",
-					"match": "\\b(func|fn|proc|pr|use|mod|pub|self|Self|as|move)\\b"
+					"match": "\\b(use|mod|pub|self|Self|as|move)\\b"
 				},
 				{
-					"name": "keyword.control keyword.other.rym",
+					"name": "keyword.other.rym",
 					"match": "\\b(impl|trait|type)\\b"
 				},
 				{
@@ -145,7 +153,12 @@
 				{
 					"comment": "storage keywords",
 					"name": "keyword.other.rym storage.type.rym",
-					"match": "\\b(let|mut|const)\\b"
+					"match": "\\b(struct|enum|let|const)\\b"
+				},
+				{
+					"comment": "storage modifier keywords",
+					"name": "keyword.other.rym storage.modifier.mut.rym",
+					"match": "\\b(mut)\\b"
 				},
 				{
 					"comment": "logical operators",

@@ -11,7 +11,7 @@
 		"url": "https://github.com/creatorsiso/rym",
 		"directory": "crates/ext_vscode"
 	},
-	"version": "0.0.11",
+	"version": "0.0.12",
 	"engines": {
 		"vscode": "^1.74.2"
 	},
@@ -60,7 +60,7 @@
 			}
 		]
 	},
-	"dependencies": {
-		"vsce": "^2.15.0"
+	"devDependencies": {
+		"@vscode/vsce": "^2.20"
 	}
 }

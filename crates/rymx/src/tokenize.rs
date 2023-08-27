@@ -53,11 +53,11 @@ pub enum TokenKind {
 
 	#[regex("[a-zA-Z_][a-zA-Z1-9_]*")]
 	Ident,
-	#[regex("(\n|\r\n)+")]
 	#[token("///", line_comment)]
 	DocComment,
 	#[token("//", line_comment)]
 	Comment,
+	#[regex("(\n|\r\n)+")]
 	VSpace,
 	#[regex("[ \t]+")]
 	HSpace,
@@ -71,6 +71,8 @@ pub enum TokenKind {
 	Enum,
 	#[token("for")]
 	For,
+	#[token("impl")]
+	Impl,
 	#[token("let")]
 	Let,
 	#[token("mut")]

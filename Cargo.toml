@@ -5,6 +5,7 @@ members = [
 	# Cli
 	"crates/rymx",
 ]
+resolver = "2"
 
 [workspace.dependencies]
 smol_str = "0.2"

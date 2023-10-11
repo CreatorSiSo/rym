@@ -1,20 +1,65 @@
-use crate::{
-	tokenize::{Token, TokenKind},
-	Span,
-};
+use std::slice::Iter;
 
-struct Node {
+use crate::tokenize::{Token, TokenKind};
+use crate::Span;
+
+pub fn parse(tokens: &[Token], src: &str) -> Result<Vec<Node>, ()> {
+	let mut tree = vec![];
+	let parser = Parser::new(src, tokens);
+	Ok(tree)
+}
+
+struct Parser<'a> {
+	src: &'a str,
+	tokens: &'a [Token],
+	token_stream: Iter<'a, Token>,
+	tree: Vec<Node>,
+}
+
+impl<'a> Parser<'a> {
+	fn new(src: &'a str, tokens: &'a [Token]) -> Self {
+		Self {
+			src,
+			tokens,
+			token_stream: tokens.iter(),
+			tree: vec![],
+		}
+	}
+
+	fn parse_file(&mut self) {
+		while let Some(token) = self.token_stream.next() {
+			match token.kind {
+				TokenKind::HSpace | TokenKind::VSpace | TokenKind::Comment => continue,
+				TokenKind::Const => self.parse_decl(),
+				_ => todo!(),
+			}
+		}
+	}
+
+	fn parse_decl(&mut self) {
+		let Some(name_token) = self.token_stream.next() else {
+			panic!()
+		};
+		assert_eq!(name_token.kind, TokenKind::Ident);
+		self.tree.push(Node {
+			span: name_token.span,
+			kind: NodeKind::BranchStart(BranchKind::Def),
+		})
+	}
+}
+
+pub struct Node {
 	pub span: Span<u32>,
 	pub kind: NodeKind,
 }
 
-enum NodeKind {
+pub enum NodeKind {
 	BranchStart(BranchKind),
 	BranchEnd(BranchKind),
 	Leaf(Leaf),
 }
 
-enum BranchKind {
+pub enum BranchKind {
 	Block,
 	Call,
 	Def,
@@ -80,7 +125,7 @@ pub enum Leaf {
 }
 
 impl Leaf {
-	pub fn from_token(token: Token, src: &str) -> Self {
+	pub fn from_token(token: &Token, src: &str) -> Self {
 		match token.kind {
 			TokenKind::Int => Self::Int(0),
 			TokenKind::Float => Self::Float(0.0),

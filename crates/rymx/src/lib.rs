@@ -1,21 +1,24 @@
 use core::ops::Range;
 use std::{fmt::Debug, num::TryFromIntError, path::PathBuf};
 
+mod ast;
 mod parse;
 mod tokenize;
 pub use tokenize::tokenize;
+use tokenize::Token;
 
-pub fn compile(diag: &mut Diagnostics, src: String) {
-	let maybe_tokens = tokenize(&src);
-	let stage_data = maybe_tokens
-		.iter()
-		.map(|maybe_token| match maybe_token {
-			Ok(token) => token.debug_string(&src) + "\n",
-			Err(span) => format!("Error [{span:?}]: \"{}\"\n", &src[span.as_range()]),
-		})
-		.collect();
+pub fn compile(diag: &mut Diagnostics, src: &str) {
+	diag.start_stage("tokenize");
 
-	diag.debug_stage("tokenize", stage_data);
+	let results = tokenize(src);
+	diag.push_results(&results.iter().fold(String::new(), |accum, result| {
+		let (kind, span) = match result {
+			Ok(Token { kind, span }) => (format!("{kind:?}"), span),
+			Err(span) => ("Error".into(), span),
+		};
+		accum + &format!("{kind} [{}]\n", span.src(src).escape_debug())
+	}));
+
 	// let Some(tokens) = maybe_tokens else {
 	// 	return;
 	// };
@@ -24,7 +27,14 @@ pub fn compile(diag: &mut Diagnostics, src: String) {
 #[derive(Debug, Default)]
 pub struct Diagnostics {
 	path: Option<PathBuf>,
-	stages: Vec<(&'static str, String)>,
+	stages: Vec<Stage>,
+}
+
+#[derive(Debug)]
+struct Stage {
+	name: &'static str,
+	messages: Vec<String>,
+	results: String,
 }
 
 impl Diagnostics {
@@ -35,10 +45,33 @@ impl Diagnostics {
 		}
 	}
 
-	pub fn debug_stage(&mut self, stage: &'static str, data: String) {
-		self.stages.push((stage, data));
+	/// All results and messages (debug, warning, error) pushed after this
+	/// will be associated with this stage until another stage one is started
+	pub fn start_stage(&mut self, name: &'static str) {
+		self.stages.push(Stage {
+			name,
+			messages: vec![],
+			results: String::new(),
+		});
 	}
 
+	/// Associates some result data for debugging with the current stage
+	/// (for example rendered tokenizer output, or an ast in text form)
+	pub fn push_results(&mut self, data: &str) {
+		self.stages.last_mut().unwrap().results.push_str(data);
+	}
+
+	/// Associates a message (debug, warning, error) with the current stage
+	pub fn push_message(&mut self, message: impl Into<String>) {
+		self
+			.stages
+			.last_mut()
+			.unwrap()
+			.messages
+			.push(message.into());
+	}
+
+	// TODO Incremantally write new results and messages to an output stream
 	pub fn save_stages(&self) -> anyhow::Result<()> {
 		let mut path = self.path.clone().unwrap_or(PathBuf::from("./unknown.rym"));
 		path.set_extension("debug");
@@ -50,8 +83,9 @@ impl Diagnostics {
 		self
 			.stages
 			.iter()
-			.map(|(stage, data)| format!(">==> {stage} >==>\n{data}<==< {stage} <==<\n"))
-			.collect()
+			.fold(String::new(), |dump, Stage { name, results, .. }| {
+				dump + &format!(">==> {name} >==>\n{results}<==< {name} <==<\n")
+			})
 	}
 }
 
@@ -61,6 +95,12 @@ pub struct Span<Idx> {
 	pub start: Idx,
 	/// Exclusive last index
 	pub end: Idx,
+}
+
+impl Span<u32> {
+	pub fn src(self, src: &str) -> &str {
+		&src[self.as_range()]
+	}
 }
 
 impl<Idx: TryInto<usize>> Span<Idx> {

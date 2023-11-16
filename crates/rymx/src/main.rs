@@ -8,7 +8,7 @@ struct Arguments {}
 
 fn main() -> anyhow::Result<()> {
 	let mut command = command!()
-		.arg(arg!(--stages "Write compilation stages to debug files"))
+		.arg(arg!(--"write-stages" "Write compilation stages to debug files"))
 		.subcommand(Command::new("repl").about("Start a repl session"))
 		.subcommand(
 			Command::new("run")
@@ -18,7 +18,7 @@ fn main() -> anyhow::Result<()> {
 
 	let help_str = command.render_help();
 	let global_matches = command.get_matches();
-	let stages = global_matches.get_flag("stages");
+	let stages = global_matches.get_flag("write-stages");
 
 	match global_matches.subcommand() {
 		Some(("repl", _)) => cmd_repl(stages)?,
@@ -44,7 +44,7 @@ fn cmd_repl(stages: bool) -> anyhow::Result<()> {
 			Ok(line) => {
 				editor.add_history_entry(line.as_str()).unwrap();
 				let mut diag = Diagnostics::default();
-				compile(&mut diag, line);
+				compile(&mut diag, &line);
 				if stages {
 					diag.save_stages()?;
 				}
@@ -71,7 +71,7 @@ fn cmd_repl(stages: bool) -> anyhow::Result<()> {
 fn cmd_run(stages: bool, path: PathBuf) -> anyhow::Result<()> {
 	let src = read_to_string(&path)?;
 	let mut diag = Diagnostics::new(path);
-	compile(&mut diag, src);
+	compile(&mut diag, &src);
 	if stages {
 		diag.save_stages()?;
 	}

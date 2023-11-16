@@ -22,18 +22,8 @@ pub struct Token {
 	pub span: Span<u32>,
 }
 
-impl Token {
-	pub fn debug_string(self, src: &str) -> String {
-		format!("{:?} [{}]", self.kind, self.src(src).escape_debug())
-	}
-
-	pub fn src<'src>(self, src: &'src str) -> &'src str {
-		&src[self.span.as_range()]
-	}
-}
-
 fn line_comment(lexer: &mut Lexer<TokenKind>) {
-	if let Some(new_line_index) = lexer.remainder().find("\n") {
+	if let Some(new_line_index) = lexer.remainder().find('\n') {
 		lexer.bump(new_line_index);
 	} else {
 		lexer.bump(lexer.remainder().len())

@@ -1,6 +1,6 @@
 use clap::{arg, command, Command};
 use rustyline::{error::ReadlineError, Editor};
-use rymx::{compile, Diagnostics};
+use rymx::{compile_expr, compile_module, Diagnostics};
 use std::{fs::read_to_string, path::PathBuf};
 
 #[derive(Debug)]
@@ -32,7 +32,7 @@ fn main() -> anyhow::Result<()> {
 	Ok(())
 }
 
-fn cmd_repl(stages: bool) -> anyhow::Result<()> {
+fn cmd_repl(write_stages: bool) -> anyhow::Result<()> {
 	let mut editor: Editor<(), _> = Editor::new()?;
 	if editor.load_history(".history").is_err() {
 		println!("No previous history.");
@@ -40,12 +40,15 @@ fn cmd_repl(stages: bool) -> anyhow::Result<()> {
 
 	loop {
 		let readline = editor.readline("➤ ");
+		let mut diag = Diagnostics::new(None, Box::new(std::io::stderr()));
+
 		match readline {
 			Ok(line) => {
 				editor.add_history_entry(line.as_str()).unwrap();
-				let mut diag = Diagnostics::default();
-				compile(&mut diag, &line);
-				if stages {
+
+				let _ = compile_expr(&mut diag, &line);
+
+				if write_stages {
 					diag.save_stages()?;
 				}
 			}
@@ -70,8 +73,8 @@ fn cmd_repl(stages: bool) -> anyhow::Result<()> {
 
 fn cmd_run(stages: bool, path: PathBuf) -> anyhow::Result<()> {
 	let src = read_to_string(&path)?;
-	let mut diag = Diagnostics::new(path);
-	compile(&mut diag, &src);
+	let mut diag = Diagnostics::new(Some(path), Box::new(std::io::stderr()));
+	compile_module(&mut diag, &src).unwrap();
 	if stages {
 		diag.save_stages()?;
 	}

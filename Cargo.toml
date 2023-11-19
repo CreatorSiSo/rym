@@ -12,6 +12,7 @@ smol_str = "0.2"
 stringx = "0.1"
 thiserror = "1"
 
+# TODO is this really the fastest and smallest profile?
 # smallest binary without compromising on speed
 [profile.dist]
 inherits = "release"
@@ -19,3 +20,5 @@ lto = "fat"
 
 [profile.dev.package]
 smol_str.opt-level = 3
+insta.opt-level = 3
+similar.opt-level = 3

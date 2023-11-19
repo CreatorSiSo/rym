@@ -3,26 +3,18 @@ use std::fmt::Debug;
 use crate::Span;
 use logos::{Lexer, Logos};
 
-pub fn tokenize(src: &str) -> Vec<Result<Token, Span<u32>>> {
-	let mut result = vec![];
-	for (maybe_kind, span) in TokenKind::lexer(src).spanned() {
-		let span = span.try_into().expect("Internal Error: File too long");
-		result.push(
-			maybe_kind
-				.map(|kind| Token { span, kind })
-				.map_err(|_| span),
-		);
-	}
-	result
+pub fn tokenizer(src: &str) -> impl Iterator<Item = (Result<Token, ()>, Span)> + '_ {
+	Token::lexer(src).spanned().map(|(maybe_token, span)| {
+		(
+			maybe_token,
+			span
+				.try_into()
+				.expect("Internal Error: Range<usize> to Span conversion failed"),
+		)
+	})
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Token {
-	pub kind: TokenKind,
-	pub span: Span<u32>,
-}
-
-fn line_comment(lexer: &mut Lexer<TokenKind>) {
+fn line_comment(lexer: &mut Lexer<Token>) {
 	if let Some(new_line_index) = lexer.remainder().find('\n') {
 		lexer.bump(new_line_index);
 	} else {
@@ -31,7 +23,7 @@ fn line_comment(lexer: &mut Lexer<TokenKind>) {
 }
 
 #[derive(Debug, Clone, Copy, Logos, PartialEq)]
-pub enum TokenKind {
+pub enum Token {
 	#[regex(r"-?[0-9][0-9_]*")]
 	Int,
 	#[regex(r"-?[0-9][0-9_]*\.[0-9_]+")]

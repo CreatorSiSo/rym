@@ -1,32 +1,62 @@
-use core::ops::Range;
-use std::{fmt::Debug, num::TryFromIntError, path::PathBuf};
+use std::{fmt::Debug, path::PathBuf};
 
 mod ast;
 mod parse;
 mod tokenize;
-pub use tokenize::tokenize;
+pub use tokenize::tokenizer;
+mod span;
+pub use span::Span;
 use tokenize::Token;
 
-pub fn compile(diag: &mut Diagnostics, src: &str) {
-	diag.start_stage("tokenize");
+pub fn compile_module(diag: &mut Diagnostics, src: &str) -> Result<(), ()> {
+	let tokens: Vec<(Token, Span)> = tokenize(diag, src)?;
 
-	let results = tokenize(src);
-	diag.push_results(&results.iter().fold(String::new(), |accum, result| {
-		let (kind, span) = match result {
-			Ok(Token { kind, span }) => (format!("{kind:?}"), span),
-			Err(span) => ("Error".into(), span),
-		};
-		accum + &format!("{kind} [{}]\n", span.src(src).escape_debug())
-	}));
-
-	// let Some(tokens) = maybe_tokens else {
-	// 	return;
-	// };
+	Ok(())
 }
 
-#[derive(Debug, Default)]
+// TODO take a module (for name lookup and so on) as input
+pub fn compile_expr(diag: &mut Diagnostics, src: &str) -> Result<(), ()> {
+	let tokens: Vec<(Token, Span)> = tokenize(diag, src)?;
+
+	// diag.start_stage("parse");
+
+	Ok(())
+}
+
+pub fn tokenize(diag: &mut Diagnostics, src: &str) -> Result<Vec<(Token, Span)>, ()> {
+	diag.start_stage("tokenize");
+
+	let results: Vec<_> = tokenizer(src).collect();
+	diag.push_results(
+		&results.iter().fold(String::new(), |accum, (result, span)| {
+			let (token, span) = match result {
+				Ok(token) => (format!("{token:?}"), span),
+				Err(_) => ("Error".into(), span),
+			};
+			accum + &format!("{token} [{}]\n", span.src(src).escape_debug())
+		}),
+	);
+
+	let mut tokens = vec![];
+	for (result, span) in results {
+		match result {
+			Ok(token) => tokens.push((token, span)),
+			Err(_) => {
+				diag.push_message(format!(
+					"Error: Invalid character <{}> at {:?}\n",
+					span.src(src),
+					span
+				));
+				return Err(());
+			}
+		}
+	}
+	Ok(tokens)
+}
+
 pub struct Diagnostics {
-	path: Option<PathBuf>,
+	results_path: Option<PathBuf>,
+	output: Box<dyn std::io::Write>,
 	stages: Vec<Stage>,
 }
 
@@ -38,9 +68,10 @@ struct Stage {
 }
 
 impl Diagnostics {
-	pub fn new(path: PathBuf) -> Self {
+	pub fn new(results_path: Option<PathBuf>, output: Box<dyn std::io::Write>) -> Self {
 		Self {
-			path: Some(path),
+			results_path,
+			output,
 			stages: vec![],
 		}
 	}
@@ -63,17 +94,17 @@ impl Diagnostics {
 
 	/// Associates a message (debug, warning, error) with the current stage
 	pub fn push_message(&mut self, message: impl Into<String>) {
-		self
-			.stages
-			.last_mut()
-			.unwrap()
-			.messages
-			.push(message.into());
+		let string: String = message.into();
+		self.output.write_all(string.as_bytes()).unwrap();
+		self.stages.last_mut().unwrap().messages.push(string);
 	}
 
 	// TODO Incremantally write new results and messages to an output stream
 	pub fn save_stages(&self) -> anyhow::Result<()> {
-		let mut path = self.path.clone().unwrap_or(PathBuf::from("./unknown.rym"));
+		let mut path = self
+			.results_path
+			.clone()
+			.unwrap_or(PathBuf::from("./unknown.rym"));
 		path.set_extension("debug");
 		std::fs::write(&path, self.dump_stages())?;
 		Ok(())
@@ -86,48 +117,5 @@ impl Diagnostics {
 			.fold(String::new(), |dump, Stage { name, results, .. }| {
 				dump + &format!(">==> {name} >==>\n{results}<==< {name} <==<\n")
 			})
-	}
-}
-
-#[derive(Clone, Copy, Default, PartialEq, Eq)]
-pub struct Span<Idx> {
-	/// Inclusive first index
-	pub start: Idx,
-	/// Exclusive last index
-	pub end: Idx,
-}
-
-impl Span<u32> {
-	pub fn src(self, src: &str) -> &str {
-		&src[self.as_range()]
-	}
-}
-
-impl<Idx: TryInto<usize>> Span<Idx> {
-	pub fn as_range(self) -> Range<usize>
-	where
-		<Idx as TryInto<usize>>::Error: Debug,
-	{
-		Range {
-			start: self.start.try_into().unwrap(),
-			end: self.end.try_into().unwrap(),
-		}
-	}
-}
-
-impl TryFrom<Range<usize>> for Span<u32> {
-	type Error = TryFromIntError;
-
-	fn try_from(Range { start, end }: Range<usize>) -> Result<Self, Self::Error> {
-		Ok(Self {
-			start: start.try_into()?,
-			end: end.try_into()?,
-		})
-	}
-}
-
-impl<Idx: Debug> Debug for Span<Idx> {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.write_fmt(format_args!("{:?}..{:?}", self.start, self.end))
 	}
 }

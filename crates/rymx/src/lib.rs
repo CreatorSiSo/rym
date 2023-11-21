@@ -9,6 +9,7 @@ pub use span::Span;
 use tokenize::Token;
 
 pub fn compile_module(diag: &mut Diagnostics, src: &str) -> Result<(), ()> {
+	diag.start_stage("tokenize");
 	let tokens: Vec<(Token, Span)> = tokenize(diag, src)?;
 
 	Ok(())
@@ -16,18 +17,19 @@ pub fn compile_module(diag: &mut Diagnostics, src: &str) -> Result<(), ()> {
 
 // TODO take a module (for name lookup and so on) as input
 pub fn compile_expr(diag: &mut Diagnostics, src: &str) -> Result<(), ()> {
+	diag.start_stage("tokenize");
 	let tokens: Vec<(Token, Span)> = tokenize(diag, src)?;
 
-	// diag.start_stage("parse");
+	diag.start_stage("parse");
+	let ast = parse::parse_expr(&tokens, src);
+	diag.push_result(&format!("{ast:#?}\n"));
 
 	Ok(())
 }
 
-pub fn tokenize(diag: &mut Diagnostics, src: &str) -> Result<Vec<(Token, Span)>, ()> {
-	diag.start_stage("tokenize");
-
+fn tokenize(diag: &mut Diagnostics, src: &str) -> Result<Vec<(Token, Span)>, ()> {
 	let results: Vec<_> = tokenizer(src).collect();
-	diag.push_results(
+	diag.push_result(
 		&results.iter().fold(String::new(), |accum, (result, span)| {
 			let (token, span) = match result {
 				Ok(token) => (format!("{token:?}"), span),
@@ -39,24 +41,28 @@ pub fn tokenize(diag: &mut Diagnostics, src: &str) -> Result<Vec<(Token, Span)>,
 
 	let mut tokens = vec![];
 	for (result, span) in results {
-		match result {
-			Ok(token) => tokens.push((token, span)),
-			Err(_) => {
-				diag.push_message(format!(
-					"Error: Invalid character <{}> at {:?}\n",
-					span.src(src),
-					span
-				));
-				return Err(());
-			}
+		let Ok(token) = result else {
+			error(
+				diag,
+				format!("Invalid character [{}] at {:?}", span.src(src), span),
+			);
+			return Err(());
+		};
+		match token {
+			Token::DocComment | Token::Comment | Token::VSpace | Token::HSpace => continue,
+			_ => tokens.push((token, span)),
 		}
 	}
 	Ok(tokens)
 }
 
+pub fn error(diag: &mut Diagnostics, message: String) {
+	diag.push_report(format!("Error: {message}\n"));
+}
+
 pub struct Diagnostics {
-	results_path: Option<PathBuf>,
-	output: Box<dyn std::io::Write>,
+	results_out: Option<PathBuf>,
+	reports_out: Box<dyn std::io::Write>,
 	stages: Vec<Stage>,
 }
 
@@ -68,10 +74,10 @@ struct Stage {
 }
 
 impl Diagnostics {
-	pub fn new(results_path: Option<PathBuf>, output: Box<dyn std::io::Write>) -> Self {
+	pub fn new(results_out: Option<PathBuf>, reports_out: Box<dyn std::io::Write>) -> Self {
 		Self {
-			results_path,
-			output,
+			results_out,
+			reports_out,
 			stages: vec![],
 		}
 	}
@@ -88,21 +94,21 @@ impl Diagnostics {
 
 	/// Associates some result data for debugging with the current stage
 	/// (for example rendered tokenizer output, or an ast in text form)
-	pub fn push_results(&mut self, data: &str) {
+	pub fn push_result(&mut self, data: &str) {
 		self.stages.last_mut().unwrap().results.push_str(data);
 	}
 
 	/// Associates a message (debug, warning, error) with the current stage
-	pub fn push_message(&mut self, message: impl Into<String>) {
+	pub fn push_report(&mut self, message: impl Into<String>) {
 		let string: String = message.into();
-		self.output.write_all(string.as_bytes()).unwrap();
+		self.reports_out.write_all(string.as_bytes()).unwrap();
 		self.stages.last_mut().unwrap().messages.push(string);
 	}
 
 	// TODO Incremantally write new results and messages to an output stream
 	pub fn save_stages(&self) -> anyhow::Result<()> {
 		let mut path = self
-			.results_path
+			.results_out
 			.clone()
 			.unwrap_or(PathBuf::from("./unknown.rym"));
 		path.set_extension("debug");
@@ -115,7 +121,7 @@ impl Diagnostics {
 			.stages
 			.iter()
 			.fold(String::new(), |dump, Stage { name, results, .. }| {
-				dump + &format!(">==> {name} >==>\n{results}<==< {name} <==<\n")
+				dump + &format!("--- {name} ---\n{results}\n")
 			})
 	}
 }

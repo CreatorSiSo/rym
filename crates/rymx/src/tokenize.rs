@@ -24,9 +24,9 @@ fn line_comment(lexer: &mut Lexer<Token>) {
 
 #[derive(Debug, Clone, Copy, Logos, PartialEq)]
 pub enum Token {
-	#[regex(r"-?[0-9][0-9_]*")]
+	#[regex(r"[0-9][0-9_]*")]
 	Int,
-	#[regex(r"-?[0-9][0-9_]*\.[0-9_]+")]
+	#[regex(r"[0-9][0-9_]*\.[0-9_]+")]
 	Float,
 	#[regex(r#""(\\"|[^"])*""#)]
 	String,

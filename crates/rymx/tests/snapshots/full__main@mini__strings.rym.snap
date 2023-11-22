@@ -1,6 +1,6 @@
 ---
 source: crates/rymx/tests/full.rs
-expression: diag.dump_stages()
+expression: diag.stages_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/mini/strings.rym
 ---
 --- tokenize ---
@@ -36,4 +36,5 @@ VSpace [\n]
 
 --- parse ---
 
-
+--- reports ---
+found Char at 67..70 expected something else

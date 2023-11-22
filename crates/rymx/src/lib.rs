@@ -1,4 +1,4 @@
-use std::{fmt::Debug, path::PathBuf};
+use std::fmt::Debug;
 
 mod ast;
 mod parse;
@@ -87,8 +87,8 @@ pub fn error(diag: &mut Diagnostics, message: String) {
 }
 
 pub struct Diagnostics {
-	results_out: Option<PathBuf>,
-	reports_out: Box<dyn std::io::Write>,
+	logs_out: Box<dyn std::io::Write>,
+	runtime_out: Box<dyn std::io::Write>,
 	stages: Vec<Stage>,
 }
 
@@ -96,14 +96,14 @@ pub struct Diagnostics {
 struct Stage {
 	name: &'static str,
 	reports: Vec<String>,
-	results: String,
+	output: String,
 }
 
 impl Diagnostics {
-	pub fn new(results_out: Option<PathBuf>, reports_out: Box<dyn std::io::Write>) -> Self {
+	pub fn new(logs_out: Box<dyn std::io::Write>, runtime_out: Box<dyn std::io::Write>) -> Self {
 		Self {
-			results_out,
-			reports_out,
+			logs_out,
+			runtime_out,
 			stages: vec![],
 		}
 	}
@@ -114,42 +114,52 @@ impl Diagnostics {
 		self.stages.push(Stage {
 			name,
 			reports: vec![],
-			results: String::new(),
+			output: String::new(),
 		});
 	}
 
 	/// Associates some result data for debugging with the current stage
 	/// (for example rendered tokenizer output, or an ast in text form)
 	pub fn push_result(&mut self, data: &str) {
-		self.stages.last_mut().unwrap().results.push_str(data);
+		self.stages.last_mut().unwrap().output.push_str(data);
 	}
 
 	/// Associates a message (debug, warning, error) with the current stage
 	pub fn push_report(&mut self, message: impl Into<String>) {
 		let string: String = message.into();
-		write!(self.reports_out, "{string}").unwrap();
-		self.reports_out.flush().unwrap();
+		write!(self.runtime_out, "{string}").unwrap();
+		self.runtime_out.flush().unwrap();
 
 		self.stages.last_mut().unwrap().reports.push(string);
 	}
 
-	// TODO Incremantally write new results and messages to an output stream
-	pub fn save_stages(&self) -> anyhow::Result<()> {
-		let mut path = self
-			.results_out
-			.clone()
-			.unwrap_or(PathBuf::from("./unknown.rym"));
-		path.set_extension("debug");
-		std::fs::write(&path, self.dump_stages())?;
+	pub fn save_outputs(&mut self) -> anyhow::Result<()> {
+		self.logs_out.write_all(self.outputs_dump().as_bytes())?;
+		self.logs_out.flush()?;
 		Ok(())
 	}
 
-	pub fn dump_stages(&self) -> String {
+	pub fn outputs_dump(&self) -> String {
 		self
 			.stages
 			.iter()
-			.fold(String::new(), |dump, Stage { name, results, .. }| {
-				dump + &format!("--- {name} ---\n{results}\n")
+			.fold(String::new(), |accum, Stage { name, output, .. }| {
+				accum + &format!("--- {name} ---\n{output}\n")
 			})
+	}
+
+	pub fn save_reports(&mut self) -> anyhow::Result<()> {
+		self.logs_out.write_all(self.reports_dump().as_bytes())?;
+		self.logs_out.flush()?;
+		Ok(())
+	}
+
+	pub fn reports_dump(&self) -> String {
+		"--- reports ---\n".to_string()
+			+ &self
+				.stages
+				.iter()
+				.map(|Stage { reports, .. }| reports.join(""))
+				.collect::<String>()
 	}
 }

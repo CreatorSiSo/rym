@@ -8,7 +8,7 @@ struct Arguments {}
 
 fn main() -> anyhow::Result<()> {
 	let mut command = command!()
-		.arg(arg!(--"write-stages" "Write compilation stages to debug files"))
+		.arg(arg!(-w --write <"outputs|reports"> ... "Write outputs to a debug file"))
 		.subcommand(Command::new("repl").about("Start a repl session"))
 		.subcommand(
 			Command::new("run")
@@ -18,21 +18,22 @@ fn main() -> anyhow::Result<()> {
 
 	let help_str = command.render_help();
 	let global_matches = command.get_matches();
-	let stages = global_matches.get_flag("write-stages");
+	let write: Vec<String> = global_matches
+		.get_many("write")
+		.map_or(vec![], |option| option.cloned().collect());
 
 	match global_matches.subcommand() {
-		Some(("repl", _)) => cmd_repl(stages)?,
-		Some(("run", sub_matches)) => cmd_run(
-			stages,
-			sub_matches.get_one::<String>("file").unwrap().into(),
-		)?,
+		Some(("repl", _)) => cmd_repl(write)?,
+		Some(("run", sub_matches)) => {
+			cmd_run(write, sub_matches.get_one::<String>("file").unwrap().into())?
+		}
 		_ => print!("{}", help_str.ansi()),
 	}
 
 	Ok(())
 }
 
-fn cmd_repl(write_stages: bool) -> anyhow::Result<()> {
+fn cmd_repl(write: Vec<String>) -> anyhow::Result<()> {
 	let mut editor: Editor<(), _> = Editor::new()?;
 	if editor.load_history(".history").is_err() {
 		println!("No previous history.");
@@ -40,7 +41,11 @@ fn cmd_repl(write_stages: bool) -> anyhow::Result<()> {
 
 	loop {
 		let readline = editor.readline("➤ ");
-		let mut diag = Diagnostics::new(None, Box::new(std::io::stderr()));
+		let mut diag = Diagnostics::new(
+			// Deletes the previous contents of repl.debug
+			Box::new(std::fs::File::create(PathBuf::from("repl.debug"))?),
+			Box::new(std::io::stderr()),
+		);
 
 		match readline {
 			Ok(line) => {
@@ -49,8 +54,11 @@ fn cmd_repl(write_stages: bool) -> anyhow::Result<()> {
 				let _ = compile_expr(&mut diag, &line);
 				print!("");
 
-				if write_stages {
-					diag.save_stages()?;
+				if write.contains(&"outputs".to_string()) {
+					diag.save_outputs()?;
+				}
+				if write.contains(&"reports".to_string()) {
+					diag.save_reports()?;
 				}
 			}
 			Err(ReadlineError::Interrupted) => {
@@ -72,12 +80,22 @@ fn cmd_repl(write_stages: bool) -> anyhow::Result<()> {
 	Ok(())
 }
 
-fn cmd_run(stages: bool, path: PathBuf) -> anyhow::Result<()> {
+fn cmd_run(write: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
 	let src = read_to_string(&path)?;
-	let mut diag = Diagnostics::new(Some(path), Box::new(std::io::stderr()));
-	let _res = compile_module(&mut diag, &src);
-	if stages {
-		diag.save_stages()?;
+	let mut diag = Diagnostics::new(
+		Box::new(std::fs::File::create(path.with_extension("debug"))?),
+		Box::new(std::io::stderr()),
+	);
+
+	// Ignoring the result here as it is already alvailabe
+	// through the Diagnostics
+	let _ = compile_module(&mut diag, &src);
+
+	if write.contains(&"outputs".to_string()) {
+		diag.save_outputs()?;
+	}
+	if write.contains(&"reports".to_string()) {
+		diag.save_reports()?;
 	}
 	Ok(())
 }

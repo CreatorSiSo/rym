@@ -1,6 +1,6 @@
 ---
 source: crates/rymx/tests/full.rs
-expression: diag.dump_stages()
+expression: diag.stages_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/mini/prelude.rym
 ---
 --- tokenize ---
@@ -43,4 +43,5 @@ VSpace [\n]
 
 --- parse ---
 
-
+--- reports ---
+found ParenOpen at 18..19 expected something else

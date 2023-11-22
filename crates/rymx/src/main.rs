@@ -1,6 +1,6 @@
 use clap::{arg, command, Command};
 use rustyline::{error::ReadlineError, Editor};
-use rymx::{compile_expr, compile_module, Diagnostics};
+use rymx::{compile_expr, compile_module, Diagnostics, SourceId};
 use std::{fs::read_to_string, path::PathBuf};
 
 #[derive(Debug)]
@@ -49,10 +49,10 @@ fn cmd_repl(write: Vec<String>) -> anyhow::Result<()> {
 
 		match readline {
 			Ok(line) => {
-				editor.add_history_entry(line.as_str()).unwrap();
+				editor.add_history_entry(&line).unwrap();
+				diag.set_other_src("repl", &line);
 
-				let _ = compile_expr(&mut diag, &line);
-				print!("");
+				let _ = compile_expr(&mut diag, &line, SourceId::Other("repl"));
 
 				if write.contains(&"outputs".to_string()) {
 					diag.save_outputs()?;
@@ -89,7 +89,7 @@ fn cmd_run(write: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
 
 	// Ignoring the result here as it is already alvailabe
 	// through the Diagnostics
-	let _ = compile_module(&mut diag, &src);
+	let _ = compile_module(&mut diag, &src, SourceId::File(path));
 
 	if write.contains(&"outputs".to_string()) {
 		diag.save_outputs()?;

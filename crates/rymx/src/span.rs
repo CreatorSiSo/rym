@@ -1,6 +1,8 @@
 use core::ops::Range;
 use std::fmt::Debug;
 
+use crate::SourceId;
+
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub struct Span {
 	/// Inclusive first index
@@ -57,5 +59,23 @@ impl From<Span> for Range<usize> {
 impl Debug for Span {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_fmt(format_args!("{:?}..{:?}", self.start, self.end))
+	}
+}
+
+pub struct SourceSpan(pub SourceId, pub Span);
+
+impl ariadne::Span for SourceSpan {
+	type SourceId = SourceId;
+
+	fn source(&self) -> &Self::SourceId {
+		&self.0
+	}
+
+	fn start(&self) -> usize {
+		self.1.start
+	}
+
+	fn end(&self) -> usize {
+		self.1.end
 	}
 }

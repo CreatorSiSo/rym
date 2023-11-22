@@ -1,6 +1,6 @@
 ---
 source: crates/rymx/tests/full.rs
-expression: diag.stages_dump() + &diag.reports_dump()
+expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/mini/strings.rym
 ---
 --- tokenize ---
@@ -37,4 +37,12 @@ VSpace [\n]
 --- parse ---
 
 --- reports ---
-found Char at 67..70 expected something else
+Error: 
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/strings.rym:1:1]
+   │
+ 3 │ ╭─▶     + 'c'
+ 4 │ ├─▶     + '\''
+   │ │                
+   │ ╰──────────────── ExpectedFound { expected: [], found: Some(Char) }
+───╯
+

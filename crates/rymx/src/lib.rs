@@ -3,28 +3,54 @@ use std::{fmt::Debug, path::PathBuf};
 mod ast;
 mod parse;
 mod tokenize;
+use ast::{Expr, Module};
 pub use tokenize::tokenizer;
 mod span;
 pub use span::Span;
 use tokenize::Token;
 
-pub fn compile_module(diag: &mut Diagnostics, src: &str) -> Result<(), ()> {
-	diag.start_stage("tokenize");
-	let tokens: Vec<(Token, Span)> = tokenize(diag, src)?;
-
-	Ok(())
-}
-
-// TODO take a module (for name lookup and so on) as input
-pub fn compile_expr(diag: &mut Diagnostics, src: &str) -> Result<(), ()> {
+pub fn compile_module(diag: &mut Diagnostics, src: &str) -> Result<Module, ()> {
 	diag.start_stage("tokenize");
 	let tokens: Vec<(Token, Span)> = tokenize(diag, src)?;
 
 	diag.start_stage("parse");
-	let ast = parse::parse_expr(&tokens, src);
-	diag.push_result(&format!("{ast:#?}\n"));
+	let module = match parse::parse_module(&tokens, src) {
+		Ok(module) => module,
+		Err(errs) => {
+			for err in errs {
+				diag.push_report(format!("{err:?\n}"));
+			}
+			return Err(());
+		}
+	};
+	diag.push_result(&format!("{module:#?}\n"));
 
-	Ok(())
+	// TODO Name resolution
+	// TODO Typechecking
+	// TODO Const evaluation
+	// TODO Generate intermediate representation
+
+	Ok(module)
+}
+
+// TODO take a module (for name lookup and so on) as input
+pub fn compile_expr(diag: &mut Diagnostics, src: &str) -> Result<Expr, ()> {
+	diag.start_stage("tokenize");
+	let tokens: Vec<(Token, Span)> = tokenize(diag, src)?;
+
+	diag.start_stage("parse");
+	let expr = match parse::parse_expr(&tokens, src) {
+		Ok(expr) => expr,
+		Err(errs) => {
+			for err in errs {
+				diag.push_report(format!("{err:?}\n"));
+			}
+			return Err(());
+		}
+	};
+	diag.push_result(&format!("{expr:#?}\n"));
+
+	Ok(expr)
 }
 
 fn tokenize(diag: &mut Diagnostics, src: &str) -> Result<Vec<(Token, Span)>, ()> {
@@ -69,7 +95,7 @@ pub struct Diagnostics {
 #[derive(Debug)]
 struct Stage {
 	name: &'static str,
-	messages: Vec<String>,
+	reports: Vec<String>,
 	results: String,
 }
 
@@ -87,7 +113,7 @@ impl Diagnostics {
 	pub fn start_stage(&mut self, name: &'static str) {
 		self.stages.push(Stage {
 			name,
-			messages: vec![],
+			reports: vec![],
 			results: String::new(),
 		});
 	}
@@ -101,8 +127,10 @@ impl Diagnostics {
 	/// Associates a message (debug, warning, error) with the current stage
 	pub fn push_report(&mut self, message: impl Into<String>) {
 		let string: String = message.into();
-		self.reports_out.write_all(string.as_bytes()).unwrap();
-		self.stages.last_mut().unwrap().messages.push(string);
+		write!(self.reports_out, "{string}").unwrap();
+		self.reports_out.flush().unwrap();
+
+		self.stages.last_mut().unwrap().reports.push(string);
 	}
 
 	// TODO Incremantally write new results and messages to an output stream

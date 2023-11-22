@@ -3,7 +3,7 @@ source: crates/rymx/tests/full.rs
 expression: diag.dump_stages()
 input_file: crates/rymx/tests/rym_clone/main.rym
 ---
->==> tokenize >==>
+--- tokenize ---
 Use [use]
 HSpace [ ]
 Ident [std]
@@ -83,5 +83,7 @@ VSpace [\n]
 BraceClose [}]
 Semi [;]
 VSpace [\n]
-<==< tokenize <==<
+
+--- parse ---
+
 

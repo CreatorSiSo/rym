@@ -2,16 +2,16 @@ use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub struct Module {
-	name: String,
-	constants: Vec<Constant>,
-	children: Vec<Module>,
+	pub name: String,
+	pub constants: Vec<Constant>,
+	pub children: Vec<Module>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Constant {
-	name: String,
-	data: Expr,
-	typ: Expr,
+	pub name: String,
+	pub data: Box<Expr>,
+	// pub typ: Expr,
 }
 
 #[derive(Clone)]
@@ -20,6 +20,7 @@ pub enum Expr {
 	Unary(UnaryOp, Box<Expr>),
 	Binary(BinaryOp, Box<Expr>, Box<Expr>),
 	Ident(String),
+	Constant(Constant),
 }
 
 impl std::fmt::Debug for Expr {
@@ -33,6 +34,7 @@ impl std::fmt::Debug for Expr {
 				.field(arg2)
 				.finish(),
 			Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
+			Self::Constant(arg0) => arg0.fmt(f),
 		}
 	}
 }

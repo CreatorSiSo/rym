@@ -1,5 +1,5 @@
 use crate::{
-	ast::{BinaryOp, Expr, UnaryOp, Value},
+	ast::{BinaryOp, Constant, Expr, Module, UnaryOp, Value},
 	span::Span,
 	tokenize::Token,
 };
@@ -9,43 +9,78 @@ use chumsky::{
 	prelude::*,
 };
 
-pub fn parse_module(tokens: &[(Token, Span)], src: &str) {
-	module_parser()
-		.parse(tokens.spanned(Span {
-			start: src.len(),
-			end: src.len(),
-		}))
-		.unwrap()
+pub fn parse_module<'a>(
+	tokens: &'a [(Token, Span)],
+	src: &'a str,
+) -> Result<Module, Vec<Rich<'a, Token, Span>>> {
+	let parse_result = module_parser(src).parse(tokens.spanned(Span {
+		start: src.len(),
+		end: src.len(),
+	}));
+
+	parse_result.into_result()
 }
 
-pub fn parse_expr(tokens: &[(Token, Span)], src: &str) -> Expr {
+pub fn parse_expr<'a>(
+	tokens: &'a [(Token, Span)],
+	src: &'a str,
+) -> Result<Expr, Vec<Rich<'a, Token, Span>>> {
 	expr_parser(src)
 		.parse(tokens.spanned(Span {
 			start: src.len(),
 			end: src.len(),
 		}))
-		.unwrap()
+		.into_result()
 }
 
 type TokenStream<'tokens> = SpannedInput<Token, Span, &'tokens [(Token, Span)]>;
 type Extra<'src> = extra::Full<Rich<'src, Token, Span>, (), &'src str>;
 
-fn module_parser<'src>() -> impl Parser<'src, TokenStream<'src>, (), Extra<'src>> {
-	end()
+fn module_parser<'src>(
+	src: &'src str,
+) -> impl Parser<'src, TokenStream<'src>, Module, Extra<'src>> {
+	constant_parser(expr_parser(src), src)
+		.then_ignore(just(Token::Semi))
+		.repeated()
+		.collect::<Vec<Constant>>()
+		.map(|constants| Module {
+			// TODO
+			name: "".into(),
+			constants,
+			children: vec![],
+		})
 }
 
-fn expr_parser<'src>(src: &'src str) -> impl Parser<'src, TokenStream<'src>, Expr, Extra<'src>> {
+fn constant_parser<'src>(
+	expr: impl Parser<'src, TokenStream<'src>, Expr, Extra<'src>> + Clone,
+	src: &'src str,
+) -> impl Parser<'src, TokenStream<'src>, Constant, Extra<'src>> + Clone {
+	// constant ::= "const" indent "=" expr
+	just(Token::Const)
+		.ignore_then(indent_parser(src))
+		.then_ignore(just(Token::Assign))
+		.then(expr)
+		.map(|(name, expr)| Constant {
+			name: name.into(),
+			data: Box::new(expr),
+			// TODO typ: Type::Unknown,
+		})
+}
+
+fn expr_parser<'src>(
+	src: &'src str,
+) -> impl Parser<'src, TokenStream<'src>, Expr, Extra<'src>> + Clone {
 	recursive(|expr| {
 		// literal ::= int | float | string
 		let literal = literal_parser(src).map(|value| Expr::Value(value));
 
-		// atom ::= "(" expr ")" | literal | identifier
+		// atom ::= "(" expr ")" | literal | ident
 		let atom = choice((
 			literal,
 			expr
 				.clone()
 				.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
-			indentifier_parser(src).map(|name| Expr::Ident(name.into())),
+			indent_parser(src).map(|name| Expr::Ident(name.into())),
 		))
 		.labelled("atom");
 
@@ -98,11 +133,16 @@ fn expr_parser<'src>(src: &'src str) -> impl Parser<'src, TokenStream<'src>, Exp
 			|a, (op, b), _| Expr::Binary(op, Box::new(a), Box::new(b)),
 		);
 
-		compare.labelled("expression")
+		// expr ::= compare | constant
+		choice((
+			compare,
+			constant_parser(expr, src).map(|constant| Expr::Constant(constant)),
+		))
+		.labelled("expression")
 	})
 }
 
-fn indentifier_parser<'src>(
+fn indent_parser<'src>(
 	src: &'src str,
 ) -> impl Parser<'src, TokenStream<'src>, &'src str, Extra<'src>> + Clone {
 	just(Token::Ident)

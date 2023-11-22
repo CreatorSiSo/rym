@@ -3,7 +3,7 @@ source: crates/rymx/tests/full.rs
 expression: diag.dump_stages()
 input_file: crates/rymx/tests/mini/hello_world.rym
 ---
->==> tokenize >==>
+--- tokenize ---
 Const [const]
 HSpace [ ]
 Ident [main]
@@ -23,5 +23,7 @@ String [\"Hello World!\"]
 ParenClose [)]
 Semi [;]
 VSpace [\n]
-<==< tokenize <==<
+
+--- parse ---
+
 

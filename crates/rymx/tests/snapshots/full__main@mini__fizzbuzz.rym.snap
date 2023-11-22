@@ -3,7 +3,7 @@ source: crates/rymx/tests/full.rs
 expression: diag.dump_stages()
 input_file: crates/rymx/tests/mini/fizzbuzz.rym
 ---
->==> tokenize >==>
+--- tokenize ---
 Const [const]
 HSpace [ ]
 Ident [main]
@@ -128,5 +128,7 @@ VSpace [\n]
 BraceClose [}]
 Semi [;]
 VSpace [\n]
-<==< tokenize <==<
+
+--- parse ---
+
 

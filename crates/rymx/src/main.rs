@@ -47,6 +47,7 @@ fn cmd_repl(write_stages: bool) -> anyhow::Result<()> {
 				editor.add_history_entry(line.as_str()).unwrap();
 
 				let _ = compile_expr(&mut diag, &line);
+				print!("");
 
 				if write_stages {
 					diag.save_stages()?;
@@ -74,7 +75,7 @@ fn cmd_repl(write_stages: bool) -> anyhow::Result<()> {
 fn cmd_run(stages: bool, path: PathBuf) -> anyhow::Result<()> {
 	let src = read_to_string(&path)?;
 	let mut diag = Diagnostics::new(Some(path), Box::new(std::io::stderr()));
-	compile_module(&mut diag, &src).unwrap();
+	let _res = compile_module(&mut diag, &src);
 	if stages {
 		diag.save_stages()?;
 	}

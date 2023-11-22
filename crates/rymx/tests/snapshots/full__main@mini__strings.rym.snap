@@ -3,7 +3,7 @@ source: crates/rymx/tests/full.rs
 expression: diag.dump_stages()
 input_file: crates/rymx/tests/mini/strings.rym
 ---
->==> tokenize >==>
+--- tokenize ---
 Const [const]
 HSpace [ ]
 Ident [long]
@@ -33,5 +33,7 @@ HSpace [ ]
 Char [\'invalid\']
 Semi [;]
 VSpace [\n]
-<==< tokenize <==<
+
+--- parse ---
+
 

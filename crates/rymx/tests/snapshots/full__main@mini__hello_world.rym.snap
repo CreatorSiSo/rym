@@ -28,7 +28,7 @@ VSpace [\n]
 
 --- reports ---
 Error: 
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/hello_world.rym:1:1]
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/hello_world.rym:1:16]
    │
  1 │ const main = fn() => println("Hello World!");
    │                ┬  

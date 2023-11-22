@@ -133,7 +133,7 @@ VSpace [\n]
 
 --- reports ---
 Error: 
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/fizzbuzz.rym:1:1]
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/fizzbuzz.rym:1:16]
    │
  1 │ const main = fn() => {
    │                ┬  

@@ -90,9 +90,13 @@ fn tokenize(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Result<Vec<(
 
 pub fn error(diag: &mut Diagnostics, message: String, src_span: SourceSpan) {
 	diag.push_report(
-		Report::build(ariadne::ReportKind::Error, src_span.0.clone(), 0)
-			.with_label(Label::new(src_span).with_message(message))
-			.finish(),
+		Report::build(
+			ariadne::ReportKind::Error,
+			src_span.0.clone(),
+			src_span.1.start,
+		)
+		.with_label(Label::new(src_span).with_message(message))
+		.finish(),
 	);
 }
 

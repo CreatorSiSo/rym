@@ -1,7 +1,10 @@
 use clap::{arg, command, Command};
 use rustyline::{error::ReadlineError, Editor};
 use rymx::{compile_expr, compile_module, Diagnostics, SourceId};
-use std::{fs::read_to_string, path::PathBuf};
+use std::{
+	fs::{read_to_string, File},
+	path::PathBuf,
+};
 
 #[derive(Debug)]
 struct Arguments {}
@@ -83,7 +86,11 @@ fn cmd_repl(write: Vec<String>) -> anyhow::Result<()> {
 fn cmd_run(write: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
 	let src = read_to_string(&path)?;
 	let mut diag = Diagnostics::new(
-		Box::new(std::fs::File::create(path.with_extension("debug"))?),
+		if write.is_empty() {
+			Box::new(std::io::sink())
+		} else {
+			Box::new(File::create(path.with_extension("debug"))?)
+		},
 		Box::new(std::io::stderr()),
 	);
 

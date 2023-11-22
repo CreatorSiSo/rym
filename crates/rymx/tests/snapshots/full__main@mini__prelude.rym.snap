@@ -45,7 +45,7 @@ VSpace [\n]
 
 --- reports ---
 Error: 
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/prelude.rym:1:1]
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/prelude.rym:1:19]
    │
  1 │ const println = fn(fmt: String, ..args: [impl Display]) => {
    │                   ┬  

@@ -45,7 +45,7 @@ fn map_parse_result<T>(
 		errs
 			.into_iter()
 			.map(|err| {
-				Report::build(ariadne::ReportKind::Error, src_id.clone(), 0)
+				Report::build(ariadne::ReportKind::Error, src_id.clone(), err.span().start)
 					.with_label(
 						Label::new(SourceSpan(src_id.clone(), *err.span()))
 							.with_message(format!("{:?}", err.reason())),

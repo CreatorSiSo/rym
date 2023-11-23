@@ -15,7 +15,7 @@ impl Interpret for Module {
 
 		for constant in self.constants {
 			let val = constant.expr.eval(env);
-			env.variable_create(constant.name, VariableKind::Const, val);
+			env.create(constant.name, VariableKind::Const, val);
 		}
 
 		// TODO only do this when requested, ie. in main.rym file
@@ -74,7 +74,7 @@ impl Interpret for Expr {
 			}
 			Expr::Constant(Constant { name, expr }) => {
 				let val = expr.eval(env);
-				env.variable_create(name, VariableKind::Const, val);
+				env.create(name, VariableKind::Const, val);
 				Value::Unit
 			}
 		}
@@ -102,29 +102,56 @@ impl Call for Function {
 
 		// TODO correct addition and removal of variables on Env
 		for (param, arg) in self.params.iter().zip(args) {
-			env.variable_create(param.0.clone(), VariableKind::Let, arg)
+			env.create(param.0.clone(), VariableKind::Let, arg)
 		}
 		self.body.clone().eval(env)
 	}
 }
 
 pub struct Env {
-	variables: HashMap<String, Variable>,
+	scopes: Vec<Scope>,
 }
 
 impl Env {
 	pub fn new() -> Self {
 		Self {
-			variables: HashMap::new(),
+			scopes: vec![Scope::new(ScopeKind::Module)],
 		}
 	}
 
-	pub fn variables(&self) -> impl Iterator<Item = (&String, &Variable)> {
-		self.variables.iter()
+	pub fn push_scope(&mut self, kind: ScopeKind) {
+		self.scopes.push(Scope::new(kind));
 	}
 
-	pub fn variable_create(&mut self, name: impl Into<String>, kind: VariableKind, value: Value) {
-		self.variables.insert(name.into(), Variable { value, kind });
+	pub fn pop_scope(&mut self) {
+		self.scopes.pop();
+	}
+
+	pub fn get(&self, name: &str) -> Option<&Value> {
+		let mut in_function = false;
+		for scope in self.scopes.iter().rev() {
+			if in_function && scope.kind == ScopeKind::Function {
+				continue;
+			}
+			if let Some(val) = scope.vars.get(name) {
+				return Some(&val.value);
+			}
+			in_function = matches!(scope.kind, ScopeKind::Function);
+		}
+		None
+	}
+
+	pub fn variables(&self) -> impl Iterator<Item = (&String, &Variable)> {
+		self.scopes.iter().map(|scope| scope.vars.iter()).flatten()
+	}
+
+	pub fn create(&mut self, name: impl Into<String>, kind: VariableKind, value: Value) {
+		self
+			.scopes
+			.last_mut()
+			.unwrap()
+			.vars
+			.insert(name.into(), Variable { value, kind });
 	}
 
 	pub fn variable_assign(&mut self) {
@@ -132,8 +159,35 @@ impl Env {
 	}
 
 	pub fn variable_get(&mut self, name: &str) -> Option<&Value> {
-		self.variables.get(name).map(|variable| &variable.value)
+		self
+			.scopes
+			.last_mut()
+			.unwrap()
+			.vars
+			.get(name)
+			.map(|variable| &variable.value)
 	}
+}
+
+struct Scope {
+	vars: HashMap<String, Variable>,
+	kind: ScopeKind,
+}
+
+impl Scope {
+	fn new(kind: ScopeKind) -> Self {
+		Self {
+			vars: HashMap::new(),
+			kind,
+		}
+	}
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum ScopeKind {
+	Module,
+	Function,
+	Expr,
 }
 
 pub struct Variable {

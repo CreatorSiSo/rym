@@ -85,7 +85,7 @@ fn constant_parser<'src>(
 		.then(expr)
 		.map(|(name, expr)| Constant {
 			name: name.into(),
-			data: Box::new(expr),
+			expr: Box::new(expr),
 			// TODO typ: Type::Unknown,
 		})
 }
@@ -197,7 +197,14 @@ fn literal_parser<'src>(
 		.labelled("float");
 
 	let string = just(Token::String)
-		.map_with(|_, extra| Value::String(current_src(extra, src).into()))
+		.map_with(|_, extra| {
+			Value::String({
+				let mut span: Span = extra.span();
+				span.start += 1;
+				span.end -= 1;
+				span.src(src).into()
+			})
+		})
 		.labelled("string");
 
 	choice((integer, float, string)).labelled("literal")

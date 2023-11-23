@@ -1,6 +1,6 @@
 use clap::{arg, command, Command};
 use rustyline::{error::ReadlineError, Editor};
-use rymx::{compile_expr, compile_module, Diagnostics, SourceId};
+use rymx::{compile_expr, compile_module, interpret, Diagnostics, Env, SourceId};
 use std::{
 	fs::{read_to_string, File},
 	path::PathBuf,
@@ -41,21 +41,31 @@ fn cmd_repl(write: Vec<String>) -> anyhow::Result<()> {
 	if editor.load_history(".history").is_err() {
 		println!("No previous history.");
 	}
+	let mut env = Env::new();
 
 	loop {
 		let readline = editor.readline("➤ ");
 		let mut diag = Diagnostics::new(
 			// Deletes the previous contents of repl.debug
-			Box::new(std::fs::File::create(PathBuf::from("repl.debug"))?),
+			Box::new(File::create(PathBuf::from("repl.debug"))?),
 			Box::new(std::io::stderr()),
 		);
 
 		match readline {
 			Ok(line) => {
+				match line.as_str() {
+					"" => continue,
+					":help" => continue,
+					_ => (),
+				}
+
 				editor.add_history_entry(&line).unwrap();
 				diag.set_other_src("repl", &line);
 
-				let _ = compile_expr(&mut diag, &line, SourceId::Other("repl"));
+				if let Ok(expr) = compile_expr(&mut diag, &line, SourceId::Other("repl")) {
+					let val = interpret(&mut diag, &mut env, expr);
+					println!("{val}");
+				}
 
 				if write.contains(&"outputs".to_string()) {
 					diag.save_outputs()?;
@@ -93,10 +103,13 @@ fn cmd_run(write: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
 		},
 		Box::new(std::io::stderr()),
 	);
+	let mut env = Env::new();
 
 	// Ignoring the result here as it is already alvailabe
 	// through the Diagnostics
-	let _ = compile_module(&mut diag, &src, SourceId::File(path));
+	if let Ok(module) = compile_module(&mut diag, &src, SourceId::File(path)) {
+		interpret(&mut diag, &mut env, module);
+	}
 
 	if write.contains(&"outputs".to_string()) {
 		diag.save_outputs()?;

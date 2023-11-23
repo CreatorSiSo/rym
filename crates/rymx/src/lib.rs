@@ -1,16 +1,44 @@
+use ariadne::{Cache, FileCache, Label, Report, Source};
 use std::collections::HashMap;
 use std::{fmt::Debug, path::PathBuf};
 
 mod ast;
+mod interpret;
 mod parse;
-mod tokenize;
-use ariadne::{Cache, FileCache, Label, Report, Source};
-use ast::{Expr, Module};
-use span::SourceSpan;
-pub use tokenize::tokenizer;
 mod span;
+mod tokenize;
+
+pub use interpret::Env;
 pub use span::Span;
+pub use tokenize::tokenizer;
+
+use ast::{Expr, Module, Value};
+use interpret::{Interpret, Variable, VariableKind};
+use span::SourceSpan;
 use tokenize::Token;
+
+pub fn interpret<I: Interpret>(diag: &mut Diagnostics, env: &mut Env, ast: I) -> Value {
+	diag.start_stage("interpret");
+	let val = ast.eval(env);
+
+	let state: String = env
+		.variables()
+		.map(|(name, Variable { value, kind })| {
+			format!(
+				"{} {name} = {}\n",
+				match kind {
+					VariableKind::Const => "const",
+					VariableKind::Let => "let",
+					VariableKind::LetMut => "let mut",
+				},
+				value
+			)
+		})
+		.collect();
+	diag.push_result(&state);
+
+	val
+}
 
 pub fn compile_module(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Result<Module, ()> {
 	diag.start_stage("tokenize");

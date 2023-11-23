@@ -1,6 +1,6 @@
 ---
 source: crates/rymx/tests/full.rs
-expression: diag.stages_dump() + &diag.reports_dump()
+expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/mini/pi.rym
 ---
 --- tokenize ---
@@ -20,11 +20,14 @@ Module {
     constants: [
         Constant {
             name: "pi",
-            data: Value(Float 3.141592653589793),
+            expr: Value(Float 3.141592653589793),
         },
     ],
     children: [],
 }
+
+--- interpret ---
+const pi = 3.141592653589793
 
 --- reports ---
 

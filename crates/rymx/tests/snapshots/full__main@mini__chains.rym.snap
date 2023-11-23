@@ -1,6 +1,6 @@
 ---
 source: crates/rymx/tests/full.rs
-expression: diag.stages_dump() + &diag.reports_dump()
+expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/mini/chains.rym
 ---
 --- tokenize ---
@@ -1232,7 +1232,7 @@ Module {
     constants: [
         Constant {
             name: "test",
-            data: Add(
+            expr: Add(
                 Add(
                     Add(
                         Add(
@@ -2146,6 +2146,9 @@ Module {
     ],
     children: [],
 }
+
+--- interpret ---
+const test = 304
 
 --- reports ---
 

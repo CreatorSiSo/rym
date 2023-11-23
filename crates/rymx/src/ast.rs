@@ -10,7 +10,7 @@ pub struct Module {
 #[derive(Debug, Clone)]
 pub struct Constant {
 	pub name: String,
-	pub data: Box<Expr>,
+	pub expr: Box<Expr>,
 	// pub typ: Expr,
 }
 
@@ -78,11 +78,26 @@ impl Display for BinaryOp {
 #[derive(Clone)]
 pub enum Value {
 	Bool(bool),
-	Int(u64),
+	Int(i64),
 	Float(f64),
 	String(String),
 	Function(Function),
 	Type(Type),
+	Unit,
+}
+
+impl std::fmt::Display for Value {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Bool(val) => f.write_str(if *val { "true" } else { "false" }),
+			Self::Int(val) => f.write_str(&val.to_string()),
+			Self::Float(val) => f.write_str(&val.to_string()),
+			Self::String(val) => f.write_fmt(format_args!("\"{val}\"")),
+			Self::Function(_val) => f.write_str("<function>"),
+			Self::Type(_val) => f.write_str("<type>"),
+			Self::Unit => f.write_str("()"),
+		}
+	}
 }
 
 impl std::fmt::Debug for Value {
@@ -94,13 +109,15 @@ impl std::fmt::Debug for Value {
 			Self::String(arg0) => f.write_fmt(format_args!("String {arg0}")),
 			Self::Function(arg0) => f.write_fmt(format_args!("Function {arg0:?}")),
 			Self::Type(_arg0) => f.write_fmt(format_args!("Type __TODO__")),
+			Self::Unit => f.write_str("Unit"),
 		}
 	}
 }
 
 #[derive(Debug, Clone)]
 pub struct Function {
-	params: Vec<(String, Type)>,
+	pub params: Vec<(String, Type)>,
+	pub body: Box<Expr>,
 }
 
 type Type = ();

@@ -1,10 +1,37 @@
 mod env;
 mod function;
 
-pub use self::env::{Env, Variable, VariableKind};
-pub use self::function::Call;
+pub use self::env::Env;
+use self::env::ScopeKind;
+pub use self::function::{Call, NativeFunction};
+use crate::ast::{BinaryOp, Expr, Function, Literal, Module, UnaryOp, VariableKind};
 
-use crate::ast::{BinaryOp, Constant, Expr, Module, UnaryOp, Value};
+#[derive(Debug, Clone)]
+pub enum Value {
+	Bool(bool),
+	Int(i64),
+	Float(f64),
+	String(String),
+	Function(Function),
+	NativeFunction(NativeFunction),
+	// Type(Type),
+	Unit,
+}
+
+impl std::fmt::Display for Value {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Bool(val) => f.write_str(if *val { "true" } else { "false" }),
+			Self::Int(val) => f.write_str(&val.to_string()),
+			Self::Float(val) => f.write_str(&val.to_string()),
+			Self::String(val) => f.write_fmt(format_args!("\"{val}\"")),
+			Self::Function(_val) => f.write_str("<function>"),
+			Self::NativeFunction(_val) => f.write_str("<native function>"),
+			// Self::Type(_val) => f.write_str("<type>"),
+			Self::Unit => f.write_str("()"),
+		}
+	}
+}
 
 pub trait Interpret {
 	fn eval(self, env: &mut Env) -> Value;
@@ -17,9 +44,9 @@ impl Interpret for Module {
 		// 	.constants
 		// 	.sort_by(|Constant { expr: l, .. }, Constant { expr: r, .. }| match (l, r) {});
 
-		for constant in self.constants {
-			let val = constant.expr.eval(env);
-			env.create(constant.name, VariableKind::Const, val);
+		for (name, expr) in self.constants {
+			let val = expr.eval(env);
+			env.create(name, VariableKind::Const, val);
 		}
 
 		// TODO only do this when requested, ie. in main.rym file
@@ -38,7 +65,19 @@ impl Interpret for Module {
 impl Interpret for Expr {
 	fn eval(self, env: &mut Env) -> Value {
 		match self {
-			Expr::Value(value) => value,
+			Expr::Unit => Value::Unit,
+			Expr::Literal(lit) => match lit {
+				Literal::Bool(inner) => Value::Bool(inner),
+				Literal::Int(inner) => Value::Int(inner),
+				Literal::Float(inner) => Value::Float(inner),
+				Literal::String(inner) => Value::String(inner),
+			},
+			Expr::Ident(name) => {
+				// TODO Only clone when needed / faster
+				env.get(&name).unwrap().clone()
+			}
+			Expr::Function(func) => Value::Function(func),
+
 			Expr::Unary(op, expr) => match (op, expr.eval(env)) {
 				(UnaryOp::Neg, Value::Float(val)) => Value::Float(-val),
 				(UnaryOp::Neg, Value::Int(val)) => Value::Int(-val),
@@ -72,13 +111,28 @@ impl Interpret for Expr {
 
 				(op, lhs, rhs) => todo!(),
 			},
-			Expr::Ident(name) => {
-				// TODO Only clone when needed / faster
-				env.get(&name).unwrap().clone()
+			Expr::Call(lhs, args) => match lhs.eval(env) {
+				Value::Function(inner) => {
+					let args = args.into_iter().map(|expr| expr.eval(env)).collect();
+					inner.call(env, args)
+				}
+				_ => todo!(),
+			},
+
+			Expr::Block(exprs) => {
+				env.push_scope(ScopeKind::Expr);
+				for expr in exprs {
+					expr.eval(env);
+				}
+				env.pop_scope();
+				Value::Unit
 			}
-			Expr::Constant(Constant { name, expr }) => {
+			Expr::Break(_) => todo!(),
+			Expr::Return(_) => todo!(),
+
+			Expr::Var(kind, name, expr) => {
 				let val = expr.eval(env);
-				env.create(name, VariableKind::Const, val);
+				env.create(name, kind, val);
 				Value::Unit
 			}
 		}

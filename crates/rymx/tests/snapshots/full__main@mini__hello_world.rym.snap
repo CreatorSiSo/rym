@@ -6,16 +6,30 @@ input_file: crates/rymx/tests/mini/hello_world.rym
 --- tokenize ---
 Const [const]
 HSpace [ ]
+Ident [println]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+Ident [str]
+ParenClose [)]
+HSpace [ ]
+BraceOpen [{]
+BraceClose [}]
+Semi [;]
+HSpace [ ]
+Comment [// TODO Remove]
+VSpace [\n]
+Const [const]
+HSpace [ ]
 Ident [main]
 HSpace [ ]
 Assign [=]
 HSpace [ ]
-Ident [fn]
+Fn [fn]
 ParenOpen [(]
 ParenClose [)]
-HSpace [ ]
-Assign [=]
-GreaterThan [>]
 HSpace [ ]
 Ident [println]
 ParenOpen [(]
@@ -25,13 +39,42 @@ Semi [;]
 VSpace [\n]
 
 --- parse ---
+Module {
+    name: "",
+    constants: [
+        (
+            "println",
+            Function {
+                params: [
+                    (
+                        "str",
+                        (),
+                    ),
+                ],
+                body: Block(
+                    [],
+                ),
+            },
+        ),
+        (
+            "main",
+            Function {
+                params: [],
+                body: Call(
+                    Ident("println"),
+                    [
+                        Literal(String Hello World!),
+                    ],
+                ),
+            },
+        ),
+    ],
+    children: [],
+}
+
+--- interpret ---
+const main = <function>
+const println = <function>
 
 --- reports ---
-Error: 
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/hello_world.rym:1:16]
-   │
- 1 │ const main = fn() => println("Hello World!");
-   │                ┬  
-   │                ╰── ExpectedFound { expected: [], found: Some(ParenOpen) }
-───╯
 

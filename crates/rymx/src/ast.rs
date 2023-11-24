@@ -3,38 +3,60 @@ use std::fmt::Display;
 #[derive(Debug, Clone)]
 pub struct Module {
 	pub name: String,
-	pub constants: Vec<Constant>,
+	pub constants: Vec<(String, Expr)>,
 	pub children: Vec<Module>,
 }
 
-#[derive(Debug, Clone)]
-pub struct Constant {
-	pub name: String,
-	pub expr: Box<Expr>,
-	// pub typ: Expr,
+#[derive(Debug, Clone, Copy)]
+pub enum VariableKind {
+	Const,
+	Let,
+	LetMut,
 }
 
 #[derive(Clone)]
 pub enum Expr {
-	Value(Value),
+	Unit,
+	Literal(Literal),
+	Ident(String),
+	Function(Function),
+
 	Unary(UnaryOp, Box<Expr>),
 	Binary(BinaryOp, Box<Expr>, Box<Expr>),
-	Ident(String),
-	Constant(Constant),
+	Call(Box<Expr>, Vec<Expr>),
+
+	Block(Vec<Expr>),
+	Break(Box<Expr>),
+	Return(Box<Expr>),
+
+	Var(VariableKind, String, Box<Expr>),
 }
 
 impl std::fmt::Debug for Expr {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			Self::Value(arg0) => f.write_fmt(format_args!("Value({arg0:?})")),
+			Self::Unit => f.write_str("Unit"),
+			Self::Literal(arg0) => f.write_fmt(format_args!("Literal({arg0:?})")),
+			Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
+			Self::Function(arg0) => arg0.fmt(f),
+
 			Self::Unary(arg0, arg1) => f.debug_tuple(&arg0.to_string()).field(arg1).finish(),
 			Self::Binary(arg0, arg1, arg2) => f
 				.debug_tuple(&arg0.to_string())
 				.field(arg1)
 				.field(arg2)
 				.finish(),
-			Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
-			Self::Constant(arg0) => arg0.fmt(f),
+			Self::Call(arg0, arg1) => f.debug_tuple("Call").field(arg0).field(arg1).finish(),
+
+			Self::Block(arg0) => f.debug_tuple("Block").field(arg0).finish(),
+			Self::Break(arg0) => f.debug_tuple("Break").field(arg0).finish(),
+			Self::Return(arg0) => f.debug_tuple("Return").field(arg0).finish(),
+
+			Self::Var(arg0, arg1, arg2) => f
+				.debug_tuple(&format!("{arg0:?}"))
+				.field(arg1)
+				.field(arg2)
+				.finish(),
 		}
 	}
 }
@@ -76,40 +98,20 @@ impl Display for BinaryOp {
 }
 
 #[derive(Clone)]
-pub enum Value {
+pub enum Literal {
 	Bool(bool),
 	Int(i64),
 	Float(f64),
 	String(String),
-	Function(Function),
-	Type(Type),
-	Unit,
 }
 
-impl std::fmt::Display for Value {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::Bool(val) => f.write_str(if *val { "true" } else { "false" }),
-			Self::Int(val) => f.write_str(&val.to_string()),
-			Self::Float(val) => f.write_str(&val.to_string()),
-			Self::String(val) => f.write_fmt(format_args!("\"{val}\"")),
-			Self::Function(_val) => f.write_str("<function>"),
-			Self::Type(_val) => f.write_str("<type>"),
-			Self::Unit => f.write_str("()"),
-		}
-	}
-}
-
-impl std::fmt::Debug for Value {
+impl std::fmt::Debug for Literal {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::Bool(arg0) => f.write_fmt(format_args!("Bool {arg0}")),
 			Self::Int(arg0) => f.write_fmt(format_args!("Int {arg0}")),
 			Self::Float(arg0) => f.write_fmt(format_args!("Float {arg0}")),
 			Self::String(arg0) => f.write_fmt(format_args!("String {arg0}")),
-			Self::Function(arg0) => f.write_fmt(format_args!("Function {arg0:?}")),
-			Self::Type(_arg0) => f.write_fmt(format_args!("Type __TODO__")),
-			Self::Unit => f.write_str("Unit"),
 		}
 	}
 }

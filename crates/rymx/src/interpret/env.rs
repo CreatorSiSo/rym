@@ -1,4 +1,5 @@
-use crate::ast::Value;
+use super::Value;
+use crate::ast::VariableKind;
 use std::collections::HashMap;
 
 pub struct Env {
@@ -20,7 +21,7 @@ impl Env {
 		self.scopes.pop();
 	}
 
-	pub fn variables(&self) -> impl Iterator<Item = (&String, &Variable)> {
+	pub fn variables(&self) -> impl Iterator<Item = (&String, &(VariableKind, Value))> {
 		self.scopes.iter().map(|scope| scope.vars.iter()).flatten()
 	}
 
@@ -30,17 +31,17 @@ impl Env {
 			.last_mut()
 			.unwrap()
 			.vars
-			.insert(name.into(), Variable { value, kind });
+			.insert(name.into(), (kind, value));
 	}
 
 	pub fn assign(&mut self, name: &str, value: Value) {
-		let Some(var) = self.scopes.last_mut().unwrap().vars.get_mut(name) else {
+		let Some((kind, value_mut)) = self.scopes.last_mut().unwrap().vars.get_mut(name) else {
 			todo!()
 		};
-		match var.kind {
+		match kind {
 			VariableKind::Const => todo!("Cannot assign to const"),
 			VariableKind::Let => todo!("Cannot assign to let"),
-			VariableKind::LetMut => var.value = value,
+			VariableKind::LetMut => *value_mut = value,
 		}
 	}
 
@@ -50,8 +51,8 @@ impl Env {
 			if in_function && scope.kind == ScopeKind::Function {
 				continue;
 			}
-			if let Some(val) = scope.vars.get(name) {
-				return Some(&val.value);
+			if let Some((_, value)) = scope.vars.get(name) {
+				return Some(value);
 			}
 			in_function = matches!(scope.kind, ScopeKind::Function);
 		}
@@ -60,7 +61,7 @@ impl Env {
 }
 
 struct Scope {
-	vars: HashMap<String, Variable>,
+	vars: HashMap<String, (VariableKind, Value)>,
 	kind: ScopeKind,
 }
 
@@ -78,15 +79,4 @@ pub enum ScopeKind {
 	Module,
 	Function,
 	Expr,
-}
-
-pub struct Variable {
-	pub value: Value,
-	pub kind: VariableKind,
-}
-
-pub enum VariableKind {
-	Const,
-	Let,
-	LetMut,
 }

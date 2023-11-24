@@ -1,6 +1,7 @@
+use super::Value;
 use crate::{
-	ast::{Function, Value},
-	interpret::{Env, Interpret, VariableKind},
+	ast::Function,
+	interpret::{env::ScopeKind, Env, Interpret, VariableKind},
 };
 
 pub trait Call {
@@ -9,17 +10,21 @@ pub trait Call {
 
 impl Call for Function {
 	fn call(&self, env: &mut Env, args: Vec<Value>) -> Value {
-		assert_eq!(self.params.len(), args.len());
+		assert!(self.params.len() == args.len());
+		env.push_scope(ScopeKind::Function);
 
-		// TODO correct addition and removal of variables on Env
 		for (param, arg) in self.params.iter().zip(args) {
 			env.create(param.0.clone(), VariableKind::Let, arg)
 		}
-		self.body.clone().eval(env)
+		let result = self.body.clone().eval(env);
+
+		env.pop_scope();
+		result
 	}
 }
 
-enum NativeFunction {
+#[derive(Debug, Clone)]
+pub enum NativeFunction {
 	Params1(fn(&Value) -> Value),
 	Params2(fn(&Value, &Value) -> Value),
 	ParamsVar(fn(&[Value]) -> Value),

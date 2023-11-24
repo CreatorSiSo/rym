@@ -1,5 +1,5 @@
 use crate::{
-	ast::{BinaryOp, Constant, Expr, Module, UnaryOp, Value},
+	ast::{BinaryOp, Expr, Function, Literal, Module, UnaryOp, VariableKind},
 	span::{SourceSpan, Span},
 	tokenize::Token,
 	SourceId,
@@ -62,32 +62,23 @@ type Extra<'src> = extra::Full<Rich<'src, Token, Span>, (), &'src str>;
 fn module_parser<'src>(
 	src: &'src str,
 ) -> impl Parser<'src, TokenStream<'src>, Module, Extra<'src>> {
-	constant_parser(expr_parser(src), src)
-		.then_ignore(just(Token::Semi))
-		.repeated()
-		.collect::<Vec<Constant>>()
-		.map(|constants| Module {
-			// TODO
-			name: "".into(),
-			constants,
-			children: vec![],
-		})
-}
-
-fn constant_parser<'src>(
-	expr: impl Parser<'src, TokenStream<'src>, Expr, Extra<'src>> + Clone,
-	src: &'src str,
-) -> impl Parser<'src, TokenStream<'src>, Constant, Extra<'src>> + Clone {
-	// constant ::= "const" indent "=" expr
-	just(Token::Const)
-		.ignore_then(indent_parser(src))
+	// constant ::= "const" ident "=" expr
+	let constant = just(Token::Const)
+		.ignore_then(ident_parser(src))
 		.then_ignore(just(Token::Assign))
-		.then(expr)
-		.map(|(name, expr)| Constant {
-			name: name.into(),
-			expr: Box::new(expr),
+		.then(expr_parser(src))
+		.then_ignore(just(Token::Semi))
+		.map(
+			|(name, expr)| (name.into(), expr),
 			// TODO typ: Type::Unknown,
-		})
+		);
+
+	constant.repeated().collect().map(|constants| Module {
+		// TODO
+		name: "".into(),
+		constants,
+		children: vec![],
+	})
 }
 
 fn expr_parser<'src>(
@@ -95,19 +86,53 @@ fn expr_parser<'src>(
 ) -> impl Parser<'src, TokenStream<'src>, Expr, Extra<'src>> + Clone {
 	recursive(|expr| {
 		// literal ::= int | float | string
-		let literal = literal_parser(src).map(|value| Expr::Value(value));
+		let literal = literal_parser(src).map(|lit| Expr::Literal(lit));
 
-		// atom ::= "(" expr ")" | literal | ident
+		// statement ::= expr ";"
+		let statement = expr.clone().then_ignore(just(Token::Semi));
+		// block ::= "{" statement* expr? "}"
+		let block = statement
+			.repeated()
+			.collect::<Vec<Expr>>()
+			.then(expr.clone().or_not())
+			.delimited_by(just(Token::BraceOpen), just(Token::BraceClose))
+			.map(|(mut exprs, last)| {
+				if let Some(last) = last {
+					if !matches!(last, Expr::Return(..) | Expr::Break(..)) {
+						exprs.push(Expr::Break(Box::new(last)));
+					}
+				}
+				Expr::Block(exprs)
+			});
+
+		// atom ::= literal | ident | "(" expr ")" | block
 		let atom = choice((
 			literal,
+			ident_parser(src).map(|name| Expr::Ident(name.into())),
 			expr
 				.clone()
 				.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
-			indent_parser(src).map(|name| Expr::Ident(name.into())),
+			block,
 		))
 		.labelled("atom");
 
-		// unary ::= ("-" | "not")* atom
+		// call ::= atom ("(" (expr ("," expr)*)? ")")?
+		let call = atom
+			.then(
+				expr
+					.clone()
+					.separated_by(just(Token::Comma))
+					.collect::<Vec<Expr>>()
+					.delimited_by(just(Token::ParenOpen), just(Token::ParenClose))
+					.or_not(),
+			)
+			.map(|(lhs, args)| match args {
+				Some(args) => Expr::Call(Box::new(lhs), args),
+				None => lhs,
+			})
+			.boxed();
+
+		// unary ::= ("-" | "not")* call
 		let unary = choice((
 			select! {
 				Token::Minus => UnaryOp::Neg,
@@ -115,24 +140,27 @@ fn expr_parser<'src>(
 			}
 			.repeated()
 			.collect::<Vec<UnaryOp>>()
-			.then(atom.clone())
+			.then(call.clone())
 			.map(|(op, expr)| {
 				op.into_iter()
 					.fold(expr, |accum, op| Expr::Unary(op, Box::new(accum)))
 			}),
-			atom,
+			call,
 		));
 
 		// sum ::= unary (("*" | "/") unary)*
-		let product = unary.clone().foldl_with(
-			select! {
-				Token::Star => BinaryOp::Mul,
-				Token::Slash => BinaryOp::Div,
-			}
-			.then(unary)
-			.repeated(),
-			|a, (op, b), _| Expr::Binary(op, Box::new(a), Box::new(b)),
-		);
+		let product = unary
+			.clone()
+			.foldl_with(
+				select! {
+					Token::Star => BinaryOp::Mul,
+					Token::Slash => BinaryOp::Div,
+				}
+				.then(unary)
+				.repeated(),
+				|a, (op, b), _| Expr::Binary(op, Box::new(a), Box::new(b)),
+			)
+			.boxed();
 
 		// sum ::= product (("+" | "-") product)*
 		let sum = product.clone().foldl_with(
@@ -146,26 +174,62 @@ fn expr_parser<'src>(
 		);
 
 		// compare ::= sum (("==" | "!=") sum)*
-		let compare = sum.clone().foldl_with(
-			select! {
-				Token::Eq => BinaryOp::Eq,
-				Token::NotEq => BinaryOp::NotEq,
-			}
-			.then(sum)
-			.repeated(),
-			|a, (op, b), _| Expr::Binary(op, Box::new(a), Box::new(b)),
-		);
+		let compare = sum
+			.clone()
+			.foldl_with(
+				select! {
+					Token::Eq => BinaryOp::Eq,
+					Token::NotEq => BinaryOp::NotEq,
+				}
+				.then(sum)
+				.repeated(),
+				|a, (op, b), _| Expr::Binary(op, Box::new(a), Box::new(b)),
+			)
+			.boxed();
 
-		// expr ::= compare | constant
-		choice((
-			compare,
-			constant_parser(expr, src).map(|constant| Expr::Constant(constant)),
+		// function ::= fn "(" (ident ("," ident)*)? ")" expr
+		let function = just(Token::Fn)
+			.ignore_then(
+				ident_parser(src)
+					.separated_by(just(Token::Comma))
+					.collect::<Vec<&str>>()
+					.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
+			)
+			.then(expr.clone())
+			.map(|(params, body)| {
+				Expr::Function(Function {
+					params: params.into_iter().map(|name| (name.into(), ())).collect(),
+					body: Box::new(body),
+				})
+			})
+			.labelled("function");
+
+		// var ::= ("const" | "let" | "let mut") indent "=" expr
+		let var = choice((
+			just(Token::Const).to(VariableKind::Const),
+			just(Token::Let)
+				.then(just(Token::Mut))
+				.to(VariableKind::LetMut),
+			just(Token::Let).to(VariableKind::Let),
 		))
-		.labelled("expression")
+		.then(ident_parser(src))
+		.then_ignore(just(Token::Assign))
+		.then(expr)
+		.map(
+			|((kind, name), expr)| Expr::Var(kind, name.into(), Box::new(expr)),
+			// TODO typ: Type::Unknown,
+		)
+		.boxed()
+		.labelled("variable");
+
+		// expr ::= function | var | compare
+		choice((function, var, compare))
+			.labelled("expression")
+			.boxed()
 	})
 }
 
-fn indent_parser<'src>(
+fn ident_parser<'src>(
 	src: &'src str,
 ) -> impl Parser<'src, TokenStream<'src>, &'src str, Extra<'src>> + Clone {
 	just(Token::Ident)
@@ -175,10 +239,10 @@ fn indent_parser<'src>(
 
 fn literal_parser<'src>(
 	src: &'src str,
-) -> impl Parser<'src, TokenStream<'src>, Value, Extra<'src>> + Clone {
+) -> impl Parser<'src, TokenStream<'src>, Literal, Extra<'src>> + Clone {
 	let integer = just(Token::Int)
 		.map_with(|_, extra| {
-			Value::Int(
+			Literal::Int(
 				current_src(extra, src)
 					.parse()
 					.expect("Internal Error: Failed to parse u64"),
@@ -188,7 +252,7 @@ fn literal_parser<'src>(
 
 	let float = just(Token::Float)
 		.map_with(|_, extra| {
-			Value::Float(
+			Literal::Float(
 				current_src(extra, src)
 					.parse()
 					.expect("Internal Error: Failed to parse f64"),
@@ -198,7 +262,7 @@ fn literal_parser<'src>(
 
 	let string = just(Token::String)
 		.map_with(|_, extra| {
-			Value::String({
+			Literal::String({
 				let mut span: Span = extra.span();
 				span.start += 1;
 				span.end -= 1;
@@ -207,7 +271,7 @@ fn literal_parser<'src>(
 		})
 		.labelled("string");
 
-	choice((integer, float, string)).labelled("literal")
+	choice((integer, float, string)).labelled("literal").boxed()
 }
 
 /// Retrieve the substring of source code at the current span.

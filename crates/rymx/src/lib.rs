@@ -12,10 +12,12 @@ pub use interpret::Env;
 pub use span::Span;
 pub use tokenize::tokenizer;
 
-use ast::{Expr, Module, Value};
-use interpret::{Interpret, Variable, VariableKind};
+use ast::{Expr, Module};
+use interpret::{Interpret, Value};
 use span::SourceSpan;
 use tokenize::Token;
+
+use crate::ast::VariableKind;
 
 pub fn interpret<I: Interpret>(diag: &mut Diagnostics, env: &mut Env, ast: I) -> Value {
 	diag.start_stage("interpret");
@@ -23,7 +25,7 @@ pub fn interpret<I: Interpret>(diag: &mut Diagnostics, env: &mut Env, ast: I) ->
 
 	let state: String = env
 		.variables()
-		.map(|(name, Variable { value, kind })| {
+		.map(|(name, (kind, value))| {
 			format!(
 				"{} {name} = {}\n",
 				match kind {

@@ -51,6 +51,8 @@ pub enum Token {
 	Const,
 	#[token("enum")]
 	Enum,
+	#[token("fn")]
+	Fn,
 	#[token("for")]
 	For,
 	#[token("impl")]

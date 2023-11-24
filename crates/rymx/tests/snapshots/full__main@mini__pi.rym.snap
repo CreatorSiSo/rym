@@ -18,10 +18,10 @@ VSpace [\n]
 Module {
     name: "",
     constants: [
-        Constant {
-            name: "pi",
-            expr: Value(Float 3.141592653589793),
-        },
+        (
+            "pi",
+            Literal(Float 3.141592653589793),
+        ),
     ],
     children: [],
 }

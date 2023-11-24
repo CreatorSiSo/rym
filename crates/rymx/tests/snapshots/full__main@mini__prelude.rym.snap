@@ -10,7 +10,7 @@ Ident [println]
 HSpace [ ]
 Assign [=]
 HSpace [ ]
-Ident [fn]
+Fn [fn]
 ParenOpen [(]
 Ident [fmt]
 Colon [:]
@@ -29,9 +29,6 @@ Ident [Display]
 BracketClose []]
 ParenClose [)]
 HSpace [ ]
-Assign [=]
-GreaterThan [>]
-HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
 HSpace [\t]
@@ -45,10 +42,10 @@ VSpace [\n]
 
 --- reports ---
 Error: 
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/prelude.rym:1:19]
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/prelude.rym:1:23]
    │
- 1 │ const println = fn(fmt: String, ..args: [impl Display]) => {
-   │                   ┬  
-   │                   ╰── ExpectedFound { expected: [], found: Some(ParenOpen) }
+ 1 │ const println = fn(fmt: String, ..args: [impl Display]) {
+   │                       ┬  
+   │                       ╰── ExpectedFound { expected: [Comma, ParenClose], found: Some(Colon) }
 ───╯
 

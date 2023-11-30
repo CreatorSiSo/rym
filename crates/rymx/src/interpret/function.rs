@@ -1,8 +1,16 @@
+use std::fmt::Display;
+
 use super::Value;
 use crate::{
-	ast::Function,
+	ast::Expr,
 	interpret::{env::ScopeKind, Env, Interpret, VariableKind},
 };
+
+#[derive(Debug, Clone)]
+pub struct Function {
+	pub params: Vec<(String, ())>,
+	pub body: Box<Expr>,
+}
 
 pub trait Call {
 	fn call(&self, env: &mut Env, args: Vec<Value>) -> Value;
@@ -20,6 +28,12 @@ impl Call for Function {
 
 		env.pop_scope();
 		result
+	}
+}
+
+impl Display for Function {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_fmt(format_args!("fn ({})", self.params.len()))
 	}
 }
 
@@ -42,6 +56,22 @@ impl Call for NativeFunction {
 				inner(&args[0], &args[1])
 			}
 			NativeFunction::ParamsVar(inner) => inner(&args),
+		}
+	}
+}
+
+impl Display for NativeFunction {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			NativeFunction::Params1(func) => {
+				f.write_fmt(format_args!("fn <{:?}>(1)", (*func) as *const ()))
+			}
+			NativeFunction::Params2(func) => {
+				f.write_fmt(format_args!("fn <{:?}>(2)", (*func) as *const ()))
+			}
+			NativeFunction::ParamsVar(func) => {
+				f.write_fmt(format_args!("fn <{:?}>(variadic)", (*func) as *const ()))
+			}
 		}
 	}
 }

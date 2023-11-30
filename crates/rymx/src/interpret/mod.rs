@@ -3,8 +3,8 @@ mod function;
 
 pub use self::env::Env;
 use self::env::ScopeKind;
-pub use self::function::{Call, NativeFunction};
-use crate::ast::{BinaryOp, Expr, Function, Literal, Module, UnaryOp, VariableKind};
+pub use self::function::{Call, Function, NativeFunction};
+use crate::ast::{BinaryOp, Expr, Literal, Module, UnaryOp, VariableKind};
 
 #[derive(Debug, Clone)]
 pub enum Value {

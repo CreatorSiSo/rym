@@ -1,5 +1,6 @@
 use crate::{
-	ast::{BinaryOp, Expr, Function, Literal, Module, UnaryOp, VariableKind},
+	ast::{BinaryOp, Expr, Literal, Module, UnaryOp, VariableKind},
+	interpret::Function,
 	span::{SourceSpan, Span},
 	tokenize::Token,
 	SourceId,

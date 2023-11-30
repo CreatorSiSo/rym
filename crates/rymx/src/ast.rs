@@ -1,3 +1,4 @@
+use crate::interpret::Function;
 use std::fmt::Display;
 
 #[derive(Debug, Clone)]
@@ -48,7 +49,7 @@ impl std::fmt::Debug for Expr {
 			Self::Unit => f.write_str("Unit"),
 			Self::Literal(arg0) => f.write_fmt(format_args!("Literal({arg0:?})")),
 			Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
-			Self::Function(arg0) => arg0.fmt(f),
+			Self::Function(arg0) => f.write_fmt(format_args!("{arg0:#?}")),
 
 			Self::Unary(arg0, arg1) => f.debug_tuple(&arg0.to_string()).field(arg1).finish(),
 			Self::Binary(arg0, arg1, arg2) => f
@@ -125,11 +126,3 @@ impl std::fmt::Debug for Literal {
 		}
 	}
 }
-
-#[derive(Debug, Clone)]
-pub struct Function {
-	pub params: Vec<(String, Type)>,
-	pub body: Box<Expr>,
-}
-
-type Type = ();

@@ -13,6 +13,14 @@ impl Env {
 		}
 	}
 
+	pub fn from_constants(constants: impl IntoIterator<Item = (&'static str, Value)>) -> Self {
+		let mut env = Self::new();
+		for (name, value) in constants {
+			env.create(name, VariableKind::Const, value)
+		}
+		env
+	}
+
 	pub fn push_scope(&mut self, kind: ScopeKind) {
 		self.scopes.push(Scope::new(kind));
 	}

@@ -1,22 +1,22 @@
 use ariadne::{Cache, FileCache, Label, Report, Source};
 use std::collections::HashMap;
-use std::fmt::Write;
-use std::{fmt::Debug, path::PathBuf};
+use std::fmt::{Debug, Display, Write};
+use std::path::PathBuf;
 
 mod ast;
 mod interpret;
-mod library;
 mod parse;
 mod span;
+mod std_env;
 mod tokenize;
 
-pub use ast::VariableKind;
-pub use interpret::{Env, NativeFunction, Value};
+pub use interpret::Env;
 pub use span::Span;
+pub use std_env::std_env;
 pub use tokenize::tokenizer;
 
 use ast::{Expr, Module};
-use interpret::Interpret;
+use interpret::{Interpret, Value};
 use span::SourceSpan;
 use tokenize::Token;
 
@@ -229,7 +229,7 @@ struct DynamicCache {
 }
 
 impl Cache<SourceId> for &mut DynamicCache {
-	fn fetch(&mut self, id: &SourceId) -> Result<&Source, Box<dyn std::fmt::Debug + '_>> {
+	fn fetch(&mut self, id: &SourceId) -> Result<&Source, Box<dyn Debug + '_>> {
 		match id {
 			SourceId::File(pathbuf) => self.files.fetch(pathbuf),
 			SourceId::Other(id) => self.other.get(id).ok_or(Box::new(format!(
@@ -238,7 +238,7 @@ impl Cache<SourceId> for &mut DynamicCache {
 		}
 	}
 
-	fn display<'a>(&self, id: &'a SourceId) -> Option<Box<dyn std::fmt::Display + 'a>> {
+	fn display<'a>(&self, id: &'a SourceId) -> Option<Box<dyn Display + 'a>> {
 		match id {
 			SourceId::File(pathbuf) => Some(Box::new(pathbuf.display())),
 			SourceId::Other(id) => Some(Box::new(*id)),

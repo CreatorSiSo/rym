@@ -1,6 +1,8 @@
 use clap::{arg, command, Command};
 use rustyline::{error::ReadlineError, Editor};
-use rymx::{compile_expr, compile_module, interpret, Diagnostics, Env, SourceId};
+use rymx::{
+	compile_expr, compile_module, interpret, Diagnostics, Env, NativeFunction, SourceId, VariableKind,
+};
 use std::{
 	fs::{read_to_string, File},
 	path::PathBuf,
@@ -42,6 +44,18 @@ fn cmd_repl(write: Vec<String>) -> anyhow::Result<()> {
 		println!("No previous history.");
 	}
 	let mut env = Env::new();
+	env.create(
+		"println",
+		VariableKind::Const,
+		rymx::Value::NativeFunction(NativeFunction::ParamsVar(|args| {
+			let mut line = args.iter().fold(String::new(), |accum, value| {
+				accum + &value.to_string() + " "
+			});
+			line.pop();
+			println!("{line}");
+			rymx::Value::Unit
+		})),
+	);
 
 	loop {
 		let readline = editor.readline("➤ ");

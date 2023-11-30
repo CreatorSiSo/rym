@@ -9,12 +9,13 @@ mod parse;
 mod span;
 mod tokenize;
 
-pub use interpret::Env;
+pub use ast::VariableKind;
+pub use interpret::{Env, NativeFunction, Value};
 pub use span::Span;
 pub use tokenize::tokenizer;
 
 use ast::{Expr, Module};
-use interpret::{Interpret, Value};
+use interpret::Interpret;
 use span::SourceSpan;
 use tokenize::Token;
 

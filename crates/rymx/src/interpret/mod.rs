@@ -25,8 +25,8 @@ impl std::fmt::Display for Value {
 			Self::Int(val) => f.write_str(&val.to_string()),
 			Self::Float(val) => f.write_str(&val.to_string()),
 			Self::String(val) => f.write_fmt(format_args!("\"{val}\"")),
-			Self::Function(_val) => f.write_str("<function>"),
-			Self::NativeFunction(_val) => f.write_str("<native function>"),
+			Self::Function(val) => f.write_str(&val.to_string()),
+			Self::NativeFunction(val) => f.write_str(&val.to_string()),
 			// Self::Type(_val) => f.write_str("<type>"),
 			Self::Unit => f.write_str("()"),
 		}
@@ -116,7 +116,11 @@ impl Interpret for Expr {
 					let args = args.into_iter().map(|expr| expr.eval(env)).collect();
 					inner.call(env, args)
 				}
-				_ => todo!(),
+				Value::NativeFunction(inner) => {
+					let args = args.into_iter().map(|expr| expr.eval(env)).collect();
+					inner.call(env, args)
+				}
+				_ => todo!("Add error, value is not a function."),
 			},
 
 			Expr::Block(exprs) => {

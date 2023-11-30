@@ -1,5 +1,6 @@
 use ariadne::{Cache, FileCache, Label, Report, Source};
 use std::collections::HashMap;
+use std::fmt::Write;
 use std::{fmt::Debug, path::PathBuf};
 
 mod ast;
@@ -17,29 +18,21 @@ use interpret::{Interpret, Value};
 use span::SourceSpan;
 use tokenize::Token;
 
-use crate::ast::VariableKind;
-
-pub fn interpret<I: Interpret>(diag: &mut Diagnostics, env: &mut Env, ast: I) -> Value {
+pub fn interpret(diag: &mut Diagnostics, env: &mut Env, ast: impl Interpret) -> Value {
 	diag.start_stage("interpret");
-	let val = ast.eval(env);
+	let result = ast.eval(env);
 
-	let state: String = env
-		.variables()
-		.map(|(name, (kind, value))| {
-			format!(
-				"{} {name} = {}\n",
-				match kind {
-					VariableKind::Const => "const",
-					VariableKind::Let => "let",
-					VariableKind::LetMut => "let mut",
-				},
-				value
-			)
-		})
-		.collect();
-	diag.push_result(&state);
+	let env_state: String =
+		env
+			.variables()
+			.fold(String::new(), |mut accum, (name, (kind, value))| {
+				writeln!(accum, "{kind} {name} = {}", value)
+					.expect("Internal Error: Unable to write into String");
+				accum
+			});
+	diag.push_result(&env_state);
 
-	val
+	result
 }
 
 pub fn compile_module(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Result<Module, ()> {
@@ -233,7 +226,7 @@ struct DynamicCache {
 impl Cache<SourceId> for &mut DynamicCache {
 	fn fetch(&mut self, id: &SourceId) -> Result<&Source, Box<dyn std::fmt::Debug + '_>> {
 		match id {
-			SourceId::File(pathbuf) => self.files.fetch(&pathbuf),
+			SourceId::File(pathbuf) => self.files.fetch(pathbuf),
 			SourceId::Other(id) => self.other.get(id).ok_or(Box::new(format!(
 				"Could not find source cache entry [{id}]"
 			))),

@@ -73,8 +73,8 @@ Module {
 }
 
 --- interpret ---
-const main = <function>
 const println = <function>
+const main = <function>
 
 --- reports ---
 

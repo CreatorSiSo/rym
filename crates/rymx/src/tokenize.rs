@@ -4,14 +4,9 @@ use crate::Span;
 use logos::{Lexer, Logos};
 
 pub fn tokenizer(src: &str) -> impl Iterator<Item = (Result<Token, ()>, Span)> + '_ {
-	Token::lexer(src).spanned().map(|(maybe_token, span)| {
-		(
-			maybe_token,
-			span
-				.try_into()
-				.expect("Internal Error: Range<usize> to Span conversion failed"),
-		)
-	})
+	Token::lexer(src)
+		.spanned()
+		.map(|(maybe_token, span)| (maybe_token, span.into()))
 }
 
 fn line_comment(lexer: &mut Lexer<Token>) {

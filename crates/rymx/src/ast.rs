@@ -14,6 +14,16 @@ pub enum VariableKind {
 	LetMut,
 }
 
+impl Display for VariableKind {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(match self {
+			VariableKind::Const => "const",
+			VariableKind::Let => "let",
+			VariableKind::LetMut => "let mut",
+		})
+	}
+}
+
 #[derive(Clone)]
 pub enum Expr {
 	Unit,

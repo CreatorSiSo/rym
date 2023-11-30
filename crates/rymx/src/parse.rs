@@ -59,9 +59,7 @@ fn map_parse_result<T>(
 type TokenStream<'tokens> = SpannedInput<Token, Span, &'tokens [(Token, Span)]>;
 type Extra<'src> = extra::Full<Rich<'src, Token, Span>, (), &'src str>;
 
-fn module_parser<'src>(
-	src: &'src str,
-) -> impl Parser<'src, TokenStream<'src>, Module, Extra<'src>> {
+fn module_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
 	// constant ::= "const" ident "=" expr
 	let constant = just(Token::Const)
 		.ignore_then(ident_parser(src))
@@ -81,12 +79,10 @@ fn module_parser<'src>(
 	})
 }
 
-fn expr_parser<'src>(
-	src: &'src str,
-) -> impl Parser<'src, TokenStream<'src>, Expr, Extra<'src>> + Clone {
+fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 	recursive(|expr| {
 		// literal ::= int | float | string
-		let literal = literal_parser(src).map(|lit| Expr::Literal(lit));
+		let literal = literal_parser(src).map(Expr::Literal);
 
 		// statement ::= expr ";"
 		let statement = expr.clone().then_ignore(just(Token::Semi));
@@ -229,17 +225,13 @@ fn expr_parser<'src>(
 	})
 }
 
-fn ident_parser<'src>(
-	src: &'src str,
-) -> impl Parser<'src, TokenStream<'src>, &'src str, Extra<'src>> + Clone {
+fn ident_parser(src: &str) -> impl Parser<TokenStream, &str, Extra> + Clone {
 	just(Token::Ident)
-		.map_with(|_, extra| current_src(extra, src).into())
+		.map_with(|_, extra| current_src(extra, src))
 		.labelled("indentifier")
 }
 
-fn literal_parser<'src>(
-	src: &'src str,
-) -> impl Parser<'src, TokenStream<'src>, Literal, Extra<'src>> + Clone {
+fn literal_parser(src: &str) -> impl Parser<TokenStream, Literal, Extra> + Clone {
 	let integer = just(Token::Int)
 		.map_with(|_, extra| {
 			Literal::Int(

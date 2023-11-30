@@ -22,7 +22,7 @@ impl Env {
 	}
 
 	pub fn variables(&self) -> impl Iterator<Item = (&String, &(VariableKind, Value))> {
-		self.scopes.iter().map(|scope| scope.vars.iter()).flatten()
+		self.scopes.iter().flat_map(|scope| scope.vars.iter())
 	}
 
 	pub fn create(&mut self, name: impl Into<String>, kind: VariableKind, value: Value) {
@@ -57,6 +57,12 @@ impl Env {
 			in_function = matches!(scope.kind, ScopeKind::Function);
 		}
 		None
+	}
+}
+
+impl Default for Env {
+	fn default() -> Self {
+		Self::new()
 	}
 }
 

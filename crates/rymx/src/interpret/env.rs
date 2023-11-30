@@ -21,8 +21,17 @@ impl Env {
 		self.scopes.pop();
 	}
 
-	pub fn variables(&self) -> impl Iterator<Item = (&String, &(VariableKind, Value))> {
-		self.scopes.iter().flat_map(|scope| scope.vars.iter())
+	pub fn variables(&self) -> Vec<Vec<(String, (VariableKind, Value))>> {
+		self
+			.scopes
+			.iter()
+			.map(|scope| {
+				// TODO Too many clones
+				let mut vars: Vec<_> = scope.vars.clone().into_iter().collect();
+				vars.sort_by_key(|(name, _)| name.clone());
+				vars
+			})
+			.collect()
 	}
 
 	pub fn create(&mut self, name: impl Into<String>, kind: VariableKind, value: Value) {

@@ -5,6 +5,7 @@ use std::{fmt::Debug, path::PathBuf};
 
 mod ast;
 mod interpret;
+mod library;
 mod parse;
 mod span;
 mod tokenize;
@@ -23,14 +24,17 @@ pub fn interpret(diag: &mut Diagnostics, env: &mut Env, ast: impl Interpret) -> 
 	diag.start_stage("interpret");
 	let result = ast.eval(env);
 
-	let env_state: String =
-		env
-			.variables()
-			.fold(String::new(), |mut accum, (name, (kind, value))| {
-				writeln!(accum, "{kind} {name} = {}", value)
+	let env_state: String = env
+		.variables()
+		.into_iter()
+		.fold((0, String::new()), |(indent, mut accum), scope| {
+			for (name, (kind, value)) in scope {
+				writeln!(accum, "{}{kind} {name} = {}", "  ".repeat(indent), value)
 					.expect("Internal Error: Unable to write into String");
-				accum
-			});
+			}
+			(indent + 1, accum)
+		})
+		.1;
 	diag.push_result(&env_state);
 
 	result

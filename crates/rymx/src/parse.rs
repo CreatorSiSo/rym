@@ -211,16 +211,26 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 		))
 		.then(ident_parser(src))
 		.then_ignore(just(Token::Assign))
-		.then(expr)
+		.then(expr.clone())
 		.map(
-			|((kind, name), expr)| Expr::Var(kind, name.into(), Box::new(expr)),
+			|((kind, name), rhs)| Expr::Var(kind, name.into(), Box::new(rhs)),
 			// TODO typ: Type::Unknown,
 		)
 		.boxed()
 		.labelled("variable");
 
-		// expr ::= function | var | compare
-		choice((function, var, compare))
+		let if_else = just(Token::If)
+			.ignore_then(expr.clone())
+			.then_ignore(just(Token::Then))
+			.then(expr.clone())
+			.then_ignore(just(Token::Else))
+			.then(expr)
+			.map(|((cond, then_branch), else_branch)| {
+				Expr::IfElse(Box::new(cond), Box::new(then_branch), Box::new(else_branch))
+			});
+
+		// expr ::= function | var | if_else | compare
+		choice((function, var, if_else, compare))
 			.labelled("expression")
 			.boxed()
 	})

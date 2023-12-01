@@ -18,6 +18,12 @@ pub enum Value {
 	Unit,
 }
 
+impl Value {
+	fn none(self) -> ControlFlow {
+		ControlFlow::None(self)
+	}
+}
+
 impl std::fmt::Display for Value {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
@@ -33,38 +39,66 @@ impl std::fmt::Display for Value {
 	}
 }
 
+pub enum ControlFlow {
+	None(Value),
+	Break(Value),
+	Return(Value),
+}
+
+impl ControlFlow {
+	pub fn inner(self) -> Value {
+		match self {
+			ControlFlow::None(inner) | ControlFlow::Break(inner) | ControlFlow::Return(inner) => inner,
+		}
+	}
+}
+
+macro_rules! default_flow {
+	($control_flow:expr) => {
+		match $control_flow {
+			ControlFlow::None(inner) => inner,
+			control_flow => return control_flow,
+		}
+	};
+}
+
 pub trait Interpret {
-	fn eval(self, env: &mut Env) -> Value;
+	fn eval(self, env: &mut Env) -> ControlFlow;
 }
 
 impl Interpret for Module {
-	fn eval(self, env: &mut Env) -> Value {
+	fn eval(self, env: &mut Env) -> ControlFlow {
 		// TODO sort based on dependency
 		// self
 		// 	.constants
 		// 	.sort_by(|Constant { expr: l, .. }, Constant { expr: r, .. }| match (l, r) {});
 
 		for (name, expr) in self.constants {
-			let val = expr.eval(env);
+			// Top level, ignoring control flow
+			let val = match expr.eval(env) {
+				ControlFlow::None(inner) | ControlFlow::Break(inner) | ControlFlow::Return(inner) => inner,
+			};
 			env.create(name, VariableKind::Const, val);
 		}
 
 		// TODO only do this when requested, ie. in main.rym file
 		if let Some(main) = env.get("main") {
 			match main {
-				// TODO avoid cloning here
-				Value::Function(val) => return val.clone().call(env, vec![]),
+				Value::Function(val) => {
+					// TODO avoid cloning here
+					val.clone().call(env, vec![]);
+				}
 				_ => todo!(),
 			}
 		}
 
-		Value::Unit
+		ControlFlow::Break(Value::Unit)
 	}
 }
 
 impl Interpret for Expr {
-	fn eval(self, env: &mut Env) -> Value {
-		match self {
+	fn eval(self, env: &mut Env) -> ControlFlow {
+		let result = match self {
 			Expr::Unit => Value::Unit,
 			Expr::Literal(lit) => match lit {
 				Literal::Bool(inner) => Value::Bool(inner),
@@ -78,14 +112,18 @@ impl Interpret for Expr {
 			}
 			Expr::Function(func) => Value::Function(func),
 
-			Expr::Unary(op, expr) => match (op, expr.eval(env)) {
+			Expr::Unary(op, expr) => match (op, default_flow!(expr.eval(env))) {
 				(UnaryOp::Neg, Value::Float(val)) => Value::Float(-val),
 				(UnaryOp::Neg, Value::Int(val)) => Value::Int(-val),
 				(UnaryOp::Not, Value::Bool(val)) => Value::Bool(!val),
 
 				(op, val) => todo!(),
 			},
-			Expr::Binary(op, lhs, rhs) => match (op, lhs.eval(env), rhs.eval(env)) {
+			Expr::Binary(op, lhs, rhs) => match (
+				op,
+				default_flow!(lhs.eval(env)),
+				default_flow!(rhs.eval(env)),
+			) {
 				(BinaryOp::Add, Value::Float(lhs), Value::Float(rhs)) => Value::Float(lhs + rhs),
 				(BinaryOp::Add, Value::Int(lhs), Value::Float(rhs)) => Value::Float(lhs as f64 + rhs),
 				(BinaryOp::Add, Value::Float(lhs), Value::Int(rhs)) => Value::Float(lhs + rhs as f64),
@@ -106,44 +144,70 @@ impl Interpret for Expr {
 
 				(BinaryOp::Add, Value::String(lhs), Value::String(rhs)) => Value::String(lhs + &rhs),
 
-				(BinaryOp::Eq, lhs, rhs) => Value::Bool(eval_eq(lhs, rhs)),
-				(BinaryOp::NotEq, lhs, rhs) => Value::Bool(!eval_eq(lhs, rhs)),
+				(BinaryOp::Eq, ref lhs, ref rhs) => Value::Bool(eval_eq(lhs, rhs)),
+				(BinaryOp::NotEq, ref lhs, ref rhs) => Value::Bool(!eval_eq(lhs, rhs)),
 
 				(op, lhs, rhs) => todo!(),
 			},
-			Expr::Call(lhs, args) => match lhs.eval(env) {
+			Expr::Call(lhs, args) => match default_flow!(lhs.eval(env)) {
 				Value::Function(inner) => {
-					let args = args.into_iter().map(|expr| expr.eval(env)).collect();
-					inner.call(env, args)
+					let mut arg_values = vec![];
+					for expr in args {
+						arg_values.push(default_flow!(expr.eval(env)));
+					}
+					inner.call(env, arg_values)
 				}
 				Value::NativeFunction(inner) => {
-					let args = args.into_iter().map(|expr| expr.eval(env)).collect();
-					inner.call(env, args)
+					let mut arg_values = vec![];
+					for expr in args {
+						arg_values.push(default_flow!(expr.eval(env)));
+					}
+					inner.call(env, arg_values)
 				}
 				_ => todo!("Add error, value is not a function."),
 			},
 
+			Expr::IfElse(cond_expr, then_expr, else_expr) => {
+				let Value::Bool(condition) = default_flow!(cond_expr.eval(env)) else {
+					todo!();
+				};
+				if condition {
+					default_flow!(then_expr.eval(env))
+				} else {
+					default_flow!(else_expr.eval(env))
+				}
+			}
 			Expr::Block(exprs) => {
 				env.push_scope(ScopeKind::Expr);
-				for expr in exprs {
-					expr.eval(env);
+				let mut result = Value::Unit;
+				'exprs_loop: for expr in exprs {
+					match expr.eval(env) {
+						ControlFlow::None(_) => (),
+						ControlFlow::Break(inner) => {
+							result = inner;
+							break 'exprs_loop;
+						}
+						control_flow => return control_flow,
+					}
 				}
 				env.pop_scope();
-				Value::Unit
+				result
 			}
-			Expr::Break(_) => todo!(),
-			Expr::Return(_) => todo!(),
+			Expr::Break(expr) => return ControlFlow::Break(default_flow!(expr.eval(env))),
+			Expr::Return(expr) => return ControlFlow::Return(default_flow!(expr.eval(env))),
 
 			Expr::Var(kind, name, expr) => {
-				let val = expr.eval(env);
+				let val = default_flow!(expr.eval(env));
 				env.create(name, kind, val);
 				Value::Unit
 			}
-		}
+		};
+
+		ControlFlow::None(result)
 	}
 }
 
-fn eval_eq(lhs: Value, rhs: Value) -> bool {
+pub(crate) fn eval_eq(lhs: &Value, rhs: &Value) -> bool {
 	match (lhs, rhs) {
 		(Value::Bool(lhs), Value::Bool(rhs)) => lhs == rhs,
 		(Value::Int(lhs), Value::Int(rhs)) => lhs == rhs,

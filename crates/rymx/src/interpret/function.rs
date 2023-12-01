@@ -27,7 +27,7 @@ impl Call for Function {
 		let result = self.body.clone().eval(env);
 
 		env.pop_scope();
-		result
+		result.inner()
 	}
 }
 
@@ -63,15 +63,9 @@ impl Call for NativeFunction {
 impl Display for NativeFunction {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			NativeFunction::Params1(func) => {
-				f.write_fmt(format_args!("fn <{:?}>(1)", (*func) as *const ()))
-			}
-			NativeFunction::Params2(func) => {
-				f.write_fmt(format_args!("fn <{:?}>(2)", (*func) as *const ()))
-			}
-			NativeFunction::ParamsVar(func) => {
-				f.write_fmt(format_args!("fn <{:?}>(variadic)", (*func) as *const ()))
-			}
+			NativeFunction::Params1(_func) => f.write_str("fn<native> (1)"),
+			NativeFunction::Params2(_func) => f.write_str("fn<native> (2)"),
+			NativeFunction::ParamsVar(_func) => f.write_str("fn<native> (variadic)"),
 		}
 	}
 }

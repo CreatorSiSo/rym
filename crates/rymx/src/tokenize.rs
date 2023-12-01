@@ -44,12 +44,16 @@ pub enum Token {
 	As,
 	#[token("const")]
 	Const,
+	#[token("else")]
+	Else,
 	#[token("enum")]
 	Enum,
 	#[token("fn")]
 	Fn,
 	#[token("for")]
 	For,
+	#[token("if")]
+	If,
 	#[token("impl")]
 	Impl,
 	#[token("let")]
@@ -64,6 +68,8 @@ pub enum Token {
 	UpperSelf,
 	#[token("struct")]
 	Struct,
+	#[token("then")]
+	Then,
 	#[token("use")]
 	Use,
 

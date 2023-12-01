@@ -2148,6 +2148,8 @@ Module {
 }
 
 --- interpret ---
+const assert_eq = fn<native> (2)
+const println = fn<native> (variadic)
 const test = 304
 
 --- reports ---

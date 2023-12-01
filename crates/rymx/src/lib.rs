@@ -22,7 +22,9 @@ use tokenize::Token;
 
 pub fn interpret(diag: &mut Diagnostics, env: &mut Env, ast: impl Interpret) -> Value {
 	diag.start_stage("interpret");
-	let result = ast.eval(env);
+	// TODO does this make sense
+	// Ignoring control flow
+	let result = ast.eval(env).inner();
 
 	let env_state: String = env
 		.variables()

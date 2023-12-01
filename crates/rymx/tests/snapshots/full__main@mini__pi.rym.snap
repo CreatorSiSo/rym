@@ -27,7 +27,9 @@ Module {
 }
 
 --- interpret ---
+const assert_eq = fn<native> (2)
 const pi = 3.141592653589793
+const println = fn<native> (variadic)
 
 --- reports ---
 

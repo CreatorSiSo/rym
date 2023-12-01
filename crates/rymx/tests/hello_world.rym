@@ -1,2 +1,1 @@
-const println = fn(str) {}; // TODO Remove
 const main = fn() println("Hello World!");

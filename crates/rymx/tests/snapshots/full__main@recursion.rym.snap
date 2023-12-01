@@ -1,0 +1,456 @@
+---
+source: crates/rymx/tests/full.rs
+expression: diag.outputs_dump() + &diag.reports_dump()
+input_file: crates/rymx/tests/recursion.rym
+---
+--- tokenize ---
+Const [const]
+HSpace [ ]
+Ident [fib]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+Ident [n]
+ParenClose [)]
+VSpace [\n]
+HSpace [\t]
+If [if]
+HSpace [ ]
+Ident [n]
+HSpace [ ]
+Eq [==]
+HSpace [ ]
+Int [0]
+HSpace [ ]
+Then [then]
+HSpace [ ]
+Int [0]
+VSpace [\n]
+HSpace [\t]
+Else [else]
+HSpace [ ]
+If [if]
+HSpace [ ]
+Ident [n]
+HSpace [ ]
+Eq [==]
+HSpace [ ]
+Int [1]
+HSpace [ ]
+Then [then]
+HSpace [ ]
+Int [1]
+VSpace [\n]
+HSpace [\t]
+Else [else]
+HSpace [ ]
+Ident [fib]
+ParenOpen [(]
+Ident [n]
+HSpace [ ]
+Minus [-]
+HSpace [ ]
+Int [1]
+ParenClose [)]
+HSpace [ ]
+Plus [+]
+HSpace [ ]
+Ident [fib]
+ParenOpen [(]
+Ident [n]
+HSpace [ ]
+Minus [-]
+HSpace [ ]
+Int [2]
+ParenClose [)]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [main]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [0]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [0]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [1]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [1]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [2]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [1]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [3]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [2]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [4]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [3]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [5]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [5]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [6]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [8]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [7]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [13]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [8]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [21]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [9]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [34]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [10]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [55]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [\t]
+Ident [assert_eq]
+ParenOpen [(]
+Ident [fib]
+ParenOpen [(]
+Int [20]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Int [6765]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+BraceClose [}]
+Semi [;]
+VSpace [\n]
+
+--- parse ---
+Module {
+    name: "",
+    constants: [
+        (
+            "fib",
+            Function {
+                params: [
+                    (
+                        "n",
+                        (),
+                    ),
+                ],
+                body: IfElse(
+                    Eq(
+                        Ident("n"),
+                        Literal(Int 0),
+                    ),
+                    Literal(Int 0),
+                    IfElse(
+                        Eq(
+                            Ident("n"),
+                            Literal(Int 1),
+                        ),
+                        Literal(Int 1),
+                        Add(
+                            Call(
+                                Ident("fib"),
+                                [
+                                    Sub(
+                                        Ident("n"),
+                                        Literal(Int 1),
+                                    ),
+                                ],
+                            ),
+                            Call(
+                                Ident("fib"),
+                                [
+                                    Sub(
+                                        Ident("n"),
+                                        Literal(Int 2),
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ),
+                ),
+            },
+        ),
+        (
+            "main",
+            Function {
+                params: [],
+                body: Block(
+                    [
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 0),
+                                    ],
+                                ),
+                                Literal(Int 0),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 1),
+                                    ],
+                                ),
+                                Literal(Int 1),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 2),
+                                    ],
+                                ),
+                                Literal(Int 1),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 3),
+                                    ],
+                                ),
+                                Literal(Int 2),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 4),
+                                    ],
+                                ),
+                                Literal(Int 3),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 5),
+                                    ],
+                                ),
+                                Literal(Int 5),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 6),
+                                    ],
+                                ),
+                                Literal(Int 8),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 7),
+                                    ],
+                                ),
+                                Literal(Int 13),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 8),
+                                    ],
+                                ),
+                                Literal(Int 21),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 9),
+                                    ],
+                                ),
+                                Literal(Int 34),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 10),
+                                    ],
+                                ),
+                                Literal(Int 55),
+                            ],
+                        ),
+                        Call(
+                            Ident("assert_eq"),
+                            [
+                                Call(
+                                    Ident("fib"),
+                                    [
+                                        Literal(Int 20),
+                                    ],
+                                ),
+                                Literal(Int 6765),
+                            ],
+                        ),
+                    ],
+                ),
+            },
+        ),
+    ],
+    children: [],
+}
+
+--- interpret ---
+const assert_eq = fn<native> (2)
+const fib = fn (1)
+const main = fn (0)
+const println = fn<native> (variadic)
+
+--- reports ---
+

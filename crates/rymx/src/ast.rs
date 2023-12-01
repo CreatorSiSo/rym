@@ -36,6 +36,14 @@ pub enum Expr {
 	Binary(BinaryOp, Box<Expr>, Box<Expr>),
 	Call(Box<Expr>, Vec<Expr>),
 
+	IfElse(
+		/// Condition
+		Box<Expr>,
+		/// Then branch
+		Box<Expr>,
+		/// Else branch
+		Box<Expr>,
+	),
 	Block(Vec<Expr>),
 	Break(Box<Expr>),
 	Return(Box<Expr>),
@@ -59,6 +67,12 @@ impl std::fmt::Debug for Expr {
 				.finish(),
 			Self::Call(arg0, arg1) => f.debug_tuple("Call").field(arg0).field(arg1).finish(),
 
+			Self::IfElse(arg0, arg1, arg2) => f
+				.debug_tuple("IfElse")
+				.field(arg0)
+				.field(arg1)
+				.field(arg2)
+				.finish(),
 			Self::Block(arg0) => f.debug_tuple("Block").field(arg0).finish(),
 			Self::Break(arg0) => f.debug_tuple("Break").field(arg0).finish(),
 			Self::Return(arg0) => f.debug_tuple("Return").field(arg0).finish(),

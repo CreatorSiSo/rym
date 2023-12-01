@@ -7,12 +7,11 @@ mod ast;
 mod interpret;
 mod parse;
 mod span;
-mod std_env;
+pub mod std_lib;
 mod tokenize;
 
 pub use interpret::Env;
 pub use span::Span;
-pub use std_env::std_env;
 pub use tokenize::tokenizer;
 
 use ast::{Expr, Module};

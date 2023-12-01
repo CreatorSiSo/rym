@@ -2148,7 +2148,10 @@ Module {
 }
 
 --- interpret ---
+const assert = fn<native> (1)
 const assert_eq = fn<native> (2)
+const fib_native = fn<native> (1)
+const print = fn<native> (variadic)
 const println = fn<native> (variadic)
 const test = 304
 

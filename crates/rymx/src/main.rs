@@ -41,7 +41,7 @@ fn cmd_repl(write: Vec<String>) -> anyhow::Result<()> {
 	if editor.load_history(".history").is_err() {
 		println!("No previous history.");
 	}
-	let mut env = rymx::std_env();
+	let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);
 
 	loop {
 		let readline = editor.readline("➤ ");

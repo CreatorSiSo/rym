@@ -18,9 +18,19 @@ pub enum Value {
 	Unit,
 }
 
-impl Value {
-	fn none(self) -> ControlFlow {
-		ControlFlow::None(self)
+impl PartialEq for Value {
+	fn eq(&self, other: &Self) -> bool {
+		match (self, other) {
+			(Self::Bool(l0), Self::Bool(r0)) => l0 == r0,
+			(Self::Int(l0), Self::Int(r0)) => l0 == r0,
+			(Self::Float(l0), Self::Float(r0)) => l0 == r0,
+			(Self::String(l0), Self::String(r0)) => l0 == r0,
+			(Self::Function(l0), Self::Function(r0)) => l0 == r0,
+			(Self::NativeFunction(l0), Self::NativeFunction(r0)) => l0 == r0,
+			(Value::Unit, Value::Unit) => todo!(),
+			// TODO These cases should not be accessible, protect them via type checking
+			_ => false,
+		}
 	}
 }
 
@@ -144,8 +154,8 @@ impl Interpret for Expr {
 
 				(BinaryOp::Add, Value::String(lhs), Value::String(rhs)) => Value::String(lhs + &rhs),
 
-				(BinaryOp::Eq, ref lhs, ref rhs) => Value::Bool(eval_eq(lhs, rhs)),
-				(BinaryOp::NotEq, ref lhs, ref rhs) => Value::Bool(!eval_eq(lhs, rhs)),
+				(BinaryOp::Eq, lhs, rhs) => Value::Bool(lhs == rhs),
+				(BinaryOp::NotEq, lhs, rhs) => Value::Bool(lhs != rhs),
 
 				(op, lhs, rhs) => todo!(),
 			},
@@ -204,16 +214,5 @@ impl Interpret for Expr {
 		};
 
 		ControlFlow::None(result)
-	}
-}
-
-pub(crate) fn eval_eq(lhs: &Value, rhs: &Value) -> bool {
-	match (lhs, rhs) {
-		(Value::Bool(lhs), Value::Bool(rhs)) => lhs == rhs,
-		(Value::Int(lhs), Value::Int(rhs)) => lhs == rhs,
-		(Value::Float(lhs), Value::Float(rhs)) => lhs == rhs,
-		(Value::String(lhs), Value::String(rhs)) => lhs == rhs,
-		(Value::Unit, Value::Unit) => todo!(),
-		_ => todo!(),
 	}
 }

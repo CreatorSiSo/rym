@@ -12,6 +12,12 @@ pub struct Function {
 	pub body: Box<Expr>,
 }
 
+impl PartialEq for Function {
+	fn eq(&self, other: &Self) -> bool {
+		self.params.len() == other.params.len() && self.body == other.body
+	}
+}
+
 pub trait Call {
 	fn call(&self, env: &mut Env, args: Vec<Value>) -> Value;
 }
@@ -37,7 +43,7 @@ impl Display for Function {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum NativeFunction {
 	Params1(fn(&Value) -> Value),
 	Params2(fn(&Value, &Value) -> Value),

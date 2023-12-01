@@ -28,7 +28,7 @@ pub enum Token {
 	#[regex(r#"'(\\'|[^'])*'"#)]
 	Char,
 
-	#[regex("[a-zA-Z_][a-zA-Z1-9_]*")]
+	#[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
 	Ident,
 	#[token("///", line_comment)]
 	DocComment,

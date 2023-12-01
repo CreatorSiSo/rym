@@ -8,7 +8,7 @@ pub struct Module {
 	pub children: Vec<Module>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VariableKind {
 	Const,
 	Let,
@@ -25,7 +25,7 @@ impl Display for VariableKind {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Expr {
 	Unit,
 	Literal(Literal),
@@ -86,7 +86,7 @@ impl std::fmt::Debug for Expr {
 	}
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnaryOp {
 	/// Negation `-1`
 	Neg,
@@ -100,7 +100,7 @@ impl Display for UnaryOp {
 	}
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BinaryOp {
 	/// Addition `1 + 2`
 	Add,
@@ -122,7 +122,7 @@ impl Display for BinaryOp {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Literal {
 	Bool(bool),
 	Int(i64),

@@ -1,0 +1,5 @@
+const input = read_to_string("./day1.txt");
+
+const main = fn() {
+	print(input);
+};

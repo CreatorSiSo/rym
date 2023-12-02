@@ -95,6 +95,10 @@ fn cmd_repl(write: Vec<String>) -> anyhow::Result<()> {
 
 fn cmd_run(write: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
 	let src = read_to_string(&path)?;
+	// TODO reset current_dir when executing non const code
+	// let prev_current_dir = std::env::current_dir()?;
+	std::env::set_current_dir(path.parent().unwrap())?;
+
 	let mut diag = Diagnostics::new(
 		if write.is_empty() {
 			Box::new(std::io::sink())
@@ -103,7 +107,7 @@ fn cmd_run(write: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
 		},
 		Box::new(std::io::stderr()),
 	);
-	let mut env = Env::new();
+	let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);
 
 	// Ignoring the result here as it is already alvailabe
 	// through the Diagnostics

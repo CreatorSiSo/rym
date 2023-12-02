@@ -1,6 +1,6 @@
 use crate::interpret::{NativeFunction, Value};
 
-pub const CONSTANTS: [(&'static str, Value); 4] = [
+pub const CONSTANTS: [(&'static str, Value); 5] = [
 	(
 		"print",
 		wrap_fn_var(|args| {
@@ -13,6 +13,13 @@ pub const CONSTANTS: [(&'static str, Value); 4] = [
 		wrap_fn_var(|args| {
 			println!("{}", apply_format(args));
 			Value::Unit
+		}),
+	),
+	(
+		"read_to_string",
+		wrap_fn_1(|arg| {
+			let Value::String(path) = arg else { panic!() };
+			Value::String(std::fs::read_to_string(path).unwrap())
 		}),
 	),
 	(

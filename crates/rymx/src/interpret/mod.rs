@@ -40,7 +40,7 @@ impl std::fmt::Display for Value {
 			Self::Bool(val) => f.write_str(if *val { "true" } else { "false" }),
 			Self::Int(val) => f.write_str(&val.to_string()),
 			Self::Float(val) => f.write_str(&val.to_string()),
-			Self::String(val) => f.write_fmt(format_args!("\"{val}\"")),
+			Self::String(val) => f.write_str(val),
 			Self::Function(val) => f.write_str(&val.to_string()),
 			Self::NativeFunction(val) => f.write_str(&val.to_string()),
 			// Self::Type(_val) => f.write_str("<type>"),
@@ -116,10 +116,11 @@ impl Interpret for Expr {
 				Literal::Float(inner) => Value::Float(inner),
 				Literal::String(inner) => Value::String(inner),
 			},
-			Expr::Ident(name) => {
+			Expr::Ident(name) => match env.get(&name) {
 				// TODO Only clone when needed / faster
-				env.get(&name).unwrap().clone()
-			}
+				Some(val) => val.clone(),
+				None => panic!("Unable to find <{name}>"),
+			},
 			Expr::Function(func) => Value::Function(func),
 
 			Expr::Unary(op, expr) => match (op, default_flow!(expr.eval(env))) {

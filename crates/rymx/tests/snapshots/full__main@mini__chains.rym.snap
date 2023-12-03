@@ -2153,6 +2153,7 @@ const assert_eq = fn<native> (2)
 const fib_native = fn<native> (1)
 const print = fn<native> (variadic)
 const println = fn<native> (variadic)
+const read_to_string = fn<native> (1)
 const test = 304
 
 --- reports ---

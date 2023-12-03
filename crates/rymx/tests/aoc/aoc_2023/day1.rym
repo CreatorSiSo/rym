@@ -1,0 +1,13 @@
+const input = read_to_string("./day1.txt");
+
+const main = fn() {
+	let sum = input
+		.lines()
+		.flat_map(fn (line) {
+			let left = line.iter().find(char.is_digit)?;
+			let right = line.iter().findr(char.is_digit)?;
+			u64.parse(left ++ right)
+		})
+		.sum();
+	print(sum);
+};

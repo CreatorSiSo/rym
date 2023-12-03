@@ -33,6 +33,7 @@ const fib_native = fn<native> (1)
 const pi = 3.141592653589793
 const print = fn<native> (variadic)
 const println = fn<native> (variadic)
+const read_to_string = fn<native> (1)
 
 --- reports ---
 

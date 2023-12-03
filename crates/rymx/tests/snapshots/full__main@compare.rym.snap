@@ -6,7 +6,75 @@ input_file: crates/rymx/tests/compare.rym
 --- tokenize ---
 Const [const]
 HSpace [ ]
-Ident [print_eq_print_0]
+Ident [int_eq_0]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Int [0]
+HSpace [ ]
+Eq [==]
+HSpace [ ]
+Int [0]
+Semi [;]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [int_eq_1]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Int [1]
+HSpace [ ]
+Eq [==]
+HSpace [ ]
+Int [1]
+Semi [;]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [int_eq_2]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Int [1]
+HSpace [ ]
+Eq [==]
+HSpace [ ]
+Int [2]
+Semi [;]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [int_eq_3]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Int [255]
+HSpace [ ]
+Eq [==]
+HSpace [ ]
+Minus [-]
+Int [2132426873]
+Semi [;]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [int_eq_4]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Minus [-]
+Int [2132426873]
+HSpace [ ]
+Eq [==]
+HSpace [ ]
+Minus [-]
+Int [2132426873]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [fn_native_eq_0]
 HSpace [ ]
 Assign [=]
 HSpace [ ]
@@ -19,7 +87,7 @@ Semi [;]
 VSpace [\n]
 Const [const]
 HSpace [ ]
-Ident [print_eq_print_1]
+Ident [fn_native_eq_1]
 HSpace [ ]
 Assign [=]
 HSpace [ ]
@@ -38,7 +106,7 @@ Semi [;]
 VSpace [\n]
 Const [const]
 HSpace [ ]
-Ident [print_eq_print_2]
+Ident [fn_native_eq_2]
 HSpace [ ]
 Assign [=]
 HSpace [ ]
@@ -63,14 +131,55 @@ Module {
     name: "",
     constants: [
         (
-            "print_eq_print_0",
+            "int_eq_0",
+            Eq(
+                Literal(Int 0),
+                Literal(Int 0),
+            ),
+        ),
+        (
+            "int_eq_1",
+            Eq(
+                Literal(Int 1),
+                Literal(Int 1),
+            ),
+        ),
+        (
+            "int_eq_2",
+            Eq(
+                Literal(Int 1),
+                Literal(Int 2),
+            ),
+        ),
+        (
+            "int_eq_3",
+            Eq(
+                Literal(Int 255),
+                Neg(
+                    Literal(Int 2132426873),
+                ),
+            ),
+        ),
+        (
+            "int_eq_4",
+            Eq(
+                Neg(
+                    Literal(Int 2132426873),
+                ),
+                Neg(
+                    Literal(Int 2132426873),
+                ),
+            ),
+        ),
+        (
+            "fn_native_eq_0",
             Eq(
                 Ident("print"),
                 Ident("print"),
             ),
         ),
         (
-            "print_eq_print_1",
+            "fn_native_eq_1",
             Eq(
                 Ident("print"),
                 Function {
@@ -80,7 +189,7 @@ Module {
             ),
         ),
         (
-            "print_eq_print_2",
+            "fn_native_eq_2",
             Eq(
                 Ident("print"),
                 Call(
@@ -100,11 +209,17 @@ Module {
 const assert = fn<native> (1)
 const assert_eq = fn<native> (2)
 const fib_native = fn<native> (1)
+const fn_native_eq_0 = true
+const fn_native_eq_1 = false
+const fn_native_eq_2 = true
+const int_eq_0 = true
+const int_eq_1 = true
+const int_eq_2 = false
+const int_eq_3 = false
+const int_eq_4 = true
 const print = fn<native> (variadic)
-const print_eq_print_0 = true
-const print_eq_print_1 = false
-const print_eq_print_2 = true
 const println = fn<native> (variadic)
+const read_to_string = fn<native> (1)
 
 --- reports ---
 

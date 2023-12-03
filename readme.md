@@ -1,55 +1,28 @@
 # Rym
 
-**Rym** is a statically typed programming language inspired by Rust, Swift, Python and others that focuses on **ease of use** and **should just work™**.
-Big thanks go to Robert Nystrom and his book [crafting interpreters](http://craftinginterpreters.com) open source which inspired me to continue working on this language.
-
-## Content
-
 - [Rym](#rym)
-  - [Content](#content)
-  - [About Rym](#about-rym)
+  - [Examples](#examples)
+  - [About](#about)
     - [Name](#name)
     - [Goals](#goals)
-  - [Examples](#examples)
-  - [How to install](#how-to-install)
+  - [Installation](#installation)
   - [Inspired by](#inspired-by)
   - [Other languages written in Rust](#other-languages-written-in-rust)
   - [Project Structure](#project-structure)
     - [Tests](#tests)
-- [Todos](#todos)
+  - [Todos](#todos)
 
-## About Rym
+**Rym** is a statically typed programming language inspired by Rust, Swift, Python and others.
+It focuses on **ease of use** and **should just work™**. </br>
 
-### Name
-
-- **R**ust**y** ⇒ Heavily borrows 🙃 from Rust
-- **M**ulti-paradigm ⇒ Mix of object oriented, procedural and functional programming
-- Programming **Lang**uage ⇒ because thats what it is
-
-### Goals
-
-The language should be as powerful as possible while only providing a small set of consistent features.
-(Kinda like Go)
-
-- Features
-  - Static types
-    - inferred
-  - Complex types
-    - struct
-    - enum / tagged union
-  - Iterators
-  - Zig like comp time
-- Nice developer experience
-  - Informative errors and warnings
-  - Builtin tools
-    - First party REPL
-    - Package manager
+Big thanks to Robert Nystrom and his book [crafting interpreters](http://craftinginterpreters.com)
+which inspired me to start and continue working on this language.
 
 ## Examples
 
-```dart
-const main = fn() @Io, Result<(), Error> => {
-	const msg = "Hello World";
+```rust
+const main = fn() @Io, Result[(), Error] => {
+	let msg = "Hello World";
 	println(msg);
 
 	let mut num = 2/4 * (10 - 1);
@@ -62,13 +35,13 @@ const main = fn() @Io, Result<(), Error> => {
 
 Early returns when unwrapping `Tryable`s
 
-```dart
-const main = fn() Result<Number, String> => {
-	const number = maybe_error()?;
+```rust
+const main = fn() @Io, Result[isize, String] => {
+	let number = maybe_error()?;
 	println(number);
 
 	// Same as
-	const inner = match maybe_error() with
+	let inner = match maybe_error() with
 		| Ok(val) => val,
 		| err => return err;
 	println(inner);
@@ -89,7 +62,36 @@ const chained = match maybe_error() {
 const chained = maybe_error().and_then(|val| Ok(val.to_string()))
 ``` -->
 
-## How to install
+## About
+
+### Name
+
+- **R**ust**y** ⇒ Heavily borrows 🙃 from Rust
+- **M**ulti-paradigm ⇒ Mix of object oriented, procedural and functional programming
+- Programming **Lang**uage ⇒ because thats what it is
+
+### Goals
+
+The language should be as powerful as possible while only providing a small set of consistent features. (Kind of like Go)
+
+Apart from that Rym just gets used to try out a bunch of my ideas...
+I am trying my best to combine all of them in a meaningful manner ;)
+
+- Features
+  - Static types
+    - inferred
+  - Complex types
+    - struct
+    - enum / tagged union
+  - Iterators
+  - Zig like comp time
+- Nice developer experience
+  - Informative errors and warnings
+  - Builtin tools
+    - First party REPL
+    - Package manager
+
+## Installation
 
 **TODO**
 
@@ -123,6 +125,6 @@ For now just run `cargo test`, there is no special setup.
 
 **TODO**
 
-# Todos
+## Todos
 
 - [ ] add benchmarking capabilities

@@ -49,6 +49,32 @@ Ident [int_eq_3]
 HSpace [ ]
 Assign [=]
 HSpace [ ]
+Int [1]
+HSpace [ ]
+GreaterThan [>]
+HSpace [ ]
+Int [2]
+Semi [;]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [int_eq_4]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Int [1]
+HSpace [ ]
+LessThanEq [<=]
+HSpace [ ]
+Int [2]
+Semi [;]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [int_eq_5]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
 Int [255]
 HSpace [ ]
 Eq [==]
@@ -59,7 +85,7 @@ Semi [;]
 VSpace [\n]
 Const [const]
 HSpace [ ]
-Ident [int_eq_4]
+Ident [int_eq_6]
 HSpace [ ]
 Assign [=]
 HSpace [ ]
@@ -157,6 +183,20 @@ Module {
         ),
         (
             "int_eq_3",
+            GreaterThan(
+                Literal(Int 1),
+                Literal(Int 2),
+            ),
+        ),
+        (
+            "int_eq_4",
+            LessThanEq(
+                Literal(Int 1),
+                Literal(Int 2),
+            ),
+        ),
+        (
+            "int_eq_5",
             Eq(
                 Literal(Int 255),
                 Neg(
@@ -165,7 +205,7 @@ Module {
             ),
         ),
         (
-            "int_eq_4",
+            "int_eq_6",
             Eq(
                 Neg(
                     Literal(Int 2132426873),
@@ -221,6 +261,8 @@ const int_eq_1 = true
 const int_eq_2 = false
 const int_eq_3 = false
 const int_eq_4 = true
+const int_eq_5 = false
+const int_eq_6 = true
 const print = fn<native> (variadic)
 const println = fn<native> (variadic)
 const read_to_string = fn<native> (1)

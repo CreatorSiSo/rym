@@ -1,6 +1,11 @@
 mod env;
 mod function;
 
+use std::{
+	cmp::PartialOrd,
+	ops::{Add, Div, Mul, Sub},
+};
+
 pub use self::env::Env;
 use self::env::ScopeKind;
 pub use self::function::{Call, Function, NativeFunction};
@@ -135,23 +140,17 @@ impl Interpret for Expr {
 				default_flow!(lhs.eval(env)),
 				default_flow!(rhs.eval(env)),
 			) {
-				(BinaryOp::Add, Value::Float(lhs), Value::Float(rhs)) => Value::Float(lhs + rhs),
-				(BinaryOp::Add, Value::Int(lhs), Value::Float(rhs)) => Value::Float(lhs as f64 + rhs),
-				(BinaryOp::Add, Value::Float(lhs), Value::Int(rhs)) => Value::Float(lhs + rhs as f64),
-				(BinaryOp::Sub, Value::Float(lhs), Value::Float(rhs)) => Value::Float(lhs - rhs),
-				(BinaryOp::Sub, Value::Int(lhs), Value::Float(rhs)) => Value::Float(lhs as f64 - rhs),
-				(BinaryOp::Sub, Value::Float(lhs), Value::Int(rhs)) => Value::Float(lhs - rhs as f64),
-				(BinaryOp::Mul, Value::Float(lhs), Value::Float(rhs)) => Value::Float(lhs * rhs),
-				(BinaryOp::Mul, Value::Int(lhs), Value::Float(rhs)) => Value::Float(lhs as f64 * rhs),
-				(BinaryOp::Mul, Value::Float(lhs), Value::Int(rhs)) => Value::Float(lhs * rhs as f64),
-				(BinaryOp::Div, Value::Float(lhs), Value::Float(rhs)) => Value::Float(lhs / rhs),
-				(BinaryOp::Div, Value::Int(lhs), Value::Float(rhs)) => Value::Float(lhs as f64 / rhs),
-				(BinaryOp::Div, Value::Float(lhs), Value::Int(rhs)) => Value::Float(lhs / rhs as f64),
+				(op, Value::Float(lhs), Value::Float(rhs)) => eval_binary(op, lhs, rhs, Value::Float),
+				(op, Value::Float(lhs), Value::Int(rhs)) => {
+					let rhs = rhs as f64;
+					eval_binary(op, lhs, rhs, Value::Float)
+				}
+				(op, Value::Int(lhs), Value::Float(rhs)) => {
+					let lhs = lhs as f64;
+					eval_binary(op, lhs, rhs, Value::Float)
+				}
 
-				(BinaryOp::Add, Value::Int(lhs), Value::Int(rhs)) => Value::Int(lhs + rhs),
-				(BinaryOp::Sub, Value::Int(lhs), Value::Int(rhs)) => Value::Int(lhs - rhs),
-				(BinaryOp::Mul, Value::Int(lhs), Value::Int(rhs)) => Value::Int(lhs * rhs),
-				(BinaryOp::Div, Value::Int(lhs), Value::Int(rhs)) => Value::Int(lhs / rhs),
+				(op, Value::Int(lhs), Value::Int(rhs)) => eval_binary(op, lhs, rhs, Value::Int),
 
 				(BinaryOp::Add, Value::String(lhs), Value::String(rhs)) => Value::String(lhs + &rhs),
 
@@ -215,5 +214,24 @@ impl Interpret for Expr {
 		};
 
 		ControlFlow::None(result)
+	}
+}
+
+fn eval_binary<T>(op: BinaryOp, lhs: T, rhs: T, make_value: fn(T) -> Value) -> Value
+where
+	T: PartialOrd + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+{
+	match op {
+		BinaryOp::Add => make_value(lhs + rhs),
+		BinaryOp::Sub => make_value(lhs - rhs),
+		BinaryOp::Mul => make_value(lhs * rhs),
+		BinaryOp::Div => make_value(lhs / rhs),
+
+		BinaryOp::LessThan => Value::Bool(lhs < rhs),
+		BinaryOp::LessThanEq => Value::Bool(lhs <= rhs),
+		BinaryOp::GreaterThan => Value::Bool(lhs > rhs),
+		BinaryOp::GreaterThanEq => Value::Bool(lhs >= rhs),
+		BinaryOp::Eq => Value::Bool(lhs == rhs),
+		BinaryOp::NotEq => Value::Bool(lhs != rhs),
 	}
 }

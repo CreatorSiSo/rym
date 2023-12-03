@@ -61,7 +61,7 @@ If [if]
 HSpace [ ]
 Ident [n]
 HSpace [ ]
-Eq [==]
+LessThanEq [<=]
 HSpace [ ]
 Int [0]
 HSpace [ ]
@@ -317,6 +317,9 @@ HSpace [ ]
 Fn [fn]
 ParenOpen [(]
 Ident [n]
+Comma [,]
+HSpace [ ]
+Ident [step]
 ParenClose [)]
 HSpace [ ]
 ThickArrow [=>]
@@ -338,7 +341,7 @@ If [if]
 HSpace [ ]
 Ident [n]
 HSpace [ ]
-NotEq [!=]
+GreaterThan [>]
 HSpace [ ]
 Int [0]
 HSpace [ ]
@@ -346,15 +349,148 @@ Then [then]
 HSpace [ ]
 Ident [countdown]
 ParenOpen [(]
+Ident [min]
+ParenOpen [(]
 Ident [n]
 HSpace [ ]
 Minus [-]
 HSpace [ ]
-Int [1]
+Ident [step]
+Comma [,]
+HSpace [ ]
+Int [0]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Ident [step]
 ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [min]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+Ident [value]
+Comma [,]
+HSpace [ ]
+Ident [min]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+VSpace [\n]
+HSpace [    ]
+If [if]
+HSpace [ ]
+Ident [value]
+HSpace [ ]
+LessThan [<]
+HSpace [ ]
+Ident [min]
+HSpace [ ]
+Then [then]
+HSpace [ ]
+Ident [min]
+HSpace [ ]
+Else [else]
+HSpace [ ]
+Ident [value]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [max]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+Ident [value]
+Comma [,]
+HSpace [ ]
+Ident [max]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+VSpace [\n]
+HSpace [    ]
+If [if]
+HSpace [ ]
+Ident [value]
+HSpace [ ]
+GreaterThan [>]
+HSpace [ ]
+Ident [max]
+HSpace [ ]
+Then [then]
+HSpace [ ]
+Ident [max]
+HSpace [ ]
+Else [else]
+HSpace [ ]
+Ident [value]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [clamp]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+Ident [value]
+Comma [,]
+HSpace [ ]
+Ident [min]
+Comma [,]
+HSpace [ ]
+Ident [max]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+VSpace [\n]
+HSpace [    ]
+If [if]
+HSpace [ ]
+Ident [value]
+HSpace [ ]
+LessThan [<]
+HSpace [ ]
+Ident [min]
+HSpace [ ]
+Then [then]
+VSpace [\n]
+HSpace [        ]
+Ident [min]
+VSpace [\n]
+HSpace [    ]
+Else [else]
+HSpace [ ]
+If [if]
+HSpace [ ]
+Ident [value]
+HSpace [ ]
+GreaterThan [>]
+HSpace [ ]
+Ident [max]
+HSpace [ ]
+Then [then]
+VSpace [\n]
+HSpace [        ]
+Ident [max]
+VSpace [\n]
+HSpace [    ]
+Else [else]
+VSpace [\n]
+HSpace [        ]
+Ident [value]
 Semi [;]
 VSpace [\n\n]
 Const [const]
@@ -375,6 +511,9 @@ HSpace [    ]
 Ident [countdown]
 ParenOpen [(]
 Int [0]
+Comma [,]
+HSpace [ ]
+Int [5]
 ParenClose [)]
 Semi [;]
 VSpace [\n]
@@ -387,6 +526,9 @@ VSpace [\n]
 HSpace [    ]
 Ident [countdown]
 ParenOpen [(]
+Int [1]
+Comma [,]
+HSpace [ ]
 Int [1]
 ParenClose [)]
 Semi [;]
@@ -401,6 +543,25 @@ HSpace [    ]
 Ident [countdown]
 ParenOpen [(]
 Int [10]
+Comma [,]
+HSpace [ ]
+Int [1]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [    ]
+Ident [println]
+ParenOpen [(]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [    ]
+Ident [countdown]
+ParenOpen [(]
+Int [100]
+Comma [,]
+HSpace [ ]
+Int [8]
 ParenClose [)]
 Semi [;]
 VSpace [\n]
@@ -443,7 +604,7 @@ Module {
                     ),
                 ],
                 body: IfElse(
-                    Eq(
+                    LessThanEq(
                         Ident("n"),
                         Literal(Int 0),
                     ),
@@ -657,6 +818,10 @@ Module {
                         "n",
                         (),
                     ),
+                    (
+                        "step",
+                        (),
+                    ),
                 ],
                 body: Block(
                     [
@@ -668,22 +833,109 @@ Module {
                             ],
                         ),
                         IfElse(
-                            NotEq(
+                            GreaterThan(
                                 Ident("n"),
                                 Literal(Int 0),
                             ),
                             Call(
                                 Ident("countdown"),
                                 [
-                                    Sub(
-                                        Ident("n"),
-                                        Literal(Int 1),
+                                    Call(
+                                        Ident("min"),
+                                        [
+                                            Sub(
+                                                Ident("n"),
+                                                Ident("step"),
+                                            ),
+                                            Literal(Int 0),
+                                        ],
                                     ),
+                                    Ident("step"),
                                 ],
                             ),
                             Unit,
                         ),
                     ],
+                ),
+            },
+        ),
+        (
+            "min",
+            Function {
+                params: [
+                    (
+                        "value",
+                        (),
+                    ),
+                    (
+                        "min",
+                        (),
+                    ),
+                ],
+                body: IfElse(
+                    LessThan(
+                        Ident("value"),
+                        Ident("min"),
+                    ),
+                    Ident("min"),
+                    Ident("value"),
+                ),
+            },
+        ),
+        (
+            "max",
+            Function {
+                params: [
+                    (
+                        "value",
+                        (),
+                    ),
+                    (
+                        "max",
+                        (),
+                    ),
+                ],
+                body: IfElse(
+                    GreaterThan(
+                        Ident("value"),
+                        Ident("max"),
+                    ),
+                    Ident("max"),
+                    Ident("value"),
+                ),
+            },
+        ),
+        (
+            "clamp",
+            Function {
+                params: [
+                    (
+                        "value",
+                        (),
+                    ),
+                    (
+                        "min",
+                        (),
+                    ),
+                    (
+                        "max",
+                        (),
+                    ),
+                ],
+                body: IfElse(
+                    LessThan(
+                        Ident("value"),
+                        Ident("min"),
+                    ),
+                    Ident("min"),
+                    IfElse(
+                        GreaterThan(
+                            Ident("value"),
+                            Ident("max"),
+                        ),
+                        Ident("max"),
+                        Ident("value"),
+                    ),
                 ),
             },
         ),
@@ -697,6 +949,7 @@ Module {
                             Ident("countdown"),
                             [
                                 Literal(Int 0),
+                                Literal(Int 5),
                             ],
                         ),
                         Call(
@@ -706,6 +959,7 @@ Module {
                         Call(
                             Ident("countdown"),
                             [
+                                Literal(Int 1),
                                 Literal(Int 1),
                             ],
                         ),
@@ -717,6 +971,18 @@ Module {
                             Ident("countdown"),
                             [
                                 Literal(Int 10),
+                                Literal(Int 1),
+                            ],
+                        ),
+                        Call(
+                            Ident("println"),
+                            [],
+                        ),
+                        Call(
+                            Ident("countdown"),
+                            [
+                                Literal(Int 100),
+                                Literal(Int 8),
                             ],
                         ),
                     ],
@@ -730,10 +996,13 @@ Module {
 --- interpret ---
 const assert = fn<native> (1)
 const assert_eq = fn<native> (2)
-const countdown = fn (1)
+const clamp = fn (3)
+const countdown = fn (2)
 const fib_if = fn (1)
 const fib_native = fn<native> (1)
 const main = fn (0)
+const max = fn (2)
+const min = fn (2)
 const print = fn<native> (variadic)
 const println = fn<native> (variadic)
 const read_to_string = fn<native> (1)

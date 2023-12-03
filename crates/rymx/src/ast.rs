@@ -114,6 +114,14 @@ pub enum BinaryOp {
 	Eq,
 	/// Inequality `1 != 2`
 	NotEq,
+	/// Less than `1 < 2`
+	LessThan,
+	/// Less than or equal `1 <= 2`
+	LessThanEq,
+	/// Greater than `1 > 2`
+	GreaterThan,
+	/// Less than or equal `1 >= 2`
+	GreaterThanEq,
 }
 
 impl Display for BinaryOp {

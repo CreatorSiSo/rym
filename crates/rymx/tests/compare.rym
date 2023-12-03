@@ -1,8 +1,10 @@
 const int_eq_0 = 0 == 0;
 const int_eq_1 = 1 == 1;
 const int_eq_2 = 1 == 2;
-const int_eq_3 = 255 == -2132426873;
-const int_eq_4 = -2132426873 == -2132426873;
+const int_eq_3 = 1 > 2;
+const int_eq_4 = 1 <= 2;
+const int_eq_5 = 255 == -2132426873;
+const int_eq_6 = -2132426873 == -2132426873;
 
 const fn_native_eq_0 = print == print;
 const fn_native_eq_1 = print == (fn() => print);

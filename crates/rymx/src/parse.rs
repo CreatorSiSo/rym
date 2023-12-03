@@ -170,13 +170,17 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 			|a, (op, b), _| Expr::Binary(op, Box::new(a), Box::new(b)),
 		);
 
-		// compare ::= sum (("==" | "!=") sum)*
+		// compare ::= sum (("==" | "!=" | "<" | "<=" | ">" | ">=") sum)*
 		let compare = sum
 			.clone()
 			.foldl_with(
 				select! {
 					Token::Eq => BinaryOp::Eq,
 					Token::NotEq => BinaryOp::NotEq,
+					Token::LessThan => BinaryOp::LessThan,
+					Token::LessThanEq => BinaryOp::LessThanEq,
+					Token::GreaterThan => BinaryOp::GreaterThan,
+					Token::GreaterThanEq => BinaryOp::GreaterThanEq,
 				}
 				.then(sum)
 				.repeated(),

@@ -12,8 +12,8 @@ Big thanks go to Robert Nystrom and his book [crafting interpreters](http://craf
     - [Goals](#goals)
   - [Examples](#examples)
   - [How to install](#how-to-install)
-  - [Inspirational projects](#inspirational-projects)
-  - [Similar projects](#similar-projects)
+  - [Inspired by](#inspired-by)
+  - [Other languages written in Rust](#other-languages-written-in-rust)
   - [Project Structure](#project-structure)
     - [Tests](#tests)
 - [Todos](#todos)
@@ -28,15 +28,18 @@ Big thanks go to Robert Nystrom and his book [crafting interpreters](http://craf
 
 ### Goals
 
+The language should be as powerful as possible while only providing a small set of consistent features.
+(Kinda like Go)
+
 - Features
   - Static types
-  - Complex types (structs, enums, ..)
-  - Union types
+    - inferred
+  - Complex types
+    - struct
+    - enum / tagged union
   - Iterators
-  - Inferred types
-  - Constant evaluation context
-  - Tryable chaining?
-- Nice Development Experience
+  - Zig like comp time
+- Nice developer experience
   - Informative errors and warnings
   - Builtin tools
     - First party REPL
@@ -44,38 +47,37 @@ Big thanks go to Robert Nystrom and his book [crafting interpreters](http://craf
 
 ## Examples
 
-```rust
-fn main() -> Result<(), Error>, ?Io => {
+```dart
+const main = fn() @Io, Result<(), Error> => {
 	const msg = "Hello World";
-	print(msg);
+	println(msg);
 
 	let mut num = 2/4 * (10 - 1);
-	print("Number:", num);
+	println("Number:", num);
 
 	const msg = msg + "!";
-	print("Combined:", msg, num);
+	println("Combined:", msg, num);
 }
 ```
 
 Early returns when unwrapping `Tryable`s
 
-```rust
-fn main() -> Result<Number, String> => {
+```dart
+const main = fn() Result<Number, String> => {
 	const number = maybe_error()?;
-	print(number);
+	println(number);
 
 	// Same as
-	const inner = match maybe_error() {
-		Ok(val) => val,
-		err => return err,
-	};
-	print(inner);
+	const inner = match maybe_error() with
+		| Ok(val) => val,
+		| err => return err;
+	println(inner);
 }
 ```
 
 <!-- Tryable chaining
 
-```rust
+```dart
 const chained = maybe_error()&.to_string()
 
 // Short form of:
@@ -91,15 +93,17 @@ const chained = maybe_error().and_then(|val| Ok(val.to_string()))
 
 **TODO**
 
-## Inspirational projects
+## Inspired by
 
 - [Rust](https://github.com/rust-lang/rust): Empowering everyone to build reliable and efficient software.
+- [OCaml](): **TODO**
+- [F#](): **TODO**
 - [Swift](https://github.com/apple/swift): A Swift is a high-performance system programming language.
 - [HVM](https://github.com/Kindelia/HVM): A massively parallel, optimal functional runtime in Rust
 - [Unison](https://www.unison-lang.org/): A friendly programming language from the future (statically-typed, functional)
 - [Fused Effects](https://github.com/fused-effects/fused-effects): A fast, flexible, fused effect system for Haskell
 
-## Similar projects
+## Other languages written in Rust
 
 - [Boson](https://github.com/Narasimha1997/boson-lang): Hybrid programming language written in Rust.
 - [Mun](https://github.com/mun-lang/mun): Programming language empowering creation through iteration.
@@ -115,9 +119,10 @@ The project is split into many crates that are part of one Cargo workspace:
 
 ### Tests
 
+For now just run `cargo test`, there is no special setup.
+
 **TODO**
 
 # Todos
 
-- [ ] use insta snapshot testing crate
 - [ ] add benchmarking capabilities

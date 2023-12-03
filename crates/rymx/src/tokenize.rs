@@ -114,6 +114,10 @@ pub enum Token {
 	Semi,
 	#[token(":")]
 	Colon,
+	#[token("->")]
+	ThinArrow,
+	#[token("=>")]
+	ThickArrow,
 
 	#[token("==")]
 	Eq,

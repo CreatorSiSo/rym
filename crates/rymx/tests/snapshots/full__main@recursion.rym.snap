@@ -6,7 +6,46 @@ input_file: crates/rymx/tests/recursion.rym
 --- tokenize ---
 Const [const]
 HSpace [ ]
-Ident [fib]
+Ident [main]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+Ident [test_fib]
+ParenOpen [(]
+String [\"fib_if\"]
+Comma [,]
+HSpace [ ]
+Ident [fib_if]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [    ]
+Comment [// test_fib(\"fib_match\", fib_match);]
+VSpace [\n]
+HSpace [    ]
+Comment [// test_fib(\"fib_oneliner\", fib_oneliner);]
+VSpace [\n\n]
+HSpace [    ]
+Ident [test_countdown]
+ParenOpen [(]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+BraceClose [}]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [fib_if]
 HSpace [ ]
 Assign [=]
 HSpace [ ]
@@ -14,6 +53,8 @@ Fn [fn]
 ParenOpen [(]
 Ident [n]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 VSpace [\n]
 HSpace [    ]
 If [if]
@@ -46,7 +87,7 @@ VSpace [\n]
 HSpace [    ]
 Else [else]
 HSpace [ ]
-Ident [fib]
+Ident [fib_if]
 ParenOpen [(]
 Ident [n]
 HSpace [ ]
@@ -57,7 +98,7 @@ ParenClose [)]
 HSpace [ ]
 Plus [+]
 HSpace [ ]
-Ident [fib]
+Ident [fib_if]
 ParenOpen [(]
 Ident [n]
 HSpace [ ]
@@ -67,15 +108,31 @@ Int [2]
 ParenClose [)]
 Semi [;]
 VSpace [\n\n]
+Comment [// const fib_match = fn(n) => match n with]
+VSpace [\n]
+Comment [//     | 0 => 0]
+VSpace [\n]
+Comment [//     | 1 => 1]
+VSpace [\n]
+Comment [//     | _ => fib_match(n - 1) + fib_match(n - 2);]
+VSpace [\n\n]
+Comment [// const fib_oneliner = fn(n) => match n with 0 => 0 | 1 => 1 | _ => fib_oneliner(n - 1) + fib_oneliner(n - 2);]
+VSpace [\n\n]
 Const [const]
 HSpace [ ]
-Ident [main]
+Ident [test_fib]
 HSpace [ ]
 Assign [=]
 HSpace [ ]
 Fn [fn]
 ParenOpen [(]
+Ident [name]
+Comma [,]
+HSpace [ ]
+Ident [fib]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -234,6 +291,118 @@ HSpace [ ]
 Int [6765]
 ParenClose [)]
 Semi [;]
+VSpace [\n\n]
+HSpace [    ]
+Ident [println]
+ParenOpen [(]
+String [\"Successfully tested \"]
+Comma [,]
+HSpace [ ]
+Ident [name]
+Comma [,]
+HSpace [ ]
+String [\"!\"]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+BraceClose [}]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [countdown]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+Ident [n]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+Ident [print]
+ParenOpen [(]
+Ident [n]
+Comma [,]
+HSpace [ ]
+String [\" \"]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [    ]
+If [if]
+HSpace [ ]
+Ident [n]
+HSpace [ ]
+NotEq [!=]
+HSpace [ ]
+Int [0]
+HSpace [ ]
+Then [then]
+HSpace [ ]
+Ident [countdown]
+ParenOpen [(]
+Ident [n]
+HSpace [ ]
+Minus [-]
+HSpace [ ]
+Int [1]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+BraceClose [}]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [test_countdown]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+Ident [countdown]
+ParenOpen [(]
+Int [0]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [    ]
+Ident [println]
+ParenOpen [(]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [    ]
+Ident [countdown]
+ParenOpen [(]
+Int [1]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [    ]
+Ident [println]
+ParenOpen [(]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [    ]
+Ident [countdown]
+ParenOpen [(]
+Int [10]
+ParenClose [)]
+Semi [;]
 VSpace [\n]
 BraceClose [}]
 Semi [;]
@@ -244,7 +413,28 @@ Module {
     name: "",
     constants: [
         (
-            "fib",
+            "main",
+            Function {
+                params: [],
+                body: Block(
+                    [
+                        Call(
+                            Ident("test_fib"),
+                            [
+                                Literal(String fib_if),
+                                Ident("fib_if"),
+                            ],
+                        ),
+                        Call(
+                            Ident("test_countdown"),
+                            [],
+                        ),
+                    ],
+                ),
+            },
+        ),
+        (
+            "fib_if",
             Function {
                 params: [
                     (
@@ -266,7 +456,7 @@ Module {
                         Literal(Int 1),
                         Add(
                             Call(
-                                Ident("fib"),
+                                Ident("fib_if"),
                                 [
                                     Sub(
                                         Ident("n"),
@@ -275,7 +465,7 @@ Module {
                                 ],
                             ),
                             Call(
-                                Ident("fib"),
+                                Ident("fib_if"),
                                 [
                                     Sub(
                                         Ident("n"),
@@ -289,9 +479,18 @@ Module {
             },
         ),
         (
-            "main",
+            "test_fib",
             Function {
-                params: [],
+                params: [
+                    (
+                        "name",
+                        (),
+                    ),
+                    (
+                        "fib",
+                        (),
+                    ),
+                ],
                 body: Block(
                     [
                         Call(
@@ -438,6 +637,88 @@ Module {
                                 Literal(Int 6765),
                             ],
                         ),
+                        Call(
+                            Ident("println"),
+                            [
+                                Literal(String Successfully tested ),
+                                Ident("name"),
+                                Literal(String !),
+                            ],
+                        ),
+                    ],
+                ),
+            },
+        ),
+        (
+            "countdown",
+            Function {
+                params: [
+                    (
+                        "n",
+                        (),
+                    ),
+                ],
+                body: Block(
+                    [
+                        Call(
+                            Ident("print"),
+                            [
+                                Ident("n"),
+                                Literal(String  ),
+                            ],
+                        ),
+                        IfElse(
+                            NotEq(
+                                Ident("n"),
+                                Literal(Int 0),
+                            ),
+                            Call(
+                                Ident("countdown"),
+                                [
+                                    Sub(
+                                        Ident("n"),
+                                        Literal(Int 1),
+                                    ),
+                                ],
+                            ),
+                            Unit,
+                        ),
+                    ],
+                ),
+            },
+        ),
+        (
+            "test_countdown",
+            Function {
+                params: [],
+                body: Block(
+                    [
+                        Call(
+                            Ident("countdown"),
+                            [
+                                Literal(Int 0),
+                            ],
+                        ),
+                        Call(
+                            Ident("println"),
+                            [],
+                        ),
+                        Call(
+                            Ident("countdown"),
+                            [
+                                Literal(Int 1),
+                            ],
+                        ),
+                        Call(
+                            Ident("println"),
+                            [],
+                        ),
+                        Call(
+                            Ident("countdown"),
+                            [
+                                Literal(Int 10),
+                            ],
+                        ),
                     ],
                 ),
             },
@@ -449,12 +730,15 @@ Module {
 --- interpret ---
 const assert = fn<native> (1)
 const assert_eq = fn<native> (2)
-const fib = fn (1)
+const countdown = fn (1)
+const fib_if = fn (1)
 const fib_native = fn<native> (1)
 const main = fn (0)
 const print = fn<native> (variadic)
 const println = fn<native> (variadic)
 const read_to_string = fn<native> (1)
+const test_countdown = fn (0)
+const test_fib = fn (2)
 
 --- reports ---
 

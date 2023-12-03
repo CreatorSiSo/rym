@@ -1,9 +1,24 @@
-const fib = fn(n)
+const main = fn() => {
+    test_fib("fib_if", fib_if);
+    // test_fib("fib_match", fib_match);
+    // test_fib("fib_oneliner", fib_oneliner);
+
+    test_countdown();
+};
+
+const fib_if = fn(n) =>
     if n == 0 then 0
     else if n == 1 then 1
-    else fib(n - 1) + fib(n - 2);
+    else fib_if(n - 1) + fib_if(n - 2);
 
-const main = fn() {
+// const fib_match = fn(n) => match n with
+//     | 0 => 0
+//     | 1 => 1
+//     | _ => fib_match(n - 1) + fib_match(n - 2);
+
+// const fib_oneliner = fn(n) => match n with 0 => 0 | 1 => 1 | _ => fib_oneliner(n - 1) + fib_oneliner(n - 2);
+
+const test_fib = fn(name, fib) => {
     assert_eq(fib(0), 0);
     assert_eq(fib(1), 1);
     assert_eq(fib(2), 1);
@@ -16,4 +31,19 @@ const main = fn() {
     assert_eq(fib(9), 34);
     assert_eq(fib(10), 55);
     assert_eq(fib(20), 6765);
+
+    println("Successfully tested ", name, "!");
+};
+
+const countdown = fn(n) => {
+    print(n, " ");
+    if n != 0 then countdown(n - 1);
+};
+
+const test_countdown = fn() => {
+    countdown(0);
+    println();
+    countdown(1);
+    println();
+    countdown(10);
 };

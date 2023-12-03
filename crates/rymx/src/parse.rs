@@ -184,7 +184,7 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 			)
 			.boxed();
 
-		// function ::= fn "(" (ident ("," ident)*)? ")" expr
+		// function ::= fn "(" (ident ("," ident)*)? ")" "=>" expr
 		let function = just(Token::Fn)
 			.ignore_then(
 				ident_parser(src)
@@ -192,6 +192,7 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 					.collect::<Vec<&str>>()
 					.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
 			)
+			.then_ignore(just(Token::ThickArrow))
 			.then(expr.clone())
 			.map(|(params, body)| {
 				Expr::Function(Function {
@@ -223,10 +224,13 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 			.ignore_then(expr.clone())
 			.then_ignore(just(Token::Then))
 			.then(expr.clone())
-			.then_ignore(just(Token::Else))
-			.then(expr)
+			.then(just(Token::Else).ignore_then(expr).or_not())
 			.map(|((cond, then_branch), else_branch)| {
-				Expr::IfElse(Box::new(cond), Box::new(then_branch), Box::new(else_branch))
+				Expr::IfElse(
+					Box::new(cond),
+					Box::new(then_branch),
+					Box::new(else_branch.unwrap_or(Expr::Unit)),
+				)
 			});
 
 		// expr ::= function | var | if_else | compare

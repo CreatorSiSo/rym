@@ -43,11 +43,9 @@ pub const CONSTANTS: [(&'static str, Value); 5] = [
 ];
 
 fn apply_format(args: &[Value]) -> String {
-	let mut result = args.iter().fold(String::new(), |accum, value| {
-		accum + &value.to_string() + " "
-	});
-	result.pop();
-	result
+	args
+		.iter()
+		.fold(String::new(), |accum, value| accum + &value.to_string())
 }
 
 pub const OTHER: [(&'static str, Value); 1] = [(

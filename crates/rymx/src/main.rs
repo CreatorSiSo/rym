@@ -97,7 +97,7 @@ fn cmd_run(write: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
 	let src = read_to_string(&path)?;
 	// TODO reset current_dir when executing non const code
 	// let prev_current_dir = std::env::current_dir()?;
-	std::env::set_current_dir(path.parent().unwrap())?;
+	// std::env::set_current_dir(path.parent().unwrap())?;
 
 	let mut diag = Diagnostics::new(
 		if write.is_empty() {

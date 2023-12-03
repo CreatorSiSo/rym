@@ -184,10 +184,15 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 			)
 			.boxed();
 
-		// function ::= fn "(" (ident ("," ident)*)? ")" "=>" expr
+		// parameter ::= ident (":" __TODO__)?
+		let parameter = ident_parser(src)
+			.then(just(Token::Colon).ignore_then(ident_parser(src)).or_not())
+			.map(|(name, _typ)| name);
+
+		// function ::= fn "(" (parameter ("," parameter)*)? ")" "=>" expr
 		let function = just(Token::Fn)
 			.ignore_then(
-				ident_parser(src)
+				parameter
 					.separated_by(just(Token::Comma))
 					.collect::<Vec<&str>>()
 					.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),

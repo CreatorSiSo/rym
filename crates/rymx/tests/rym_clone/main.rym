@@ -3,7 +3,9 @@ use package.Error as OtherError;
 use package.prelude.*;
 
 /// Combined error type
-const Error = IoError | OtherError;
+const Error =
+	| type IoError
+	| OtherError(message: String);
 
 const main = fn() Result<(), Error> => {
 	// TODO read cli arguments

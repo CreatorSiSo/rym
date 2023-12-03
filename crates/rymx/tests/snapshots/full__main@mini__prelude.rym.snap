@@ -29,6 +29,8 @@ Ident [Display]
 BracketClose []]
 ParenClose [)]
 HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
 HSpace [\t]
@@ -42,10 +44,10 @@ VSpace [\n]
 
 --- reports ---
 Error: 
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/prelude.rym:1:23]
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/prelude.rym:1:33]
    │
- 1 │ const println = fn(fmt: String, ..args: [impl Display]) {
-   │                       ┬  
-   │                       ╰── ExpectedFound { expected: [Comma, ParenClose], found: Some(Colon) }
+ 1 │ const println = fn(fmt: String, ..args: [impl Display]) => {
+   │                                 ─┬  
+   │                                  ╰── ExpectedFound { expected: [Ident], found: Some(DotDot) }
 ───╯
 

@@ -103,6 +103,6 @@ Error:
    │
  1 │ use std.io.{self, IoError};
    │ ─┬─  
-   │  ╰─── ExpectedFound { expected: [Const, end of input], found: Some(Use) }
+   │  ╰─── ExpectedFound { expected: [Const, Fn, end of input], found: Some(Use) }
 ───╯
 

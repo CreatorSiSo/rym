@@ -126,14 +126,21 @@ impl Interpret for Expr {
 				Some(val) => val.clone(),
 				None => panic!("Unable to find <{name}>"),
 			},
-			Expr::Function(func) => Value::Function(func),
+			Expr::Chain(_lhs, _rhs) => todo!(),
+			Expr::ChainEnd(_rhs) => todo!(),
+			Expr::Function(func) => {
+				if let Some(ref name) = func.name {
+					env.create(name, VariableKind::Const, Value::Function(func.clone()))
+				}
+				Value::Function(func)
+			}
 
 			Expr::Unary(op, expr) => match (op, default_flow!(expr.eval(env))) {
 				(UnaryOp::Neg, Value::Float(val)) => Value::Float(-val),
 				(UnaryOp::Neg, Value::Int(val)) => Value::Int(-val),
 				(UnaryOp::Not, Value::Bool(val)) => Value::Bool(!val),
 
-				(op, val) => todo!(),
+				(_op, _val) => todo!(),
 			},
 			Expr::Binary(op, lhs, rhs) => match (
 				op,
@@ -157,7 +164,7 @@ impl Interpret for Expr {
 				(BinaryOp::Eq, lhs, rhs) => Value::Bool(lhs == rhs),
 				(BinaryOp::NotEq, lhs, rhs) => Value::Bool(lhs != rhs),
 
-				(op, lhs, rhs) => todo!(),
+				(_op, _lhs, _rhs) => todo!(),
 			},
 			Expr::Call(lhs, args) => match default_flow!(lhs.eval(env)) {
 				Value::Function(inner) => {

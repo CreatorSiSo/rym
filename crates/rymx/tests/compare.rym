@@ -7,5 +7,5 @@ const int_eq_5 = 255 == -2132426873;
 const int_eq_6 = -2132426873 == -2132426873;
 
 const fn_native_eq_0 = print == print;
-const fn_native_eq_1 = print == (fn() => print);
-const fn_native_eq_2 = print == (fn() => print)();
+const fn_native_eq_1 = print == (fn() void print);
+const fn_native_eq_2 = print == (fn() void print)();

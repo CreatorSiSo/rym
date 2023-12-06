@@ -1,0 +1,127 @@
+const std = import("std");
+const fs = std.fs;
+const fmt = std.fmt;
+const List = std.List;
+const dbg = std.debug.print;
+
+// !void
+fn main() void {
+    const input = fs.read_to_string("src/2023/day2.txt").try;
+    const games = parse_games(input.items).try;
+
+    let mut possible_games_sum: u32 = 0;
+    const max_step = Step { red = 12, green = 13, blue = 14 };
+
+    outer: for (game in games) {
+        for (step in game.steps) {
+            if (
+                (step.red > max_step.red)
+                or (step.green > max_step.green)
+                or (step.blue > max_step.blue)
+            ) {
+                continue :outer;
+            }
+        }
+        possible_games_sum += game.id;
+    }
+
+    dbg("Part 1: {}\n", [possible_games_sum]);
+
+    let mut power_sum: u32 = 0;
+    for (game in games) {
+        let mut min_step = Step { red = 0, green = 0, blue = 0 };
+
+        for (step in game.steps) {
+            // TODO turn max back into @max
+            min_step.red = max(min_step.red, step.red);
+            min_step.green = max(min_step.green, step.green);
+            min_step.blue = max(min_step.blue, step.blue);
+        }
+
+        power_sum += min_step.red * min_step.blue * min_step.green;
+    }
+
+    dbg("Part 2: {}\n", [power_sum]);
+}
+
+// !List(Game)
+fn parse_games(input: [u8; _]) List(Game) {
+    let mut games = List(Game).init(gpa);
+    let mut lines = input.split("\n");
+    while (lines.next()) |line| {
+        if (line.len == 0) continue;
+        try games.append(try Game.from_str(gpa, line));
+    }
+    return games;
+}
+
+const Game = struct {
+    id: u32,
+    steps: List(Step),
+
+    const ParseGameError = error{
+        InvalidFormat,
+        Overflow,
+        InvalidCharacter,
+        OutOfMemory,
+    };
+
+    // ParseGameError!Game
+    fn from_str(str: [u8; _]) Game {
+        let Some(colon_pos) = str.index_of(":") else {
+            return ParseGameError.InvalidFormat;
+        };
+        let id = fmt.parseInt(u32, str[5..colon_pos], 10).try;
+
+        let mut game = Game.new(id).try;
+
+        let steps_str = str[colon_pos + 1 ..];
+        let mut steps = steps_str.split(";");
+        while (steps.next()) |step_str| {
+            game.steps.append(Step.from_str(step_str).try).try;
+        }
+
+        return game;
+    }
+
+    // error{OutOfMemory}!Game
+    fn new(id: u32) Game {
+        return Game { id, steps = List(Step).new().try };
+    }
+};
+
+const Step = struct {
+    red: u32,
+    green: u32,
+    blue: u32,
+
+    /// Parse a Step from a string with format
+    ///
+    /// ```
+    /// step ::= cube ("," cube)*
+    /// cube ::= " " int " " ("red" | "green" | "blue")
+    /// ```
+    // fmt.ParseIntError!Step
+    fn from_str(str: [u8]) Step {
+        let mut step = Step { red = 0, green = 0, blue = 0 };
+
+        let mut cubes = str.split(",");
+        while (cubes.next()) |padded_str| {
+            // Discard leading space
+            let cube_str = padded_str[1..];
+            let Some(space_pos) = cube_str.index_of(" ") else continue;
+
+            let name = cube_str[(space_pos + 1)..];
+            let amount = fmt.parseInt(u32, cube_str[0..space_pos], 10).try;
+
+            match (name) {
+                "red" => step.red = amount,
+                "green" => step.green = amount,
+                "blue" => step.blue = amount,
+                else => dbg("Invalid cube name \"{s}\"", [name]),
+            }
+        }
+
+        return step;
+    }
+};

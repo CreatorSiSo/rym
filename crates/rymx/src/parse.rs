@@ -61,9 +61,10 @@ type TokenStream<'tokens> = SpannedInput<Token, Span, &'tokens [(Token, Span)]>;
 type Extra<'src> = extra::Full<Rich<'src, Token, Span>, (), &'src str>;
 
 fn module_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
-	// constant ::= "const" ident "=" expr
+	// constant ::= "const" ident (":" expr)? "=" expr
 	let constant = just(Token::Const)
 		.ignore_then(ident_parser(src))
+		.then_ignore(just(Token::Colon).ignore_then(expr_parser(src)).or_not())
 		.then_ignore(just(Token::Assign))
 		.then(expr_parser(src))
 		.then_ignore(just(Token::Semi))
@@ -72,12 +73,19 @@ fn module_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
 			// TODO typ: Type::Unknown,
 		);
 
-	constant.repeated().collect().map(|constants| Module {
-		// TODO
-		name: "".into(),
-		constants,
-		children: vec![],
-	})
+	let function = function_parser(expr_parser(src), src)
+		.map(|func| (func.name.clone().unwrap(), Expr::Function(func)));
+
+	// module ::= (constant | function)*
+	choice((constant, function))
+		.repeated()
+		.collect()
+		.map(|constants| Module {
+			// TODO
+			name: "".into(),
+			constants,
+			children: vec![],
+		})
 }
 
 fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
@@ -105,7 +113,7 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 		// atom ::= literal | ident | "(" expr ")" | block
 		let atom = choice((
 			literal,
-			ident_parser(src).map(|name| Expr::Ident(name.into())),
+			ident_parser(src).map(String::from).map(Expr::Ident),
 			expr
 				.clone()
 				.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
@@ -129,21 +137,29 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 			})
 			.boxed();
 
-		// unary ::= ("-" | "not")* call
-		let unary = choice((
-			select! {
-				Token::Minus => UnaryOp::Neg,
-				Token::Not => UnaryOp::Not,
-			}
-			.repeated()
-			.collect::<Vec<UnaryOp>>()
-			.then(call.clone())
-			.map(|(op, expr)| {
-				op.into_iter()
-					.fold(expr, |accum, op| Expr::Unary(op, Box::new(accum)))
-			}),
-			call,
-		));
+		let chain = call
+			.clone()
+			.foldl(just(Token::Dot).ignore_then(call).repeated(), |lhs, rhs| {
+				Expr::Chain(Box::new(lhs), Box::new(rhs))
+			});
+
+		// unary ::= ("-" | "not")* chain
+		let unary = select! {
+			Token::Minus => UnaryOp::Neg,
+			Token::Not => UnaryOp::Not,
+		}
+		.repeated()
+		.at_least(1)
+		.collect::<Vec<UnaryOp>>()
+		.or_not()
+		.then(chain)
+		.map(|(maybe_op, expr)| {
+			let Some(op) = maybe_op else {
+				return expr;
+			};
+			op.into_iter()
+				.fold(expr, |accum, op| Expr::Unary(op, Box::new(accum)))
+		});
 
 		// sum ::= unary (("*" | "/") unary)*
 		let product = unary
@@ -188,30 +204,7 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 			)
 			.boxed();
 
-		// parameter ::= ident (":" __TODO__)?
-		let parameter = ident_parser(src)
-			.then(just(Token::Colon).ignore_then(ident_parser(src)).or_not())
-			.map(|(name, _typ)| name);
-
-		// function ::= fn "(" (parameter ("," parameter)*)? ")" "=>" expr
-		let function = just(Token::Fn)
-			.ignore_then(
-				parameter
-					.separated_by(just(Token::Comma))
-					.collect::<Vec<&str>>()
-					.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
-			)
-			.then_ignore(just(Token::ThickArrow))
-			.then(expr.clone())
-			.map(|(params, body)| {
-				Expr::Function(Function {
-					params: params.into_iter().map(|name| (name.into(), ())).collect(),
-					body: Box::new(body),
-				})
-			})
-			.labelled("function");
-
-		// var ::= ("const" | "let" | "let mut") indent "=" expr
+		// var ::= ("const" | "let" | "let mut") indent (":" expr)? "=" expr
 		let var = choice((
 			just(Token::Const).to(VariableKind::Const),
 			just(Token::Let)
@@ -220,6 +213,7 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 			just(Token::Let).to(VariableKind::Let),
 		))
 		.then(ident_parser(src))
+		.then_ignore(just(Token::Colon).ignore_then(expr.clone()).or_not())
 		.then_ignore(just(Token::Assign))
 		.then(expr.clone())
 		.map(
@@ -233,7 +227,7 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 			.ignore_then(expr.clone())
 			.then_ignore(just(Token::Then))
 			.then(expr.clone())
-			.then(just(Token::Else).ignore_then(expr).or_not())
+			.then(just(Token::Else).ignore_then(expr.clone()).or_not())
 			.map(|((cond, then_branch), else_branch)| {
 				Expr::IfElse(
 					Box::new(cond),
@@ -242,12 +236,74 @@ fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 				)
 			});
 
+		let function = function_parser(expr, src).map(|function| Expr::Function(function));
+
 		// expr ::= function | var | if_else | compare
 		choice((function, var, if_else, compare))
 			.labelled("expression")
 			.boxed()
 	})
 }
+
+// TODO Destinct parsing for function statements and expressions
+fn function_parser<'src>(
+	expr: impl Parser<'src, TokenStream<'src>, Expr, Extra<'src>> + Clone,
+	src: &'src str,
+) -> impl Parser<TokenStream, Function, Extra> + Clone {
+	// parameter ::= ident (":" __TODO__)?
+	let parameter = ident_parser(src)
+		.then(just(Token::Colon).ignore_then(ident_parser(src)).or_not())
+		.map(|(name, _typ)| name);
+
+	// function ::= fn "ident" "(" (parameter ("," parameter)*)? ")" path? expr
+	let function = just(Token::Fn)
+		.ignore_then(ident_parser(src).or_not())
+		.then(
+			parameter
+				.separated_by(just(Token::Comma))
+				.collect::<Vec<&str>>()
+				.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
+		)
+		.then(ident_parser(src).or_not())
+		.then(expr)
+		.map(|(((name, params), return_type), body)| Function {
+			name: name.map(String::from),
+			params: params.into_iter().map(|name| (name.into(), ())).collect(),
+			return_type: return_type.map(String::from),
+			body: Box::new(body),
+		})
+		.labelled("function");
+
+	function
+}
+
+// fn path_parser(src: &str) -> impl Parser<TokenStream, Path, Extra> + Clone {
+// 	let ident = ident_parser(src).map(String::from);
+
+// 	// path ::= ("." ident)+ | ident ("." ident)*
+// 	just(Token::Dot)
+// 		.or_not()
+// 		.rewind()
+// 		.then(
+// 			ident
+// 				.clone()
+// 				.separated_by(just(Token::Dot))
+// 				.allow_leading()
+// 				.at_least(1)
+// 				.collect::<Vec<String>>()
+// 				.map(|segements| segements),
+// 		)
+// 		.map(|(dot, segments)| {
+// 			let is_incomplete = dot.is_some();
+// 			match (is_incomplete, segments.len()) {
+// 				(true, _) => Path::Incomplete(segments),
+// 				(false, 1) => Path::Simple(segments[0].clone()),
+// 				(false, _) => Path::Full(segments),
+// 			}
+// 		})
+// 		.boxed()
+// 		.labelled("path")
+// }
 
 fn ident_parser(src: &str) -> impl Parser<TokenStream, &str, Extra> + Clone {
 	just(Token::Ident)

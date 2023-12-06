@@ -126,7 +126,7 @@ Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [void]
 HSpace [ ]
 Ident [print]
 ParenClose [)]
@@ -147,7 +147,7 @@ Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [void]
 HSpace [ ]
 Ident [print]
 ParenClose [)]
@@ -227,7 +227,11 @@ Module {
             Eq(
                 Ident("print"),
                 Function {
+                    name: None,
                     params: [],
+                    return_type: Some(
+                        "void",
+                    ),
                     body: Ident("print"),
                 },
             ),
@@ -238,7 +242,11 @@ Module {
                 Ident("print"),
                 Call(
                     Function {
+                        name: None,
                         params: [],
+                        return_type: Some(
+                            "void",
+                        ),
                         body: Ident("print"),
                     },
                     [],

@@ -1,6 +1,6 @@
 use crate::interpret::{NativeFunction, Value};
 
-pub const CONSTANTS: [(&'static str, Value); 5] = [
+pub const CONSTANTS: [(&str, Value); 5] = [
 	(
 		"print",
 		wrap_fn_var(|args| {
@@ -48,7 +48,7 @@ fn apply_format(args: &[Value]) -> String {
 		.fold(String::new(), |accum, value| accum + &value.to_string())
 }
 
-pub const OTHER: [(&'static str, Value); 1] = [(
+pub const OTHER: [(&str, Value); 1] = [(
 	"fib_native",
 	wrap_fn_1(|arg0| match arg0 {
 		Value::Int(int) => Value::Int(fib_native(*int)),

@@ -8,7 +8,9 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct Function {
+	pub name: Option<String>,
 	pub params: Vec<(String, ())>,
+	pub return_type: Option<String>,
 	pub body: Box<Expr>,
 }
 

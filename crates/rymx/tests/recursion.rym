@@ -1,15 +1,15 @@
-const main = fn() => {
+fn main() void {
     test_fib("fib_if", fib_if);
     // test_fib("fib_match", fib_match);
     // test_fib("fib_oneliner", fib_oneliner);
 
     test_countdown();
-};
+}
 
-const fib_if = fn(n) =>
+fn fib_if(n) Uint
     if n <= 0 then 0
     else if n == 1 then 1
-    else fib_if(n - 1) + fib_if(n - 2);
+    else fib_if(n - 1) + fib_if(n - 2)
 
 // const fib_match = fn(n) => match n with
 //     | 0 => 0
@@ -18,7 +18,7 @@ const fib_if = fn(n) =>
 
 // const fib_oneliner = fn(n) => match n with 0 => 0 | 1 => 1 | _ => fib_oneliner(n - 1) + fib_oneliner(n - 2);
 
-const test_fib = fn(name, fib) => {
+fn test_fib(name, fib) void {
     assert_eq(fib(0), 0);
     assert_eq(fib(1), 1);
     assert_eq(fib(2), 1);
@@ -33,28 +33,28 @@ const test_fib = fn(name, fib) => {
     assert_eq(fib(20), 6765);
 
     println("Successfully tested ", name, "!");
-};
+}
 
-const countdown = fn(n, step) => {
+fn countdown(n, step) void {
     print(n, " ");
     if n > 0 then countdown(min(n - step, 0), step);
-};
+}
 
-const min = fn(value, min) =>
-    if value < min then min else value;
+fn min(value, min) any
+    if value < min then min else value
 
-const max = fn(value, max) =>
-    if value > max then max else value;
+fn max(value, max) any
+    if value > max then max else value
 
-const clamp = fn(value, min, max) =>
+fn clamp(value, min, max) any
     if value < min then
         min
     else if value > max then
         max
     else
-        value;
+        value
 
-const test_countdown = fn() => {
+fn test_countdown() void {
     countdown(0, 5);
     println();
     countdown(1, 1);
@@ -62,4 +62,4 @@ const test_countdown = fn() => {
     countdown(10, 1);
     println();
     countdown(100, 8);
-};
+}

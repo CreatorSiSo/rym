@@ -4,17 +4,13 @@ expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/recursion.rym
 ---
 --- tokenize ---
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [main]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [void]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -41,20 +37,15 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [fib_if]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [n]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [Uint]
 VSpace [\n]
 HSpace [    ]
 If [if]
@@ -106,7 +97,6 @@ Minus [-]
 HSpace [ ]
 Int [2]
 ParenClose [)]
-Semi [;]
 VSpace [\n\n]
 Comment [// const fib_match = fn(n) => match n with]
 VSpace [\n]
@@ -118,13 +108,9 @@ Comment [//     | _ => fib_match(n - 1) + fib_match(n - 2);]
 VSpace [\n\n]
 Comment [// const fib_oneliner = fn(n) => match n with 0 => 0 | 1 => 1 | _ => fib_oneliner(n - 1) + fib_oneliner(n - 2);]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [test_fib]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [name]
 Comma [,]
@@ -132,7 +118,7 @@ HSpace [ ]
 Ident [fib]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [void]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -306,15 +292,10 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [countdown]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [n]
 Comma [,]
@@ -322,7 +303,7 @@ HSpace [ ]
 Ident [step]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [void]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -367,15 +348,10 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [min]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [value]
 Comma [,]
@@ -383,7 +359,7 @@ HSpace [ ]
 Ident [min]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [any]
 VSpace [\n]
 HSpace [    ]
 If [if]
@@ -401,15 +377,10 @@ HSpace [ ]
 Else [else]
 HSpace [ ]
 Ident [value]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [max]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [value]
 Comma [,]
@@ -417,7 +388,7 @@ HSpace [ ]
 Ident [max]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [any]
 VSpace [\n]
 HSpace [    ]
 If [if]
@@ -435,15 +406,10 @@ HSpace [ ]
 Else [else]
 HSpace [ ]
 Ident [value]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [clamp]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [value]
 Comma [,]
@@ -454,7 +420,7 @@ HSpace [ ]
 Ident [max]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [any]
 VSpace [\n]
 HSpace [    ]
 If [if]
@@ -491,19 +457,14 @@ Else [else]
 VSpace [\n]
 HSpace [        ]
 Ident [value]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [test_countdown]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [void]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -566,7 +527,6 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n]
 
 --- parse ---
@@ -576,7 +536,13 @@ Module {
         (
             "main",
             Function {
+                name: Some(
+                    "main",
+                ),
                 params: [],
+                return_type: Some(
+                    "void",
+                ),
                 body: Block(
                     [
                         Call(
@@ -597,12 +563,18 @@ Module {
         (
             "fib_if",
             Function {
+                name: Some(
+                    "fib_if",
+                ),
                 params: [
                     (
                         "n",
                         (),
                     ),
                 ],
+                return_type: Some(
+                    "Uint",
+                ),
                 body: IfElse(
                     LessThanEq(
                         Ident("n"),
@@ -642,6 +614,9 @@ Module {
         (
             "test_fib",
             Function {
+                name: Some(
+                    "test_fib",
+                ),
                 params: [
                     (
                         "name",
@@ -652,6 +627,9 @@ Module {
                         (),
                     ),
                 ],
+                return_type: Some(
+                    "void",
+                ),
                 body: Block(
                     [
                         Call(
@@ -813,6 +791,9 @@ Module {
         (
             "countdown",
             Function {
+                name: Some(
+                    "countdown",
+                ),
                 params: [
                     (
                         "n",
@@ -823,6 +804,9 @@ Module {
                         (),
                     ),
                 ],
+                return_type: Some(
+                    "void",
+                ),
                 body: Block(
                     [
                         Call(
@@ -862,6 +846,9 @@ Module {
         (
             "min",
             Function {
+                name: Some(
+                    "min",
+                ),
                 params: [
                     (
                         "value",
@@ -872,6 +859,9 @@ Module {
                         (),
                     ),
                 ],
+                return_type: Some(
+                    "any",
+                ),
                 body: IfElse(
                     LessThan(
                         Ident("value"),
@@ -885,6 +875,9 @@ Module {
         (
             "max",
             Function {
+                name: Some(
+                    "max",
+                ),
                 params: [
                     (
                         "value",
@@ -895,6 +888,9 @@ Module {
                         (),
                     ),
                 ],
+                return_type: Some(
+                    "any",
+                ),
                 body: IfElse(
                     GreaterThan(
                         Ident("value"),
@@ -908,6 +904,9 @@ Module {
         (
             "clamp",
             Function {
+                name: Some(
+                    "clamp",
+                ),
                 params: [
                     (
                         "value",
@@ -922,6 +921,9 @@ Module {
                         (),
                     ),
                 ],
+                return_type: Some(
+                    "any",
+                ),
                 body: IfElse(
                     LessThan(
                         Ident("value"),
@@ -942,7 +944,13 @@ Module {
         (
             "test_countdown",
             Function {
+                name: Some(
+                    "test_countdown",
+                ),
                 params: [],
+                return_type: Some(
+                    "void",
+                ),
                 body: Block(
                     [
                         Call(

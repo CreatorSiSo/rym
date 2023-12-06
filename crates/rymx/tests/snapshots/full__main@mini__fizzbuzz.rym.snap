@@ -4,17 +4,13 @@ expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/mini/fizzbuzz.rym
 ---
 --- tokenize ---
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [main]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
-ThickArrow [=>]
+Ident [void]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -131,7 +127,6 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n]
 
 --- parse ---

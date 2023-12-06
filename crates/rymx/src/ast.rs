@@ -30,6 +30,8 @@ pub enum Expr {
 	Unit,
 	Literal(Literal),
 	Ident(String),
+	Chain(Box<Expr>, Box<Expr>),
+	ChainEnd(Box<Expr>),
 	Function(Function),
 
 	Unary(UnaryOp, Box<Expr>),
@@ -57,6 +59,8 @@ impl std::fmt::Debug for Expr {
 			Self::Unit => f.write_str("Unit"),
 			Self::Literal(arg0) => f.write_fmt(format_args!("Literal({arg0:?})")),
 			Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
+			Self::Chain(arg0, arg1) => f.debug_tuple("Chain").field(arg0).field(arg1).finish(),
+			Self::ChainEnd(arg0) => f.debug_tuple("ChainEnd").field(arg0).finish(),
 			Self::Function(arg0) => f.write_fmt(format_args!("{arg0:#?}")),
 
 			Self::Unary(arg0, arg1) => f.debug_tuple(&arg0.to_string()).field(arg1).finish(),

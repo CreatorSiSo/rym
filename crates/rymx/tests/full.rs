@@ -12,6 +12,8 @@ fn main() {
 		{
 			interpret(&mut diag, &mut env, module);
 		}
-		assert_snapshot!(diag.outputs_dump() + &diag.reports_dump());
+		assert_snapshot!(
+			/* "integration", */ diag.outputs_dump() + &diag.reports_dump()
+		);
 	})
 }

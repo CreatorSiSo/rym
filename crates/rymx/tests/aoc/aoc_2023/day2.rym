@@ -5,7 +5,7 @@ const List = std.List;
 const dbg = std.debug.print;
 
 // !void
-fn main() void {
+fn main() {
     const input = fs.read_to_string("src/2023/day2.txt").try;
     const games = parse_games(input.items).try;
 
@@ -105,8 +105,7 @@ const Step = struct {
     fn from_str(str: [u8]) Step {
         let mut step = Step { red = 0, green = 0, blue = 0 };
 
-        let mut cubes = str.split(",");
-        while (cubes.next()) |padded_str| {
+        let mut cubes = str.split(",").map(fn(padded_str) {
             // Discard leading space
             let cube_str = padded_str[1..];
             let Some(space_pos) = cube_str.index_of(" ") else continue;
@@ -120,7 +119,8 @@ const Step = struct {
                 "blue" => step.blue = amount,
                 else => dbg("Invalid cube name \"{s}\"", [name]),
             }
-        }
+        });
+
 
         return step;
     }

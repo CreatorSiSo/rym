@@ -1,6 +1,8 @@
 use crate::interpret::{NativeFunction, Value};
 
-pub const CONSTANTS: [(&str, Value); 5] = [
+pub const CONSTANTS: [(&str, Value); 7] = [
+	("true", Value::Bool(true)),
+	("false", Value::Bool(false)),
 	(
 		"print",
 		wrap_fn_var(|args| {

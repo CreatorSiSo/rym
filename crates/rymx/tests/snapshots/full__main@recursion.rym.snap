@@ -10,8 +10,6 @@ Ident [main]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
-Ident [void]
-HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
 HSpace [    ]
@@ -29,23 +27,35 @@ Comment [// test_fib(\"fib_match\", fib_match);]
 VSpace [\n]
 HSpace [    ]
 Comment [// test_fib(\"fib_oneliner\", fib_oneliner);]
-VSpace [\n\n]
+VSpace [\n]
 HSpace [    ]
 Ident [test_countdown]
 ParenOpen [(]
 ParenClose [)]
 Semi [;]
 VSpace [\n]
+HSpace [    ]
+Ident [test_fake_loops]
+ParenOpen [(]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
 BraceClose [}]
 VSpace [\n\n]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [fib_if]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 Ident [n]
 ParenClose [)]
 HSpace [ ]
 Ident [Uint]
+HSpace [ ]
+ThickArrow [=>]
 VSpace [\n]
 HSpace [    ]
 If [if]
@@ -97,6 +107,7 @@ Minus [-]
 HSpace [ ]
 Int [2]
 ParenClose [)]
+Semi [;]
 VSpace [\n\n]
 Comment [// const fib_match = fn(n) => match n with]
 VSpace [\n]
@@ -117,8 +128,6 @@ Comma [,]
 HSpace [ ]
 Ident [fib]
 ParenClose [)]
-HSpace [ ]
-Ident [void]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -303,8 +312,6 @@ HSpace [ ]
 Ident [step]
 ParenClose [)]
 HSpace [ ]
-Ident [void]
-HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
 HSpace [    ]
@@ -351,120 +358,9 @@ BraceClose [}]
 VSpace [\n\n]
 Fn [fn]
 HSpace [ ]
-Ident [min]
-ParenOpen [(]
-Ident [value]
-Comma [,]
-HSpace [ ]
-Ident [min]
-ParenClose [)]
-HSpace [ ]
-Ident [any]
-VSpace [\n]
-HSpace [    ]
-If [if]
-HSpace [ ]
-Ident [value]
-HSpace [ ]
-LessThan [<]
-HSpace [ ]
-Ident [min]
-HSpace [ ]
-Then [then]
-HSpace [ ]
-Ident [min]
-HSpace [ ]
-Else [else]
-HSpace [ ]
-Ident [value]
-VSpace [\n\n]
-Fn [fn]
-HSpace [ ]
-Ident [max]
-ParenOpen [(]
-Ident [value]
-Comma [,]
-HSpace [ ]
-Ident [max]
-ParenClose [)]
-HSpace [ ]
-Ident [any]
-VSpace [\n]
-HSpace [    ]
-If [if]
-HSpace [ ]
-Ident [value]
-HSpace [ ]
-GreaterThan [>]
-HSpace [ ]
-Ident [max]
-HSpace [ ]
-Then [then]
-HSpace [ ]
-Ident [max]
-HSpace [ ]
-Else [else]
-HSpace [ ]
-Ident [value]
-VSpace [\n\n]
-Fn [fn]
-HSpace [ ]
-Ident [clamp]
-ParenOpen [(]
-Ident [value]
-Comma [,]
-HSpace [ ]
-Ident [min]
-Comma [,]
-HSpace [ ]
-Ident [max]
-ParenClose [)]
-HSpace [ ]
-Ident [any]
-VSpace [\n]
-HSpace [    ]
-If [if]
-HSpace [ ]
-Ident [value]
-HSpace [ ]
-LessThan [<]
-HSpace [ ]
-Ident [min]
-HSpace [ ]
-Then [then]
-VSpace [\n]
-HSpace [        ]
-Ident [min]
-VSpace [\n]
-HSpace [    ]
-Else [else]
-HSpace [ ]
-If [if]
-HSpace [ ]
-Ident [value]
-HSpace [ ]
-GreaterThan [>]
-HSpace [ ]
-Ident [max]
-HSpace [ ]
-Then [then]
-VSpace [\n]
-HSpace [        ]
-Ident [max]
-VSpace [\n]
-HSpace [    ]
-Else [else]
-VSpace [\n]
-HSpace [        ]
-Ident [value]
-VSpace [\n\n]
-Fn [fn]
-HSpace [ ]
 Ident [test_countdown]
 ParenOpen [(]
 ParenClose [)]
-HSpace [ ]
-Ident [void]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -526,6 +422,324 @@ Int [8]
 ParenClose [)]
 Semi [;]
 VSpace [\n]
+HSpace [    ]
+Ident [println]
+ParenOpen [(]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+BraceClose [}]
+VSpace [\n\n]
+Fn [fn]
+HSpace [ ]
+Ident [test_fake_loops]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+Fn [fn]
+HSpace [ ]
+Ident [while_do]
+ParenOpen [(]
+Ident [i]
+Comma [,]
+HSpace [ ]
+Ident [increment]
+Comma [,]
+HSpace [ ]
+Ident [condition]
+Comma [,]
+HSpace [ ]
+Ident [body]
+ParenClose [)]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [        ]
+If [if]
+HSpace [ ]
+Not [not]
+HSpace [ ]
+Ident [condition]
+ParenOpen [(]
+Ident [i]
+ParenClose [)]
+HSpace [ ]
+Then [then]
+HSpace [ ]
+Return [return]
+Semi [;]
+VSpace [\n]
+HSpace [        ]
+Ident [body]
+ParenOpen [(]
+Ident [i]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [        ]
+Ident [while_do]
+ParenOpen [(]
+Ident [increment]
+ParenOpen [(]
+Ident [i]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Ident [increment]
+Comma [,]
+HSpace [ ]
+Ident [condition]
+Comma [,]
+HSpace [ ]
+Ident [body]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+HSpace [    ]
+BraceClose [}]
+VSpace [\n\n]
+HSpace [    ]
+Ident [while_do]
+ParenOpen [(]
+VSpace [\n]
+HSpace [        ]
+Int [0]
+Comma [,]
+VSpace [\n]
+HSpace [        ]
+Fn [fn]
+ParenOpen [(]
+Ident [i]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+Ident [i]
+HSpace [ ]
+Plus [+]
+HSpace [ ]
+Int [2]
+Comma [,]
+VSpace [\n]
+HSpace [        ]
+Fn [fn]
+ParenOpen [(]
+Ident [i]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+Ident [i]
+HSpace [ ]
+LessThan [<]
+HSpace [ ]
+Int [10]
+Comma [,]
+VSpace [\n]
+HSpace [        ]
+Fn [fn]
+ParenOpen [(]
+Ident [i]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+Ident [println]
+ParenOpen [(]
+String [\"i = \"]
+Comma [,]
+HSpace [ ]
+Ident [i]
+ParenClose [)]
+VSpace [\n]
+HSpace [    ]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+BraceClose [}]
+VSpace [\n\n]
+Fn [fn]
+HSpace [ ]
+Ident [outer]
+ParenOpen [(]
+Ident [n]
+ParenClose [)]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+Fn [fn]
+HSpace [ ]
+Ident [inner]
+ParenOpen [(]
+Ident [n]
+ParenClose [)]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [        ]
+Ident [n]
+HSpace [ ]
+Plus [+]
+HSpace [ ]
+Int [1]
+VSpace [\n]
+HSpace [    ]
+BraceClose [}]
+VSpace [\n\n]
+HSpace [    ]
+Ident [n]
+HSpace [ ]
+Minus [-]
+HSpace [ ]
+ParenOpen [(]
+If [if]
+HSpace [ ]
+Ident [n]
+HSpace [ ]
+LessThan [<]
+HSpace [ ]
+Int [0]
+HSpace [ ]
+Then [then]
+HSpace [ ]
+Ident [inner]
+ParenOpen [(]
+Ident [n]
+ParenClose [)]
+HSpace [ ]
+Else [else]
+HSpace [ ]
+Ident [outer]
+ParenOpen [(]
+Ident [n]
+ParenClose [)]
+ParenClose [)]
+VSpace [\n]
+BraceClose [}]
+VSpace [\n\n]
+Fn [fn]
+HSpace [ ]
+Ident [min]
+ParenOpen [(]
+Ident [value]
+Comma [,]
+HSpace [ ]
+Ident [min]
+ParenClose [)]
+HSpace [ ]
+Ident [any]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+If [if]
+HSpace [ ]
+Ident [value]
+HSpace [ ]
+LessThan [<]
+HSpace [ ]
+Ident [min]
+HSpace [ ]
+Then [then]
+HSpace [ ]
+Ident [min]
+HSpace [ ]
+Else [else]
+HSpace [ ]
+Ident [value]
+VSpace [\n]
+BraceClose [}]
+VSpace [\n\n]
+Fn [fn]
+HSpace [ ]
+Ident [max]
+ParenOpen [(]
+Ident [value]
+Comma [,]
+HSpace [ ]
+Ident [max]
+ParenClose [)]
+HSpace [ ]
+Ident [any]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+If [if]
+HSpace [ ]
+Ident [value]
+HSpace [ ]
+GreaterThan [>]
+HSpace [ ]
+Ident [max]
+HSpace [ ]
+Then [then]
+HSpace [ ]
+Ident [max]
+HSpace [ ]
+Else [else]
+HSpace [ ]
+Ident [value]
+VSpace [\n]
+BraceClose [}]
+VSpace [\n\n]
+Fn [fn]
+HSpace [ ]
+Ident [clamp]
+ParenOpen [(]
+Ident [value]
+Comma [,]
+HSpace [ ]
+Ident [min]
+Comma [,]
+HSpace [ ]
+Ident [max]
+ParenClose [)]
+HSpace [ ]
+Ident [any]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+If [if]
+HSpace [ ]
+Ident [value]
+HSpace [ ]
+LessThan [<]
+HSpace [ ]
+Ident [min]
+HSpace [ ]
+Then [then]
+VSpace [\n]
+HSpace [        ]
+Ident [min]
+VSpace [\n]
+HSpace [    ]
+Else [else]
+HSpace [ ]
+If [if]
+HSpace [ ]
+Ident [value]
+HSpace [ ]
+GreaterThan [>]
+HSpace [ ]
+Ident [max]
+HSpace [ ]
+Then [then]
+VSpace [\n]
+HSpace [        ]
+Ident [max]
+VSpace [\n]
+HSpace [    ]
+Else [else]
+VSpace [\n]
+HSpace [        ]
+Ident [value]
+VSpace [\n]
 BraceClose [}]
 VSpace [\n]
 
@@ -540,9 +754,7 @@ Module {
                     "main",
                 ),
                 params: [],
-                return_type: Some(
-                    "void",
-                ),
+                return_type: "()",
                 body: Block(
                     [
                         Call(
@@ -556,6 +768,10 @@ Module {
                             Ident("test_countdown"),
                             [],
                         ),
+                        Call(
+                            Ident("test_fake_loops"),
+                            [],
+                        ),
                     ],
                 ),
             },
@@ -563,18 +779,11 @@ Module {
         (
             "fib_if",
             Function {
-                name: Some(
-                    "fib_if",
-                ),
+                name: None,
                 params: [
-                    (
-                        "n",
-                        (),
-                    ),
+                    "n",
                 ],
-                return_type: Some(
-                    "Uint",
-                ),
+                return_type: "Uint",
                 body: IfElse(
                     LessThanEq(
                         Ident("n"),
@@ -618,18 +827,10 @@ Module {
                     "test_fib",
                 ),
                 params: [
-                    (
-                        "name",
-                        (),
-                    ),
-                    (
-                        "fib",
-                        (),
-                    ),
+                    "name",
+                    "fib",
                 ],
-                return_type: Some(
-                    "void",
-                ),
+                return_type: "()",
                 body: Block(
                     [
                         Call(
@@ -795,18 +996,10 @@ Module {
                     "countdown",
                 ),
                 params: [
-                    (
-                        "n",
-                        (),
-                    ),
-                    (
-                        "step",
-                        (),
-                    ),
+                    "n",
+                    "step",
                 ],
-                return_type: Some(
-                    "void",
-                ),
+                return_type: "()",
                 body: Block(
                     [
                         Call(
@@ -844,113 +1037,13 @@ Module {
             },
         ),
         (
-            "min",
-            Function {
-                name: Some(
-                    "min",
-                ),
-                params: [
-                    (
-                        "value",
-                        (),
-                    ),
-                    (
-                        "min",
-                        (),
-                    ),
-                ],
-                return_type: Some(
-                    "any",
-                ),
-                body: IfElse(
-                    LessThan(
-                        Ident("value"),
-                        Ident("min"),
-                    ),
-                    Ident("min"),
-                    Ident("value"),
-                ),
-            },
-        ),
-        (
-            "max",
-            Function {
-                name: Some(
-                    "max",
-                ),
-                params: [
-                    (
-                        "value",
-                        (),
-                    ),
-                    (
-                        "max",
-                        (),
-                    ),
-                ],
-                return_type: Some(
-                    "any",
-                ),
-                body: IfElse(
-                    GreaterThan(
-                        Ident("value"),
-                        Ident("max"),
-                    ),
-                    Ident("max"),
-                    Ident("value"),
-                ),
-            },
-        ),
-        (
-            "clamp",
-            Function {
-                name: Some(
-                    "clamp",
-                ),
-                params: [
-                    (
-                        "value",
-                        (),
-                    ),
-                    (
-                        "min",
-                        (),
-                    ),
-                    (
-                        "max",
-                        (),
-                    ),
-                ],
-                return_type: Some(
-                    "any",
-                ),
-                body: IfElse(
-                    LessThan(
-                        Ident("value"),
-                        Ident("min"),
-                    ),
-                    Ident("min"),
-                    IfElse(
-                        GreaterThan(
-                            Ident("value"),
-                            Ident("max"),
-                        ),
-                        Ident("max"),
-                        Ident("value"),
-                    ),
-                ),
-            },
-        ),
-        (
             "test_countdown",
             Function {
                 name: Some(
                     "test_countdown",
                 ),
                 params: [],
-                return_type: Some(
-                    "void",
-                ),
+                return_type: "()",
                 body: Block(
                     [
                         Call(
@@ -993,6 +1086,263 @@ Module {
                                 Literal(Int 8),
                             ],
                         ),
+                        Call(
+                            Ident("println"),
+                            [],
+                        ),
+                    ],
+                ),
+            },
+        ),
+        (
+            "test_fake_loops",
+            Function {
+                name: Some(
+                    "test_fake_loops",
+                ),
+                params: [],
+                return_type: "()",
+                body: Block(
+                    [
+                        Function {
+                            name: Some(
+                                "while_do",
+                            ),
+                            params: [
+                                "i",
+                                "increment",
+                                "condition",
+                                "body",
+                            ],
+                            return_type: "()",
+                            body: Block(
+                                [
+                                    IfElse(
+                                        Not(
+                                            Call(
+                                                Ident("condition"),
+                                                [
+                                                    Ident("i"),
+                                                ],
+                                            ),
+                                        ),
+                                        Return(
+                                            Unit,
+                                        ),
+                                        Unit,
+                                    ),
+                                    Call(
+                                        Ident("body"),
+                                        [
+                                            Ident("i"),
+                                        ],
+                                    ),
+                                    Call(
+                                        Ident("while_do"),
+                                        [
+                                            Call(
+                                                Ident("increment"),
+                                                [
+                                                    Ident("i"),
+                                                ],
+                                            ),
+                                            Ident("increment"),
+                                            Ident("condition"),
+                                            Ident("body"),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                        },
+                        Call(
+                            Ident("while_do"),
+                            [
+                                Literal(Int 0),
+                                Function {
+                                    name: None,
+                                    params: [
+                                        "i",
+                                    ],
+                                    return_type: "Unknown",
+                                    body: Add(
+                                        Ident("i"),
+                                        Literal(Int 2),
+                                    ),
+                                },
+                                Function {
+                                    name: None,
+                                    params: [
+                                        "i",
+                                    ],
+                                    return_type: "Unknown",
+                                    body: LessThan(
+                                        Ident("i"),
+                                        Literal(Int 10),
+                                    ),
+                                },
+                                Function {
+                                    name: None,
+                                    params: [
+                                        "i",
+                                    ],
+                                    return_type: "Unknown",
+                                    body: Call(
+                                        Ident("println"),
+                                        [
+                                            Literal(String i = ),
+                                            Ident("i"),
+                                        ],
+                                    ),
+                                },
+                            ],
+                        ),
+                    ],
+                ),
+            },
+        ),
+        (
+            "outer",
+            Function {
+                name: Some(
+                    "outer",
+                ),
+                params: [
+                    "n",
+                ],
+                return_type: "()",
+                body: Block(
+                    [
+                        Function {
+                            name: Some(
+                                "inner",
+                            ),
+                            params: [
+                                "n",
+                            ],
+                            return_type: "()",
+                            body: Block(
+                                [
+                                    Break(
+                                        Add(
+                                            Ident("n"),
+                                            Literal(Int 1),
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        },
+                        Break(
+                            Sub(
+                                Ident("n"),
+                                IfElse(
+                                    LessThan(
+                                        Ident("n"),
+                                        Literal(Int 0),
+                                    ),
+                                    Call(
+                                        Ident("inner"),
+                                        [
+                                            Ident("n"),
+                                        ],
+                                    ),
+                                    Call(
+                                        Ident("outer"),
+                                        [
+                                            Ident("n"),
+                                        ],
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ],
+                ),
+            },
+        ),
+        (
+            "min",
+            Function {
+                name: Some(
+                    "min",
+                ),
+                params: [
+                    "value",
+                    "min",
+                ],
+                return_type: "any",
+                body: Block(
+                    [
+                        Break(
+                            IfElse(
+                                LessThan(
+                                    Ident("value"),
+                                    Ident("min"),
+                                ),
+                                Ident("min"),
+                                Ident("value"),
+                            ),
+                        ),
+                    ],
+                ),
+            },
+        ),
+        (
+            "max",
+            Function {
+                name: Some(
+                    "max",
+                ),
+                params: [
+                    "value",
+                    "max",
+                ],
+                return_type: "any",
+                body: Block(
+                    [
+                        Break(
+                            IfElse(
+                                GreaterThan(
+                                    Ident("value"),
+                                    Ident("max"),
+                                ),
+                                Ident("max"),
+                                Ident("value"),
+                            ),
+                        ),
+                    ],
+                ),
+            },
+        ),
+        (
+            "clamp",
+            Function {
+                name: Some(
+                    "clamp",
+                ),
+                params: [
+                    "value",
+                    "min",
+                    "max",
+                ],
+                return_type: "any",
+                body: Block(
+                    [
+                        Break(
+                            IfElse(
+                                LessThan(
+                                    Ident("value"),
+                                    Ident("min"),
+                                ),
+                                Ident("min"),
+                                IfElse(
+                                    GreaterThan(
+                                        Ident("value"),
+                                        Ident("max"),
+                                    ),
+                                    Ident("max"),
+                                    Ident("value"),
+                                ),
+                            ),
+                        ),
                     ],
                 ),
             },
@@ -1006,16 +1356,20 @@ const assert = fn<native> (1)
 const assert_eq = fn<native> (2)
 const clamp = fn (3)
 const countdown = fn (2)
+const false = false
 const fib_if = fn (1)
 const fib_native = fn<native> (1)
 const main = fn (0)
 const max = fn (2)
 const min = fn (2)
+const outer = fn (1)
 const print = fn<native> (variadic)
 const println = fn<native> (variadic)
 const read_to_string = fn<native> (1)
 const test_countdown = fn (0)
+const test_fake_loops = fn (0)
 const test_fib = fn (2)
+const true = true
 
 --- reports ---
 

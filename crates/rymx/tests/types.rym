@@ -1,0 +1,29 @@
+const u1_min: u1 = 0;
+const u1_max: u1 = 1;
+
+const u8_min: u8 = 0;
+const u8_max: u8 = 255;
+
+// TODO ...
+
+test "arrays" {
+    let zeroed: [_]u8 = [0; 512];
+    assert_eq(@type_of(zeroed), [512]u8);
+
+    let initialized: [_]u8 = [1, 0, 0, 255];
+    assert_eq(@type_of(initialized), [4]u8);
+    assert_eq(initialized.[0], 1);
+    assert_eq(initialized.[1], 0);
+    assert_eq(initialized.[2], 0);
+    assert_eq(initialized.[3], 255);
+
+    let mut mutable: [_]u8 = [0; 5];
+    initialized.[0] = 1;
+    initialized.[1] = 2;
+    initialized.[2] = 3;
+    initialized.[3] = 4;
+    initialized.[4] = 5;
+    assert_eq(mutable, [1, 2, 3, 4, 5]);
+}
+
+// TODO Slices

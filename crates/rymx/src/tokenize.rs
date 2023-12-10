@@ -66,6 +66,8 @@ pub enum Token {
 	LowerSelf,
 	#[token("Self")]
 	UpperSelf,
+	#[token("return")]
+	Return,
 	#[token("struct")]
 	Struct,
 	#[token("then")]

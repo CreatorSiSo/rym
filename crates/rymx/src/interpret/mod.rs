@@ -32,7 +32,7 @@ impl PartialEq for Value {
 			(Self::String(l0), Self::String(r0)) => l0 == r0,
 			(Self::Function(l0), Self::Function(r0)) => l0 == r0,
 			(Self::NativeFunction(l0), Self::NativeFunction(r0)) => l0 == r0,
-			(Value::Unit, Value::Unit) => todo!(),
+			(Value::Unit, Value::Unit) => true,
 			// TODO These cases should not be accessible, protect them via type checking
 			_ => false,
 		}
@@ -130,7 +130,7 @@ impl Interpret for Expr {
 			Expr::ChainEnd(_rhs) => todo!(),
 			Expr::Function(func) => {
 				if let Some(ref name) = func.name {
-					env.create(name, VariableKind::Const, Value::Function(func.clone()))
+					env.create(name, VariableKind::Const, Value::Function(func.clone()));
 				}
 				Value::Function(func)
 			}

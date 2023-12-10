@@ -126,7 +126,9 @@ Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
-Ident [void]
+Ident [fn_type]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 Ident [print]
 ParenClose [)]
@@ -147,7 +149,9 @@ Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
-Ident [void]
+Ident [fn_type]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 Ident [print]
 ParenClose [)]
@@ -229,9 +233,7 @@ Module {
                 Function {
                     name: None,
                     params: [],
-                    return_type: Some(
-                        "void",
-                    ),
+                    return_type: "fn_type",
                     body: Ident("print"),
                 },
             ),
@@ -244,9 +246,7 @@ Module {
                     Function {
                         name: None,
                         params: [],
-                        return_type: Some(
-                            "void",
-                        ),
+                        return_type: "fn_type",
                         body: Ident("print"),
                     },
                     [],
@@ -260,6 +260,7 @@ Module {
 --- interpret ---
 const assert = fn<native> (1)
 const assert_eq = fn<native> (2)
+const false = false
 const fib_native = fn<native> (1)
 const fn_native_eq_0 = true
 const fn_native_eq_1 = false
@@ -274,6 +275,7 @@ const int_eq_6 = true
 const print = fn<native> (variadic)
 const println = fn<native> (variadic)
 const read_to_string = fn<native> (1)
+const true = true
 
 --- reports ---
 

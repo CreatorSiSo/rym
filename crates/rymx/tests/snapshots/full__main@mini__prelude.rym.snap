@@ -48,6 +48,6 @@ Error:
    │
  1 │ const println = fn(fmt: String, ..args: [impl Display]) => {
    │                                 ─┬  
-   │                                  ╰── ExpectedFound { expected: [Ident], found: Some(DotDot) }
+   │                                  ╰── ExpectedFound { expected: [Ident, ParenClose], found: Some(DotDot) }
 ───╯
 

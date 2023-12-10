@@ -10,8 +10,6 @@ Ident [main]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
-Ident [void]
-HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
 HSpace [    ]
@@ -19,7 +17,7 @@ Comment [// assert_eq(ones, 304);]
 VSpace [\n]
 BraceClose [}]
 VSpace [\n\n]
-Comment [// TODO Fix stack overflow]
+Comment [// // TODO Fix stack overflow]
 VSpace [\n]
 Comment [// const ones = 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1;]
 VSpace [\n\n]
@@ -106,9 +104,7 @@ Module {
                     "main",
                 ),
                 params: [],
-                return_type: Some(
-                    "void",
-                ),
+                return_type: "()",
                 body: Block(
                     [],
                 ),
@@ -125,9 +121,7 @@ Module {
                     "create_death_chain",
                 ),
                 params: [],
-                return_type: Some(
-                    "chain",
-                ),
+                return_type: "chain",
                 body: Block(
                     [
                         Break(
@@ -182,12 +176,14 @@ Module {
 const assert = fn<native> (1)
 const assert_eq = fn<native> (2)
 const create_death_chain = fn (0)
+const false = false
 const fib_native = fn<native> (1)
 const main = fn (0)
 const pi = 3.141592653589793
 const print = fn<native> (variadic)
 const println = fn<native> (variadic)
 const read_to_string = fn<native> (1)
+const true = true
 
 --- reports ---
 

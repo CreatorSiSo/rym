@@ -9,8 +9,8 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Function {
 	pub name: Option<String>,
-	pub params: Vec<(String, ())>,
-	pub return_type: Option<String>,
+	pub params: Vec<String>,
+	pub return_type: String,
 	pub body: Box<Expr>,
 }
 
@@ -30,7 +30,7 @@ impl Call for Function {
 		env.push_scope(ScopeKind::Function);
 
 		for (param, arg) in self.params.iter().zip(args) {
-			env.create(param.0.clone(), VariableKind::Let, arg)
+			env.create(param.clone(), VariableKind::Let, arg)
 		}
 		let result = self.body.clone().eval(env);
 

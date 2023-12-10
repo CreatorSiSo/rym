@@ -1,4 +1,4 @@
-fn main() void {
+fn main() {
 	(1..).iter().for_each(fn(i) => println(match i with
 		| _ if i % 3 == 0 => "Fizz",
 		| _ if i % 5 == 0 => "Buzz",

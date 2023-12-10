@@ -10,12 +10,16 @@ Ident [main]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
-Ident [void]
-HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
 Ident [println]
 ParenOpen [(]
 String [\"Hello World!\"]
 ParenClose [)]
+Semi [;]
+VSpace [\n]
+BraceClose [}]
 VSpace [\n]
 
 --- parse ---
@@ -29,13 +33,15 @@ Module {
                     "main",
                 ),
                 params: [],
-                return_type: Some(
-                    "void",
-                ),
-                body: Call(
-                    Ident("println"),
+                return_type: "()",
+                body: Block(
                     [
-                        Literal(String Hello World!),
+                        Call(
+                            Ident("println"),
+                            [
+                                Literal(String Hello World!),
+                            ],
+                        ),
                     ],
                 ),
             },
@@ -47,11 +53,13 @@ Module {
 --- interpret ---
 const assert = fn<native> (1)
 const assert_eq = fn<native> (2)
+const false = false
 const fib_native = fn<native> (1)
 const main = fn (0)
 const print = fn<native> (variadic)
 const println = fn<native> (variadic)
 const read_to_string = fn<native> (1)
+const true = true
 
 --- reports ---
 

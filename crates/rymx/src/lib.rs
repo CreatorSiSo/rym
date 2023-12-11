@@ -45,7 +45,7 @@ pub fn compile_module(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Op
 	let tokens: Vec<(Token, Span)> = tokenize(diag, src, src_id.clone())?;
 
 	diag.start_stage("parse");
-	let module = match parse::parse_module(&tokens, src, src_id) {
+	let module = match parse::parse_file(&tokens, src, src_id) {
 		Ok(module) => module,
 		Err(reports) => {
 			for report in reports {

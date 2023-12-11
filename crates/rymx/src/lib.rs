@@ -1,6 +1,7 @@
 use std::fmt::Write;
 
 mod ast;
+mod compile;
 mod diagnostics;
 mod interpret;
 mod parse;

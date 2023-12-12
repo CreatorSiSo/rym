@@ -8,6 +8,7 @@ mod parse;
 mod span;
 pub mod std_lib;
 mod tokenize;
+mod vm;
 
 pub use diagnostics::{Diagnostics, SourceId};
 pub use interpret::Env;

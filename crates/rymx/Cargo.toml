@@ -14,6 +14,7 @@ chumsky = { git = "https://github.com/zesterer/chumsky", rev = "c935ce5916f1395e
 ] }
 clap = { version = "4.4", features = ["cargo"] }
 insta = { version = "1.34", features = ["glob"] }
+itertools = "0.12.0"
 logos = "0.13.0"
 owo-colors = "3.5"
 rustyline = "12"

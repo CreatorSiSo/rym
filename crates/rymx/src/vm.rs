@@ -1,16 +1,16 @@
 use crate::compile::{
-	bytecode::{Chunk, JumpOffset, OpCode, Register, REGISTERS_LENGTH},
+	bytecode::{ByteCode, JumpOffset, OpCode, REGISTERS_LENGTH},
 	Value,
 };
 
 struct VirtualMachine {
 	pointer: usize,
-	chunk: Chunk,
+	chunk: ByteCode,
 	registers: [Value; REGISTERS_LENGTH],
 }
 
 impl VirtualMachine {
-	pub fn new(chunk: Chunk) -> Self {
+	pub fn new(chunk: ByteCode) -> Self {
 		Self {
 			pointer: 0,
 			chunk,
@@ -103,7 +103,7 @@ impl VirtualMachine {
 
 #[test]
 fn simple_loop() {
-	let mut chunk = Chunk::new();
+	let mut chunk = ByteCode::new();
 
 	chunk.write(OpCode::LoadInt { dest: 0, val: 10 });
 	chunk.write(OpCode::LoadInt { dest: 1, val: 0 });

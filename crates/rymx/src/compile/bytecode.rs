@@ -1,8 +1,8 @@
-pub struct Chunk {
+pub struct ByteCode {
 	opcodes: Vec<OpCode>,
 }
 
-impl Chunk {
+impl ByteCode {
 	pub fn new() -> Self {
 		Self { opcodes: vec![] }
 	}
@@ -20,7 +20,7 @@ impl Chunk {
 	}
 }
 
-impl std::fmt::Debug for Chunk {
+impl std::fmt::Debug for ByteCode {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_str("Chunk {\n")?;
 
@@ -95,7 +95,7 @@ fn test_inst_size() {
 
 #[test]
 fn assemble_chunk() {
-	let mut chunk = Chunk::new();
+	let mut chunk = ByteCode::new();
 
 	chunk.write(OpCode::LoadInt { dest: 0, val: 10 });
 	chunk.write(OpCode::LoadInt { dest: 1, val: 0 });

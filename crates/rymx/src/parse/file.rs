@@ -43,6 +43,6 @@ pub fn file_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
 		// TODO
 		name: "".into(),
 		constants,
-		children: vec![],
+		sub_modules: vec![],
 	})
 }

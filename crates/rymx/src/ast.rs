@@ -5,7 +5,7 @@ use std::fmt::Display;
 pub struct Module {
 	pub name: String,
 	pub constants: Vec<(String, Expr)>,
-	pub children: Vec<Module>,
+	pub sub_modules: Vec<Module>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

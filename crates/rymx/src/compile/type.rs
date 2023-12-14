@@ -1,9 +1,9 @@
-use super::Value;
-use bumpalo::{collections::Vec, Bump};
+use super::Constant;
 use itertools::Itertools;
+use std::fmt::{Debug, Display};
 
-#[derive(PartialEq, Eq)]
-pub enum Type<'a> {
+#[derive(PartialEq)]
+pub enum Type {
 	Unit,
 	Never,
 	Unknown,
@@ -15,19 +15,18 @@ pub enum Type<'a> {
 	USize,
 	FloatLiteral,
 	Float(u8),
-	Array(Option<usize>, &'a mut Type<'a>),
-	Union(Vec<'a, Type<'a>>),
-	Function {
-		params: Vec<'a, (Type<'a>, Option<(&'a str, Value)>)>,
-		return_type: &'a mut Type<'a>,
-	},
+	Array(Option<usize>, Box<Type>),
+	Union(Vec<Type>),
+	Function(FunctionType),
 }
 
-impl Type<'_> {
-	fn alloc<'a>(self, bump: &'a Bump) -> &'a mut Self {
-		bump.alloc(self)
-	}
+#[derive(Debug, PartialEq)]
+struct FunctionType {
+	params: Vec<(Type, Option<(String, Constant)>)>,
+	return_type: Box<Type>,
+}
 
+impl Type {
 	fn array_to_string(
 		element_type: &Type,
 		length: Option<usize>,
@@ -48,13 +47,13 @@ impl Type<'_> {
 	}
 }
 
-impl std::fmt::Debug for Type<'_> {
+impl Debug for Type {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_str(self.to_string().as_str())
 	}
 }
 
-impl std::fmt::Display for Type<'_> {
+impl Display for Type {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Type::Unit => write!(f, "()"),
@@ -72,10 +71,10 @@ impl std::fmt::Display for Type<'_> {
 				write!(f, "{}", Self::array_to_string(&**element_type, *length)?)
 			}
 			Type::Union(types) => write!(f, "{}", types.iter().join(" | ")),
-			Type::Function {
+			Type::Function(FunctionType {
 				params,
 				return_type,
-			} => {
+			}) => {
 				write!(
 					f,
 					"fn({}) {return_type}",
@@ -97,11 +96,6 @@ impl std::fmt::Display for Type<'_> {
 
 #[test]
 fn display_types() {
-	use bumpalo::vec;
-	use num_bigint::BigInt;
-
-	let bump = Bump::new();
-
 	// TODO Make sure thses types never get constructed
 	assert_eq!(&Type::Int(0).to_string(), "i0");
 	assert_eq!(&Type::UInt(0).to_string(), "u0");
@@ -133,22 +127,15 @@ fn display_types() {
 	assert_eq!(&Type::Float(32).to_string(), "f32");
 	assert_eq!(&Type::Float(64).to_string(), "f64");
 
+	assert_eq!(&Type::Array(None, Type::Unit.into()).to_string(), "[]()");
 	assert_eq!(
-		&Type::Array(None, Type::Unit.alloc(&bump)).to_string(),
-		"[]()"
-	);
-	assert_eq!(
-		&Type::Array(
-			None,
-			Type::Array(None, Type::Unit.alloc(&bump)).alloc(&bump)
-		)
-		.to_string(),
+		&Type::Array(None, Type::Array(None, Type::Unit.into()).into()).to_string(),
 		"[][]()"
 	);
 	assert_eq!(
 		&Type::Array(
 			Some(4),
-			Type::Array(Some(32), Type::Float(64).alloc(&bump)).alloc(&bump),
+			Type::Array(Some(32), Type::Float(64).into()).into(),
 		)
 		.to_string(),
 		"[4][32]f64"
@@ -156,13 +143,7 @@ fn display_types() {
 	assert_eq!(
 		&Type::Array(
 			None,
-			Type::Union(vec![
-				in &bump;
-				Type::UInt(1),
-				Type::UInt(8),
-				Type::UInt(16)
-			])
-			.alloc(&bump),
+			Type::Union(vec![Type::UInt(1), Type::UInt(8), Type::UInt(16)]).into(),
 		)
 		.to_string(),
 		"[](u1 | u8 | u16)"
@@ -172,33 +153,23 @@ fn display_types() {
 			None,
 			Type::Array(
 				Some(256),
-				Type::Union(vec![
-					in &bump;
-					Type::UInt(1),
-					Type::UInt(8),
-					Type::UInt(16),
-				])
-				.alloc(&bump)
+				Type::Union(vec![Type::UInt(1), Type::UInt(8), Type::UInt(16),]).into()
 			)
-			.alloc(&bump),
+			.into(),
 		)
 		.to_string(),
 		"[][256](u1 | u8 | u16)"
 	);
 
 	assert_eq!(
-		&Type::Function {
+		&Type::Function(FunctionType {
 			params: vec![
-				in &bump;
 				(Type::UInt(32), None),
 				(Type::UInt(32), None),
-				(
-					Type::UInt(64),
-					Some((&*bump.alloc_str("named"), Value::Int(BigInt::from(0))))
-				)
+				(Type::UInt(64), Some(("named".into(), Constant::Int(0))))
 			],
-			return_type: Type::UInt(64).alloc(&bump),
-		}
+			return_type: Type::UInt(64).into(),
+		})
 		.to_string(),
 		"fn(u32, u32, named: u64 = 0) u64"
 	);

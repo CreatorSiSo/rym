@@ -1,44 +1,22 @@
 pub mod bytecode;
 mod r#type;
 pub use r#type::Type;
-mod value;
-pub use value::Value;
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Hash)]
-pub struct Symbol(Vec<String>);
-
-impl Symbol {
-	pub const GLOBAL: Self = Symbol(vec![]);
-
-	pub fn with_child(&self, child: impl Into<String>) -> Self {
-		let mut clone = self.clone();
-		clone.0.push(child.into());
-		clone
-	}
-}
-
-impl Ord for Symbol {
-	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		self.0.len().cmp(&other.0.len()).then(self.0.cmp(&other.0))
-	}
-}
-
-impl<I: IntoIterator<Item = T>, T: Into<String>> From<I> for Symbol {
-	fn from(iter: I) -> Self {
-		Symbol(iter.into_iter().map(Into::into).collect())
-	}
-}
+mod constant;
+pub use constant::Constant;
+mod eval;
+mod module;
+mod symbol;
 
 #[cfg(target_os)]
 mod test {
 	use super::{Compiler, Symbol, Type};
 	use crate::{
 		ast::{Expr, Literal, Module},
-		compile::Value,
+		compile::Constant,
 		interpret::Function,
 	};
 
-	fn compile_modules<const N: usize>(modules: [Module; N]) -> Vec<(Symbol, (Type, Value))> {
+	fn compile_modules<const N: usize>(modules: [Module; N]) -> Vec<(Symbol, (Type, Constant))> {
 		let mut compiler = Compiler::new();
 		for module in modules {
 			compiler.compile_module(Symbol::GLOBAL, &module);
@@ -68,7 +46,7 @@ mod test {
 			constants,
 			vec![(
 				Symbol::from(["hello_world", "main"]),
-				(Type::Unknown, Value::Unit)
+				(Type::Unknown, Constant::Unit)
 			),]
 		);
 	}
@@ -104,23 +82,29 @@ mod test {
 		assert_eq!(
 			constants,
 			vec![
-				(Symbol::from(["std", "false"]), (Type::Bool, Value::Int(0))),
-				(Symbol::from(["std", "true"]), (Type::Bool, Value::Int(1))),
+				(
+					Symbol::from(["std", "false"]),
+					(Type::Bool, Constant::Int(0))
+				),
+				(
+					Symbol::from(["std", "true"]),
+					(Type::Bool, Constant::Int(1))
+				),
 				(
 					Symbol::from(["std", "floats", "one"]),
-					(Type::FloatLiteral, Value::Float(1.0))
+					(Type::FloatLiteral, Constant::Float(1.0))
 				),
 				(
 					Symbol::from(["std", "floats", "two"]),
-					(Type::FloatLiteral, Value::Float(2.0))
+					(Type::FloatLiteral, Constant::Float(2.0))
 				),
 				(
 					Symbol::from(["std", "ints", "one"]),
-					(Type::IntLiteral, Value::Int(1))
+					(Type::IntLiteral, Constant::Int(1))
 				),
 				(
 					Symbol::from(["std", "ints", "two"]),
-					(Type::IntLiteral, Value::Int(2))
+					(Type::IntLiteral, Constant::Int(2))
 				),
 			]
 		);

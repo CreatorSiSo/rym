@@ -33,8 +33,9 @@ impl ConstEvaluator {
 				.resolve_ident(ident)
 				.expect(&format!("Could not find {ident}")),
 			ast::Expr::Chain(_, _) => todo!(),
-			ast::Expr::ChainEnd(_) => todo!(),
 			ast::Expr::Function(_) => todo!(),
+			ast::Expr::Array(_) => todo!(),
+			ast::Expr::ArrayWithRepeat(_, _) => todo!(),
 			ast::Expr::Unary(_, _) => todo!(),
 			ast::Expr::Binary(_, _, _) => todo!(),
 			ast::Expr::Call(_, _) => todo!(),

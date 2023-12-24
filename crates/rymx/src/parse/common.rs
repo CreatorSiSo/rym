@@ -56,15 +56,7 @@ pub(super) fn block_parser<'src>(
 }
 
 pub fn literal_parser(src: &str) -> impl Parser<TokenStream, Literal, Extra> + Clone {
-	let integer = just(Token::Int)
-		.map_with(|_, extra| {
-			Literal::Int(
-				current_src(extra, src)
-					.parse()
-					.expect("Internal Error: Failed to parse u64"),
-			)
-		})
-		.labelled("integer");
+	let integer = integer_parser(src).map(Literal::Int);
 
 	let float = just(Token::Float)
 		.map_with(|_, extra| {
@@ -88,6 +80,16 @@ pub fn literal_parser(src: &str) -> impl Parser<TokenStream, Literal, Extra> + C
 		.labelled("string");
 
 	choice((integer, float, string)).labelled("literal").boxed()
+}
+
+pub fn integer_parser(src: &str) -> impl Parser<TokenStream, i64, Extra> + Clone {
+	just(Token::Int)
+		.map_with(|_, extra| {
+			current_src(extra, src)
+				.parse()
+				.expect("Internal Error: Failed to parse u64")
+		})
+		.labelled("integer")
 }
 
 pub(super) fn ident_parser(src: &str) -> impl Parser<TokenStream, &str, Extra> + Clone {

@@ -38,8 +38,9 @@ pub enum Expr {
 	Literal(Literal),
 	Ident(String),
 	Chain(Box<Expr>, Box<Expr>),
-	ChainEnd(Box<Expr>),
 	Function(Function),
+	Array(Vec<Expr>),
+	ArrayWithRepeat(Box<Expr>, Box<Expr>),
 
 	Unary(UnaryOp, Box<Expr>),
 	Binary(BinaryOp, Box<Expr>, Box<Expr>),
@@ -65,8 +66,13 @@ impl std::fmt::Debug for Expr {
 			Self::Literal(arg0) => f.write_fmt(format_args!("Literal({arg0:?})")),
 			Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
 			Self::Chain(arg0, arg1) => f.debug_tuple("Chain").field(arg0).field(arg1).finish(),
-			Self::ChainEnd(arg0) => f.debug_tuple("ChainEnd").field(arg0).finish(),
 			Self::Function(arg0) => f.write_fmt(format_args!("{arg0:#?}")),
+			Self::Array(arg0) => f.write_fmt(format_args!("Array({arg0:?})")),
+			Self::ArrayWithRepeat(arg0, arg1) => f
+				.debug_tuple("ArrayWithRepeat")
+				.field(arg0)
+				.field(arg1)
+				.finish(),
 
 			Self::Unary(arg0, arg1) => f.debug_tuple(&arg0.to_string()).field(arg1).finish(),
 			Self::Binary(arg0, arg1, arg2) => f
@@ -103,9 +109,16 @@ pub enum Type {
 		named_args: Vec<(String, Type, Literal)>,
 		return_type: Box<Type>,
 	},
+	Array(Option<ArraySize>, Box<Type>),
 	Struct(Vec<(String, Type, Option<Literal>)>),
 	Enum(Vec<(String, Option<Type>)>),
 	Union(Vec<Type>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ArraySize {
+	Path(Path),
+	Int(u64),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

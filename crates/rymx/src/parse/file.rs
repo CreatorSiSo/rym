@@ -1,5 +1,6 @@
 use super::{common::*, expr::expr_parser, r#type::type_parser};
 use crate::ast::*;
+use crate::parse::r#type::typedef_parser;
 use crate::tokenize::Token;
 use chumsky::prelude::*;
 
@@ -18,19 +19,9 @@ pub fn file_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
 		.then_ignore(just(Token::Semi))
 		.map(|((name, typ), expr)| Definition::Constant((name.into(), typ, expr)));
 
-	// type_def ::=  "type" ident "=" type ";")
-	let type_def = just(Token::Type)
-		.ignore_then(ident_parser(src))
-		.then_ignore(just(Token::Assign))
-		.then(type_parser(src))
-		.then_ignore(just(Token::Semi))
-		.map(|(name, typ)| Definition::TypeDef((name.into(), typ)));
+	let typedef = typedef_parser(src).map(|(name, value)| Definition::TypeDef((name.into(), value)));
 
-	// type Definition =
-	// | Constant (String, Option[Type], Expr)
-	// | TypeDef (String, Type);
-
-	let definition = constant.or(type_def);
+	let definition = constant.or(typedef);
 
 	// module ::= (definition)*
 	definition

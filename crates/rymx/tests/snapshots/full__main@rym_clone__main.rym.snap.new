@@ -1,0 +1,275 @@
+---
+source: crates/rymx/tests/full.rs
+assertion_line: 15
+expression: diag.outputs_dump() + &diag.reports_dump()
+input_file: crates/rymx/tests/rym_clone/main.rym
+---
+--- tokenize ---
+Comment [// stud]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [import]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+Ident [string]
+Colon [:]
+HSpace [ ]
+Ident [String]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [\t]
+Comment [// TODO]
+VSpace [\n]
+BraceClose [}]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [io]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Ident [import]
+ParenOpen [(]
+String [\"std.io\"]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [ParseError]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Ident [example_package]
+Dot [.]
+Ident [Error]
+Semi [;]
+VSpace [\n\n]
+Comment [// use std.io.{self, IoError};]
+VSpace [\n]
+Comment [// use package.Error as OtherError;]
+VSpace [\n]
+Comment [// use package.prelude.*;]
+VSpace [\n\n]
+DocComment [/// Combined error type]
+VSpace [\n]
+Type [type]
+HSpace [ ]
+Ident [Error]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Enum [enum]
+VSpace [\n]
+HSpace [\t]
+Pipe [|]
+HSpace [ ]
+Ident [Io]
+HSpace [ ]
+Ident [io]
+Dot [.]
+Ident [Error]
+VSpace [\n]
+HSpace [\t]
+Pipe [|]
+HSpace [ ]
+Ident [Parse]
+HSpace [ ]
+Ident [ParseError]
+VSpace [\n]
+HSpace [\t]
+Pipe [|]
+HSpace [ ]
+Ident [Other]
+HSpace [ ]
+Struct [struct]
+HSpace [ ]
+BraceOpen [{]
+HSpace [ ]
+Ident [message]
+Colon [:]
+HSpace [ ]
+Ident [String]
+HSpace [ ]
+BraceClose [}]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [main]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+Ident [Result]
+BracketOpen [[]
+ParenOpen [(]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Ident [Error]
+BracketClose []]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [\t]
+Comment [// TODO read cli arguments]
+VSpace [\n]
+BraceClose [}]
+Semi [;]
+VSpace [\n]
+
+--- parse ---
+Module {
+    name: "",
+    constants: [
+        (
+            "import",
+            None,
+            Function {
+                name: None,
+                params: [
+                    "string",
+                ],
+                return_type: Unkown,
+                body: Block(
+                    [],
+                ),
+            },
+        ),
+        (
+            "io",
+            None,
+            Call(
+                Ident("import"),
+                [
+                    Literal(String: "std.io"),
+                ],
+            ),
+        ),
+        (
+            "ParseError",
+            None,
+            Chain(
+                Ident("example_package"),
+                Ident("Error"),
+            ),
+        ),
+        (
+            "main",
+            None,
+            Function {
+                name: None,
+                params: [],
+                return_type: Generic(
+                    Path(
+                        Path {
+                            parts: [
+                                "Result",
+                            ],
+                        },
+                    ),
+                    [
+                        Unit,
+                        Path(
+                            Path {
+                                parts: [
+                                    "Error",
+                                ],
+                            },
+                        ),
+                    ],
+                ),
+                body: Block(
+                    [],
+                ),
+            },
+        ),
+    ],
+    types: [
+        (
+            "Error",
+            Enum(
+                [
+                    (
+                        "Io",
+                        Some(
+                            Path(
+                                Path {
+                                    parts: [
+                                        "io",
+                                        "Error",
+                                    ],
+                                },
+                            ),
+                        ),
+                    ),
+                    (
+                        "Parse",
+                        Some(
+                            Path(
+                                Path {
+                                    parts: [
+                                        "ParseError",
+                                    ],
+                                },
+                            ),
+                        ),
+                    ),
+                    (
+                        "Other",
+                        Some(
+                            Struct(
+                                [
+                                    (
+                                        "message",
+                                        Path(
+                                            Path {
+                                                parts: [
+                                                    "String",
+                                                ],
+                                            },
+                                        ),
+                                        None,
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ),
+                ],
+            ),
+        ),
+    ],
+    sub_modules: [],
+}
+
+--- interpret ---
+const ParseError = ()
+const assert = fn<native> (1)
+const assert_eq = fn<native> (2)
+const false = false
+const fib_native = fn<native> (1)
+const import = fn (1)
+const io = ()
+const main = fn (0)
+const print = fn<native> (variadic)
+const println = fn<native> (variadic)
+const read_to_string = fn<native> (1)
+const true = true
+
+--- reports ---
+

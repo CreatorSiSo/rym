@@ -75,7 +75,6 @@ impl SymbolTableBuilder {
 				self.scan_expression(lhs);
 				self.scan_expression(rhs);
 			}
-			Expr::ChainEnd(rhs) => self.scan_expression(rhs),
 			Expr::Function(func) => self.scan_function(func),
 			Expr::Unary(_op, rhs) => self.scan_expression(rhs),
 			Expr::Binary(_op, lhs, rhs) => {

@@ -1,0 +1,212 @@
+---
+source: crates/rymx/tests/full.rs
+assertion_line: 15
+expression: diag.outputs_dump() + &diag.reports_dump()
+input_file: crates/rymx/tests/stress.rym
+---
+--- tokenize ---
+Const [const]
+HSpace [ ]
+Ident [main]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+Comment [// assert_eq(ones, 304);]
+VSpace [\n]
+BraceClose [}]
+Semi [;]
+VSpace [\n\n]
+Comment [// // TODO Fix stack overflow]
+VSpace [\n]
+Comment [// const ones = 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [pi]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Float [3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282]
+Semi [;]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [create_death_chain]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+Ident [chain]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+ParenOpen [(]
+Ident [pi]
+HSpace [ ]
+Minus [-]
+HSpace [ ]
+ParenOpen [(]
+Minus [-]
+Int [1]
+HSpace [ ]
+Star [*]
+HSpace [ ]
+Ident [pi]
+ParenClose [)]
+Dot [.]
+Ident [abs]
+ParenOpen [(]
+ParenClose [)]
+ParenClose [)]
+VSpace [\n]
+HSpace [        ]
+Dot [.]
+Ident [try]
+VSpace [\n]
+HSpace [        ]
+Dot [.]
+Ident [test_with_values]
+ParenOpen [(]
+Int [0]
+Comma [,]
+HSpace [ ]
+Int [1]
+Comma [,]
+HSpace [ ]
+Int [2]
+Comma [,]
+HSpace [ ]
+String [\"Hello World!\"]
+ParenClose [)]
+VSpace [\n]
+HSpace [        ]
+Dot [.]
+Ident [make_new]
+ParenOpen [(]
+Int [2]
+Comma [,]
+HSpace [ ]
+Int [2]
+ParenClose [)]
+VSpace [\n]
+BraceClose [}]
+Semi [;]
+VSpace [\n]
+
+--- parse ---
+Module {
+    name: "",
+    constants: [
+        (
+            "main",
+            None,
+            Function {
+                name: None,
+                params: [],
+                return_type: Unkown,
+                body: Block(
+                    [],
+                ),
+            },
+        ),
+        (
+            "pi",
+            None,
+            Literal(Float: 3.141592653589793),
+        ),
+        (
+            "create_death_chain",
+            None,
+            Function {
+                name: None,
+                params: [],
+                return_type: Path(
+                    Path {
+                        parts: [
+                            "chain",
+                        ],
+                    },
+                ),
+                body: Block(
+                    [
+                        Expr(
+                            Break(
+                                Chain(
+                                    Chain(
+                                        Chain(
+                                            Sub(
+                                                Ident("pi"),
+                                                Chain(
+                                                    Mul(
+                                                        Neg(
+                                                            Literal(Int: 1),
+                                                        ),
+                                                        Ident("pi"),
+                                                    ),
+                                                    Call(
+                                                        Ident("abs"),
+                                                        [],
+                                                    ),
+                                                ),
+                                            ),
+                                            Ident("try"),
+                                        ),
+                                        Call(
+                                            Ident("test_with_values"),
+                                            [
+                                                Literal(Int: 0),
+                                                Literal(Int: 1),
+                                                Literal(Int: 2),
+                                                Literal(String: "Hello World!"),
+                                            ],
+                                        ),
+                                    ),
+                                    Call(
+                                        Ident("make_new"),
+                                        [
+                                            Literal(Int: 2),
+                                            Literal(Int: 2),
+                                        ],
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ],
+                ),
+            },
+        ),
+    ],
+    types: [],
+    sub_modules: [],
+}
+
+--- interpret ---
+const assert = fn<native> (1)
+const assert_eq = fn<native> (2)
+const create_death_chain = fn (0)
+const false = false
+const fib_native = fn<native> (1)
+const main = fn (0)
+const pi = 3.141592653589793
+const print = fn<native> (variadic)
+const println = fn<native> (variadic)
+const read_to_string = fn<native> (1)
+const true = true
+
+--- reports ---
+

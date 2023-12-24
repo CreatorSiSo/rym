@@ -139,13 +139,22 @@ impl Interpret for Expr {
 				Some(val) => val.clone(),
 				None => panic!("Unable to find <{name}>"),
 			},
-			Expr::Chain(_lhs, _rhs) => todo!(),
-			Expr::ChainEnd(_rhs) => todo!(),
+			Expr::Chain(_lhs, _rhs) => {
+				// TODO
+				debug_todo();
+				Value::Unit
+			}
 			Expr::Function(func) => {
 				if let Some(ref name) = func.name {
 					env.create(name, VariableKind::Const, Value::Function(func.clone()));
 				}
 				Value::Function(func)
+			}
+			Expr::Array(array) => {
+				todo!();
+			}
+			Expr::ArrayWithRepeat(value, length) => {
+				todo!();
 			}
 
 			Expr::Unary(op, expr) => match (op, default_flow!(expr.eval(env))) {
@@ -248,4 +257,9 @@ where
 		BinaryOp::Eq => Value::Bool(lhs == rhs),
 		BinaryOp::NotEq => Value::Bool(lhs != rhs),
 	}
+}
+
+#[track_caller]
+fn debug_todo() {
+	println!("Hit TODO: {}", std::panic::Location::caller());
 }

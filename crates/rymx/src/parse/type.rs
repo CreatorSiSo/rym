@@ -2,6 +2,18 @@ use super::common::*;
 use crate::{ast::*, tokenize::Token};
 use chumsky::prelude::*;
 
+pub fn typedef_parser(src: &str) -> impl Parser<TokenStream, (&str, Type), Extra> + Clone {
+	// typedef ::=  "type" ident "=" type ";")
+	let typedef = just(Token::Type)
+		.ignore_then(ident_parser(src))
+		.then_ignore(just(Token::Assign))
+		.then(type_parser(src))
+		.then_ignore(just(Token::Semi))
+		.labelled("type definition");
+
+	typedef
+}
+
 pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
 	recursive(|type_| {
 		// literal ::= int | float | string
@@ -15,22 +27,22 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
 			.separated_by(just(Token::Dot))
 			.at_least(1)
 			.collect::<Vec<String>>()
-			.map(|parts| Type::Path(Path::new(parts)));
+			.map(Path::new);
 
-		// atom ::= "(" ")" | literal | path | "(" expr ")"
+		// atom ::= "(" ")" | literal | path | "(" type ")"
 		let atom = choice((
 			just(Token::ParenOpen)
 				.then(just(Token::ParenClose))
 				.to(Type::Unit),
 			literal,
-			path,
+			path.clone().map(Type::Path),
 			type_
 				.clone()
 				.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
 		))
 		.labelled("atom");
 
-		// generic ::= atom "[" type ("," type)* ","? "]"
+		// generic ::= atom ("[" type ("," type)* ","? "]")?
 		let generic = atom
 			.then(
 				type_
@@ -69,8 +81,8 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
 			.labelled("struct");
 
 		// enum_variant ::= ident type?
-		let enum_variant = ident.then(type_.or_not());
-		// enum_variants ::= enum_variant? ("|" enum_variant)*
+		let enum_variant = ident.then(type_.clone().or_not());
+		// enum_variants ::= "|"? enum_variant ("|" enum_variant)*
 		let enum_variants = enum_variant
 			.separated_by(just(Token::Pipe))
 			.allow_leading()
@@ -81,7 +93,17 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
 			.map(Type::Enum)
 			.labelled("enum");
 
-		choice((struct_, enum_, generic))
+		// size ::= (path | int)
+		let size = path
+			.map(ArraySize::Path)
+			.or(integer_parser(src).map(|int| ArraySize::Int(int as u64)));
+		// array ::= "[" size? "]" type
+		let array = (size.or_not())
+			.delimited_by(just(Token::BracketOpen), just(Token::BracketClose))
+			.then(type_)
+			.map(|(size, element)| Type::Array(size, Box::new(element)));
+
+		choice((struct_, enum_, array, generic))
 	})
 	.labelled("type")
 }

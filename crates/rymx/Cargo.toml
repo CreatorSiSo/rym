@@ -8,6 +8,7 @@ default-run = "rymx"
 
 [dependencies]
 chumsky = { git = "https://github.com/zesterer/chumsky", rev = "e045b140497bd07fecbe13ae1ad22aa252678de3", features = [
+	"pratt",
 	"label",
 ] }
 anyhow = "1.0"

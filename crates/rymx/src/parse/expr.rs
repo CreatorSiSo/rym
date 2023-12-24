@@ -7,7 +7,7 @@ pub fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 		// literal ::= int | float | string
 		let literal = literal_parser(src).map(Expr::Literal);
 
-		// var ::= ("const" | "let" | "let mut") ident (":" expr)? "=" expr ";"
+		// var ::= ("const" | "let" | "let mut") ident (":" type)? "=" expr ";"
 		let var = choice((
 			just(Token::Const).to(VariableKind::Const),
 			just(Token::Let)
@@ -16,13 +16,13 @@ pub fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 			just(Token::Let).to(VariableKind::Let),
 		))
 		.then(ident_parser(src))
-		.then_ignore(just(Token::Colon).ignore_then(expr.clone()).or_not())
+		.then_ignore(just(Token::Colon).ignore_then(type_parser(src)).or_not())
 		.then_ignore(just(Token::Assign))
 		.then(expr.clone())
 		.then_ignore(just(Token::Semi))
 		.map(|((kind, name), rhs)| Stmt::Variable(kind, name.into(), rhs))
-		.boxed()
-		.labelled("variable");
+		.labelled("variable")
+		.boxed();
 
 		// function ::= fn "(" parameters ")" type? "=>" expr
 		let function = just(Token::Fn)
@@ -39,15 +39,34 @@ pub fn expr_parser(src: &str) -> impl Parser<TokenStream, Expr, Extra> + Clone {
 					body: Box::new(body),
 				})
 			})
-			.labelled("function expression");
+			.labelled("function");
 
-		// atom ::= literal | ident | "(" expr ")" | block
+		// array ::= "[" (expr ";" expr | (expr ",")* expr?) "]"
+		let array = choice((
+			expr
+				.clone()
+				.then_ignore(just(Token::Semi))
+				.then(expr.clone())
+				.map(|(value, length)| Expr::ArrayWithRepeat(value.into(), length.into())),
+			expr
+				.clone()
+				.separated_by(just(Token::Comma))
+				.allow_trailing()
+				.collect::<Vec<Expr>>()
+				.map(Expr::Array),
+		))
+		.delimited_by(just(Token::BracketOpen), just(Token::BracketClose))
+		.labelled("array")
+		.boxed();
+
+		// atom ::= literal | ident | "(" expr ")" | array | block
 		let atom = choice((
 			literal,
 			ident_parser(src).map(String::from).map(Expr::Ident),
 			expr
 				.clone()
 				.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
+			array,
 			block_parser(expr.clone(), var),
 		))
 		.labelled("atom");

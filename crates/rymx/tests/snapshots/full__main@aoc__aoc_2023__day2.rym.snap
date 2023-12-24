@@ -1201,11 +1201,11 @@ VSpace [\n]
 --- parse ---
 
 --- reports ---
-Error: 
+Error: Syntax Error
     ╭─[/home/simon/dev/rym/crates/rymx/tests/aoc/aoc_2023/day2.rym:13:27]
     │
  13 │     const max_step = Step { red = 12, green = 13, blue = 14 };
     │                           ┬  
-    │                           ╰── ExpectedFound { expected: [], found: Some(BraceOpen) }
+    │                           ╰── Expected nothing, found `{`.
 ────╯
 

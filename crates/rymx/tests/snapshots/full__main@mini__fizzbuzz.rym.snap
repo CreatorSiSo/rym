@@ -136,11 +136,11 @@ VSpace [\n]
 --- parse ---
 
 --- reports ---
-Error: 
+Error: Syntax Error
    ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/fizzbuzz.rym:2:4]
    │
  2 │     (1..).iter().for_each(fn(i) => println(match i with
    │       ─┬  
-   │        ╰── ExpectedFound { expected: [], found: Some(DotDot) }
+   │        ╰── Expected nothing, found `..`.
 ───╯
 

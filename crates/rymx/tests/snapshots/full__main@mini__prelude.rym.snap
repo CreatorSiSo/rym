@@ -43,11 +43,11 @@ VSpace [\n]
 --- parse ---
 
 --- reports ---
-Error: 
+Error: Syntax Error
    ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/prelude.rym:1:33]
    │
  1 │ const println = fn(fmt: String, ..args: [impl Display]) => {
    │                                 ─┬  
-   │                                  ╰── ExpectedFound { expected: [Ident, ParenClose], found: Some(DotDot) }
+   │                                  ╰── Expected identifier or `)`, found `..`.
 ───╯
 

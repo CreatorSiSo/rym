@@ -391,6 +391,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "logos-display"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "212c2fbcf063418665c18cfc065679a56dd92c3440162ba882c2822e2a3496fb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -548,6 +559,7 @@ dependencies = [
  "itertools",
  "lasso",
  "logos",
+ "logos-display",
  "owo-colors",
  "rustyline",
  "strip-ansi-escapes",

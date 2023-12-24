@@ -1,7 +1,6 @@
-use std::fmt::Debug;
-
 use crate::Span;
 use logos::{Lexer, Logos};
+use std::fmt::Debug;
 
 pub fn tokenizer(src: &str) -> impl Iterator<Item = (Result<Token, ()>, Span)> + '_ {
 	Token::lexer(src)
@@ -17,25 +16,34 @@ fn line_comment(lexer: &mut Lexer<Token>) {
 	}
 }
 
-#[derive(Debug, Clone, Copy, Logos, PartialEq)]
+#[derive(logos_display::Display, Debug, Clone, Copy, Logos, PartialEq)]
 pub enum Token {
+	#[display_override("integer literal")]
 	#[regex(r"[0-9][0-9_]*")]
 	Int,
+	#[display_override("float literal")]
 	#[regex(r"[0-9][0-9_]*\.[0-9_]+")]
 	Float,
+	#[display_override("string literal")]
 	#[regex(r#""(\\"|[^"])*""#)]
 	String,
+	#[display_override("character literal")]
 	#[regex(r#"'(\\'|[^'])*'"#)]
 	Char,
 
+	#[display_override("identifier")]
 	#[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
 	Ident,
+	#[display_override("doc comment")]
 	#[token("///", line_comment)]
 	DocComment,
+	#[display_override("comment")]
 	#[token("//", line_comment)]
 	Comment,
+	#[display_override("whitespace")]
 	#[regex("(\n|\r\n)+")]
 	VSpace,
+	#[display_override("whitespace")]
 	#[regex("[ \t]+")]
 	HSpace,
 
@@ -62,10 +70,6 @@ pub enum Token {
 	Mut,
 	#[token("not")]
 	Not,
-	#[token("self")]
-	LowerSelf,
-	#[token("Self")]
-	UpperSelf,
 	#[token("return")]
 	Return,
 	#[token("struct")]
@@ -135,4 +139,23 @@ pub enum Token {
 	GreaterThan,
 	#[token(">=")]
 	GreaterThanEq,
+}
+
+impl Token {
+	/// Extends the derived Display implementation
+	pub fn display(&self) -> String {
+		match self {
+			Self::Int => "integer literal".into(),
+			Self::Float => "float literal".into(),
+			Self::String => "string literal".into(),
+			Self::Char => "character literal".into(),
+
+			Self::Ident => "identifier".into(),
+			Self::DocComment => "doc comment".into(),
+			Self::Comment => "comment".into(),
+			Self::VSpace | Self::HSpace => "whitespace".into(),
+
+			token => format!("`{}`", token.to_string()),
+		}
+	}
 }

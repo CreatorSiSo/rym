@@ -37,12 +37,12 @@ VSpace [\n]
 --- parse ---
 
 --- reports ---
-Error: 
+Error: Syntax Error
    ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/strings.rym:3:6]
    │
  3 │ ╭─▶     + 'c'
  4 │ ├─▶     + '\''
    │ │                
-   │ ╰──────────────── ExpectedFound { expected: [], found: Some(Char) }
+   │ ╰──────────────── Expected nothing, found character literal.
 ───╯
 

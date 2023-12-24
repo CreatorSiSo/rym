@@ -322,11 +322,11 @@ VSpace [\n]
 --- parse ---
 
 --- reports ---
-Error: 
+Error: Syntax Error
     ╭─[/home/simon/dev/rym/crates/rymx/tests/types.rym:12:37]
     │
  12 │     assert_eq(type_of(zeroed), [512]u8);
     │                                     ─┬  
-    │                                      ╰── ExpectedFound { expected: [], found: Some(Ident) }
+    │                                      ╰── Expected nothing, found identifier.
 ────╯
 

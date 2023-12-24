@@ -3,29 +3,41 @@ use crate::ast::*;
 use chumsky::prelude::*;
 
 pub fn file_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
+	let definition = stmt_parser(src).validate(|stmt, extra, emitter| {
+		match stmt {
+			Stmt::Expr(..) => emitter.emit(Rich::custom(
+				extra.span(),
+				"Top-level expressions are not allowed.",
+			)),
+			Stmt::Variable(VariableKind::Let | VariableKind::LetMut, ..) => {
+				emitter.emit(Rich::custom(extra.span(), "todo"))
+			}
+			_ => {}
+		}
+		stmt
+	});
+
 	// file ::= (definition)*
-	stmt_parser(src)
-		.repeated()
-		.collect()
-		.validate(|stmts: Vec<Stmt>, extra, emitter| {
-			let mut constants = vec![];
-			let mut types = vec![];
+	definition.repeated().collect().map(|stmts: Vec<Stmt>| {
+		let mut constants = vec![];
+		let mut types = vec![];
 
-			for stmt in stmts {
-				match stmt {
-					Stmt::Expr(..) => emitter.emit(Rich::custom(extra.span(), "todo")),
-					Stmt::Variable(VariableKind::Const, name, typ, rhs) => constants.push((name, typ, rhs)),
-					Stmt::Variable(..) => emitter.emit(Rich::custom(extra.span(), "todo")),
-					Stmt::TypeDef(name, rhs) => types.push((name, rhs)),
-				}
-			}
+		for stmt in stmts {
+			match stmt {
+				Stmt::Variable(VariableKind::Const, name, typ, rhs) => constants.push((name, typ, rhs)),
+				Stmt::TypeDef(name, rhs) => types.push((name, rhs)),
 
-			Module {
-				// TODO
-				name: "".into(),
-				constants,
-				types,
-				sub_modules: vec![],
+				// Already emitted an error for these
+				_ => {}
 			}
-		})
+		}
+
+		Module {
+			// TODO
+			name: "".into(),
+			constants,
+			types,
+			sub_modules: vec![],
+		}
+	})
 }

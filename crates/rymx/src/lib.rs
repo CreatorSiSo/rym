@@ -15,7 +15,6 @@ pub use interpret::Env;
 pub use span::Span;
 pub use tokenize::tokenizer;
 
-use ast::{Expr, Module};
 use interpret::{Interpret, Value};
 use span::SourceSpan;
 use tokenize::Token;
@@ -42,7 +41,7 @@ pub fn interpret(diag: &mut Diagnostics, env: &mut Env, ast: impl Interpret) -> 
 	result
 }
 
-pub fn compile_module(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Option<Module> {
+pub fn compile_module(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Option<ast::Module> {
 	diag.start_stage("tokenize");
 	let tokens: Vec<(Token, Span)> = tokenize(diag, src, src_id.clone())?;
 
@@ -69,12 +68,12 @@ pub fn compile_module(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Op
 }
 
 // TODO take a module (for name lookup and so on) as input
-pub fn compile_expr(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Option<Expr> {
+pub fn compile_stmt(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Option<ast::Stmt> {
 	diag.start_stage("tokenize");
 	let tokens: Vec<(Token, Span)> = tokenize(diag, src, src_id.clone())?;
 
 	diag.start_stage("parse");
-	let expr = match parse::parse_expr(&tokens, src, src_id) {
+	let expr = match parse::parse_stmt(&tokens, src, src_id) {
 		Ok(expr) => expr,
 		Err(reports) => {
 			for report in reports {

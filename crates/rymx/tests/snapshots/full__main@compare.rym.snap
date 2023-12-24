@@ -166,7 +166,7 @@ Module {
     constants: [
         (
             "int_eq_0",
-            None,
+            Unkown,
             Eq(
                 Literal(Int: 0),
                 Literal(Int: 0),
@@ -174,7 +174,7 @@ Module {
         ),
         (
             "int_eq_1",
-            None,
+            Unkown,
             Eq(
                 Literal(Int: 1),
                 Literal(Int: 1),
@@ -182,7 +182,7 @@ Module {
         ),
         (
             "int_eq_2",
-            None,
+            Unkown,
             Eq(
                 Literal(Int: 1),
                 Literal(Int: 2),
@@ -190,7 +190,7 @@ Module {
         ),
         (
             "int_eq_3",
-            None,
+            Unkown,
             GreaterThan(
                 Literal(Int: 1),
                 Literal(Int: 2),
@@ -198,7 +198,7 @@ Module {
         ),
         (
             "int_eq_4",
-            None,
+            Unkown,
             LessThanEq(
                 Literal(Int: 1),
                 Literal(Int: 2),
@@ -206,7 +206,7 @@ Module {
         ),
         (
             "int_eq_5",
-            None,
+            Unkown,
             Eq(
                 Literal(Int: 255),
                 Neg(
@@ -216,7 +216,7 @@ Module {
         ),
         (
             "int_eq_6",
-            None,
+            Unkown,
             Eq(
                 Neg(
                     Literal(Int: 2132426873),
@@ -228,7 +228,7 @@ Module {
         ),
         (
             "fn_native_eq_0",
-            None,
+            Unkown,
             Eq(
                 Ident("print"),
                 Ident("print"),
@@ -236,7 +236,7 @@ Module {
         ),
         (
             "fn_native_eq_1",
-            None,
+            Unkown,
             Eq(
                 Ident("print"),
                 Function {
@@ -255,7 +255,7 @@ Module {
         ),
         (
             "fn_native_eq_2",
-            None,
+            Unkown,
             Eq(
                 Ident("print"),
                 Call(

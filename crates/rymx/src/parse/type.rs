@@ -2,18 +2,6 @@ use super::common::*;
 use crate::{ast::*, tokenize::Token};
 use chumsky::prelude::*;
 
-pub fn typedef_parser(src: &str) -> impl Parser<TokenStream, (&str, Type), Extra> + Clone {
-	// typedef ::=  "type" ident "=" type ";")
-	let typedef = just(Token::Type)
-		.ignore_then(ident_parser(src))
-		.then_ignore(just(Token::Assign))
-		.then(type_parser(src))
-		.then_ignore(just(Token::Semi))
-		.labelled("type definition");
-
-	typedef
-}
-
 pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
 	recursive(|type_| {
 		// literal ::= int | float | string

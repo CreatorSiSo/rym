@@ -4,39 +4,60 @@ expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/rym_clone/main.rym
 ---
 --- tokenize ---
-Use [use]
+Comment [// stud]
+VSpace [\n]
+Const [const]
 HSpace [ ]
-Ident [std]
-Dot [.]
-Ident [io]
-Dot [.]
+Ident [import]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+Ident [string]
+Colon [:]
+HSpace [ ]
+Ident [String]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
 BraceOpen [{]
-LowerSelf [self]
-Comma [,]
-HSpace [ ]
-Ident [IoError]
+VSpace [\n]
+HSpace [\t]
+Comment [// TODO]
+VSpace [\n]
 BraceClose [}]
 Semi [;]
-VSpace [\n]
-Use [use]
+VSpace [\n\n]
+Const [const]
 HSpace [ ]
-Ident [package]
+Ident [io]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Ident [import]
+ParenOpen [(]
+String [\"std.io\"]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [ParseError]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Ident [example_package]
 Dot [.]
 Ident [Error]
-HSpace [ ]
-As [as]
-HSpace [ ]
-Ident [OtherError]
 Semi [;]
+VSpace [\n\n]
+Comment [// use std.io.{self, IoError};]
 VSpace [\n]
-Use [use]
-HSpace [ ]
-Ident [package]
-Dot [.]
-Ident [prelude]
-Dot [.]
-Star [*]
-Semi [;]
+Comment [// use package.Error as OtherError;]
+VSpace [\n]
+Comment [// use package.prelude.*;]
 VSpace [\n\n]
 DocComment [/// Combined error type]
 VSpace [\n]
@@ -45,24 +66,40 @@ HSpace [ ]
 Ident [Error]
 HSpace [ ]
 Assign [=]
+HSpace [ ]
+Enum [enum]
 VSpace [\n]
 HSpace [\t]
 Pipe [|]
 HSpace [ ]
-Ident [IoError]
+Ident [Io]
 HSpace [ ]
-Ident [IoError]
+Ident [io]
+Dot [.]
+Ident [Error]
 VSpace [\n]
 HSpace [\t]
 Pipe [|]
 HSpace [ ]
-Ident [OtherError]
-ParenOpen [(]
+Ident [Parse]
+HSpace [ ]
+Ident [ParseError]
+VSpace [\n]
+HSpace [\t]
+Pipe [|]
+HSpace [ ]
+Ident [Other]
+HSpace [ ]
+Struct [struct]
+HSpace [ ]
+BraceOpen [{]
+HSpace [ ]
 Ident [message]
 Colon [:]
 HSpace [ ]
 Ident [String]
-ParenClose [)]
+HSpace [ ]
+BraceClose [}]
 Semi [;]
 VSpace [\n\n]
 Const [const]
@@ -76,13 +113,13 @@ ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
 Ident [Result]
-LessThan [<]
+BracketOpen [[]
 ParenOpen [(]
 ParenClose [)]
 Comma [,]
 HSpace [ ]
 Ident [Error]
-GreaterThan [>]
+BracketClose []]
 HSpace [ ]
 ThickArrow [=>]
 HSpace [ ]
@@ -96,13 +133,142 @@ Semi [;]
 VSpace [\n]
 
 --- parse ---
+Module {
+    name: "",
+    constants: [
+        (
+            "import",
+            Unkown,
+            Function {
+                name: None,
+                params: [
+                    "string",
+                ],
+                return_type: Unkown,
+                body: Block(
+                    [],
+                ),
+            },
+        ),
+        (
+            "io",
+            Unkown,
+            Call(
+                Ident("import"),
+                [
+                    Literal(String: "std.io"),
+                ],
+            ),
+        ),
+        (
+            "ParseError",
+            Unkown,
+            Chain(
+                Ident("example_package"),
+                Ident("Error"),
+            ),
+        ),
+        (
+            "main",
+            Unkown,
+            Function {
+                name: None,
+                params: [],
+                return_type: Generic(
+                    Path(
+                        Path {
+                            parts: [
+                                "Result",
+                            ],
+                        },
+                    ),
+                    [
+                        Unit,
+                        Path(
+                            Path {
+                                parts: [
+                                    "Error",
+                                ],
+                            },
+                        ),
+                    ],
+                ),
+                body: Block(
+                    [],
+                ),
+            },
+        ),
+    ],
+    types: [
+        (
+            "Error",
+            Enum(
+                [
+                    (
+                        "Io",
+                        Some(
+                            Path(
+                                Path {
+                                    parts: [
+                                        "io",
+                                        "Error",
+                                    ],
+                                },
+                            ),
+                        ),
+                    ),
+                    (
+                        "Parse",
+                        Some(
+                            Path(
+                                Path {
+                                    parts: [
+                                        "ParseError",
+                                    ],
+                                },
+                            ),
+                        ),
+                    ),
+                    (
+                        "Other",
+                        Some(
+                            Struct(
+                                [
+                                    (
+                                        "message",
+                                        Path(
+                                            Path {
+                                                parts: [
+                                                    "String",
+                                                ],
+                                            },
+                                        ),
+                                        None,
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ),
+                ],
+            ),
+        ),
+    ],
+    sub_modules: [],
+}
+
+--- interpret ---
+const ParseError = ()
+const assert = fn<native> (1)
+const assert_eq = fn<native> (2)
+const false = false
+const fib_native = fn<native> (1)
+const import = fn (1)
+const io = ()
+const main = fn (0)
+const print = fn<native> (variadic)
+const println = fn<native> (variadic)
+const read_to_string = fn<native> (1)
+const true = true
 
 --- reports ---
-Error: 
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/rym_clone/main.rym:1:1]
-   │
- 1 │ use std.io.{self, IoError};
-   │ ─┬─  
-   │  ╰─── ExpectedFound { expected: [Const, Type, end of input], found: Some(Use) }
-───╯
 

@@ -113,11 +113,11 @@ Module {
     constants: [
         (
             "main",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [],
-                return_type: "unkown",
+                return_type: Unkown,
                 body: Block(
                     [],
                 ),
@@ -125,16 +125,22 @@ Module {
         ),
         (
             "pi",
-            None,
+            Unkown,
             Literal(Float: 3.141592653589793),
         ),
         (
             "create_death_chain",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [],
-                return_type: "chain",
+                return_type: Path(
+                    Path {
+                        parts: [
+                            "chain",
+                        ],
+                    },
+                ),
                 body: Block(
                     [
                         Expr(

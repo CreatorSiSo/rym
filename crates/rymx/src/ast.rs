@@ -4,7 +4,7 @@ use std::fmt::Display;
 #[derive(Debug, Clone)]
 pub struct Module {
 	pub name: String,
-	pub constants: Vec<(String, Option<Type>, Expr)>,
+	pub constants: Vec<(String, Type, Expr)>,
 	pub types: Vec<(String, Type)>,
 	pub sub_modules: Vec<Module>,
 }
@@ -12,7 +12,8 @@ pub struct Module {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
 	Expr(Expr),
-	Variable(VariableKind, String, Expr),
+	TypeDef(String, Type),
+	Variable(VariableKind, String, Type, Expr),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

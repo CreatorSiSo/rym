@@ -1,6 +1,6 @@
 use clap::{arg, command, Command};
 use rustyline::{error::ReadlineError, Editor};
-use rymx::{compile_expr, compile_module, interpret, Diagnostics, Env, SourceId};
+use rymx::{compile_module, compile_stmt, interpret, Diagnostics, Env, SourceId};
 use std::{
 	fs::{read_to_string, File},
 	path::PathBuf,
@@ -71,7 +71,7 @@ fn cmd_repl(write_flags: Vec<String>) -> anyhow::Result<()> {
 				editor.add_history_entry(&line).unwrap();
 				let id = diag.set_other_src("repl", &line);
 
-				if let Some(expr) = compile_expr(&mut diag, &line, id) {
+				if let Some(expr) = compile_stmt(&mut diag, &line, id) {
 					let val = interpret(&mut diag, &mut env, expr);
 					println!("{val}");
 				}

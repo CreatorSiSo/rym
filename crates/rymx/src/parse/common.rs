@@ -26,35 +26,6 @@ pub(super) fn parameters_parser<'src>(
 	parameters
 }
 
-pub(super) fn block_parser<'src>(
-	expr: impl Parser<'src, TokenStream<'src>, Expr, Extra<'src>> + Clone + 'src,
-	other: impl Parser<'src, TokenStream<'src>, Stmt, Extra<'src>> + Clone + 'src,
-) -> impl Parser<'src, TokenStream<'src>, Expr, Extra<'src>> + Clone {
-	// statement ::= expr ";" | variable | function
-	let statement = choice((
-		expr.clone().map(Stmt::Expr).then_ignore(just(Token::Semi)),
-		other,
-	));
-
-	// block ::= "{" statement* expr? "}"
-	statement
-		.repeated()
-		.collect::<Vec<Stmt>>()
-		.then(
-			expr.or_not(), // FIXME Not working
-		)
-		.delimited_by(just(Token::BraceOpen), just(Token::BraceClose))
-		.map(|(mut statements, final_expr)| {
-			if let Some(expr) = final_expr {
-				if !matches!(expr, Expr::Return(..) | Expr::Break(..)) {
-					statements.push(Stmt::Expr(Expr::Break(Box::new(expr))));
-				}
-			}
-			Expr::Block(statements)
-		})
-		.boxed()
-}
-
 pub fn literal_parser(src: &str) -> impl Parser<TokenStream, Literal, Extra> + Clone {
 	let integer = integer_parser(src).map(Literal::Int);
 

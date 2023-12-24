@@ -115,11 +115,12 @@ impl Interpret for Stmt {
 	fn eval(self, env: &mut Env) -> ControlFlow {
 		match self {
 			Stmt::Expr(expr) => expr.eval(env),
-			Stmt::Variable(kind, name, expr) => {
+			Stmt::Variable(kind, name, typ, expr) => {
 				let val = default_flow!(expr.eval(env));
 				env.create(name, kind, val);
 				ControlFlow::None(Value::Unit)
 			}
+			_ => todo!(),
 		}
 	}
 }

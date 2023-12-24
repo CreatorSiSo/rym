@@ -820,7 +820,7 @@ Module {
     constants: [
         (
             "main",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [],
@@ -854,7 +854,7 @@ Module {
         ),
         (
             "fib_if",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [
@@ -905,7 +905,7 @@ Module {
         ),
         (
             "test_fib",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [
@@ -1099,7 +1099,7 @@ Module {
         ),
         (
             "countdown",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [
@@ -1149,7 +1149,7 @@ Module {
         ),
         (
             "test_countdown",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [],
@@ -1222,7 +1222,7 @@ Module {
         ),
         (
             "test_fake_loops",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [],
@@ -1232,6 +1232,7 @@ Module {
                         Variable(
                             Const,
                             "while_do",
+                            Unkown,
                             Function {
                                 name: None,
                                 params: [
@@ -1337,7 +1338,7 @@ Module {
         ),
         (
             "outer",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [
@@ -1349,6 +1350,7 @@ Module {
                         Variable(
                             Const,
                             "inner",
+                            Unkown,
                             Function {
                                 name: None,
                                 params: [
@@ -1392,7 +1394,7 @@ Module {
         ),
         (
             "min",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [
@@ -1426,7 +1428,7 @@ Module {
         ),
         (
             "max",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [
@@ -1460,7 +1462,7 @@ Module {
         ),
         (
             "clamp",
-            None,
+            Unkown,
             Function {
                 name: None,
                 params: [

@@ -54,11 +54,21 @@ Semi [;]
 VSpace [\n\n]
 Comment [// TODO ...]
 VSpace [\n\n]
-Ident [test]
+Const [const]
 HSpace [ ]
-String [\"arrays\"]
+Ident [array_test]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
+VSpace [\n]
+Comment [// test \"arrays\" {]
 VSpace [\n]
 HSpace [    ]
 Let [let]
@@ -84,7 +94,6 @@ VSpace [\n]
 HSpace [    ]
 Ident [assert_eq]
 ParenOpen [(]
-Error [@]
 Ident [type_of]
 ParenOpen [(]
 Ident [zeroed]
@@ -128,7 +137,6 @@ VSpace [\n]
 HSpace [    ]
 Ident [assert_eq]
 ParenOpen [(]
-Error [@]
 Ident [type_of]
 ParenOpen [(]
 Ident [initialized]
@@ -306,16 +314,19 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
 Comment [// TODO Slices]
 VSpace [\n]
 
+--- parse ---
+
 --- reports ---
 Error: 
-    ╭─[/home/simon/dev/rym/crates/rymx/tests/types.rym:11:15]
+    ╭─[/home/simon/dev/rym/crates/rymx/tests/types.rym:12:37]
     │
- 11 │     assert_eq(@type_of(zeroed), [512]u8);
-    │               ┬  
-    │               ╰── Invalid character [@]
+ 12 │     assert_eq(type_of(zeroed), [512]u8);
+    │                                     ─┬  
+    │                                      ╰── ExpectedFound { expected: [], found: Some(Ident) }
 ────╯
 

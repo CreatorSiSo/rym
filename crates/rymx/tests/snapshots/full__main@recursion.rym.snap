@@ -4,11 +4,17 @@ expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/recursion.rym
 ---
 --- tokenize ---
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [main]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -41,6 +47,7 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
 Const [const]
 HSpace [ ]
@@ -119,15 +126,21 @@ Comment [//     | _ => fib_match(n - 1) + fib_match(n - 2);]
 VSpace [\n\n]
 Comment [// const fib_oneliner = fn(n) => match n with 0 => 0 | 1 => 1 | _ => fib_oneliner(n - 1) + fib_oneliner(n - 2);]
 VSpace [\n\n]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [test_fib]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 Ident [name]
 Comma [,]
 HSpace [ ]
 Ident [fib]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -301,16 +314,23 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [countdown]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 Ident [n]
 Comma [,]
 HSpace [ ]
 Ident [step]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -355,12 +375,19 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [test_countdown]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -429,19 +456,30 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [test_fake_loops]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
 HSpace [    ]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [while_do]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 Ident [i]
 Comma [,]
@@ -454,6 +492,8 @@ Comma [,]
 HSpace [ ]
 Ident [body]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -500,6 +540,7 @@ Semi [;]
 VSpace [\n]
 HSpace [    ]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
 HSpace [    ]
 Ident [while_do]
@@ -560,36 +601,44 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [outer]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 Ident [n]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
 HSpace [    ]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [inner]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 Ident [n]
 ParenClose [)]
 HSpace [ ]
-BraceOpen [{]
-VSpace [\n]
-HSpace [        ]
+ThickArrow [=>]
+HSpace [ ]
 Ident [n]
 HSpace [ ]
 Plus [+]
 HSpace [ ]
 Int [1]
+Semi [;]
 VSpace [\n]
-HSpace [    ]
-BraceClose [}]
-VSpace [\n\n]
 HSpace [    ]
 Ident [n]
 HSpace [ ]
@@ -620,10 +669,15 @@ ParenClose [)]
 ParenClose [)]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [min]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 Ident [value]
 Comma [,]
@@ -632,6 +686,8 @@ Ident [min]
 ParenClose [)]
 HSpace [ ]
 Ident [any]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -653,10 +709,15 @@ HSpace [ ]
 Ident [value]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [max]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 Ident [value]
 Comma [,]
@@ -665,6 +726,8 @@ Ident [max]
 ParenClose [)]
 HSpace [ ]
 Ident [any]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -686,10 +749,15 @@ HSpace [ ]
 Ident [value]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [clamp]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 Ident [value]
 Comma [,]
@@ -701,6 +769,8 @@ Ident [max]
 ParenClose [)]
 HSpace [ ]
 Ident [any]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -741,6 +811,7 @@ HSpace [        ]
 Ident [value]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n]
 
 --- parse ---
@@ -749,28 +820,33 @@ Module {
     constants: [
         (
             "main",
+            None,
             Function {
-                name: Some(
-                    "main",
-                ),
+                name: None,
                 params: [],
-                return_type: "()",
+                return_type: "unkown",
                 body: Block(
                     [
-                        Call(
-                            Ident("test_fib"),
-                            [
-                                Literal(String fib_if),
-                                Ident("fib_if"),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("test_fib"),
+                                [
+                                    Literal(String: "fib_if"),
+                                    Ident("fib_if"),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("test_countdown"),
-                            [],
+                        Expr(
+                            Call(
+                                Ident("test_countdown"),
+                                [],
+                            ),
                         ),
-                        Call(
-                            Ident("test_fake_loops"),
-                            [],
+                        Expr(
+                            Call(
+                                Ident("test_fake_loops"),
+                                [],
+                            ),
                         ),
                     ],
                 ),
@@ -778,6 +854,7 @@ Module {
         ),
         (
             "fib_if",
+            None,
             Function {
                 name: None,
                 params: [
@@ -787,22 +864,22 @@ Module {
                 body: IfElse(
                     LessThanEq(
                         Ident("n"),
-                        Literal(Int 0),
+                        Literal(Int: 0),
                     ),
-                    Literal(Int 0),
+                    Literal(Int: 0),
                     IfElse(
                         Eq(
                             Ident("n"),
-                            Literal(Int 1),
+                            Literal(Int: 1),
                         ),
-                        Literal(Int 1),
+                        Literal(Int: 1),
                         Add(
                             Call(
                                 Ident("fib_if"),
                                 [
                                     Sub(
                                         Ident("n"),
-                                        Literal(Int 1),
+                                        Literal(Int: 1),
                                     ),
                                 ],
                             ),
@@ -811,7 +888,7 @@ Module {
                                 [
                                     Sub(
                                         Ident("n"),
-                                        Literal(Int 2),
+                                        Literal(Int: 2),
                                     ),
                                 ],
                             ),
@@ -822,168 +899,193 @@ Module {
         ),
         (
             "test_fib",
+            None,
             Function {
-                name: Some(
-                    "test_fib",
-                ),
+                name: None,
                 params: [
                     "name",
                     "fib",
                 ],
-                return_type: "()",
+                return_type: "unkown",
                 body: Block(
                     [
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 0),
-                                    ],
-                                ),
-                                Literal(Int 0),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 0),
+                                        ],
+                                    ),
+                                    Literal(Int: 0),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 1),
-                                    ],
-                                ),
-                                Literal(Int 1),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 1),
+                                        ],
+                                    ),
+                                    Literal(Int: 1),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 2),
-                                    ],
-                                ),
-                                Literal(Int 1),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 2),
+                                        ],
+                                    ),
+                                    Literal(Int: 1),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 3),
-                                    ],
-                                ),
-                                Literal(Int 2),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 3),
+                                        ],
+                                    ),
+                                    Literal(Int: 2),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 4),
-                                    ],
-                                ),
-                                Literal(Int 3),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 4),
+                                        ],
+                                    ),
+                                    Literal(Int: 3),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 5),
-                                    ],
-                                ),
-                                Literal(Int 5),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 5),
+                                        ],
+                                    ),
+                                    Literal(Int: 5),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 6),
-                                    ],
-                                ),
-                                Literal(Int 8),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 6),
+                                        ],
+                                    ),
+                                    Literal(Int: 8),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 7),
-                                    ],
-                                ),
-                                Literal(Int 13),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 7),
+                                        ],
+                                    ),
+                                    Literal(Int: 13),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 8),
-                                    ],
-                                ),
-                                Literal(Int 21),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 8),
+                                        ],
+                                    ),
+                                    Literal(Int: 21),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 9),
-                                    ],
-                                ),
-                                Literal(Int 34),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 9),
+                                        ],
+                                    ),
+                                    Literal(Int: 34),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 10),
-                                    ],
-                                ),
-                                Literal(Int 55),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 10),
+                                        ],
+                                    ),
+                                    Literal(Int: 55),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("assert_eq"),
-                            [
-                                Call(
-                                    Ident("fib"),
-                                    [
-                                        Literal(Int 20),
-                                    ],
-                                ),
-                                Literal(Int 6765),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Call(
+                                        Ident("fib"),
+                                        [
+                                            Literal(Int: 20),
+                                        ],
+                                    ),
+                                    Literal(Int: 6765),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("println"),
-                            [
-                                Literal(String Successfully tested ),
-                                Ident("name"),
-                                Literal(String !),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("println"),
+                                [
+                                    Literal(String: "Successfully tested "),
+                                    Ident("name"),
+                                    Literal(String: "!"),
+                                ],
+                            ),
                         ),
                     ],
                 ),
@@ -991,46 +1093,49 @@ Module {
         ),
         (
             "countdown",
+            None,
             Function {
-                name: Some(
-                    "countdown",
-                ),
+                name: None,
                 params: [
                     "n",
                     "step",
                 ],
-                return_type: "()",
+                return_type: "unkown",
                 body: Block(
                     [
-                        Call(
-                            Ident("print"),
-                            [
-                                Ident("n"),
-                                Literal(String  ),
-                            ],
-                        ),
-                        IfElse(
-                            GreaterThan(
-                                Ident("n"),
-                                Literal(Int 0),
-                            ),
+                        Expr(
                             Call(
-                                Ident("countdown"),
+                                Ident("print"),
                                 [
-                                    Call(
-                                        Ident("min"),
-                                        [
-                                            Sub(
-                                                Ident("n"),
-                                                Ident("step"),
-                                            ),
-                                            Literal(Int 0),
-                                        ],
-                                    ),
-                                    Ident("step"),
+                                    Ident("n"),
+                                    Literal(String: " "),
                                 ],
                             ),
-                            Unit,
+                        ),
+                        Expr(
+                            IfElse(
+                                GreaterThan(
+                                    Ident("n"),
+                                    Literal(Int: 0),
+                                ),
+                                Call(
+                                    Ident("countdown"),
+                                    [
+                                        Call(
+                                            Ident("min"),
+                                            [
+                                                Sub(
+                                                    Ident("n"),
+                                                    Ident("step"),
+                                                ),
+                                                Literal(Int: 0),
+                                            ],
+                                        ),
+                                        Ident("step"),
+                                    ],
+                                ),
+                                Unit,
+                            ),
                         ),
                     ],
                 ),
@@ -1038,57 +1143,72 @@ Module {
         ),
         (
             "test_countdown",
+            None,
             Function {
-                name: Some(
-                    "test_countdown",
-                ),
+                name: None,
                 params: [],
-                return_type: "()",
+                return_type: "unkown",
                 body: Block(
                     [
-                        Call(
-                            Ident("countdown"),
-                            [
-                                Literal(Int 0),
-                                Literal(Int 5),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("countdown"),
+                                [
+                                    Literal(Int: 0),
+                                    Literal(Int: 5),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("println"),
-                            [],
+                        Expr(
+                            Call(
+                                Ident("println"),
+                                [],
+                            ),
                         ),
-                        Call(
-                            Ident("countdown"),
-                            [
-                                Literal(Int 1),
-                                Literal(Int 1),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("countdown"),
+                                [
+                                    Literal(Int: 1),
+                                    Literal(Int: 1),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("println"),
-                            [],
+                        Expr(
+                            Call(
+                                Ident("println"),
+                                [],
+                            ),
                         ),
-                        Call(
-                            Ident("countdown"),
-                            [
-                                Literal(Int 10),
-                                Literal(Int 1),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("countdown"),
+                                [
+                                    Literal(Int: 10),
+                                    Literal(Int: 1),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("println"),
-                            [],
+                        Expr(
+                            Call(
+                                Ident("println"),
+                                [],
+                            ),
                         ),
-                        Call(
-                            Ident("countdown"),
-                            [
-                                Literal(Int 100),
-                                Literal(Int 8),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("countdown"),
+                                [
+                                    Literal(Int: 100),
+                                    Literal(Int: 8),
+                                ],
+                            ),
                         ),
-                        Call(
-                            Ident("println"),
-                            [],
+                        Expr(
+                            Call(
+                                Ident("println"),
+                                [],
+                            ),
                         ),
                     ],
                 ),
@@ -1096,105 +1216,114 @@ Module {
         ),
         (
             "test_fake_loops",
+            None,
             Function {
-                name: Some(
-                    "test_fake_loops",
-                ),
+                name: None,
                 params: [],
-                return_type: "()",
+                return_type: "unkown",
                 body: Block(
                     [
-                        Function {
-                            name: Some(
-                                "while_do",
-                            ),
-                            params: [
-                                "i",
-                                "increment",
-                                "condition",
-                                "body",
-                            ],
-                            return_type: "()",
-                            body: Block(
+                        Variable(
+                            Const,
+                            "while_do",
+                            Function {
+                                name: None,
+                                params: [
+                                    "i",
+                                    "increment",
+                                    "condition",
+                                    "body",
+                                ],
+                                return_type: "unkown",
+                                body: Block(
+                                    [
+                                        Expr(
+                                            IfElse(
+                                                Not(
+                                                    Call(
+                                                        Ident("condition"),
+                                                        [
+                                                            Ident("i"),
+                                                        ],
+                                                    ),
+                                                ),
+                                                Return(
+                                                    Unit,
+                                                ),
+                                                Unit,
+                                            ),
+                                        ),
+                                        Expr(
+                                            Call(
+                                                Ident("body"),
+                                                [
+                                                    Ident("i"),
+                                                ],
+                                            ),
+                                        ),
+                                        Expr(
+                                            Call(
+                                                Ident("while_do"),
+                                                [
+                                                    Call(
+                                                        Ident("increment"),
+                                                        [
+                                                            Ident("i"),
+                                                        ],
+                                                    ),
+                                                    Ident("increment"),
+                                                    Ident("condition"),
+                                                    Ident("body"),
+                                                ],
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                            },
+                        ),
+                        Expr(
+                            Call(
+                                Ident("while_do"),
                                 [
-                                    IfElse(
-                                        Not(
-                                            Call(
-                                                Ident("condition"),
-                                                [
-                                                    Ident("i"),
-                                                ],
-                                            ),
-                                        ),
-                                        Return(
-                                            Unit,
-                                        ),
-                                        Unit,
-                                    ),
-                                    Call(
-                                        Ident("body"),
-                                        [
+                                    Literal(Int: 0),
+                                    Function {
+                                        name: None,
+                                        params: [
+                                            "i",
+                                        ],
+                                        return_type: "unkown",
+                                        body: Add(
                                             Ident("i"),
+                                            Literal(Int: 2),
+                                        ),
+                                    },
+                                    Function {
+                                        name: None,
+                                        params: [
+                                            "i",
                                         ],
-                                    ),
-                                    Call(
-                                        Ident("while_do"),
-                                        [
-                                            Call(
-                                                Ident("increment"),
-                                                [
-                                                    Ident("i"),
-                                                ],
-                                            ),
-                                            Ident("increment"),
-                                            Ident("condition"),
-                                            Ident("body"),
+                                        return_type: "unkown",
+                                        body: LessThan(
+                                            Ident("i"),
+                                            Literal(Int: 10),
+                                        ),
+                                    },
+                                    Function {
+                                        name: None,
+                                        params: [
+                                            "i",
                                         ],
-                                    ),
+                                        return_type: "unkown",
+                                        body: Call(
+                                            Ident("println"),
+                                            [
+                                                Literal(String: "i = "),
+                                                Ident("i"),
+                                            ],
+                                        ),
+                                    },
                                 ],
                             ),
-                        },
-                        Call(
-                            Ident("while_do"),
-                            [
-                                Literal(Int 0),
-                                Function {
-                                    name: None,
-                                    params: [
-                                        "i",
-                                    ],
-                                    return_type: "Unknown",
-                                    body: Add(
-                                        Ident("i"),
-                                        Literal(Int 2),
-                                    ),
-                                },
-                                Function {
-                                    name: None,
-                                    params: [
-                                        "i",
-                                    ],
-                                    return_type: "Unknown",
-                                    body: LessThan(
-                                        Ident("i"),
-                                        Literal(Int 10),
-                                    ),
-                                },
-                                Function {
-                                    name: None,
-                                    params: [
-                                        "i",
-                                    ],
-                                    return_type: "Unknown",
-                                    body: Call(
-                                        Ident("println"),
-                                        [
-                                            Literal(String i = ),
-                                            Ident("i"),
-                                        ],
-                                    ),
-                                },
-                            ],
                         ),
                     ],
                 ),
@@ -1202,54 +1331,51 @@ Module {
         ),
         (
             "outer",
+            None,
             Function {
-                name: Some(
-                    "outer",
-                ),
+                name: None,
                 params: [
                     "n",
                 ],
-                return_type: "()",
+                return_type: "unkown",
                 body: Block(
                     [
-                        Function {
-                            name: Some(
-                                "inner",
-                            ),
-                            params: [
-                                "n",
-                            ],
-                            return_type: "()",
-                            body: Block(
-                                [
-                                    Break(
-                                        Add(
-                                            Ident("n"),
-                                            Literal(Int 1),
-                                        ),
-                                    ),
+                        Variable(
+                            Const,
+                            "inner",
+                            Function {
+                                name: None,
+                                params: [
+                                    "n",
                                 ],
-                            ),
-                        },
-                        Break(
-                            Sub(
-                                Ident("n"),
-                                IfElse(
-                                    LessThan(
-                                        Ident("n"),
-                                        Literal(Int 0),
-                                    ),
-                                    Call(
-                                        Ident("inner"),
-                                        [
+                                return_type: "unkown",
+                                body: Add(
+                                    Ident("n"),
+                                    Literal(Int: 1),
+                                ),
+                            },
+                        ),
+                        Expr(
+                            Break(
+                                Sub(
+                                    Ident("n"),
+                                    IfElse(
+                                        LessThan(
                                             Ident("n"),
-                                        ],
-                                    ),
-                                    Call(
-                                        Ident("outer"),
-                                        [
-                                            Ident("n"),
-                                        ],
+                                            Literal(Int: 0),
+                                        ),
+                                        Call(
+                                            Ident("inner"),
+                                            [
+                                                Ident("n"),
+                                            ],
+                                        ),
+                                        Call(
+                                            Ident("outer"),
+                                            [
+                                                Ident("n"),
+                                            ],
+                                        ),
                                     ),
                                 ),
                             ),
@@ -1260,10 +1386,9 @@ Module {
         ),
         (
             "min",
+            None,
             Function {
-                name: Some(
-                    "min",
-                ),
+                name: None,
                 params: [
                     "value",
                     "min",
@@ -1271,14 +1396,16 @@ Module {
                 return_type: "any",
                 body: Block(
                     [
-                        Break(
-                            IfElse(
-                                LessThan(
-                                    Ident("value"),
+                        Expr(
+                            Break(
+                                IfElse(
+                                    LessThan(
+                                        Ident("value"),
+                                        Ident("min"),
+                                    ),
                                     Ident("min"),
+                                    Ident("value"),
                                 ),
-                                Ident("min"),
-                                Ident("value"),
                             ),
                         ),
                     ],
@@ -1287,10 +1414,9 @@ Module {
         ),
         (
             "max",
+            None,
             Function {
-                name: Some(
-                    "max",
-                ),
+                name: None,
                 params: [
                     "value",
                     "max",
@@ -1298,41 +1424,8 @@ Module {
                 return_type: "any",
                 body: Block(
                     [
-                        Break(
-                            IfElse(
-                                GreaterThan(
-                                    Ident("value"),
-                                    Ident("max"),
-                                ),
-                                Ident("max"),
-                                Ident("value"),
-                            ),
-                        ),
-                    ],
-                ),
-            },
-        ),
-        (
-            "clamp",
-            Function {
-                name: Some(
-                    "clamp",
-                ),
-                params: [
-                    "value",
-                    "min",
-                    "max",
-                ],
-                return_type: "any",
-                body: Block(
-                    [
-                        Break(
-                            IfElse(
-                                LessThan(
-                                    Ident("value"),
-                                    Ident("min"),
-                                ),
-                                Ident("min"),
+                        Expr(
+                            Break(
                                 IfElse(
                                     GreaterThan(
                                         Ident("value"),
@@ -1347,8 +1440,45 @@ Module {
                 ),
             },
         ),
+        (
+            "clamp",
+            None,
+            Function {
+                name: None,
+                params: [
+                    "value",
+                    "min",
+                    "max",
+                ],
+                return_type: "any",
+                body: Block(
+                    [
+                        Expr(
+                            Break(
+                                IfElse(
+                                    LessThan(
+                                        Ident("value"),
+                                        Ident("min"),
+                                    ),
+                                    Ident("min"),
+                                    IfElse(
+                                        GreaterThan(
+                                            Ident("value"),
+                                            Ident("max"),
+                                        ),
+                                        Ident("max"),
+                                        Ident("value"),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ],
+                ),
+            },
+        ),
     ],
-    children: [],
+    types: [],
+    sub_modules: [],
 }
 
 --- interpret ---

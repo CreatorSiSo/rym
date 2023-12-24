@@ -1,12 +1,21 @@
-use std.io.{self, IoError};
-use package.Error as OtherError;
-use package.prelude.*;
+// stud
+const import = fn(string: String) => {
+	// TODO
+};
+
+const io = import("std.io");
+const ParseError = example_package.Error;
+
+// use std.io.{self, IoError};
+// use package.Error as OtherError;
+// use package.prelude.*;
 
 /// Combined error type
-const Error =
-	| type IoError
-	| OtherError(message: String);
+type Error = enum
+	| Io io.Error
+	| Parse ParseError
+	| Other struct { message: String };
 
-const main = fn() Result<(), Error> => {
+const main = fn() Result[(), Error] => {
 	// TODO read cli arguments
 };

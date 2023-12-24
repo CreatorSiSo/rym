@@ -10,9 +10,11 @@ use chumsky::{input::Input, prelude::*};
 mod common;
 mod expr;
 mod file;
+mod r#type;
 
-use expr::expr_parser;
-use file::file_parser;
+pub(self) use expr::expr_parser;
+pub(self) use file::file_parser;
+pub(self) use r#type::type_parser;
 
 pub fn parse_file<'a>(
 	tokens: &'a [(Token, Span)],

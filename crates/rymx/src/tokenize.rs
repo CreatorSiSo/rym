@@ -72,6 +72,8 @@ pub enum Token {
 	Struct,
 	#[token("then")]
 	Then,
+	#[token("type")]
+	Type,
 	#[token("use")]
 	Use,
 

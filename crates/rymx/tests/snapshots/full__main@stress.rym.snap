@@ -4,11 +4,17 @@ expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/stress.rym
 ---
 --- tokenize ---
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [main]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -16,6 +22,7 @@ HSpace [    ]
 Comment [// assert_eq(ones, 304);]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n\n]
 Comment [// // TODO Fix stack overflow]
 VSpace [\n]
@@ -30,13 +37,19 @@ HSpace [ ]
 Float [3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282]
 Semi [;]
 VSpace [\n\n]
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [create_death_chain]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
 Ident [chain]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -91,6 +104,7 @@ Int [2]
 ParenClose [)]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n]
 
 --- parse ---
@@ -99,12 +113,11 @@ Module {
     constants: [
         (
             "main",
+            None,
             Function {
-                name: Some(
-                    "main",
-                ),
+                name: None,
                 params: [],
-                return_type: "()",
+                return_type: "unkown",
                 body: Block(
                     [],
                 ),
@@ -112,55 +125,57 @@ Module {
         ),
         (
             "pi",
-            Literal(Float 3.141592653589793),
+            None,
+            Literal(Float: 3.141592653589793),
         ),
         (
             "create_death_chain",
+            None,
             Function {
-                name: Some(
-                    "create_death_chain",
-                ),
+                name: None,
                 params: [],
                 return_type: "chain",
                 body: Block(
                     [
-                        Break(
-                            Chain(
+                        Expr(
+                            Break(
                                 Chain(
                                     Chain(
-                                        Sub(
-                                            Ident("pi"),
-                                            Chain(
-                                                Mul(
-                                                    Neg(
-                                                        Literal(Int 1),
+                                        Chain(
+                                            Sub(
+                                                Ident("pi"),
+                                                Chain(
+                                                    Mul(
+                                                        Neg(
+                                                            Literal(Int: 1),
+                                                        ),
+                                                        Ident("pi"),
                                                     ),
-                                                    Ident("pi"),
-                                                ),
-                                                Call(
-                                                    Ident("abs"),
-                                                    [],
+                                                    Call(
+                                                        Ident("abs"),
+                                                        [],
+                                                    ),
                                                 ),
                                             ),
+                                            Ident("try"),
                                         ),
-                                        Ident("try"),
+                                        Call(
+                                            Ident("test_with_values"),
+                                            [
+                                                Literal(Int: 0),
+                                                Literal(Int: 1),
+                                                Literal(Int: 2),
+                                                Literal(String: "Hello World!"),
+                                            ],
+                                        ),
                                     ),
                                     Call(
-                                        Ident("test_with_values"),
+                                        Ident("make_new"),
                                         [
-                                            Literal(Int 0),
-                                            Literal(Int 1),
-                                            Literal(Int 2),
-                                            Literal(String Hello World!),
+                                            Literal(Int: 2),
+                                            Literal(Int: 2),
                                         ],
                                     ),
-                                ),
-                                Call(
-                                    Ident("make_new"),
-                                    [
-                                        Literal(Int 2),
-                                        Literal(Int 2),
-                                    ],
                                 ),
                             ),
                         ),
@@ -169,7 +184,8 @@ Module {
             },
         ),
     ],
-    children: [],
+    types: [],
+    sub_modules: [],
 }
 
 --- interpret ---

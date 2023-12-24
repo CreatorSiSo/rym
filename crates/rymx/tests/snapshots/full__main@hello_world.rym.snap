@@ -4,11 +4,17 @@ expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/hello_world.rym
 ---
 --- tokenize ---
-Fn [fn]
+Const [const]
 HSpace [ ]
 Ident [main]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Fn [fn]
 ParenOpen [(]
 ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
 HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
@@ -20,6 +26,7 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
+Semi [;]
 VSpace [\n]
 
 --- parse ---
@@ -28,26 +35,28 @@ Module {
     constants: [
         (
             "main",
+            None,
             Function {
-                name: Some(
-                    "main",
-                ),
+                name: None,
                 params: [],
-                return_type: "()",
+                return_type: "unkown",
                 body: Block(
                     [
-                        Call(
-                            Ident("println"),
-                            [
-                                Literal(String Hello World!),
-                            ],
+                        Expr(
+                            Call(
+                                Ident("println"),
+                                [
+                                    Literal(String: "Hello World!"),
+                                ],
+                            ),
                         ),
                     ],
                 ),
             },
         ),
     ],
-    children: [],
+    types: [],
+    sub_modules: [],
 }
 
 --- interpret ---

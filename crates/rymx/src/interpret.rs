@@ -9,7 +9,7 @@ use std::{
 pub use self::env::Env;
 use self::env::ScopeKind;
 pub use self::function::{Call, Function, NativeFunction};
-use crate::ast::{BinaryOp, Expr, Literal, Module, UnaryOp, VariableKind};
+use crate::ast::{BinaryOp, Expr, Literal, Module, Stmt, UnaryOp, VariableKind};
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -88,7 +88,7 @@ impl Interpret for Module {
 		// 	.constants
 		// 	.sort_by(|Constant { expr: l, .. }, Constant { expr: r, .. }| match (l, r) {});
 
-		for (name, expr) in self.constants {
+		for (name, _, expr) in self.constants {
 			// Top level, ignoring control flow
 			let val = match expr.eval(env) {
 				ControlFlow::None(inner) | ControlFlow::Break(inner) | ControlFlow::Return(inner) => inner,
@@ -108,6 +108,19 @@ impl Interpret for Module {
 		}
 
 		ControlFlow::Break(Value::Unit)
+	}
+}
+
+impl Interpret for Stmt {
+	fn eval(self, env: &mut Env) -> ControlFlow {
+		match self {
+			Stmt::Expr(expr) => expr.eval(env),
+			Stmt::Variable(kind, name, expr) => {
+				let val = default_flow!(expr.eval(env));
+				env.create(name, kind, val);
+				ControlFlow::None(Value::Unit)
+			}
+		}
 	}
 }
 
@@ -194,15 +207,15 @@ impl Interpret for Expr {
 					default_flow!(else_expr.eval(env))
 				}
 			}
-			Expr::Block(exprs) => {
+			Expr::Block(stmts) => {
 				env.push_scope(ScopeKind::Expr);
 				let mut result = Value::Unit;
-				'exprs_loop: for expr in exprs {
-					match expr.eval(env) {
+				'stmts_loop: for stmt in stmts {
+					match stmt.eval(env) {
 						ControlFlow::None(_) => (),
 						ControlFlow::Break(inner) => {
 							result = inner;
-							break 'exprs_loop;
+							break 'stmts_loop;
 						}
 						control_flow => return control_flow,
 					}
@@ -212,12 +225,6 @@ impl Interpret for Expr {
 			}
 			Expr::Break(expr) => return ControlFlow::Break(default_flow!(expr.eval(env))),
 			Expr::Return(expr) => return ControlFlow::Return(default_flow!(expr.eval(env))),
-
-			Expr::Var(kind, name, expr) => {
-				let val = default_flow!(expr.eval(env));
-				env.create(name, kind, val);
-				Value::Unit
-			}
 		};
 
 		ControlFlow::None(result)

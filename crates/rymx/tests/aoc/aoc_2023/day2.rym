@@ -5,7 +5,7 @@ const List = std.List;
 const dbg = std.debug.print;
 
 // !void
-fn main() {
+const main = fn() => {
     const input = fs.read_to_string("src/2023/day2.txt").try;
     const games = parse_games(input.items).try;
 
@@ -42,7 +42,7 @@ fn main() {
     }
 
     dbg("Part 2: {}\n", [power_sum]);
-}
+};
 
 // !List(Game)
 fn parse_games(input: [u8; _]) List(Game) {

@@ -1,33 +1,37 @@
-use std::cell::Cell;
-
-use super::{module::TypedModule, Constant};
+use super::{
+	module::{FunctionPrototype, ModulePrototype},
+	Constant,
+};
 use crate::ast;
+use std::cell::RefCell;
 
 struct ConstEvaluator {
-	typed_modules: Cell<TypedModule>,
+	prototype: RefCell<ModulePrototype>,
 	ast_module: ast::Module,
 }
 
 impl ConstEvaluator {
-	fn eval_module(ast_module: ast::Module) -> TypedModule {
+	fn eval_module(ast_module: ast::Module) -> ModulePrototype {
 		let this = ConstEvaluator {
-			typed_modules: Cell::new(TypedModule::new()),
+			prototype: RefCell::new(ModulePrototype::new()),
 			ast_module,
 		};
 
-		for (name, expr) in &this.ast_module.constants {
+		for (name, _, expr) in &this.ast_module.constants {
 			this.eval_expr(expr);
 		}
 
 		// assert_eq!(this.typed_modules.len(), 1);
-		this.typed_modules.into_inner()
+		this.prototype.into_inner()
 	}
 
 	fn eval_expr(&self, expr: &ast::Expr) -> Constant {
 		match expr {
 			ast::Expr::Unit => Constant::Unit,
 			ast::Expr::Literal(lit) => Self::literal_to_constant(lit),
-			ast::Expr::Ident(_) => todo!(),
+			ast::Expr::Ident(ident) => self
+				.resolve_ident(ident)
+				.expect(&format!("Could not find {ident}")),
 			ast::Expr::Chain(_, _) => todo!(),
 			ast::Expr::ChainEnd(_) => todo!(),
 			ast::Expr::Function(_) => todo!(),
@@ -38,16 +42,17 @@ impl ConstEvaluator {
 			ast::Expr::Block(_) => todo!(),
 			ast::Expr::Break(_) => todo!(),
 			ast::Expr::Return(_) => todo!(),
-			ast::Expr::Var(_, _, _) => todo!(),
 		}
 	}
 
+	fn eval_function(&self, func: FunctionPrototype) {}
+
 	/// Search for a constant with this name and evaluate it if needed
-	fn resolve_ident(&mut self, ident: &str) -> Option<Constant> {
-		for (name, (_, val)) in &self.typed_modules.get_mut().constants {
+	fn resolve_ident(&self, ident: &str) -> Option<Constant> {
+		for (name, (_, val)) in &self.prototype.borrow().constants {
 			(name == ident).then_some(val.clone())?;
 		}
-		for (name, _func) in &self.typed_modules.get_mut().functions {
+		for (name, _func) in &self.prototype.borrow().functions {
 			if name == ident {
 				todo!()
 			}

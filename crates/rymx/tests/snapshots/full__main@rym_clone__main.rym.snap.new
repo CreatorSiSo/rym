@@ -1,42 +1,15 @@
 ---
 source: crates/rymx/tests/full.rs
+assertion_line: 15
 expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/rym_clone/main.rym
 ---
 --- tokenize ---
-Use [use]
-HSpace [ ]
-Ident [std]
-Dot [.]
-Ident [io]
-Dot [.]
-BraceOpen [{]
-LowerSelf [self]
-Comma [,]
-HSpace [ ]
-Ident [IoError]
-BraceClose [}]
-Semi [;]
+Comment [// use std.io.{self, IoError};]
 VSpace [\n]
-Use [use]
-HSpace [ ]
-Ident [package]
-Dot [.]
-Ident [Error]
-HSpace [ ]
-As [as]
-HSpace [ ]
-Ident [OtherError]
-Semi [;]
+Comment [// use package.Error as OtherError;]
 VSpace [\n]
-Use [use]
-HSpace [ ]
-Ident [package]
-Dot [.]
-Ident [prelude]
-Dot [.]
-Star [*]
-Semi [;]
+Comment [// use package.prelude.*;]
 VSpace [\n\n]
 DocComment [/// Combined error type]
 VSpace [\n]
@@ -57,12 +30,17 @@ HSpace [\t]
 Pipe [|]
 HSpace [ ]
 Ident [OtherError]
-ParenOpen [(]
+HSpace [ ]
+Struct [struct]
+HSpace [ ]
+BraceOpen [{]
+HSpace [ ]
 Ident [message]
 Colon [:]
 HSpace [ ]
 Ident [String]
-ParenClose [)]
+HSpace [ ]
+BraceClose [}]
 Semi [;]
 VSpace [\n\n]
 Const [const]
@@ -99,10 +77,10 @@ VSpace [\n]
 
 --- reports ---
 Error: 
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/rym_clone/main.rym:1:1]
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/rym_clone/main.rym:7:2]
    │
- 1 │ use std.io.{self, IoError};
-   │ ─┬─  
-   │  ╰─── ExpectedFound { expected: [Const, Type, end of input], found: Some(Use) }
+ 7 │     | IoError IoError
+   │     ┬  
+   │     ╰── ExpectedFound { expected: [Int, Float, String, Ident, Struct, Enum, Semi], found: Some(Pipe) }
 ───╯
 

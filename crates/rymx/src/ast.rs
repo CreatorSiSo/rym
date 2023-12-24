@@ -4,8 +4,15 @@ use std::fmt::Display;
 #[derive(Debug, Clone)]
 pub struct Module {
 	pub name: String,
-	pub constants: Vec<(String, Expr)>,
+	pub constants: Vec<(String, Option<Type>, Expr)>,
+	pub types: Vec<(String, Type)>,
 	pub sub_modules: Vec<Module>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Stmt {
+	Expr(Expr),
+	Variable(VariableKind, String, Expr),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,11 +53,9 @@ pub enum Expr {
 		/// Else branch
 		Box<Expr>,
 	),
-	Block(Vec<Expr>),
+	Block(Vec<Stmt>),
 	Break(Box<Expr>),
 	Return(Box<Expr>),
-
-	Var(VariableKind, String, Box<Expr>),
 }
 
 impl std::fmt::Debug for Expr {
@@ -80,14 +85,27 @@ impl std::fmt::Debug for Expr {
 			Self::Block(arg0) => f.debug_tuple("Block").field(arg0).finish(),
 			Self::Break(arg0) => f.debug_tuple("Break").field(arg0).finish(),
 			Self::Return(arg0) => f.debug_tuple("Return").field(arg0).finish(),
-
-			Self::Var(arg0, arg1, arg2) => f
-				.debug_tuple(&format!("{arg0:?}"))
-				.field(arg1)
-				.field(arg2)
-				.finish(),
 		}
 	}
+}
+
+// TODO comments
+#[derive(Debug, Clone, PartialEq)]
+pub enum Type {
+	Unit,
+	Unkown,
+	Never,
+	Literal(Literal),
+	Path(Path),
+	Generic(Box<Type>, Vec<Type>),
+	Function {
+		args: Vec<Type>,
+		named_args: Vec<(String, Type, Literal)>,
+		return_type: Box<Type>,
+	},
+	Struct(Vec<(String, Type, Option<Literal>)>),
+	Enum(Vec<(String, Option<Type>)>),
+	Union(Vec<Type>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -134,6 +152,17 @@ impl Display for BinaryOp {
 	}
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Path {
+	parts: Vec<String>,
+}
+
+impl Path {
+	pub fn new(parts: Vec<String>) -> Self {
+		Self { parts }
+	}
+}
+
 #[derive(Clone, PartialEq)]
 pub enum Literal {
 	Bool(bool),
@@ -145,10 +174,10 @@ pub enum Literal {
 impl std::fmt::Debug for Literal {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			Self::Bool(arg0) => f.write_fmt(format_args!("Bool {arg0}")),
-			Self::Int(arg0) => f.write_fmt(format_args!("Int {arg0}")),
-			Self::Float(arg0) => f.write_fmt(format_args!("Float {arg0}")),
-			Self::String(arg0) => f.write_fmt(format_args!("String {arg0}")),
+			Self::Bool(arg0) => f.write_fmt(format_args!("Bool: {arg0}")),
+			Self::Int(arg0) => f.write_fmt(format_args!("Int: {arg0}")),
+			Self::Float(arg0) => f.write_fmt(format_args!("Float: {arg0}")),
+			Self::String(arg0) => f.write_fmt(format_args!("String: {arg0:?}")),
 		}
 	}
 }

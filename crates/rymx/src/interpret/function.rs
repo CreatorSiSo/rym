@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use super::Value;
 use crate::{
-	ast::Expr,
+	ast::{Expr, Type},
 	interpret::{env::ScopeKind, Env, Interpret, VariableKind},
 };
 
@@ -10,7 +10,7 @@ use crate::{
 pub struct Function {
 	pub name: Option<String>,
 	pub params: Vec<String>,
-	pub return_type: String,
+	pub return_type: Type,
 	pub body: Box<Expr>,
 }
 

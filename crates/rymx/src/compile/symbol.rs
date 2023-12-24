@@ -91,13 +91,13 @@ impl SymbolTableBuilder {
 				self.scan_expression(then);
 				self.scan_expression(other);
 			}
-			Expr::Block(exprs) => self.scan_expressions(exprs),
+			// Expr::Block(stmts) => self.scan_statements(stmts),
 			Expr::Break(rhs) => self.scan_expression(rhs),
 			Expr::Return(rhs) => self.scan_expression(rhs),
-			Expr::Var(_, name, rhs) => {
-				self.scan_expression(rhs);
-				self.register_name(name);
-			}
+			// Expr::Var(_, name, rhs) => {
+			// 	self.scan_expression(rhs);
+			// 	self.register_name(name);
+			// }
 			_ => (),
 		}
 	}

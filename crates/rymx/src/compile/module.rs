@@ -1,13 +1,13 @@
-use super::{Constant, Type};
+use super::{bytecode::ByteCode, Constant, Type};
 use std::collections::HashMap;
 
-pub struct TypedModule {
+pub struct ModulePrototype {
 	pub constants: HashMap<String, (Type, Constant)>,
-	pub functions: HashMap<String, TypedFunction>,
-	pub sub_modules: Vec<TypedModule>,
+	pub functions: HashMap<String, FunctionPrototype>,
+	pub sub_modules: Vec<ModulePrototype>,
 }
 
-impl TypedModule {
+impl ModulePrototype {
 	pub fn new() -> Self {
 		Self {
 			constants: HashMap::new(),
@@ -17,4 +17,6 @@ impl TypedModule {
 	}
 }
 
-pub struct TypedFunction {}
+pub struct FunctionPrototype {
+	body: ByteCode,
+}

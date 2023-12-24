@@ -29,12 +29,12 @@ pub fn interpret(diag: &mut Diagnostics, env: &mut Env, ast: impl Interpret) -> 
 	let env_state: String = env
 		.variables()
 		.into_iter()
-		.fold((0, String::new()), |(indent, mut accum), scope| {
+		.fold((0, String::new()), |(ident, mut accum), scope| {
 			for (name, (kind, value)) in scope {
-				writeln!(accum, "{}{kind} {name} = {}", "  ".repeat(indent), value)
+				writeln!(accum, "{}{kind} {name} = {}", "  ".repeat(ident), value)
 					.expect("Internal Error: Unable to write into String");
 			}
-			(indent + 1, accum)
+			(ident + 1, accum)
 		})
 		.1;
 	diag.push_result(&env_state);

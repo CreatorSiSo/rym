@@ -166,61 +166,69 @@ Module {
     constants: [
         (
             "int_eq_0",
+            None,
             Eq(
-                Literal(Int 0),
-                Literal(Int 0),
+                Literal(Int: 0),
+                Literal(Int: 0),
             ),
         ),
         (
             "int_eq_1",
+            None,
             Eq(
-                Literal(Int 1),
-                Literal(Int 1),
+                Literal(Int: 1),
+                Literal(Int: 1),
             ),
         ),
         (
             "int_eq_2",
+            None,
             Eq(
-                Literal(Int 1),
-                Literal(Int 2),
+                Literal(Int: 1),
+                Literal(Int: 2),
             ),
         ),
         (
             "int_eq_3",
+            None,
             GreaterThan(
-                Literal(Int 1),
-                Literal(Int 2),
+                Literal(Int: 1),
+                Literal(Int: 2),
             ),
         ),
         (
             "int_eq_4",
+            None,
             LessThanEq(
-                Literal(Int 1),
-                Literal(Int 2),
+                Literal(Int: 1),
+                Literal(Int: 2),
             ),
         ),
         (
             "int_eq_5",
+            None,
             Eq(
-                Literal(Int 255),
+                Literal(Int: 255),
                 Neg(
-                    Literal(Int 2132426873),
+                    Literal(Int: 2132426873),
                 ),
             ),
         ),
         (
             "int_eq_6",
+            None,
             Eq(
                 Neg(
-                    Literal(Int 2132426873),
+                    Literal(Int: 2132426873),
                 ),
                 Neg(
-                    Literal(Int 2132426873),
+                    Literal(Int: 2132426873),
                 ),
             ),
         ),
         (
             "fn_native_eq_0",
+            None,
             Eq(
                 Ident("print"),
                 Ident("print"),
@@ -228,6 +236,7 @@ Module {
         ),
         (
             "fn_native_eq_1",
+            None,
             Eq(
                 Ident("print"),
                 Function {
@@ -240,6 +249,7 @@ Module {
         ),
         (
             "fn_native_eq_2",
+            None,
             Eq(
                 Ident("print"),
                 Call(
@@ -254,7 +264,8 @@ Module {
             ),
         ),
     ],
-    children: [],
+    types: [],
+    sub_modules: [],
 }
 
 --- interpret ---

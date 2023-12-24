@@ -13,6 +13,7 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
 		let path = ident
 			.clone()
 			.separated_by(just(Token::Dot))
+			.at_least(1)
 			.collect::<Vec<String>>()
 			.map(|parts| Type::Path(Path::new(parts)));
 

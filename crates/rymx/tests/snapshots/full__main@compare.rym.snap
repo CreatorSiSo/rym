@@ -242,7 +242,13 @@ Module {
                 Function {
                     name: None,
                     params: [],
-                    return_type: "fn_type",
+                    return_type: Path(
+                        Path {
+                            parts: [
+                                "fn_type",
+                            ],
+                        },
+                    ),
                     body: Ident("print"),
                 },
             ),
@@ -256,7 +262,13 @@ Module {
                     Function {
                         name: None,
                         params: [],
-                        return_type: "fn_type",
+                        return_type: Path(
+                            Path {
+                                parts: [
+                                    "fn_type",
+                                ],
+                            },
+                        ),
                         body: Ident("print"),
                     },
                     [],

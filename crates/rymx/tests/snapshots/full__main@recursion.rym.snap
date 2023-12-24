@@ -824,7 +824,7 @@ Module {
             Function {
                 name: None,
                 params: [],
-                return_type: "unkown",
+                return_type: Unkown,
                 body: Block(
                     [
                         Expr(
@@ -860,7 +860,13 @@ Module {
                 params: [
                     "n",
                 ],
-                return_type: "Uint",
+                return_type: Path(
+                    Path {
+                        parts: [
+                            "Uint",
+                        ],
+                    },
+                ),
                 body: IfElse(
                     LessThanEq(
                         Ident("n"),
@@ -906,7 +912,7 @@ Module {
                     "name",
                     "fib",
                 ],
-                return_type: "unkown",
+                return_type: Unkown,
                 body: Block(
                     [
                         Expr(
@@ -1100,7 +1106,7 @@ Module {
                     "n",
                     "step",
                 ],
-                return_type: "unkown",
+                return_type: Unkown,
                 body: Block(
                     [
                         Expr(
@@ -1147,7 +1153,7 @@ Module {
             Function {
                 name: None,
                 params: [],
-                return_type: "unkown",
+                return_type: Unkown,
                 body: Block(
                     [
                         Expr(
@@ -1220,7 +1226,7 @@ Module {
             Function {
                 name: None,
                 params: [],
-                return_type: "unkown",
+                return_type: Unkown,
                 body: Block(
                     [
                         Variable(
@@ -1234,7 +1240,7 @@ Module {
                                     "condition",
                                     "body",
                                 ],
-                                return_type: "unkown",
+                                return_type: Unkown,
                                 body: Block(
                                     [
                                         Expr(
@@ -1291,7 +1297,7 @@ Module {
                                         params: [
                                             "i",
                                         ],
-                                        return_type: "unkown",
+                                        return_type: Unkown,
                                         body: Add(
                                             Ident("i"),
                                             Literal(Int: 2),
@@ -1302,7 +1308,7 @@ Module {
                                         params: [
                                             "i",
                                         ],
-                                        return_type: "unkown",
+                                        return_type: Unkown,
                                         body: LessThan(
                                             Ident("i"),
                                             Literal(Int: 10),
@@ -1313,7 +1319,7 @@ Module {
                                         params: [
                                             "i",
                                         ],
-                                        return_type: "unkown",
+                                        return_type: Unkown,
                                         body: Call(
                                             Ident("println"),
                                             [
@@ -1337,7 +1343,7 @@ Module {
                 params: [
                     "n",
                 ],
-                return_type: "unkown",
+                return_type: Unkown,
                 body: Block(
                     [
                         Variable(
@@ -1348,7 +1354,7 @@ Module {
                                 params: [
                                     "n",
                                 ],
-                                return_type: "unkown",
+                                return_type: Unkown,
                                 body: Add(
                                     Ident("n"),
                                     Literal(Int: 1),
@@ -1393,7 +1399,13 @@ Module {
                     "value",
                     "min",
                 ],
-                return_type: "any",
+                return_type: Path(
+                    Path {
+                        parts: [
+                            "any",
+                        ],
+                    },
+                ),
                 body: Block(
                     [
                         Expr(
@@ -1421,7 +1433,13 @@ Module {
                     "value",
                     "max",
                 ],
-                return_type: "any",
+                return_type: Path(
+                    Path {
+                        parts: [
+                            "any",
+                        ],
+                    },
+                ),
                 body: Block(
                     [
                         Expr(
@@ -1450,7 +1468,13 @@ Module {
                     "min",
                     "max",
                 ],
-                return_type: "any",
+                return_type: Path(
+                    Path {
+                        parts: [
+                            "any",
+                        ],
+                    },
+                ),
                 body: Block(
                     [
                         Expr(

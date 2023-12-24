@@ -39,7 +39,7 @@ Module {
             Function {
                 name: None,
                 params: [],
-                return_type: "unkown",
+                return_type: Unkown,
                 body: Block(
                     [
                         Expr(

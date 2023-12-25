@@ -92,20 +92,10 @@ BracketClose []]
 Semi [;]
 VSpace [\n]
 HSpace [    ]
-Ident [assert_eq]
-ParenOpen [(]
-Ident [type_of]
-ParenOpen [(]
-Ident [zeroed]
-ParenClose [)]
-Comma [,]
-HSpace [ ]
-BracketOpen [[]
-Int [512]
-BracketClose []]
-Ident [u8]
-ParenClose [)]
-Semi [;]
+Comment [// TODO allow type expressions in place of normal expressions?]
+VSpace [\n]
+HSpace [    ]
+Comment [// assert_eq(type_of(zeroed), [512]u8);]
 VSpace [\n\n]
 HSpace [    ]
 Let [let]
@@ -135,20 +125,7 @@ BracketClose []]
 Semi [;]
 VSpace [\n]
 HSpace [    ]
-Ident [assert_eq]
-ParenOpen [(]
-Ident [type_of]
-ParenOpen [(]
-Ident [initialized]
-ParenClose [)]
-Comma [,]
-HSpace [ ]
-BracketOpen [[]
-Int [4]
-BracketClose []]
-Ident [u8]
-ParenClose [)]
-Semi [;]
+Comment [// assert_eq(type_of(initialized), [4]u8);]
 VSpace [\n]
 HSpace [    ]
 Ident [assert_eq]
@@ -323,10 +300,10 @@ VSpace [\n]
 
 --- reports ---
 Error: Syntax Error
-    ╭─[/home/simon/dev/rym/crates/rymx/tests/types.rym:12:37]
+    ╭─[/home/simon/dev/rym/crates/rymx/tests/types.rym:17:27]
     │
- 12 │     assert_eq(type_of(zeroed), [512]u8);
-    │                                     ─┬  
-    │                                      ╰── Expected nothing, found identifier.
+ 17 │     assert_eq(initialized.[0], 1);
+    │                           ┬  
+    │                           ╰── Expected identifier, found `[`.
 ────╯
 

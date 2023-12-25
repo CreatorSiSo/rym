@@ -63,16 +63,27 @@ impl Env {
 	}
 
 	pub fn get(&self, name: &str) -> Option<&Value> {
-		let mut in_function = false;
+		// search local scopes from inner-most outwards
+		let mut prev_kind = ScopeKind::Expr;
 		for scope in self.scopes.iter().rev() {
-			if in_function && scope.kind == ScopeKind::Function {
+			// jump out of nested function scopes,
+			// closures are not yet supported
+			if prev_kind == ScopeKind::Function && scope.kind == ScopeKind::Function {
 				continue;
 			}
+
 			if let Some((_, value)) = scope.vars.get(name) {
 				return Some(value);
 			}
-			in_function = matches!(scope.kind, ScopeKind::Function);
+
+			prev_kind = scope.kind;
 		}
+
+		// search modules
+		// for scope in self.scopes.iter() {
+		// 	// TODO
+		// }
+
 		None
 	}
 }
@@ -97,7 +108,7 @@ impl Scope {
 	}
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ScopeKind {
 	Module,
 	Function,

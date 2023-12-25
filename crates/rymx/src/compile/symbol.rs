@@ -71,10 +71,10 @@ impl SymbolTableBuilder {
 			Expr::Ident(_) => {
 				// TODO
 			}
-			Expr::Chain(lhs, rhs) => {
-				self.scan_expression(lhs);
-				self.scan_expression(rhs);
-			}
+			// Expr::FieldAccess(lhs, rhs) => {
+			// 	self.scan_expression(lhs);
+			// 	self.scan_expression(rhs);
+			// }
 			Expr::Function(func) => self.scan_function(func),
 			Expr::Unary(_op, rhs) => self.scan_expression(rhs),
 			Expr::Binary(_op, lhs, rhs) => {

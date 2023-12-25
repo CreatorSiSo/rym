@@ -38,7 +38,7 @@ pub enum Expr {
 	Unit,
 	Literal(Literal),
 	Ident(String),
-	Chain(Box<Expr>, Box<Expr>),
+	FieldAccess(Box<Expr>, String),
 	Function(Function),
 	Array(Vec<Expr>),
 	ArrayWithRepeat(Box<Expr>, Box<Expr>),
@@ -66,7 +66,11 @@ impl std::fmt::Debug for Expr {
 			Self::Unit => f.write_str("Unit"),
 			Self::Literal(arg0) => f.write_fmt(format_args!("Literal({arg0:?})")),
 			Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
-			Self::Chain(arg0, arg1) => f.debug_tuple("Chain").field(arg0).field(arg1).finish(),
+			Self::FieldAccess(arg0, arg1) => f
+				.debug_tuple("FieldAccess")
+				.field(arg0)
+				.field(arg1)
+				.finish(),
 			Self::Function(arg0) => f.write_fmt(format_args!("{arg0:#?}")),
 			Self::Array(arg0) => f.write_fmt(format_args!("Array({arg0:?})")),
 			Self::ArrayWithRepeat(arg0, arg1) => f
@@ -168,7 +172,13 @@ impl Display for BinaryOp {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Path {
-	parts: Vec<String>,
+	pub parts: Vec<String>,
+}
+
+impl std::fmt::Display for Path {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(&self.parts.join("."))
+	}
 }
 
 impl Path {

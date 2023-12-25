@@ -145,28 +145,30 @@ Module {
                     [
                         Expr(
                             Break(
-                                Chain(
-                                    Chain(
-                                        Chain(
-                                            Sub(
-                                                Ident("pi"),
-                                                Chain(
-                                                    Mul(
-                                                        Neg(
-                                                            Literal(Int: 1),
-                                                        ),
-                                                        Ident("pi"),
-                                                    ),
-                                                    Call(
-                                                        Ident("abs"),
-                                                        [],
-                                                    ),
-                                                ),
-                                            ),
-                                            Ident("try"),
-                                        ),
+                                Call(
+                                    FieldAccess(
                                         Call(
-                                            Ident("test_with_values"),
+                                            FieldAccess(
+                                                FieldAccess(
+                                                    Sub(
+                                                        Ident("pi"),
+                                                        Call(
+                                                            FieldAccess(
+                                                                Mul(
+                                                                    Neg(
+                                                                        Literal(Int: 1),
+                                                                    ),
+                                                                    Ident("pi"),
+                                                                ),
+                                                                "abs",
+                                                            ),
+                                                            [],
+                                                        ),
+                                                    ),
+                                                    "try",
+                                                ),
+                                                "test_with_values",
+                                            ),
                                             [
                                                 Literal(Int: 0),
                                                 Literal(Int: 1),
@@ -174,14 +176,12 @@ Module {
                                                 Literal(String: "Hello World!"),
                                             ],
                                         ),
+                                        "make_new",
                                     ),
-                                    Call(
-                                        Ident("make_new"),
-                                        [
-                                            Literal(Int: 2),
-                                            Literal(Int: 2),
-                                        ],
-                                    ),
+                                    [
+                                        Literal(Int: 2),
+                                        Literal(Int: 2),
+                                    ],
                                 ),
                             ),
                         ),

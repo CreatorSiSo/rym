@@ -140,7 +140,7 @@ impl Interpret for Expr {
 				Some(val) => val.clone(),
 				None => panic!("Unable to find <{name}>"),
 			},
-			Expr::Chain(_lhs, _rhs) => {
+			Expr::FieldAccess(_lhs, _rhs) => {
 				// TODO
 				debug_todo();
 				Value::Unit

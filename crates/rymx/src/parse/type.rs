@@ -9,21 +9,13 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
 
 		let ident = ident_parser(src).map(String::from);
 
-		// path ::= ident ("." ident)*
-		let path = ident
-			.clone()
-			.separated_by(just(Token::Dot))
-			.at_least(1)
-			.collect::<Vec<String>>()
-			.map(Path::new);
-
 		// atom ::= "(" ")" | literal | path | "(" type ")"
 		let atom = choice((
 			just(Token::ParenOpen)
 				.then(just(Token::ParenClose))
 				.to(Type::Unit),
 			literal,
-			path.clone().map(Type::Path),
+			path_parser(src).map(Type::Path),
 			type_
 				.clone()
 				.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
@@ -82,7 +74,7 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
 			.labelled("enum");
 
 		// size ::= (path | int)
-		let size = path
+		let size = path_parser(src)
 			.map(ArraySize::Path)
 			.or(integer_parser(src).map(|int| ArraySize::Int(int as u64)));
 		// array ::= "[" size? "]" type

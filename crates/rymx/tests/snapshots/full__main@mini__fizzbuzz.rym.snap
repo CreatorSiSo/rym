@@ -141,6 +141,6 @@ Error: Syntax Error
    │
  2 │     (1..).iter().for_each(fn(i) => println(match i with
    │       ─┬  
-   │        ╰── Expected nothing, found `..`.
+   │        ╰── Expected expression or `)`, found `..`.
 ───╯
 

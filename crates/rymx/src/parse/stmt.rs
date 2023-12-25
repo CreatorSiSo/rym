@@ -4,183 +4,7 @@ use chumsky::prelude::*;
 
 pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
 	recursive(|stmt| {
-		let expr = recursive(|expr| {
-			// literal ::= int | float | string
-			let literal = literal_parser(src).map(Expr::Literal);
-
-			// function ::= fn "(" parameters ")" type? "=>" expr
-			let function = just(Token::Fn)
-				.ignore_then(
-					parameters_parser(src).delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
-				)
-				.then(type_parser(src).or_not())
-				.then(just(Token::ThickArrow).ignore_then(expr.clone()))
-				.map(|((params, return_type), body)| {
-					Expr::Function(Function {
-						name: None,
-						params: params.into_iter().map(Into::into).collect(),
-						return_type: return_type.unwrap_or(Type::Unkown),
-						body: Box::new(body),
-					})
-				})
-				.labelled("function");
-
-			// array ::= "[" (expr ";" expr | (expr ",")* expr?) "]"
-			let array = choice((
-				expr
-					.clone()
-					.then_ignore(just(Token::Semi))
-					.then(expr.clone())
-					.map(|(value, length)| Expr::ArrayWithRepeat(value.into(), length.into())),
-				expr
-					.clone()
-					.separated_by(just(Token::Comma))
-					.allow_trailing()
-					.collect::<Vec<Expr>>()
-					.map(Expr::Array),
-			))
-			.delimited_by(just(Token::BracketOpen), just(Token::BracketClose))
-			.labelled("array")
-			.boxed();
-
-			// block ::= "{" statement* expr? "}"
-			let block = stmt
-				.clone()
-				.repeated()
-				.collect::<Vec<Stmt>>()
-				.then(
-					expr.clone().or_not(), // FIXME Not working
-				)
-				.delimited_by(just(Token::BraceOpen), just(Token::BraceClose))
-				.map(|(mut statements, final_expr)| {
-					if let Some(expr) = final_expr {
-						if !matches!(expr, Expr::Return(..) | Expr::Break(..)) {
-							statements.push(Stmt::Expr(Expr::Break(Box::new(expr))));
-						}
-					}
-					Expr::Block(statements)
-				})
-				.boxed();
-
-			// atom ::= literal | ident | "(" expr ")" | array | block
-			let atom = choice((
-				literal,
-				ident_parser(src).map(String::from).map(Expr::Ident),
-				expr
-					.clone()
-					.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
-				array,
-				block,
-			))
-			.labelled("atom");
-
-			// call ::= atom ("(" (expr ("," expr)*)? ")")?
-			let call = atom
-				.then(
-					expr
-						.clone()
-						.separated_by(just(Token::Comma))
-						.collect::<Vec<Expr>>()
-						.delimited_by(just(Token::ParenOpen), just(Token::ParenClose))
-						.or_not(),
-				)
-				.map(|(lhs, args)| match args {
-					Some(args) => Expr::Call(Box::new(lhs), args),
-					None => lhs,
-				})
-				.boxed();
-
-			// chain ::= call ("." call)*
-			let chain = call
-				.clone()
-				.foldl(just(Token::Dot).ignore_then(call).repeated(), |lhs, rhs| {
-					Expr::Chain(Box::new(lhs), Box::new(rhs))
-				});
-
-			// unary ::= ("-" | "not")* chain
-			let unary = select! {
-				Token::Minus => UnaryOp::Neg,
-				Token::Not => UnaryOp::Not,
-			}
-			.repeated()
-			.at_least(1)
-			.collect::<Vec<UnaryOp>>()
-			.or_not()
-			.then(chain)
-			.map(|(maybe_op, expr)| {
-				let Some(op) = maybe_op else {
-					return expr;
-				};
-				op.into_iter()
-					.fold(expr, |accum, op| Expr::Unary(op, Box::new(accum)))
-			});
-
-			// sum ::= unary (("*" | "/") unary)*
-			let product = unary
-				.clone()
-				.foldl_with(
-					select! {
-						Token::Star => BinaryOp::Mul,
-						Token::Slash => BinaryOp::Div,
-					}
-					.then(unary)
-					.repeated(),
-					|a, (op, b), _| Expr::Binary(op, Box::new(a), Box::new(b)),
-				)
-				.boxed();
-
-			// sum ::= product (("+" | "-") product)*
-			let sum = product.clone().foldl_with(
-				select! {
-					Token::Plus => BinaryOp::Add,
-					Token::Minus => BinaryOp::Sub,
-				}
-				.then(product)
-				.repeated(),
-				|a, (op, b), _| Expr::Binary(op, Box::new(a), Box::new(b)),
-			);
-
-			// compare ::= sum (("==" | "!=" | "<" | "<=" | ">" | ">=") sum)*
-			let compare = sum
-				.clone()
-				.foldl_with(
-					select! {
-						Token::Eq => BinaryOp::Eq,
-						Token::NotEq => BinaryOp::NotEq,
-						Token::LessThan => BinaryOp::LessThan,
-						Token::LessThanEq => BinaryOp::LessThanEq,
-						Token::GreaterThan => BinaryOp::GreaterThan,
-						Token::GreaterThanEq => BinaryOp::GreaterThanEq,
-					}
-					.then(sum)
-					.repeated(),
-					|a, (op, b), _| Expr::Binary(op, Box::new(a), Box::new(b)),
-				)
-				.boxed();
-
-			let if_else = just(Token::If)
-				.ignore_then(expr.clone())
-				.then_ignore(just(Token::Then))
-				.then(expr.clone())
-				.then(just(Token::Else).ignore_then(expr.clone()).or_not())
-				.map(|((cond, then_branch), else_branch)| {
-					Expr::IfElse(
-						Box::new(cond),
-						Box::new(then_branch),
-						Box::new(else_branch.unwrap_or(Expr::Unit)),
-					)
-				});
-
-			// return ::= "return" expr?
-			let r#return = just(Token::Return)
-				.ignore_then(expr.or_not())
-				.map(|inner| Expr::Return(Box::new(inner.unwrap_or(Expr::Unit))));
-
-			// expr ::= function | if_else | compare | return
-			choice((function, if_else, compare, r#return))
-				.labelled("expression")
-				.boxed()
-		});
+		let expr = expr_parser(src, stmt);
 
 		// typedef ::=  "type" ident "=" type ";"
 		let typedef = just(Token::Type)
@@ -216,5 +40,154 @@ pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
 			variable,
 			expr.then_ignore(just(Token::Semi)).map(Stmt::Expr),
 		))
+	})
+}
+
+/// Only works when called from stmt_parser!
+fn expr_parser<'src>(
+	src: &'src str,
+	stmt: impl Parser<'src, TokenStream<'src>, Stmt, Extra<'src>> + Clone + 'src,
+) -> impl Parser<TokenStream, Expr, Extra> + Clone {
+	recursive(|expr| {
+		// literal ::= int | float | string
+		let literal = literal_parser(src).map(Expr::Literal);
+
+		// function ::= fn "(" parameters ")" type? "=>" expr
+		let function = just(Token::Fn)
+			.ignore_then(
+				parameters_parser(src).delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
+			)
+			.then(type_parser(src).or_not())
+			.then(just(Token::ThickArrow).ignore_then(expr.clone()))
+			.map(|((params, return_type), body)| {
+				Expr::Function(Function {
+					name: None,
+					params: params.into_iter().map(Into::into).collect(),
+					return_type: return_type.unwrap_or(Type::Unkown),
+					body: Box::new(body),
+				})
+			})
+			.labelled("function");
+
+		// array ::= "[" (expr ";" expr | (expr ",")* expr?) "]"
+		let array = choice((
+			expr
+				.clone()
+				.then_ignore(just(Token::Semi))
+				.then(expr.clone())
+				.map(|(value, length)| Expr::ArrayWithRepeat(value.into(), length.into())),
+			expr
+				.clone()
+				.separated_by(just(Token::Comma))
+				.allow_trailing()
+				.collect::<Vec<Expr>>()
+				.map(Expr::Array),
+		))
+		.delimited_by(just(Token::BracketOpen), just(Token::BracketClose))
+		.labelled("array")
+		.boxed();
+
+		// block ::= "{" statement* expr? "}"
+		let block = stmt
+			.clone()
+			.repeated()
+			.collect::<Vec<Stmt>>()
+			.then(
+				expr.clone().or_not(), // FIXME Not working
+			)
+			.delimited_by(just(Token::BraceOpen), just(Token::BraceClose))
+			.map(|(mut statements, final_expr)| {
+				if let Some(expr) = final_expr {
+					if !matches!(expr, Expr::Return(..) | Expr::Break(..)) {
+						statements.push(Stmt::Expr(Expr::Break(Box::new(expr))));
+					}
+				}
+				Expr::Block(statements)
+			})
+			.boxed();
+
+		// atom ::= literal | ident | "(" expr ")" | array | block
+		let atom = choice((
+			literal,
+			ident_parser(src).map(String::from).map(Expr::Ident),
+			expr
+				.clone()
+				.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
+			array,
+			block,
+		))
+		.labelled("atom");
+
+		let basic = {
+			use chumsky::pratt::{infix, left, postfix, prefix};
+
+			let binary = |associativity, token, op| {
+				infix(associativity, just(token), move |l, r| {
+					Expr::Binary(op, Box::new(l), Box::new(r))
+				})
+			};
+
+			atom.clone().pratt((
+				// field ::= atom "." ident
+				postfix(
+					6,
+					just(Token::Dot).ignore_then(ident_parser(src).map(String::from)),
+					|l, field| Expr::FieldAccess(Box::new(l), field),
+				),
+				// call ::= field "(" (expr ("," expr)*)? ")"
+				postfix(
+					5,
+					expr
+						.clone()
+						.separated_by(just(Token::Comma))
+						.collect::<Vec<Expr>>()
+						.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
+					|l, args| Expr::Call(Box::new(l), args),
+				),
+				// unary ::= ("-" | "not") call
+				prefix(4, just(Token::Not), |rhs| {
+					Expr::Unary(UnaryOp::Not, Box::new(rhs))
+				}),
+				prefix(4, just(Token::Minus), |rhs| {
+					Expr::Unary(UnaryOp::Neg, Box::new(rhs))
+				}),
+				// mul_div ::= unary ("*" | "/") unary
+				binary(left(3), Token::Star, BinaryOp::Mul),
+				binary(left(3), Token::Slash, BinaryOp::Div),
+				// add_sub ::= mul_div ("*" | "/") mul_div
+				binary(left(2), Token::Plus, BinaryOp::Add),
+				binary(left(2), Token::Minus, BinaryOp::Sub),
+				// compare ::= add_sub ("==" | "!=" | "<" | "<=" | ">" | ">=") add_sub
+				binary(left(1), Token::Eq, BinaryOp::Eq),
+				binary(left(1), Token::NotEq, BinaryOp::NotEq),
+				binary(left(1), Token::LessThan, BinaryOp::LessThan),
+				binary(left(1), Token::LessThanEq, BinaryOp::LessThanEq),
+				binary(left(1), Token::GreaterThan, BinaryOp::GreaterThan),
+				binary(left(1), Token::GreaterThanEq, BinaryOp::GreaterThanEq),
+			))
+		};
+
+		let if_else = just(Token::If)
+			.ignore_then(expr.clone())
+			.then_ignore(just(Token::Then))
+			.then(expr.clone())
+			.then(just(Token::Else).ignore_then(expr.clone()).or_not())
+			.map(|((cond, then_branch), else_branch)| {
+				Expr::IfElse(
+					Box::new(cond),
+					Box::new(then_branch),
+					Box::new(else_branch.unwrap_or(Expr::Unit)),
+				)
+			});
+
+		// return ::= "return" expr?
+		let r#return = just(Token::Return)
+			.ignore_then(expr.or_not())
+			.map(|inner| Expr::Return(Box::new(inner.unwrap_or(Expr::Unit))));
+
+		// expr ::= function | if_else | simple | return
+		choice((function, if_else, /* compare, */ basic, atom, r#return))
+			.labelled("expression")
+			.boxed()
 	})
 }

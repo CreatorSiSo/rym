@@ -26,6 +26,15 @@ pub(super) fn parameters_parser<'src>(
 	parameters
 }
 
+pub fn path_parser(src: &str) -> impl Parser<TokenStream, Path, Extra> + Clone {
+	// path ::= ident ("." ident)*
+	ident_parser(src)
+		.map(String::from)
+		.separated_by(just(Token::Dot))
+		.at_least(1)
+		.collect::<Vec<String>>()
+		.map(Path::new)
+}
 pub fn literal_parser(src: &str) -> impl Parser<TokenStream, Literal, Extra> + Clone {
 	let integer = integer_parser(src).map(Literal::Int);
 

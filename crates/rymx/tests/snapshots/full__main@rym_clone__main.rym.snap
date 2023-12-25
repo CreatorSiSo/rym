@@ -163,9 +163,9 @@ Module {
         (
             "ParseError",
             Unkown,
-            Chain(
+            FieldAccess(
                 Ident("example_package"),
-                Ident("Error"),
+                "Error",
             ),
         ),
         (

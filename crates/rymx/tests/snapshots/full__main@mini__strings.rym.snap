@@ -20,29 +20,56 @@ VSpace [\n]
 HSpace [\t]
 Plus [+]
 HSpace [ ]
-Char [\'c\']
+String [\'c\']
 VSpace [\n]
 HSpace [\t]
 Plus [+]
 HSpace [ ]
-Char [\'\\\'\']
+String [\'\\\'\']
 VSpace [\n]
 HSpace [\t]
 Plus [+]
 HSpace [ ]
-Char [\'invalid\']
+String [\'invalid\']
 Semi [;]
 VSpace [\n]
 
 --- parse ---
+Module {
+    name: "",
+    constants: [
+        (
+            "long",
+            Unkown,
+            Add(
+                Add(
+                    Add(
+                        Add(
+                            Literal(String: "Hello World!"),
+                            Literal(String: "\\\" --- ' --- \\\" --- ’ --- \\\""),
+                        ),
+                        Literal(String: "c"),
+                    ),
+                    Literal(String: "\\'"),
+                ),
+                Literal(String: "invalid"),
+            ),
+        ),
+    ],
+    types: [],
+    sub_modules: [],
+}
+
+--- interpret ---
+const assert = fn<native> (1)
+const assert_eq = fn<native> (2)
+const false = false
+const fib_native = fn<native> (1)
+const long = Hello World!\" --- ' --- \" --- ’ --- \"c\'invalid
+const print = fn<native> (variadic)
+const println = fn<native> (variadic)
+const read_to_string = fn<native> (1)
+const true = true
 
 --- reports ---
-Error: Syntax Error
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/strings.rym:3:6]
-   │
- 3 │ ╭─▶     + 'c'
- 4 │ ├─▶     + '\''
-   │ │                
-   │ ╰──────────────── Expected nothing, found character literal.
-───╯
 

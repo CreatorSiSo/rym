@@ -61,7 +61,7 @@ fn map_parse_result<T>(
 						if expected.is_empty() {
 							"nothing".into()
 						} else {
-							expected.into_iter().map(display_pattern).join(" or ")
+							expected.into_iter().map(display_pattern).join(" | ")
 						},
 						found
 							.map(|token| token.display())

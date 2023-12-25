@@ -1,5 +1,6 @@
 ---
 source: crates/rymx/tests/full.rs
+assertion_line: 15
 expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/mini/fizzbuzz.rym
 ---
@@ -141,6 +142,6 @@ Error: Syntax Error
    │
  2 │     (1..).iter().for_each(fn(i) => println(match i with
    │       ─┬  
-   │        ╰── Expected expression or `)`, found `..`.
+   │        ╰── Expected expression | `)`, found `..`.
 ───╯
 

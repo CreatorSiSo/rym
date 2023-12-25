@@ -1,5 +1,6 @@
 ---
 source: crates/rymx/tests/full.rs
+assertion_line: 15
 expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/mini/prelude.rym
 ---
@@ -48,6 +49,6 @@ Error: Syntax Error
    │
  1 │ const println = fn(fmt: String, ..args: [impl Display]) => {
    │                                 ─┬  
-   │                                  ╰── Expected identifier or `)`, found `..`.
+   │                                  ╰── Expected identifier | `)`, found `..`.
 ───╯
 

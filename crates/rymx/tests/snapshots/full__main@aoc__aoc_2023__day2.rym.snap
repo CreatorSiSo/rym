@@ -1,5 +1,6 @@
 ---
 source: crates/rymx/tests/full.rs
+assertion_line: 15
 expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/aoc/aoc_2023/day2.rym
 ---
@@ -1206,6 +1207,6 @@ Error: Syntax Error
     │
  13 │     const max_step = Step { red = 12, green = 13, blue = 14 };
     │                           ┬  
-    │                           ╰── Expected expression or `;`, found `{`.
+    │                           ╰── Expected expression | `;`, found `{`.
 ────╯
 

@@ -145,6 +145,11 @@ impl Interpret for Expr {
 				debug_todo();
 				Value::Unit
 			}
+			Expr::Subscript(_lhs, _rhs) => {
+				// TODO
+				debug_todo();
+				Value::Unit
+			}
 			Expr::Function(func) => {
 				if let Some(ref name) = func.name {
 					env.create(name, VariableKind::Const, Value::Function(func.clone()));
@@ -257,6 +262,11 @@ where
 		BinaryOp::GreaterThanEq => Value::Bool(lhs >= rhs),
 		BinaryOp::Eq => Value::Bool(lhs == rhs),
 		BinaryOp::NotEq => Value::Bool(lhs != rhs),
+
+		BinaryOp::Assign => {
+			debug_todo();
+			Value::Unit
+		}
 	}
 }
 

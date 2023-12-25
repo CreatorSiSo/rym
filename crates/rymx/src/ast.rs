@@ -37,15 +37,17 @@ impl Display for VariableKind {
 pub enum Expr {
 	Unit,
 	Literal(Literal),
-	Ident(String),
-	FieldAccess(Box<Expr>, String),
-	Function(Function),
 	Array(Vec<Expr>),
 	ArrayWithRepeat(Box<Expr>, Box<Expr>),
+	Function(Function),
+
+	Ident(String),
 
 	Unary(UnaryOp, Box<Expr>),
 	Binary(BinaryOp, Box<Expr>, Box<Expr>),
 	Call(Box<Expr>, Vec<Expr>),
+	Subscript(Box<Expr>, Box<Expr>),
+	FieldAccess(Box<Expr>, String),
 
 	IfElse(
 		/// Condition
@@ -65,19 +67,15 @@ impl std::fmt::Debug for Expr {
 		match self {
 			Self::Unit => f.write_str("Unit"),
 			Self::Literal(arg0) => f.write_fmt(format_args!("Literal({arg0:?})")),
-			Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
-			Self::FieldAccess(arg0, arg1) => f
-				.debug_tuple("FieldAccess")
-				.field(arg0)
-				.field(arg1)
-				.finish(),
-			Self::Function(arg0) => f.write_fmt(format_args!("{arg0:#?}")),
 			Self::Array(arg0) => f.write_fmt(format_args!("Array({arg0:?})")),
 			Self::ArrayWithRepeat(arg0, arg1) => f
 				.debug_tuple("ArrayWithRepeat")
 				.field(arg0)
 				.field(arg1)
 				.finish(),
+			Self::Function(arg0) => f.write_fmt(format_args!("{arg0:#?}")),
+
+			Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
 
 			Self::Unary(arg0, arg1) => f.debug_tuple(&arg0.to_string()).field(arg1).finish(),
 			Self::Binary(arg0, arg1, arg2) => f
@@ -86,6 +84,12 @@ impl std::fmt::Debug for Expr {
 				.field(arg2)
 				.finish(),
 			Self::Call(arg0, arg1) => f.debug_tuple("Call").field(arg0).field(arg1).finish(),
+			Self::Subscript(arg0, arg1) => f.debug_tuple("Subscript").field(arg0).field(arg1).finish(),
+			Self::FieldAccess(arg0, arg1) => f
+				.debug_tuple("FieldAccess")
+				.field(arg0)
+				.field(arg1)
+				.finish(),
 
 			Self::IfElse(arg0, arg1, arg2) => f
 				.debug_tuple("IfElse")
@@ -150,6 +154,7 @@ pub enum BinaryOp {
 	Mul,
 	/// Division `1 / 2`
 	Div,
+
 	/// Equality `1 == 2`
 	Eq,
 	/// Inequality `1 != 2`
@@ -162,6 +167,9 @@ pub enum BinaryOp {
 	GreaterThan,
 	/// Less than or equal `1 >= 2`
 	GreaterThanEq,
+
+	/// Assignment `left = right`
+	Assign,
 }
 
 impl Display for BinaryOp {

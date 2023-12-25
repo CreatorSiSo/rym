@@ -92,9 +92,7 @@ fn expr_parser<'src>(
 			.clone()
 			.repeated()
 			.collect::<Vec<Stmt>>()
-			.then(
-				expr.clone().or_not(), // FIXME Not working
-			)
+			.then(expr.clone().or_not())
 			.delimited_by(just(Token::BraceOpen), just(Token::BraceClose))
 			.map(|(mut statements, final_expr)| {
 				if let Some(expr) = final_expr {
@@ -104,22 +102,23 @@ fn expr_parser<'src>(
 				}
 				Expr::Block(statements)
 			})
+			.labelled("block")
 			.boxed();
 
-		// atom ::= literal | ident | "(" expr ")" | array | block
+		// atom ::= literal | ident | array | "(" expr ")" | block
 		let atom = choice((
 			literal,
 			ident_parser(src).map(String::from).map(Expr::Ident),
+			array,
 			expr
 				.clone()
 				.delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
-			array,
 			block,
 		))
 		.labelled("atom");
 
 		let basic = {
-			use chumsky::pratt::{infix, left, postfix, prefix};
+			use chumsky::pratt::{infix, left, postfix, prefix, right};
 
 			let binary = |associativity, token, op| {
 				infix(associativity, just(token), move |l, r| {
@@ -130,13 +129,23 @@ fn expr_parser<'src>(
 			atom.clone().pratt((
 				// field ::= atom "." ident
 				postfix(
-					6,
+					7,
 					just(Token::Dot).ignore_then(ident_parser(src).map(String::from)),
 					|l, field| Expr::FieldAccess(Box::new(l), field),
 				),
+				// subscript ::= field "." "[" expr "]"
+				postfix(
+					6,
+					just(Token::Dot).ignore_then(
+						expr
+							.clone()
+							.delimited_by(just(Token::BracketOpen), just(Token::BracketClose)),
+					),
+					|l, index| Expr::Subscript(Box::new(l), Box::new(index)),
+				),
 				// call ::= field "(" (expr ("," expr)*)? ")"
 				postfix(
-					5,
+					6,
 					expr
 						.clone()
 						.separated_by(just(Token::Comma))
@@ -145,25 +154,32 @@ fn expr_parser<'src>(
 					|l, args| Expr::Call(Box::new(l), args),
 				),
 				// unary ::= ("-" | "not") call
-				prefix(4, just(Token::Not), |rhs| {
-					Expr::Unary(UnaryOp::Not, Box::new(rhs))
+				prefix(5, just(Token::Not), |r| {
+					Expr::Unary(UnaryOp::Not, Box::new(r))
 				}),
-				prefix(4, just(Token::Minus), |rhs| {
-					Expr::Unary(UnaryOp::Neg, Box::new(rhs))
+				prefix(5, just(Token::Minus), |r| {
+					Expr::Unary(UnaryOp::Neg, Box::new(r))
 				}),
 				// mul_div ::= unary ("*" | "/") unary
-				binary(left(3), Token::Star, BinaryOp::Mul),
-				binary(left(3), Token::Slash, BinaryOp::Div),
+				binary(left(4), Token::Star, BinaryOp::Mul),
+				binary(left(4), Token::Slash, BinaryOp::Div),
 				// add_sub ::= mul_div ("*" | "/") mul_div
-				binary(left(2), Token::Plus, BinaryOp::Add),
-				binary(left(2), Token::Minus, BinaryOp::Sub),
+				binary(left(3), Token::Plus, BinaryOp::Add),
+				binary(left(3), Token::Minus, BinaryOp::Sub),
 				// compare ::= add_sub ("==" | "!=" | "<" | "<=" | ">" | ">=") add_sub
-				binary(left(1), Token::Eq, BinaryOp::Eq),
-				binary(left(1), Token::NotEq, BinaryOp::NotEq),
-				binary(left(1), Token::LessThan, BinaryOp::LessThan),
-				binary(left(1), Token::LessThanEq, BinaryOp::LessThanEq),
-				binary(left(1), Token::GreaterThan, BinaryOp::GreaterThan),
-				binary(left(1), Token::GreaterThanEq, BinaryOp::GreaterThanEq),
+				// TODO Require parentheses
+				binary(left(2), Token::Eq, BinaryOp::Eq),
+				binary(left(2), Token::NotEq, BinaryOp::NotEq),
+				binary(left(2), Token::LessThan, BinaryOp::LessThan),
+				binary(left(2), Token::LessThanEq, BinaryOp::LessThanEq),
+				binary(left(2), Token::GreaterThan, BinaryOp::GreaterThan),
+				binary(left(2), Token::GreaterThanEq, BinaryOp::GreaterThanEq),
+				// assign ::= compare "=" compare
+				binary(right(1), Token::Assign, BinaryOp::Assign),
+				// break ::= "break" assign
+				prefix(0, just(Token::Break), |r| Expr::Break(Box::new(r))),
+				// return_value ::= "return" assign
+				prefix(0, just(Token::Return), |r| Expr::Return(Box::new(r))),
 			))
 		};
 
@@ -180,13 +196,11 @@ fn expr_parser<'src>(
 				)
 			});
 
-		// return ::= "return" expr?
-		let r#return = just(Token::Return)
-			.ignore_then(expr.or_not())
-			.map(|inner| Expr::Return(Box::new(inner.unwrap_or(Expr::Unit))));
+		// return ::= "return"
+		let r#return = just(Token::Return).to(Expr::Return(Box::new(Expr::Unit)));
 
-		// expr ::= function | if_else | simple | return
-		choice((function, if_else, /* compare, */ basic, atom, r#return))
+		// expr ::= function | if_else | basic | atom
+		choice((function, if_else, basic, atom, r#return))
 			.labelled("expression")
 			.boxed()
 	})

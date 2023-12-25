@@ -297,13 +297,262 @@ Comment [// TODO Slices]
 VSpace [\n]
 
 --- parse ---
+Module {
+    name: "",
+    constants: [
+        (
+            "u1_min",
+            Path(
+                Path {
+                    parts: [
+                        "u1",
+                    ],
+                },
+            ),
+            Literal(Int: 0),
+        ),
+        (
+            "u1_max",
+            Path(
+                Path {
+                    parts: [
+                        "u1",
+                    ],
+                },
+            ),
+            Literal(Int: 1),
+        ),
+        (
+            "u8_min",
+            Path(
+                Path {
+                    parts: [
+                        "u8",
+                    ],
+                },
+            ),
+            Literal(Int: 0),
+        ),
+        (
+            "u8_max",
+            Path(
+                Path {
+                    parts: [
+                        "u8",
+                    ],
+                },
+            ),
+            Literal(Int: 255),
+        ),
+        (
+            "array_test",
+            Unkown,
+            Function {
+                name: None,
+                params: [],
+                return_type: Unkown,
+                body: Block(
+                    [
+                        Variable(
+                            Let,
+                            "zeroed",
+                            Array(
+                                Some(
+                                    Path(
+                                        Path {
+                                            parts: [
+                                                "_",
+                                            ],
+                                        },
+                                    ),
+                                ),
+                                Path(
+                                    Path {
+                                        parts: [
+                                            "u8",
+                                        ],
+                                    },
+                                ),
+                            ),
+                            ArrayWithRepeat(
+                                Literal(Int: 0),
+                                Literal(Int: 512),
+                            ),
+                        ),
+                        Variable(
+                            Let,
+                            "initialized",
+                            Array(
+                                Some(
+                                    Path(
+                                        Path {
+                                            parts: [
+                                                "_",
+                                            ],
+                                        },
+                                    ),
+                                ),
+                                Path(
+                                    Path {
+                                        parts: [
+                                            "u8",
+                                        ],
+                                    },
+                                ),
+                            ),
+                            Array([Literal(Int: 1), Literal(Int: 0), Literal(Int: 0), Literal(Int: 255)]),
+                        ),
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Subscript(
+                                        Ident("initialized"),
+                                        Literal(Int: 0),
+                                    ),
+                                    Literal(Int: 1),
+                                ],
+                            ),
+                        ),
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Subscript(
+                                        Ident("initialized"),
+                                        Literal(Int: 1),
+                                    ),
+                                    Literal(Int: 0),
+                                ],
+                            ),
+                        ),
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Subscript(
+                                        Ident("initialized"),
+                                        Literal(Int: 2),
+                                    ),
+                                    Literal(Int: 0),
+                                ],
+                            ),
+                        ),
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Subscript(
+                                        Ident("initialized"),
+                                        Literal(Int: 3),
+                                    ),
+                                    Literal(Int: 255),
+                                ],
+                            ),
+                        ),
+                        Variable(
+                            LetMut,
+                            "mutable",
+                            Array(
+                                Some(
+                                    Path(
+                                        Path {
+                                            parts: [
+                                                "_",
+                                            ],
+                                        },
+                                    ),
+                                ),
+                                Path(
+                                    Path {
+                                        parts: [
+                                            "u8",
+                                        ],
+                                    },
+                                ),
+                            ),
+                            ArrayWithRepeat(
+                                Literal(Int: 0),
+                                Literal(Int: 5),
+                            ),
+                        ),
+                        Expr(
+                            Assign(
+                                Subscript(
+                                    Ident("initialized"),
+                                    Literal(Int: 0),
+                                ),
+                                Literal(Int: 1),
+                            ),
+                        ),
+                        Expr(
+                            Assign(
+                                Subscript(
+                                    Ident("initialized"),
+                                    Literal(Int: 1),
+                                ),
+                                Literal(Int: 2),
+                            ),
+                        ),
+                        Expr(
+                            Assign(
+                                Subscript(
+                                    Ident("initialized"),
+                                    Literal(Int: 2),
+                                ),
+                                Literal(Int: 3),
+                            ),
+                        ),
+                        Expr(
+                            Assign(
+                                Subscript(
+                                    Ident("initialized"),
+                                    Literal(Int: 3),
+                                ),
+                                Literal(Int: 4),
+                            ),
+                        ),
+                        Expr(
+                            Assign(
+                                Subscript(
+                                    Ident("initialized"),
+                                    Literal(Int: 4),
+                                ),
+                                Literal(Int: 5),
+                            ),
+                        ),
+                        Expr(
+                            Call(
+                                Ident("assert_eq"),
+                                [
+                                    Ident("mutable"),
+                                    Array([Literal(Int: 1), Literal(Int: 2), Literal(Int: 3), Literal(Int: 4), Literal(Int: 5)]),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
+            },
+        ),
+    ],
+    types: [],
+    sub_modules: [],
+}
+
+--- interpret ---
+const array_test = fn (0)
+const assert = fn<native> (1)
+const assert_eq = fn<native> (2)
+const false = false
+const fib_native = fn<native> (1)
+const print = fn<native> (variadic)
+const println = fn<native> (variadic)
+const read_to_string = fn<native> (1)
+const true = true
+const u1_max = 1
+const u1_min = 0
+const u8_max = 255
+const u8_min = 0
 
 --- reports ---
-Error: Syntax Error
-    ╭─[/home/simon/dev/rym/crates/rymx/tests/types.rym:17:27]
-    │
- 17 │     assert_eq(initialized.[0], 1);
-    │                           ┬  
-    │                           ╰── Expected identifier, found `[`.
-────╯
 

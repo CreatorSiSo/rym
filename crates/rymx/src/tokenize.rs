@@ -41,6 +41,8 @@ pub enum Token {
 	// keywords
 	#[token("as")]
 	As,
+	#[token("break")]
+	Break,
 	#[token("const")]
 	Const,
 	#[token("else")]

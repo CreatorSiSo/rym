@@ -10,18 +10,18 @@ pub(super) type Extra<'src> = extra::Full<Rich<'src, Token, Span>, (), &'src str
 
 pub(super) fn parameters_parser<'src>(
 	src: &'src str,
-) -> impl Parser<TokenStream, Vec<&str>, Extra> + Clone {
+) -> impl Parser<TokenStream, Vec<(String, Type)>, Extra> + Clone {
 	// parameter ::= ident (":" type)?
 	let parameter = ident_parser(src)
 		.then(just(Token::Colon).ignore_then(type_parser(src)).or_not())
-		.map(|(name, _typ)| name)
+		.map(|(name, maybe_typ)| (name.to_string(), maybe_typ.unwrap_or(Type::Unkown)))
 		.labelled("parameter");
 
 	// parameters ::= (parameter ("," parameter)*)?
 	let parameters = parameter
 		.separated_by(just(Token::Comma))
 		.allow_trailing()
-		.collect::<Vec<&str>>();
+		.collect();
 
 	parameters
 }

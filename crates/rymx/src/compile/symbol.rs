@@ -1,4 +1,4 @@
-use crate::{ast::Expr, interpret::Function};
+use crate::ast::{Expr, Function};
 use std::collections::HashMap;
 
 /// Inspired by: https://github.com/RustPython/RustPython/blob/main/compiler/codegen/src/symboltable.rs
@@ -113,8 +113,8 @@ impl SymbolTableBuilder {
 			SymbolTableType::Function,
 		);
 
-		for param in params {
-			self.register_name(param);
+		for (name, _typ) in params {
+			self.register_name(name);
 		}
 		self.scan_expression(body);
 

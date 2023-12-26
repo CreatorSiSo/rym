@@ -71,6 +71,8 @@ pub enum Token {
 	Then,
 	#[token("type")]
 	Type,
+	#[token("union")]
+	Union,
 	#[token("use")]
 	Use,
 

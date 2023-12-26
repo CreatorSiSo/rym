@@ -73,6 +73,18 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
 			.map(Type::Enum)
 			.labelled("enum");
 
+		// union_variants ::= "|"? type ("|" type)*
+		let union_variants = type_
+			.clone()
+			.separated_by(just(Token::Pipe))
+			.allow_leading()
+			.collect::<Vec<Type>>();
+		// union ::= "union" union_variants
+		let union = just(Token::Union)
+			.ignore_then(union_variants)
+			.map(Type::Union)
+			.labelled("union");
+
 		// size ::= (path | int)
 		let size = path_parser(src)
 			.map(ArraySize::Path)
@@ -81,9 +93,9 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
 		let array = (size.or_not())
 			.delimited_by(just(Token::BracketOpen), just(Token::BracketClose))
 			.then(type_)
-			.map(|(size, element)| Type::Array(size, Box::new(element)));
+			.map(|(size, element)| Type::Array(size.unwrap_or(ArraySize::Unknown), Box::new(element)));
 
-		choice((struct_, enum_, array, generic))
+		choice((struct_, enum_, union, array, generic))
 	})
 	.labelled("type")
 }

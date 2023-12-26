@@ -117,6 +117,7 @@ Module {
             Function {
                 name: None,
                 params: [],
+                named_params: {},
                 return_type: Unkown,
                 body: Block(
                     [],
@@ -134,12 +135,9 @@ Module {
             Function {
                 name: None,
                 params: [],
+                named_params: {},
                 return_type: Path(
-                    Path {
-                        parts: [
-                            "chain",
-                        ],
-                    },
+                    Path(["chain"]),
                 ),
                 body: Block(
                     [
@@ -195,16 +193,16 @@ Module {
 }
 
 --- interpret ---
-const assert = fn<native> (1)
-const assert_eq = fn<native> (2)
-const create_death_chain = fn (0)
+const assert = extern fn(1)
+const assert_eq = extern fn(2)
+const create_death_chain = fn() chain
 const false = false
-const fib_native = fn<native> (1)
-const main = fn (0)
+const fib_native = extern fn(1)
+const main = fn() <unknown>
 const pi = 3.141592653589793
-const print = fn<native> (variadic)
-const println = fn<native> (variadic)
-const read_to_string = fn<native> (1)
+const print = extern fn(..[]TODO)
+const println = extern fn(..[]TODO)
+const read_to_string = extern fn(1)
 const true = true
 
 --- reports ---

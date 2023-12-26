@@ -1,47 +1,26 @@
-use std::fmt::Display;
-
 use super::Value;
 use crate::{
-	ast::{Expr, Type},
+	ast,
 	interpret::{env::ScopeKind, Env, Interpret, VariableKind},
 };
-
-#[derive(Debug, Clone)]
-pub struct Function {
-	pub name: Option<String>,
-	pub params: Vec<String>,
-	pub return_type: Type,
-	pub body: Box<Expr>,
-}
-
-impl PartialEq for Function {
-	fn eq(&self, other: &Self) -> bool {
-		self.params.len() == other.params.len() && self.body == other.body
-	}
-}
+use std::fmt::Display;
 
 pub trait Call {
 	fn call(&self, env: &mut Env, args: Vec<Value>) -> Value;
 }
 
-impl Call for Function {
+impl Call for ast::Function {
 	fn call(&self, env: &mut Env, args: Vec<Value>) -> Value {
 		assert!(self.params.len() == args.len());
 		env.push_scope(ScopeKind::Function);
 
-		for (param, arg) in self.params.iter().zip(args) {
-			env.create(param.clone(), VariableKind::Let, arg)
+		for ((name, typ), arg) in self.params.iter().zip(args) {
+			env.create(name.clone(), VariableKind::Let, arg)
 		}
 		let result = self.body.clone().eval(env);
 
 		env.pop_scope();
 		result.inner()
-	}
-}
-
-impl Display for Function {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.write_fmt(format_args!("fn ({})", self.params.len()))
 	}
 }
 
@@ -71,9 +50,9 @@ impl Call for NativeFunction {
 impl Display for NativeFunction {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			NativeFunction::Params1(_func) => f.write_str("fn<native> (1)"),
-			NativeFunction::Params2(_func) => f.write_str("fn<native> (2)"),
-			NativeFunction::ParamsVar(_func) => f.write_str("fn<native> (variadic)"),
+			NativeFunction::Params1(_func) => f.write_str("extern fn(1)"),
+			NativeFunction::Params2(_func) => f.write_str("extern fn(2)"),
+			NativeFunction::ParamsVar(_func) => f.write_str("extern fn(..[]TODO)"),
 		}
 	}
 }

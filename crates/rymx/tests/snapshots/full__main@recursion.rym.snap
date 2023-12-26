@@ -824,6 +824,7 @@ Module {
             Function {
                 name: None,
                 params: [],
+                named_params: {},
                 return_type: Unkown,
                 body: Block(
                     [
@@ -858,14 +859,14 @@ Module {
             Function {
                 name: None,
                 params: [
-                    "n",
+                    (
+                        "n",
+                        Unkown,
+                    ),
                 ],
+                named_params: {},
                 return_type: Path(
-                    Path {
-                        parts: [
-                            "Uint",
-                        ],
-                    },
+                    Path(["Uint"]),
                 ),
                 body: IfElse(
                     LessThanEq(
@@ -909,9 +910,16 @@ Module {
             Function {
                 name: None,
                 params: [
-                    "name",
-                    "fib",
+                    (
+                        "name",
+                        Unkown,
+                    ),
+                    (
+                        "fib",
+                        Unkown,
+                    ),
                 ],
+                named_params: {},
                 return_type: Unkown,
                 body: Block(
                     [
@@ -1103,9 +1111,16 @@ Module {
             Function {
                 name: None,
                 params: [
-                    "n",
-                    "step",
+                    (
+                        "n",
+                        Unkown,
+                    ),
+                    (
+                        "step",
+                        Unkown,
+                    ),
                 ],
+                named_params: {},
                 return_type: Unkown,
                 body: Block(
                     [
@@ -1153,6 +1168,7 @@ Module {
             Function {
                 name: None,
                 params: [],
+                named_params: {},
                 return_type: Unkown,
                 body: Block(
                     [
@@ -1226,6 +1242,7 @@ Module {
             Function {
                 name: None,
                 params: [],
+                named_params: {},
                 return_type: Unkown,
                 body: Block(
                     [
@@ -1236,11 +1253,24 @@ Module {
                             Function {
                                 name: None,
                                 params: [
-                                    "i",
-                                    "increment",
-                                    "condition",
-                                    "body",
+                                    (
+                                        "i",
+                                        Unkown,
+                                    ),
+                                    (
+                                        "increment",
+                                        Unkown,
+                                    ),
+                                    (
+                                        "condition",
+                                        Unkown,
+                                    ),
+                                    (
+                                        "body",
+                                        Unkown,
+                                    ),
                                 ],
+                                named_params: {},
                                 return_type: Unkown,
                                 body: Block(
                                     [
@@ -1296,8 +1326,12 @@ Module {
                                     Function {
                                         name: None,
                                         params: [
-                                            "i",
+                                            (
+                                                "i",
+                                                Unkown,
+                                            ),
                                         ],
+                                        named_params: {},
                                         return_type: Unkown,
                                         body: Add(
                                             Ident("i"),
@@ -1307,8 +1341,12 @@ Module {
                                     Function {
                                         name: None,
                                         params: [
-                                            "i",
+                                            (
+                                                "i",
+                                                Unkown,
+                                            ),
                                         ],
+                                        named_params: {},
                                         return_type: Unkown,
                                         body: LessThan(
                                             Ident("i"),
@@ -1318,8 +1356,12 @@ Module {
                                     Function {
                                         name: None,
                                         params: [
-                                            "i",
+                                            (
+                                                "i",
+                                                Unkown,
+                                            ),
                                         ],
+                                        named_params: {},
                                         return_type: Unkown,
                                         body: Call(
                                             Ident("println"),
@@ -1342,8 +1384,12 @@ Module {
             Function {
                 name: None,
                 params: [
-                    "n",
+                    (
+                        "n",
+                        Unkown,
+                    ),
                 ],
+                named_params: {},
                 return_type: Unkown,
                 body: Block(
                     [
@@ -1354,8 +1400,12 @@ Module {
                             Function {
                                 name: None,
                                 params: [
-                                    "n",
+                                    (
+                                        "n",
+                                        Unkown,
+                                    ),
                                 ],
+                                named_params: {},
                                 return_type: Unkown,
                                 body: Add(
                                     Ident("n"),
@@ -1398,15 +1448,18 @@ Module {
             Function {
                 name: None,
                 params: [
-                    "value",
-                    "min",
+                    (
+                        "value",
+                        Unkown,
+                    ),
+                    (
+                        "min",
+                        Unkown,
+                    ),
                 ],
+                named_params: {},
                 return_type: Path(
-                    Path {
-                        parts: [
-                            "any",
-                        ],
-                    },
+                    Path(["any"]),
                 ),
                 body: Block(
                     [
@@ -1432,15 +1485,18 @@ Module {
             Function {
                 name: None,
                 params: [
-                    "value",
-                    "max",
+                    (
+                        "value",
+                        Unkown,
+                    ),
+                    (
+                        "max",
+                        Unkown,
+                    ),
                 ],
+                named_params: {},
                 return_type: Path(
-                    Path {
-                        parts: [
-                            "any",
-                        ],
-                    },
+                    Path(["any"]),
                 ),
                 body: Block(
                     [
@@ -1466,16 +1522,22 @@ Module {
             Function {
                 name: None,
                 params: [
-                    "value",
-                    "min",
-                    "max",
+                    (
+                        "value",
+                        Unkown,
+                    ),
+                    (
+                        "min",
+                        Unkown,
+                    ),
+                    (
+                        "max",
+                        Unkown,
+                    ),
                 ],
+                named_params: {},
                 return_type: Path(
-                    Path {
-                        parts: [
-                            "any",
-                        ],
-                    },
+                    Path(["any"]),
                 ),
                 body: Block(
                     [
@@ -1508,23 +1570,23 @@ Module {
 }
 
 --- interpret ---
-const assert = fn<native> (1)
-const assert_eq = fn<native> (2)
-const clamp = fn (3)
-const countdown = fn (2)
+const assert = extern fn(1)
+const assert_eq = extern fn(2)
+const clamp = fn(<unknown>, <unknown>, <unknown>) any
+const countdown = fn(<unknown>, <unknown>) <unknown>
 const false = false
-const fib_if = fn (1)
-const fib_native = fn<native> (1)
-const main = fn (0)
-const max = fn (2)
-const min = fn (2)
-const outer = fn (1)
-const print = fn<native> (variadic)
-const println = fn<native> (variadic)
-const read_to_string = fn<native> (1)
-const test_countdown = fn (0)
-const test_fake_loops = fn (0)
-const test_fib = fn (2)
+const fib_if = fn(<unknown>) Uint
+const fib_native = extern fn(1)
+const main = fn() <unknown>
+const max = fn(<unknown>, <unknown>) any
+const min = fn(<unknown>, <unknown>) any
+const outer = fn(<unknown>) <unknown>
+const print = extern fn(..[]TODO)
+const println = extern fn(..[]TODO)
+const read_to_string = extern fn(1)
+const test_countdown = fn() <unknown>
+const test_fake_loops = fn() <unknown>
+const test_fib = fn(<unknown>, <unknown>) <unknown>
 const true = true
 
 --- reports ---

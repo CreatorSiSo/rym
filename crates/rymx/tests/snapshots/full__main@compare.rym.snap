@@ -242,12 +242,9 @@ Module {
                 Function {
                     name: None,
                     params: [],
+                    named_params: {},
                     return_type: Path(
-                        Path {
-                            parts: [
-                                "fn_type",
-                            ],
-                        },
+                        Path(["fn_type"]),
                     ),
                     body: Ident("print"),
                 },
@@ -262,12 +259,9 @@ Module {
                     Function {
                         name: None,
                         params: [],
+                        named_params: {},
                         return_type: Path(
-                            Path {
-                                parts: [
-                                    "fn_type",
-                                ],
-                            },
+                            Path(["fn_type"]),
                         ),
                         body: Ident("print"),
                     },
@@ -281,10 +275,10 @@ Module {
 }
 
 --- interpret ---
-const assert = fn<native> (1)
-const assert_eq = fn<native> (2)
+const assert = extern fn(1)
+const assert_eq = extern fn(2)
 const false = false
-const fib_native = fn<native> (1)
+const fib_native = extern fn(1)
 const fn_native_eq_0 = true
 const fn_native_eq_1 = false
 const fn_native_eq_2 = true
@@ -295,9 +289,9 @@ const int_eq_3 = false
 const int_eq_4 = true
 const int_eq_5 = false
 const int_eq_6 = true
-const print = fn<native> (variadic)
-const println = fn<native> (variadic)
-const read_to_string = fn<native> (1)
+const print = extern fn(..[]TODO)
+const println = extern fn(..[]TODO)
+const read_to_string = extern fn(1)
 const true = true
 
 --- reports ---

@@ -303,44 +303,28 @@ Module {
         (
             "u1_min",
             Path(
-                Path {
-                    parts: [
-                        "u1",
-                    ],
-                },
+                Path(["u1"]),
             ),
             Literal(Int: 0),
         ),
         (
             "u1_max",
             Path(
-                Path {
-                    parts: [
-                        "u1",
-                    ],
-                },
+                Path(["u1"]),
             ),
             Literal(Int: 1),
         ),
         (
             "u8_min",
             Path(
-                Path {
-                    parts: [
-                        "u8",
-                    ],
-                },
+                Path(["u8"]),
             ),
             Literal(Int: 0),
         ),
         (
             "u8_max",
             Path(
-                Path {
-                    parts: [
-                        "u8",
-                    ],
-                },
+                Path(["u8"]),
             ),
             Literal(Int: 255),
         ),
@@ -350,6 +334,7 @@ Module {
             Function {
                 name: None,
                 params: [],
+                named_params: {},
                 return_type: Unkown,
                 body: Block(
                     [
@@ -357,21 +342,11 @@ Module {
                             Let,
                             "zeroed",
                             Array(
-                                Some(
-                                    Path(
-                                        Path {
-                                            parts: [
-                                                "_",
-                                            ],
-                                        },
-                                    ),
+                                Path(
+                                    Path(["_"]),
                                 ),
                                 Path(
-                                    Path {
-                                        parts: [
-                                            "u8",
-                                        ],
-                                    },
+                                    Path(["u8"]),
                                 ),
                             ),
                             ArrayWithRepeat(
@@ -383,21 +358,11 @@ Module {
                             Let,
                             "initialized",
                             Array(
-                                Some(
-                                    Path(
-                                        Path {
-                                            parts: [
-                                                "_",
-                                            ],
-                                        },
-                                    ),
+                                Path(
+                                    Path(["_"]),
                                 ),
                                 Path(
-                                    Path {
-                                        parts: [
-                                            "u8",
-                                        ],
-                                    },
+                                    Path(["u8"]),
                                 ),
                             ),
                             Array([Literal(Int: 1), Literal(Int: 0), Literal(Int: 0), Literal(Int: 255)]),
@@ -454,21 +419,11 @@ Module {
                             LetMut,
                             "mutable",
                             Array(
-                                Some(
-                                    Path(
-                                        Path {
-                                            parts: [
-                                                "_",
-                                            ],
-                                        },
-                                    ),
+                                Path(
+                                    Path(["_"]),
                                 ),
                                 Path(
-                                    Path {
-                                        parts: [
-                                            "u8",
-                                        ],
-                                    },
+                                    Path(["u8"]),
                                 ),
                             ),
                             ArrayWithRepeat(
@@ -540,14 +495,14 @@ Module {
 }
 
 --- interpret ---
-const array_test = fn (0)
-const assert = fn<native> (1)
-const assert_eq = fn<native> (2)
+const array_test = fn() <unknown>
+const assert = extern fn(1)
+const assert_eq = extern fn(2)
 const false = false
-const fib_native = fn<native> (1)
-const print = fn<native> (variadic)
-const println = fn<native> (variadic)
-const read_to_string = fn<native> (1)
+const fib_native = extern fn(1)
+const print = extern fn(..[]TODO)
+const println = extern fn(..[]TODO)
+const read_to_string = extern fn(1)
 const true = true
 const u1_max = 1
 const u1_min = 0

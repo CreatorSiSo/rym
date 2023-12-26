@@ -1,6 +1,7 @@
 use super::{common::*, type_parser};
-use crate::{ast::*, interpret::Function, tokenize::Token};
+use crate::{ast::*, tokenize::Token};
 use chumsky::prelude::*;
+use std::collections::HashMap;
 
 pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
 	recursive(|stmt| {
@@ -62,7 +63,8 @@ fn expr_parser<'src>(
 			.map(|((params, return_type), body)| {
 				Expr::Function(Function {
 					name: None,
-					params: params.into_iter().map(Into::into).collect(),
+					params,
+					named_params: HashMap::new(),
 					return_type: return_type.unwrap_or(Type::Unkown),
 					body: Box::new(body),
 				})

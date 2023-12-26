@@ -8,8 +8,8 @@ use std::{
 
 pub use self::env::Env;
 use self::env::ScopeKind;
-pub use self::function::{Call, Function, NativeFunction};
-use crate::ast::{BinaryOp, Expr, Literal, Module, Stmt, UnaryOp, VariableKind};
+pub use self::function::{Call, NativeFunction};
+use crate::ast::{BinaryOp, Expr, Function, Literal, Module, Stmt, UnaryOp, VariableKind};
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -42,14 +42,13 @@ impl PartialEq for Value {
 impl std::fmt::Display for Value {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			Self::Bool(val) => f.write_str(if *val { "true" } else { "false" }),
-			Self::Int(val) => f.write_str(&val.to_string()),
-			Self::Float(val) => f.write_str(&val.to_string()),
-			Self::String(val) => f.write_str(val),
-			Self::Function(val) => f.write_str(&val.to_string()),
-			Self::NativeFunction(val) => f.write_str(&val.to_string()),
-			// Self::Type(_val) => f.write_str("<type>"),
-			Self::Unit => f.write_str("()"),
+			Self::Unit => write!(f, "()"),
+			Self::Bool(inner) => f.write_str(if *inner { "true" } else { "false" }),
+			Self::Int(inner) => write!(f, "{inner:#}"),
+			Self::Float(inner) => write!(f, "{inner:#}"),
+			Self::String(inner) => write!(f, "{inner:#}"),
+			Self::Function(inner) => write!(f, "{inner:#}"),
+			Self::NativeFunction(inner) => write!(f, "{inner}"),
 		}
 	}
 }

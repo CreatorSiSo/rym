@@ -115,14 +115,15 @@
         "function_name": {
             "patterns": [
                 {
-                    "match": "([_a-z][_a-zA-Z0-9]*)(?=\\S*\\()",
-                    "name": "entity.name.function.rym"
+                    "match": "([_a-z][_a-zA-Z0-9]*)(?=\\s*\\()",
+                    "captures": {
+                        "1": { "name": "entity.name.function.rym" }
+                    }
                 },
                 {
-                    "match": "([_a-z][_a-zA-Z0-9]*)\\S*((?=<.*>\\()|(?=\\())",
+                    "match": "([_a-z][_a-zA-Z0-9]*)(?=\\s*\\[.*\\]\\()",
                     "captures": {
-                        "1": { "name": "entity.name.function.rym" },
-                        "2": { "name": "keyword.operator.assignment.rym" }
+                        "1": { "name": "entity.name.function.generic.rym" }
                     }
                 }
             ]

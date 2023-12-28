@@ -240,7 +240,6 @@ Module {
             Eq(
                 Ident("print"),
                 Function {
-                    name: None,
                     params: [],
                     named_params: {},
                     return_type: Path(
@@ -257,7 +256,6 @@ Module {
                 Ident("print"),
                 Call(
                     Function {
-                        name: None,
                         params: [],
                         named_params: {},
                         return_type: Path(

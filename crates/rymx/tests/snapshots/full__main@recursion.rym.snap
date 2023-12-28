@@ -4,13 +4,9 @@ expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/recursion.rym
 ---
 --- tokenize ---
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [main]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
@@ -47,17 +43,15 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [fib_if]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [n]
+Colon [:]
+HSpace [ ]
+Ident [Int]
 ParenClose [)]
 HSpace [ ]
 Ident [Uint]
@@ -126,13 +120,9 @@ Comment [//     | _ => fib_match(n - 1) + fib_match(n - 2);]
 VSpace [\n\n]
 Comment [// const fib_oneliner = fn(n) => match n with 0 => 0 | 1 => 1 | _ => fib_oneliner(n - 1) + fib_oneliner(n - 2);]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [test_fib]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [name]
 Comma [,]
@@ -314,15 +304,10 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [countdown]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [n]
 Comma [,]
@@ -375,15 +360,10 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [test_countdown]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
@@ -456,15 +436,10 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [test_fake_loops]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
@@ -473,15 +448,14 @@ HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
 HSpace [    ]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [while_do]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [i]
+Colon [:]
+HSpace [ ]
+Ident [Int]
 Comma [,]
 HSpace [ ]
 Ident [increment]
@@ -540,7 +514,6 @@ Semi [;]
 VSpace [\n]
 HSpace [    ]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
 HSpace [    ]
 Ident [while_do]
@@ -601,15 +574,10 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [outer]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [n]
 ParenClose [)]
@@ -619,13 +587,9 @@ HSpace [ ]
 BraceOpen [{]
 VSpace [\n]
 HSpace [    ]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [inner]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [n]
 ParenClose [)]
@@ -669,15 +633,10 @@ ParenClose [)]
 ParenClose [)]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [min]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [value]
 Comma [,]
@@ -709,15 +668,10 @@ HSpace [ ]
 Ident [value]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [max]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [value]
 Comma [,]
@@ -749,15 +703,10 @@ HSpace [ ]
 Ident [value]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [clamp]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [value]
 Comma [,]
@@ -811,7 +760,6 @@ HSpace [        ]
 Ident [value]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n]
 
 --- parse ---
@@ -822,10 +770,9 @@ Module {
             "main",
             Unkown,
             Function {
-                name: None,
                 params: [],
                 named_params: {},
-                return_type: Unkown,
+                return_type: Unit,
                 body: Block(
                     [
                         Expr(
@@ -857,11 +804,12 @@ Module {
             "fib_if",
             Unkown,
             Function {
-                name: None,
                 params: [
                     (
                         "n",
-                        Unkown,
+                        Path(
+                            Path(["Int"]),
+                        ),
                     ),
                 ],
                 named_params: {},
@@ -908,7 +856,6 @@ Module {
             "test_fib",
             Unkown,
             Function {
-                name: None,
                 params: [
                     (
                         "name",
@@ -920,7 +867,7 @@ Module {
                     ),
                 ],
                 named_params: {},
-                return_type: Unkown,
+                return_type: Unit,
                 body: Block(
                     [
                         Expr(
@@ -1109,7 +1056,6 @@ Module {
             "countdown",
             Unkown,
             Function {
-                name: None,
                 params: [
                     (
                         "n",
@@ -1121,7 +1067,7 @@ Module {
                     ),
                 ],
                 named_params: {},
-                return_type: Unkown,
+                return_type: Unit,
                 body: Block(
                     [
                         Expr(
@@ -1166,10 +1112,9 @@ Module {
             "test_countdown",
             Unkown,
             Function {
-                name: None,
                 params: [],
                 named_params: {},
-                return_type: Unkown,
+                return_type: Unit,
                 body: Block(
                     [
                         Expr(
@@ -1240,10 +1185,9 @@ Module {
             "test_fake_loops",
             Unkown,
             Function {
-                name: None,
                 params: [],
                 named_params: {},
-                return_type: Unkown,
+                return_type: Unit,
                 body: Block(
                     [
                         Variable(
@@ -1251,11 +1195,12 @@ Module {
                             "while_do",
                             Unkown,
                             Function {
-                                name: None,
                                 params: [
                                     (
                                         "i",
-                                        Unkown,
+                                        Path(
+                                            Path(["Int"]),
+                                        ),
                                     ),
                                     (
                                         "increment",
@@ -1271,7 +1216,7 @@ Module {
                                     ),
                                 ],
                                 named_params: {},
-                                return_type: Unkown,
+                                return_type: Unit,
                                 body: Block(
                                     [
                                         Expr(
@@ -1324,7 +1269,6 @@ Module {
                                 [
                                     Literal(Int: 0),
                                     Function {
-                                        name: None,
                                         params: [
                                             (
                                                 "i",
@@ -1339,7 +1283,6 @@ Module {
                                         ),
                                     },
                                     Function {
-                                        name: None,
                                         params: [
                                             (
                                                 "i",
@@ -1354,7 +1297,6 @@ Module {
                                         ),
                                     },
                                     Function {
-                                        name: None,
                                         params: [
                                             (
                                                 "i",
@@ -1382,7 +1324,6 @@ Module {
             "outer",
             Unkown,
             Function {
-                name: None,
                 params: [
                     (
                         "n",
@@ -1390,7 +1331,7 @@ Module {
                     ),
                 ],
                 named_params: {},
-                return_type: Unkown,
+                return_type: Unit,
                 body: Block(
                     [
                         Variable(
@@ -1398,7 +1339,6 @@ Module {
                             "inner",
                             Unkown,
                             Function {
-                                name: None,
                                 params: [
                                     (
                                         "n",
@@ -1406,7 +1346,7 @@ Module {
                                     ),
                                 ],
                                 named_params: {},
-                                return_type: Unkown,
+                                return_type: Unit,
                                 body: Add(
                                     Ident("n"),
                                     Literal(Int: 1),
@@ -1446,7 +1386,6 @@ Module {
             "min",
             Unkown,
             Function {
-                name: None,
                 params: [
                     (
                         "value",
@@ -1483,7 +1422,6 @@ Module {
             "max",
             Unkown,
             Function {
-                name: None,
                 params: [
                     (
                         "value",
@@ -1520,7 +1458,6 @@ Module {
             "clamp",
             Unkown,
             Function {
-                name: None,
                 params: [
                     (
                         "value",
@@ -1573,20 +1510,20 @@ Module {
 const assert = extern fn(1)
 const assert_eq = extern fn(2)
 const clamp = fn(<unknown>, <unknown>, <unknown>) any
-const countdown = fn(<unknown>, <unknown>) <unknown>
+const countdown = fn(<unknown>, <unknown>) ()
 const false = false
-const fib_if = fn(<unknown>) Uint
+const fib_if = fn(Int) Uint
 const fib_native = extern fn(1)
-const main = fn() <unknown>
+const main = fn() ()
 const max = fn(<unknown>, <unknown>) any
 const min = fn(<unknown>, <unknown>) any
-const outer = fn(<unknown>) <unknown>
+const outer = fn(<unknown>) ()
 const print = extern fn(..[]TODO)
 const println = extern fn(..[]TODO)
 const read_to_string = extern fn(1)
-const test_countdown = fn() <unknown>
-const test_fake_loops = fn() <unknown>
-const test_fib = fn(<unknown>, <unknown>) <unknown>
+const test_countdown = fn() ()
+const test_fake_loops = fn() ()
+const test_fib = fn(<unknown>, <unknown>) ()
 const true = true
 
 --- reports ---

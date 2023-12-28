@@ -332,7 +332,6 @@ Module {
             "array_test",
             Unkown,
             Function {
-                name: None,
                 params: [],
                 named_params: {},
                 return_type: Unkown,

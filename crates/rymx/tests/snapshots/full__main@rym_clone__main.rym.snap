@@ -140,7 +140,6 @@ Module {
             "import",
             Unkown,
             Function {
-                name: None,
                 params: [
                     (
                         "string",
@@ -178,7 +177,6 @@ Module {
             "main",
             Unkown,
             Function {
-                name: None,
                 params: [],
                 named_params: {},
                 return_type: Generic(

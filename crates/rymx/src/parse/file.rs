@@ -27,7 +27,7 @@ pub fn file_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
                 Stmt::Variable(VariableKind::Const, name, typ, rhs) => {
                     constants.push((name, typ, rhs))
                 }
-                Stmt::TypeDef(name, rhs) => types.push((name, rhs)),
+                Stmt::Type(name, rhs) => types.push((name, rhs)),
 
                 // Already emitted an error for these
                 _ => {}

@@ -15,7 +15,8 @@ pub struct Module {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
     Expr(Expr),
-    TypeDef(String, Type),
+    Function(Function),
+    Type(String, Type),
     Variable(VariableKind, String, Type, Expr),
 }
 
@@ -111,7 +112,6 @@ impl std::fmt::Debug for Expr {
 
 #[derive(Debug, Clone)]
 pub struct Function {
-    pub name: Option<String>,
     pub params: Vec<(String, Type)>,
     pub named_params: HashMap<String, (Type, Expr)>,
     pub return_type: Type,

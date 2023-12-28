@@ -1,21 +1,57 @@
 use super::{common::*, type_parser};
-use crate::{ast::*, tokenize::Token};
+use crate::{ast::*, tokenize::Token, Span};
 use chumsky::prelude::*;
 use std::collections::HashMap;
 
 pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
     recursive(|stmt| {
-        let expr = expr_parser(src, stmt);
+        let expr = expr_parser(src, stmt.clone());
 
-        // typedef ::=  "type" ident "=" type ";"
-        let typedef = just(Token::Type)
+        // type_def ::=  "type" ident "=" type ";"
+        let type_def = just(Token::Type)
             .ignore_then(ident_parser(src))
             .then_ignore(just(Token::Assign))
             .then(type_parser(src))
             .then_ignore(just(Token::Semi))
-            .map(|(name, rhs)| Stmt::TypeDef(name.into(), rhs))
+            .map(|(name, rhs)| Stmt::Type(name.into(), rhs))
             .labelled("type definition")
             .boxed();
+
+        // function_def ::= "fn" ident "(" parameters ")" type? "=>" expr ";"?
+        let function_def = just(Token::Fn)
+            .ignore_then(ident_parser(src))
+            .then(
+                parameters_parser(src)
+                    .delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
+            )
+            .then(type_parser(src).or_not())
+            .then_ignore(just(Token::ThickArrow))
+            .then(expr_parser(src, stmt))
+            .then(just(Token::Semi).or_not().map(|semi| semi.is_some()))
+            .validate(|((rest, body), has_semi), extra, emitter| {
+                // Not emitting "missing semicolon error" for functions
+                // that use a block expression as body
+                if has_semi && !matches!(body, Expr::Block(..)) {
+                    emitter.emit(Rich::custom(
+                        Span::new(extra.span().end, extra.span().end),
+                        "Expected `;`, found nothing.",
+                    ))
+                }
+                (rest, body)
+            })
+            .map(|(((name, params), maybe_type), body)| {
+                Stmt::Variable(
+                    VariableKind::Const,
+                    name.into(),
+                    Type::Unkown, // TODO Use proper function type
+                    Expr::Function(Function {
+                        params,
+                        named_params: HashMap::new(),
+                        return_type: maybe_type.unwrap_or(Type::Unit),
+                        body: Box::new(body),
+                    }),
+                )
+            });
 
         // variable ::= ("const" | "let" | "let mut") ident (":" type)? "=" expr ";"
         let variable = choice((
@@ -37,9 +73,10 @@ pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
         .boxed();
 
         choice((
-            typedef,
-            variable,
             expr.then_ignore(just(Token::Semi)).map(Stmt::Expr),
+            type_def,
+            function_def,
+            variable,
         ))
     })
 }
@@ -63,7 +100,6 @@ fn expr_parser<'src>(
             .then(just(Token::ThickArrow).ignore_then(expr.clone()))
             .map(|((params, return_type), body)| {
                 Expr::Function(Function {
-                    name: None,
                     params,
                     named_params: HashMap::new(),
                     return_type: return_type.unwrap_or(Type::Unkown),

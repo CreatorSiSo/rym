@@ -12,6 +12,10 @@ pub struct Span {
 }
 
 impl Span {
+    pub fn new(start: usize, end: usize) -> Self {
+        Self { start, end }
+    }
+
     pub fn src(self, src: &str) -> &str {
         &src[std::ops::Range::<usize>::from(self)]
     }

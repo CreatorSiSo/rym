@@ -115,7 +115,6 @@ Module {
             "main",
             Unkown,
             Function {
-                name: None,
                 params: [],
                 named_params: {},
                 return_type: Unkown,
@@ -133,7 +132,6 @@ Module {
             "create_death_chain",
             Unkown,
             Function {
-                name: None,
                 params: [],
                 named_params: {},
                 return_type: Path(

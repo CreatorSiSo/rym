@@ -102,15 +102,8 @@ impl SymbolTableBuilder {
     }
 
     pub fn scan_function(&mut self, func: &Function) {
-        let Function {
-            name, params, body, ..
-        } = func;
-        self.enter_scope(
-            name.as_ref()
-                .map(AsRef::as_ref)
-                .unwrap_or("<anonymous function>"),
-            SymbolTableType::Function,
-        );
+        let Function { params, body, .. } = func;
+        self.enter_scope("<function>", SymbolTableType::Function);
 
         for (name, _typ) in params {
             self.register_name(name);

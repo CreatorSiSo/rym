@@ -153,12 +153,7 @@ impl Interpret for Expr {
                 debug_todo();
                 Value::Unit
             }
-            Expr::Function(func) => {
-                if let Some(ref name) = func.name {
-                    env.create(name, VariableKind::Const, Value::Function(func.clone()));
-                }
-                Value::Function(func)
-            }
+            Expr::Function(func) => Value::Function(func),
             Expr::Array(array) => {
                 todo!();
             }

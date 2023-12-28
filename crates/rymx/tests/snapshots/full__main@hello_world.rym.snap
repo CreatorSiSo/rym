@@ -4,13 +4,9 @@ expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/hello_world.rym
 ---
 --- tokenize ---
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [main]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
@@ -26,7 +22,6 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n]
 
 --- parse ---
@@ -37,10 +32,9 @@ Module {
             "main",
             Unkown,
             Function {
-                name: None,
                 params: [],
                 named_params: {},
-                return_type: Unkown,
+                return_type: Unit,
                 body: Block(
                     [
                         Expr(
@@ -65,7 +59,7 @@ const assert = extern fn(1)
 const assert_eq = extern fn(2)
 const false = false
 const fib_native = extern fn(1)
-const main = fn() <unknown>
+const main = fn() ()
 const print = extern fn(..[]TODO)
 const println = extern fn(..[]TODO)
 const read_to_string = extern fn(1)

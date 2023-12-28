@@ -1,4 +1,4 @@
-use super::type_parser;
+use super::{error::ParseError, type_parser};
 use crate::{ast::*, tokenize::Token, Span};
 use chumsky::{
     input::{MapExtra, SpannedInput},
@@ -6,7 +6,7 @@ use chumsky::{
 };
 
 pub(super) type TokenStream<'tokens> = SpannedInput<Token, Span, &'tokens [(Token, Span)]>;
-pub(super) type Extra<'src> = extra::Full<Rich<'src, Token, Span>, (), &'src str>;
+pub(super) type Extra<'src> = extra::Full<ParseError, (), &'src str>;
 
 pub(super) fn parameters_parser<'src>(
     src: &'src str,
@@ -35,8 +35,17 @@ pub fn path_parser(src: &str) -> impl Parser<TokenStream, Path, Extra> + Clone {
         .collect::<Vec<String>>()
         .map(Path::new)
 }
+
 pub fn literal_parser(src: &str) -> impl Parser<TokenStream, Literal, Extra> + Clone {
-    let integer = integer_parser(src).map(Literal::Int);
+    let integer = just(Token::Int)
+        .map_with(|_, extra| {
+            Literal::Int(
+                current_src(extra, src)
+                    .parse()
+                    .expect("Internal Error: Failed to parse i64"),
+            )
+        })
+        .labelled("integer");
 
     let float = just(Token::Float)
         .map_with(|_, extra| {
@@ -60,16 +69,6 @@ pub fn literal_parser(src: &str) -> impl Parser<TokenStream, Literal, Extra> + C
         .labelled("string");
 
     choice((integer, float, string)).labelled("literal").boxed()
-}
-
-pub fn integer_parser(src: &str) -> impl Parser<TokenStream, i64, Extra> + Clone {
-    just(Token::Int)
-        .map_with(|_, extra| {
-            current_src(extra, src)
-                .parse()
-                .expect("Internal Error: Failed to parse u64")
-        })
-        .labelled("integer")
 }
 
 pub(super) fn ident_parser(src: &str) -> impl Parser<TokenStream, &str, Extra> + Clone {

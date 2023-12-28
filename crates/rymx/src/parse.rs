@@ -5,10 +5,11 @@ use crate::{
     SourceId,
 };
 use ariadne::{Label, Report};
-use chumsky::{error::RichPattern, input::Input, prelude::*};
+use chumsky::{input::Input, prelude::*};
 use itertools::Itertools;
 
 mod common;
+mod error;
 mod file;
 mod stmt;
 mod r#type;
@@ -16,6 +17,8 @@ mod r#type;
 pub(self) use file::file_parser;
 pub(self) use r#type::type_parser;
 pub(self) use stmt::stmt_parser;
+
+use self::error::{ParseError, Pattern};
 
 pub fn parse_file<'a>(
     tokens: &'a [(Token, Span)],
@@ -43,21 +46,21 @@ pub fn parse_stmt<'a>(
     map_parse_result(parse_result, src_id)
 }
 
-fn map_parse_result<T>(
-    parse_result: ParseResult<T, Rich<'_, Token, Span>>,
+fn map_parse_result<'a, T>(
+    parse_result: ParseResult<T, ParseError>,
     src_id: SourceId,
-) -> Result<T, Vec<Report<'_, SourceSpan>>> {
-    use chumsky::error::RichReason;
+) -> Result<T, Vec<Report<'a, SourceSpan>>> {
+    use self::error::Reason;
 
-    let err_to_report = |err: Rich<'_, Token, Span>| {
+    let err_to_report = |err: ParseError| {
         let report_base =
             Report::build(ariadne::ReportKind::Error, src_id.clone(), err.span().start);
 
         match err.reason() {
-            RichReason::ExpectedFound { expected, found } => report_base
+            Reason::ExpectedFound { expected, found } => report_base
                 .with_message(format!("Syntax Error"))
                 .with_label(
-                    Label::new(SourceSpan(src_id.clone(), *err.span())).with_message(format!(
+                    Label::new(SourceSpan(src_id.clone(), err.span())).with_message(format!(
                         "Expected {}, found {}.",
                         if expected.is_empty() {
                             "nothing".into()
@@ -70,9 +73,9 @@ fn map_parse_result<T>(
                     )),
                 )
                 .finish(),
-            RichReason::Custom(msg) => {
+            Reason::Custom(msg) => {
                 let builder = report_base.with_message("Syntax Error").with_label(
-                    Label::new(SourceSpan(src_id.clone(), *err.span())).with_message(msg),
+                    Label::new(SourceSpan(src_id.clone(), err.span())).with_message(msg),
                 );
 
                 // let notes = HashMap::from([]);
@@ -83,7 +86,7 @@ fn map_parse_result<T>(
                 builder.finish()
                 // }
             }
-            RichReason::Many(_) => todo!(),
+            Reason::Many(_) => todo!(),
         }
     };
 
@@ -92,10 +95,10 @@ fn map_parse_result<T>(
         .map_err(|errs| errs.into_iter().map(err_to_report).collect())
 }
 
-fn display_pattern(pattern: &RichPattern<'_, Token>) -> String {
+fn display_pattern(pattern: &Pattern) -> String {
     match pattern {
-        RichPattern::Token(token) => token.display(),
-        RichPattern::Label(label) => (*label).into(),
-        RichPattern::EndOfInput => "end of input".into(),
+        Pattern::Token(token) => token.display(),
+        Pattern::Label(label) => (*label).into(),
+        Pattern::EndOfInput => "end of input".into(),
     }
 }

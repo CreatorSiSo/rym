@@ -1,9 +1,8 @@
-use core::ops::Range;
-use std::fmt::Debug;
-
 use crate::SourceId;
+use core::ops::Range;
+use std::fmt::{Debug, Display};
 
-#[derive(Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub struct Span {
     /// Inclusive first index
     pub start: usize,
@@ -60,7 +59,13 @@ impl From<Span> for Range<usize> {
 
 impl Debug for Span {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{:?}..{:?}", self.start, self.end))
+        f.write_str(&self.to_string())
+    }
+}
+
+impl Display for Span {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}..{}", self.start, self.end))
     }
 }
 

@@ -1,6 +1,6 @@
-use super::{common::*, type_parser};
+use super::{common::*, error::ParseError, type_parser};
 use crate::{ast::*, tokenize::Token, Span};
-use chumsky::prelude::*;
+use chumsky::{prelude::*, util::MaybeRef};
 use std::collections::HashMap;
 
 pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
@@ -32,9 +32,10 @@ pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
                 // Not emitting "missing semicolon error" for functions
                 // that use a block expression as body
                 if missing_semi && !matches!(body, Expr::Block(..)) {
-                    emitter.emit(Rich::custom(
+                    emitter.emit(ParseError::expected_found(
+                        [Some(MaybeRef::Val(Token::Semi))],
+                        None,
                         Span::new(extra.span().end, extra.span().end),
-                        "Expected `;`, found nothing.",
                     ))
                 }
                 (rest, body)

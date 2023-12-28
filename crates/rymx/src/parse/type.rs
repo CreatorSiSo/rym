@@ -1,6 +1,6 @@
-use super::common::*;
+use super::{common::*, error::ParseError};
 use crate::{ast::*, tokenize::Token};
-use chumsky::prelude::*;
+use chumsky::{prelude::*, util::Maybe};
 
 pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
     recursive(|type_| {
@@ -90,7 +90,20 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
         // size ::= (path | int)
         let size = path_parser(src)
             .map(ArraySize::Path)
-            .or(integer_parser(src).map(|int| ArraySize::Int(int as u64)));
+            .or(literal_parser(src).validate(|lit, extra, emitter| {
+                let found = match lit {
+                    Literal::Int(inner) => return ArraySize::Int(inner as u64),
+                    Literal::Bool(_) => Token::Ident,
+                    Literal::Float(_) => Token::Float,
+                    Literal::String(_) => Token::String,
+                };
+                emitter.emit(ParseError::expected_found(
+                    [Some(Maybe::Val(Token::Int))],
+                    Some(Maybe::Val(found)),
+                    extra.span(),
+                ));
+                ArraySize::Unknown
+            }));
         // array ::= "[" size? "]" type
         let array = (size.or_not())
             .delimited_by(just(Token::BracketOpen), just(Token::BracketClose))

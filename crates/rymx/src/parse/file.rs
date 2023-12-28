@@ -1,16 +1,16 @@
-use super::{common::*, stmt::stmt_parser};
+use super::{common::*, error::ParseError, stmt::stmt_parser};
 use crate::ast::*;
 use chumsky::prelude::*;
 
 pub fn file_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
     let definition = stmt_parser(src).validate(|stmt, extra, emitter| {
         match stmt {
-            Stmt::Expr(..) => emitter.emit(Rich::custom(
+            Stmt::Expr(..) => emitter.emit(ParseError::custom(
                 extra.span(),
                 "Top-level expressions are not allowed.",
             )),
             Stmt::Variable(VariableKind::Let | VariableKind::LetMut, ..) => {
-                emitter.emit(Rich::custom(extra.span(), "todo"))
+                emitter.emit(ParseError::custom(extra.span(), "todo"))
             }
             _ => {}
         }

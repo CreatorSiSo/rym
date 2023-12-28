@@ -16,7 +16,9 @@ fn line_comment(lexer: &mut Lexer<Token>) {
     }
 }
 
-#[derive(logos_display::Display, Debug, Clone, Copy, Logos, PartialEq)]
+#[derive(
+    logos_display::Display, Debug, Clone, Copy, Logos, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 pub enum Token {
     #[regex(r"[0-9][0-9_]*")]
     Int,

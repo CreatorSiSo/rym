@@ -10,7 +10,7 @@
 
 ## Extension Settings
 
-- `none yet`
+-   `none yet`
 
 ## Known Issues
 

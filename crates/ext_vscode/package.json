@@ -1,66 +1,66 @@
 {
-	"name": "rym-lang",
-	"displayName": "Rym",
-	"description": "Language extension for the Rym programming language.",
-	"categories": [
-		"Programming Languages"
-	],
-	"icon": "icons/icon.png",
-	"license": "MIT",
-	"repository": {
-		"url": "https://github.com/creatorsiso/rym",
-		"directory": "crates/ext_vscode"
-	},
-	"version": "0.0.12",
-	"engines": {
-		"vscode": "^1.74.2"
-	},
-	"scripts": {
-		"pkg": "vsce package"
-	},
-	"contributes": {
-		"languages": [
-			{
-				"id": "rym",
-				"aliases": [
-					"Rym",
-					"rym"
-				],
-				"extensions": [
-					".rym"
-				],
-				"icon": {
-					"dark": "./icons/file-icon-dark.svg",
-					"light": "./icons/file-icon-light.svg"
-				},
-				"configuration": "./language-configuration.json"
-			},
-			{
-				"id": "rym-injection"
-			}
-		],
-		"grammars": [
-			{
-				"language": "rym",
-				"scopeName": "source.rym",
-				"path": "./syntaxes/rym.tmLanguage.json"
-			},
-			{
-				"language": "rym-injection",
-				"scopeName": "source.rym.codeblock",
-				"path": "./syntaxes/markdown-rym.tmLanguage.json",
-				"injectTo": [
-					"text.html.markdown",
-					"text.html.quarto",
-					"source.typst"
-				],
-				"embeddedLanguages": {
-					"meta.embedded.block.rym": "rym"
-				}
-			}
-		]
-	},
-	"devDependencies": {
-		"@vscode/vsce": "^2.20"
-	}
+    "name": "rym-lang",
+    "displayName": "Rym",
+    "description": "Language extension for the Rym programming language.",
+    "categories": [
+        "Programming Languages"
+    ],
+    "icon": "icons/icon.png",
+    "license": "MIT",
+    "repository": {
+        "url": "https://github.com/creatorsiso/rym",
+        "directory": "crates/ext_vscode"
+    },
+    "version": "0.0.13",
+    "engines": {
+        "vscode": "^1.74.2"
+    },
+    "scripts": {
+        "pkg": "vsce package"
+    },
+    "contributes": {
+        "languages": [
+            {
+                "id": "rym",
+                "aliases": [
+                    "Rym",
+                    "rym"
+                ],
+                "extensions": [
+                    ".rym"
+                ],
+                "icon": {
+                    "dark": "./icons/file-icon-dark.svg",
+                    "light": "./icons/file-icon-light.svg"
+                },
+                "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "rym-injection"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "rym",
+                "scopeName": "source.rym",
+                "path": "./syntaxes/rym.tmLanguage.json"
+            },
+            {
+                "language": "rym-injection",
+                "scopeName": "source.rym.codeblock",
+                "path": "./syntaxes/markdown-rym.tmLanguage.json",
+                "injectTo": [
+                    "text.html.markdown",
+                    "text.html.quarto",
+                    "source.typst"
+                ],
+                "embeddedLanguages": {
+                    "meta.embedded.block.rym": "rym"
+                }
+            }
+        ]
+    },
+    "devDependencies": {
+        "@vscode/vsce": "^2.20"
+    }
 }

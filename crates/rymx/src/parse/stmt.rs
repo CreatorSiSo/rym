@@ -27,11 +27,11 @@ pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
             .then(type_parser(src).or_not())
             .then_ignore(just(Token::ThickArrow))
             .then(expr_parser(src, stmt))
-            .then(just(Token::Semi).or_not().map(|semi| semi.is_some()))
-            .validate(|((rest, body), has_semi), extra, emitter| {
+            .then(just(Token::Semi).or_not().map(|semi| semi.is_none()))
+            .validate(|((rest, body), missing_semi), extra, emitter| {
                 // Not emitting "missing semicolon error" for functions
                 // that use a block expression as body
-                if has_semi && !matches!(body, Expr::Block(..)) {
+                if missing_semi && !matches!(body, Expr::Block(..)) {
                     emitter.emit(Rich::custom(
                         Span::new(extra.span().end, extra.span().end),
                         "Expected `;`, found nothing.",

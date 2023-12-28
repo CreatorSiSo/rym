@@ -1,8 +1,8 @@
-const main = fn() => {
+fn main() => {
 	(1..).iter().for_each(fn(i) => println(match i with
 		| _ if i % 3 == 0 => "Fizz",
 		| _ if i % 5 == 0 => "Buzz",
 		| _ if i % 15 == 0 => "FizzBuzz",
 		| _ => i.to_string(),
 	))
-};
+}

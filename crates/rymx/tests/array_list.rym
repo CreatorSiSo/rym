@@ -2,9 +2,9 @@
 //     data: [len]T,
 // }
 
-struct ArrayList[T] {
-    mut data: mut []T,
-    mut length: usize,
+type ArrayList = struct[T] {
+    data: mut []T,
+    length: usize,
     allocator: mut Allocator,
 }
 

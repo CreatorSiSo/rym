@@ -1,7 +1,7 @@
 // stud
-const import = fn(string: String) => {
+fn import(string: String) RymModule => {
 	// TODO
-};
+}
 
 const io = import("std.io");
 const ParseError = example_package.Error;
@@ -16,6 +16,6 @@ type Error = enum
 	| Parse ParseError
 	| Other struct { message: String };
 
-const main = fn() Result[(), Error] => {
+fn main() Result[(), Error] => {
 	// TODO read cli arguments
 };

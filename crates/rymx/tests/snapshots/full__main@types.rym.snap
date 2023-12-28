@@ -54,13 +54,9 @@ Semi [;]
 VSpace [\n\n]
 Comment [// TODO ...]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [array_test]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
@@ -291,7 +287,6 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
 Comment [// TODO Slices]
 VSpace [\n]
@@ -334,7 +329,7 @@ Module {
             Function {
                 params: [],
                 named_params: {},
-                return_type: Unkown,
+                return_type: Unit,
                 body: Block(
                     [
                         Variable(
@@ -494,7 +489,7 @@ Module {
 }
 
 --- interpret ---
-const array_test = fn() <unknown>
+const array_test = fn() ()
 const assert = extern fn(1)
 const assert_eq = extern fn(2)
 const false = false

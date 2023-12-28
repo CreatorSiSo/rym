@@ -6,7 +6,7 @@ const u8_max: u8 = 255;
 
 // TODO ...
 
-const array_test = fn() => {
+fn array_test() => {
 // test "arrays" {
     let zeroed: [_]u8 = [0; 512];
     // TODO allow type expressions in place of normal expressions?
@@ -26,6 +26,6 @@ const array_test = fn() => {
     initialized.[3] = 4;
     initialized.[4] = 5;
     assert_eq(mutable, [1, 2, 3, 4, 5]);
-};
+}
 
 // TODO Slices

@@ -4,13 +4,9 @@ expression: diag.outputs_dump() + &diag.reports_dump()
 input_file: crates/rymx/tests/stress.rym
 ---
 --- tokenize ---
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [main]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
@@ -22,7 +18,6 @@ HSpace [    ]
 Comment [// assert_eq(ones, 304);]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
 Comment [// // TODO Fix stack overflow]
 VSpace [\n]
@@ -37,13 +32,9 @@ HSpace [ ]
 Float [3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282]
 Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [create_death_chain]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
@@ -104,7 +95,6 @@ Int [2]
 ParenClose [)]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n]
 
 --- parse ---
@@ -117,7 +107,7 @@ Module {
             Function {
                 params: [],
                 named_params: {},
-                return_type: Unkown,
+                return_type: Unit,
                 body: Block(
                     [],
                 ),
@@ -196,7 +186,7 @@ const assert_eq = extern fn(2)
 const create_death_chain = fn() chain
 const false = false
 const fib_native = extern fn(1)
-const main = fn() <unknown>
+const main = fn() ()
 const pi = 3.141592653589793
 const print = extern fn(..[]TODO)
 const println = extern fn(..[]TODO)

@@ -6,19 +6,17 @@ input_file: crates/rymx/tests/rym_clone/main.rym
 --- tokenize ---
 Comment [// stud]
 VSpace [\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [import]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 Ident [string]
 Colon [:]
 HSpace [ ]
 Ident [String]
 ParenClose [)]
+HSpace [ ]
+Ident [RymModule]
 HSpace [ ]
 ThickArrow [=>]
 HSpace [ ]
@@ -28,7 +26,6 @@ HSpace [\t]
 Comment [// TODO]
 VSpace [\n]
 BraceClose [}]
-Semi [;]
 VSpace [\n\n]
 Const [const]
 HSpace [ ]
@@ -102,13 +99,9 @@ HSpace [ ]
 BraceClose [}]
 Semi [;]
 VSpace [\n\n]
-Const [const]
+Fn [fn]
 HSpace [ ]
 Ident [main]
-HSpace [ ]
-Assign [=]
-HSpace [ ]
-Fn [fn]
 ParenOpen [(]
 ParenClose [)]
 HSpace [ ]
@@ -149,7 +142,9 @@ Module {
                     ),
                 ],
                 named_params: {},
-                return_type: Unkown,
+                return_type: Path(
+                    Path(["RymModule"]),
+                ),
                 body: Block(
                     [],
                 ),
@@ -246,7 +241,7 @@ const assert = extern fn(1)
 const assert_eq = extern fn(2)
 const false = false
 const fib_native = extern fn(1)
-const import = fn(String) <unknown>
+const import = fn(String) RymModule
 const io = ()
 const main = fn() Result[(), Error]
 const print = extern fn(..[]TODO)

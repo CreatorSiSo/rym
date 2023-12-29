@@ -167,6 +167,49 @@ fn patterns_to_string(patterns: &Vec<Pattern>) -> String {
     replace_subset(
         &mut patterns,
         &[
+            Pattern::Token(Token::Eq),
+            Pattern::Token(Token::NotEq),
+            Pattern::Token(Token::LessThan),
+            Pattern::Token(Token::LessThanEq),
+            Pattern::Token(Token::GreaterThan),
+            Pattern::Token(Token::GreaterThanEq),
+        ],
+        &Pattern::Label("a comparison operator"),
+    );
+
+    replace_subset(
+        &mut patterns,
+        &[
+            Pattern::Token(Token::Slash),
+            Pattern::Token(Token::Star),
+            Pattern::Token(Token::Plus),
+            Pattern::Token(Token::Minus),
+        ],
+        &Pattern::Label("an arithmetic operator"),
+    );
+
+    replace_subset(
+        &mut patterns,
+        &[
+            Pattern::Token(Token::Assign),
+            // TODO Add others
+        ],
+        &Pattern::Label("an assignment operator"),
+    );
+
+    replace_subset(
+        &mut patterns,
+        &[
+            Pattern::Label("a comparison operator"),
+            Pattern::Label("an arithmetic operator"),
+            Pattern::Label("an assignment operator"),
+        ],
+        &Pattern::Label("an operator"),
+    );
+
+    replace_subset(
+        &mut patterns,
+        &[
             Pattern::Label("literal"),
             Pattern::Token(Token::Ident),
             Pattern::Token(Token::ParenOpen),
@@ -187,8 +230,6 @@ fn patterns_to_string(patterns: &Vec<Pattern>) -> String {
         ],
         &Pattern::Label("expression"),
     );
-
-    // TODO Insert label for binary operators
 
     let mut patterns = patterns.into_iter().collect_vec();
     patterns.sort();

@@ -1,0 +1,49 @@
+---
+source: crates/rymx/tests/full.rs
+expression: diag.outputs_dump() + &diag.reports_dump()
+input_file: crates/rymx/tests/invalid/many_errors.rym
+---
+--- tokenize ---
+Const [const]
+HSpace [ ]
+Ident [test]
+Colon [:]
+HSpace [ ]
+Union [union]
+HSpace [ ]
+BracketOpen [[]
+String [\"test\"]
+BracketClose []]
+Ident [u8]
+HSpace [ ]
+Pipe [|]
+HSpace [ ]
+BracketOpen [[]
+Float [1.0]
+BracketClose []]
+Ident [usihf]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Int [0]
+Semi [;]
+VSpace [\n]
+
+--- parse ---
+
+--- reports ---
+Error: Expected integer, found string
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/invalid/many_errors.rym:1:20]
+   │
+ 1 │ const test: union ["test"]u8 | [1.0]usihf = 0;
+   │                    ───┬──  
+   │                       ╰──── Expected integer
+───╯
+Error: Expected integer, found float
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/invalid/many_errors.rym:1:33]
+   │
+ 1 │ const test: union ["test"]u8 | [1.0]usihf = 0;
+   │                                 ─┬─  
+   │                                  ╰─── Expected integer
+───╯
+

@@ -1,0 +1,7 @@
+fn main() Result[(), IoError] => {
+    call_some_function(testing, {
+        let test = 0;
+        test = test + 0 // <<-- Missing semicolon
+        test
+    });
+}

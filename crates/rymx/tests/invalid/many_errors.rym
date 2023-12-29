@@ -1,0 +1,1 @@
+const test: union ["test"]u8 | [1.0]usihf = 0;

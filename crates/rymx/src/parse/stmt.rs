@@ -199,7 +199,7 @@ fn expr_parser<'src>(
                 // mul_div ::= unary ("*" | "/") unary
                 binary(left(4), Token::Star, BinaryOp::Mul),
                 binary(left(4), Token::Slash, BinaryOp::Div),
-                // add_sub ::= mul_div ("*" | "/") mul_div
+                // add_sub ::= mul_div ("+" | "-") mul_div
                 binary(left(3), Token::Plus, BinaryOp::Add),
                 binary(left(3), Token::Minus, BinaryOp::Sub),
                 // compare ::= add_sub ("==" | "!=" | "<" | "<=" | ">" | ">=") add_sub

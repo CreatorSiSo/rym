@@ -52,7 +52,8 @@ pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
                         body: Box::new(body),
                     }),
                 )
-            });
+            })
+            .labelled("function definition");
 
         // variable ::= ("const" | "let" | "let mut") ident (":" type)? "=" expr ";"
         let variable = choice((
@@ -70,7 +71,7 @@ pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
         .map(|(((kind, name), typ), rhs)| {
             Stmt::Variable(kind, name.into(), typ.unwrap_or(Type::Unkown), rhs)
         })
-        .labelled("variable")
+        .labelled("variable definition")
         .boxed();
 
         choice((
@@ -229,14 +230,15 @@ fn expr_parser<'src>(
                     Box::new(then_branch),
                     Box::new(else_branch.unwrap_or(Expr::Unit)),
                 )
-            });
+            })
+            .labelled("if else");
 
         // return ::= "return"
         let r#return = just(Token::Return).to(Expr::Return(Box::new(Expr::Unit)));
 
         // expr ::= function | if_else | basic | atom
         choice((function, if_else, basic, atom, r#return))
-            .labelled("expression")
             .boxed()
+            .labelled("expression")
     })
 }

@@ -1,3 +1,4 @@
+use self::error::{ParseError, Pattern};
 use crate::{
     ast::{Module, Stmt},
     span::{SourceSpan, Span},
@@ -18,7 +19,7 @@ pub(self) use file::file_parser;
 pub(self) use r#type::type_parser;
 pub(self) use stmt::stmt_parser;
 
-use self::error::{ParseError, Pattern};
+type ReportBuilder<'a> = ariadne::ReportBuilder<'a, SourceSpan>;
 
 pub fn parse_file<'a>(
     tokens: &'a [(Token, Span)],
@@ -53,41 +54,22 @@ fn map_parse_result<'a, T>(
     use self::error::Reason;
 
     let err_to_report = |err: ParseError| {
-        let report_base =
-            Report::build(ariadne::ReportKind::Error, src_id.clone(), err.span().start);
+        let builder = Report::build(ariadne::ReportKind::Error, src_id.clone(), err.span().start);
+        let span = SourceSpan(src_id.clone(), err.span());
+        dbg!(err.contexts().collect::<Vec<_>>());
 
         match err.reason() {
-            Reason::ExpectedFound { expected, found } => report_base
-                .with_message(format!("Syntax Error"))
-                .with_label(
-                    Label::new(SourceSpan(src_id.clone(), err.span())).with_message(format!(
-                        "Expected {}, found {}.",
-                        if expected.is_empty() {
-                            "nothing".into()
-                        } else {
-                            expected.into_iter().map(display_pattern).join(" | ")
-                        },
-                        found
-                            .map(|token| token.display())
-                            .unwrap_or("nothing".into())
-                    )),
-                )
-                .finish(),
-            Reason::Custom(msg) => {
-                let builder = report_base.with_message("Syntax Error").with_label(
-                    Label::new(SourceSpan(src_id.clone(), err.span())).with_message(msg),
-                );
-
-                // let notes = HashMap::from([]);
-
-                // if let Some(note) = notes.get(msg.as_str()) {
-                // 	builder.with_note(note).finish()
-                // } else {
-                builder.finish()
-                // }
-            }
+            Reason::ExpectedFound { expected, found } => match (expected.is_empty(), found) {
+                (true, _) => report_unexpected(builder, span, found),
+                (false, None) => report_expected(builder, span, expected),
+                (false, Some(found)) => report_expected_found(builder, span, expected, found),
+            },
+            Reason::Custom(msg) => builder
+                .with_message("Syntax Error")
+                .with_label(Label::new(SourceSpan(src_id.clone(), err.span())).with_message(msg)),
             Reason::Many(_) => todo!(),
         }
+        .finish()
     };
 
     parse_result
@@ -95,10 +77,125 @@ fn map_parse_result<'a, T>(
         .map_err(|errs| errs.into_iter().map(err_to_report).collect())
 }
 
-fn display_pattern(pattern: &Pattern) -> String {
-    match pattern {
-        Pattern::Token(token) => token.display(),
-        Pattern::Label(label) => (*label).into(),
-        Pattern::EndOfInput => "end of input".into(),
+fn report_expected_found<'a>(
+    builder: ReportBuilder<'a>,
+    span: SourceSpan,
+    expected: &Vec<Pattern>,
+    found: &Token,
+) -> ReportBuilder<'a> {
+    let patterns = patterns_to_string(expected);
+    builder
+        .with_message(format!("Expected {patterns}, found {}", found.display()))
+        .with_label(Label::new(span).with_message(format!("Expected {patterns}")))
+}
+
+fn report_expected<'a>(
+    builder: ReportBuilder<'a>,
+    span: SourceSpan,
+    expected: &Vec<Pattern>,
+) -> ReportBuilder<'a> {
+    let msg = format!("Expected {}", patterns_to_string(expected));
+    builder
+        .with_message(msg.clone())
+        .with_label(Label::new(span).with_message(msg))
+}
+
+fn report_unexpected<'a>(
+    builder: ReportBuilder<'a>,
+    span: SourceSpan,
+    found: &Option<Token>,
+) -> ReportBuilder<'a> {
+    let msg = format!(
+        "Unexpected {}",
+        found
+            .map(|token| token.display())
+            .unwrap_or("end of input".into())
+    );
+    builder
+        .with_message(msg.clone())
+        .with_label(Label::new(span).with_message(msg))
+}
+
+fn patterns_to_string(patterns: &Vec<Pattern>) -> String {
+    if patterns.is_empty() {
+        return "nothing".into();
+    };
+
+    use std::collections::HashSet;
+    let mut patterns: HashSet<&Pattern> = HashSet::from_iter(patterns.iter());
+
+    fn replace_subset<'a>(
+        super_set: &mut HashSet<&'a Pattern>,
+        search: &'static [Pattern],
+        replacement: &'static Pattern,
+    ) {
+        let search_set = HashSet::from_iter(search);
+        if search_set.is_subset(&super_set) {
+            for pattern in search_set {
+                super_set.remove(pattern);
+            }
+            super_set.insert(&replacement);
+        }
     }
+
+    fn replace_element(
+        haystack: &mut HashSet<&Pattern>,
+        needle: &'static Pattern,
+        replacement: &'static Pattern,
+    ) {
+        if haystack.remove(needle) {
+            haystack.insert(replacement);
+        }
+    }
+
+    replace_element(
+        &mut patterns,
+        &Pattern::Token(Token::Ident),
+        &Pattern::Label("identifier"),
+    );
+
+    replace_subset(
+        &mut patterns,
+        &[
+            Pattern::Token(Token::Int),
+            Pattern::Token(Token::Float),
+            Pattern::Token(Token::String),
+        ],
+        &Pattern::Label("literal"),
+    );
+
+    replace_subset(
+        &mut patterns,
+        &[
+            Pattern::Label("literal"),
+            Pattern::Token(Token::Ident),
+            Pattern::Token(Token::ParenOpen),
+            Pattern::Token(Token::BraceOpen),
+            Pattern::Token(Token::BracketOpen),
+            Pattern::Token(Token::Break),
+            Pattern::Token(Token::Return),
+        ],
+        &Pattern::Label("expression"),
+    );
+
+    replace_subset(
+        &mut patterns,
+        &[
+            Pattern::Label("expression"),
+            Pattern::Token(Token::Not),
+            Pattern::Token(Token::Minus),
+        ],
+        &Pattern::Label("expression"),
+    );
+
+    // TODO Insert label for binary operators
+
+    let mut patterns = patterns.into_iter().collect_vec();
+    patterns.sort();
+    let (last, start) = patterns.split_last().unwrap();
+    format!(
+        "{}{}{last}",
+        start.iter().join(", "),
+        if start.is_empty() { "" } else { " or " }
+    )
 }

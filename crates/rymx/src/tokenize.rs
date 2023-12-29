@@ -20,23 +20,33 @@ fn line_comment(lexer: &mut Lexer<Token>) {
     logos_display::Display, Debug, Clone, Copy, Logos, PartialEq, Eq, PartialOrd, Ord, Hash,
 )]
 pub enum Token {
+    #[display_override("integer")]
     #[regex(r"[0-9][0-9_]*")]
     Int,
+    #[display_override("float")]
     #[regex(r"[0-9][0-9_]*\.[0-9_]+")]
     Float,
+    // #[display_override("character")]
     #[regex(r#"'(\\'|[^'])*'"#)]
     // Char,
+    #[display_override("string")]
     #[regex(r#""(\\"|[^"])*""#)]
     String,
 
+    #[display_override("identifier")]
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
     Ident,
+
+    #[display_override("doc comment")]
     #[token("///", line_comment)]
     DocComment,
+    #[display_override("comment")]
     #[token("//", line_comment)]
     Comment,
+    #[display_override("whitespace")]
     #[regex("(\n|\r\n)+")]
     VSpace,
+    #[display_override("whitespace")]
     #[regex("[ \t]+")]
     HSpace,
 
@@ -142,17 +152,14 @@ impl Token {
     /// Extends the derived Display implementation
     pub fn display(&self) -> String {
         match self {
-            Self::Int => "integer".into(),
-            Self::Float => "float".into(),
-            // Self::Char => "character".into(),
-            Self::String => "string".into(),
-
-            Self::Ident => "identifier".into(),
-
-            Self::DocComment => "doc comment".into(),
-            Self::Comment => "comment".into(),
-            Self::VSpace | Self::HSpace => "whitespace".into(),
-
+            Self::Int
+            | Self::Float
+            | Self::String
+            | Self::Ident
+            | Self::DocComment
+            | Self::Comment
+            | Self::VSpace
+            | Self::HSpace => self.to_string(),
             token => format!("`{}`", token.to_string()),
         }
     }

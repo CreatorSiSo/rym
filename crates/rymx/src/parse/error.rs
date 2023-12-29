@@ -15,21 +15,12 @@ pub enum Pattern {
     EndOfInput,
 }
 
-impl Pattern {
-    fn write(
-        &self,
-        f: &mut fmt::Formatter,
-        mut fmt_token: impl FnMut(&Token, &mut fmt::Formatter<'_>) -> fmt::Result,
-        mut fmt_label: impl FnMut(&Label, &mut fmt::Formatter<'_>) -> fmt::Result,
-    ) -> fmt::Result {
+impl fmt::Display for Pattern {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Token(tok) => {
-                write!(f, "'")?;
-                fmt_token(tok, f)?;
-                write!(f, "'")
-            }
-            Self::Label(label) => fmt_label(label, f),
-            Self::EndOfInput => write!(f, "end of input"),
+            Self::Token(token) => write!(f, "{}", token.display()),
+            Self::Label(label) => f.write_str(label),
+            Self::EndOfInput => f.write_str("EndOfInput"),
         }
     }
 }
@@ -37,26 +28,15 @@ impl Pattern {
 impl fmt::Debug for Pattern {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Token(t) => write!(f, "{t:?}"),
-            Self::Label(label) => write!(f, "{label:?}"),
-            Self::EndOfInput => write!(f, "end of input"),
-        }
-    }
-}
-
-impl fmt::Display for Pattern {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Token(t) => write!(f, "'{}'", &*t),
-            Self::Label(s) => write!(f, "{s}"),
-            Self::EndOfInput => write!(f, "end of input"),
+            Self::Token(token) => write!(f, "{token:?}"),
+            Self::Label(label) => f.write_str(label),
+            Self::EndOfInput => f.write_str("EndOfInput"),
         }
     }
 }
 
 // TODO: Maybe should make ExpectedFound encapsulated a bit more
 /// The reason for a [`Rich`] error.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Reason {
     /// An unexpected input was found
@@ -90,57 +70,6 @@ impl Reason {
             Reason::Custom(_) => None,
             Reason::Many(many) => many.iter_mut().find_map(|r| r.take_found()),
         }
-    }
-
-    fn inner_fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-        mut fmt_token: impl FnMut(&Token, &mut fmt::Formatter<'_>) -> fmt::Result,
-        mut fmt_span: impl FnMut(&Span, &mut fmt::Formatter<'_>) -> fmt::Result,
-        mut fmt_label: impl FnMut(&Label, &mut fmt::Formatter<'_>) -> fmt::Result,
-        span: Option<Span>,
-    ) -> fmt::Result {
-        match self {
-            Reason::ExpectedFound { expected, found } => {
-                write!(f, "found ")?;
-                write_token(f, &mut fmt_token, *found)?;
-                if let Some(span) = span {
-                    write!(f, " at ")?;
-                    fmt_span(&span, f)?;
-                }
-                write!(f, " expected ")?;
-                match &expected[..] {
-                    [] => write!(f, "something else")?,
-                    [expected] => expected.write(f, &mut fmt_token, &mut fmt_label)?,
-                    _ => {
-                        for expected in &expected[..expected.len() - 1] {
-                            expected.write(f, &mut fmt_token, &mut fmt_label)?;
-                            write!(f, ", ")?;
-                        }
-                        write!(f, "or ")?;
-                        expected
-                            .last()
-                            .unwrap()
-                            .write(f, &mut fmt_token, &mut fmt_label)?;
-                    }
-                }
-            }
-            Reason::Custom(msg) => {
-                write!(f, "{msg}")?;
-                if let Some(span) = span {
-                    write!(f, " at ")?;
-                    fmt_span(&span, f)?;
-                }
-            }
-            Reason::Many(_) => {
-                write!(f, "multiple errors")?;
-                if let Some(span) = span {
-                    write!(f, " found at ")?;
-                    fmt_span(&span, f)?;
-                }
-            }
-        }
-        Ok(())
     }
 }
 
@@ -189,37 +118,12 @@ impl Reason {
     }
 }
 
-impl fmt::Display for Reason {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.inner_fmt(f, Token::fmt, |_: &Span, _| Ok(()), Label::fmt, None)
-    }
-}
-
 /// A rich default error type that tracks error spans, expected inputs, and the actual input found at an error site.
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ParseError {
     span: Span,
     reason: Box<Reason>,
     context: Vec<(Label, Span)>,
-}
-
-impl ParseError {
-    fn inner_fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-        fmt_token: impl FnMut(&Token, &mut fmt::Formatter<'_>) -> fmt::Result,
-        fmt_span: impl FnMut(&Span, &mut fmt::Formatter<'_>) -> fmt::Result,
-        fmt_label: impl FnMut(&Label, &mut fmt::Formatter<'_>) -> fmt::Result,
-        with_spans: bool,
-    ) -> fmt::Result {
-        self.reason.inner_fmt(
-            f,
-            fmt_token,
-            fmt_span,
-            fmt_label,
-            with_spans.then_some(self.span),
-        )
-    }
 }
 
 impl ParseError {
@@ -241,11 +145,6 @@ impl ParseError {
     /// Get the reason for this error.
     pub fn reason(&self) -> &Reason {
         &self.reason
-    }
-
-    /// Take the reason from this error.
-    pub fn into_reason(self) -> Reason {
-        *self.reason
     }
 
     /// Get the token found by this error when parsing. `None` implies that the error expected the end of input.
@@ -300,12 +199,17 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
     }
 
     #[inline]
-    fn merge(self, other: Self) -> Self {
+    fn merge(mut self, mut other: Self) -> Self {
         let new_reason = self.reason.flat_merge(*other.reason);
         Self {
             span: self.span,
             reason: Box::new(new_reason),
-            context: self.context, // TOOD: Merge contexts
+            // TODO Merging contexts correctly?
+            context: {
+                self.context.append(&mut other.context);
+                self.context.dedup_by_key(|(label, _)| *label);
+                self.context
+            },
         }
     }
 
@@ -392,6 +296,7 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
         self
     }
 }
+
 impl<'a> chumsky::label::LabelError<'a, TokenStream<'a>, Label> for ParseError {
     #[inline]
     fn label_with(&mut self, label: Label) {
@@ -415,28 +320,5 @@ impl<'a> chumsky::label::LabelError<'a, TokenStream<'a>, Label> for ParseError {
         if self.context.iter().all(|(l, _)| l != &label) {
             self.context.push((label, span));
         }
-    }
-}
-
-impl fmt::Debug for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.inner_fmt(f, Token::fmt, Span::fmt, Label::fmt, true)
-    }
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.inner_fmt(f, Token::fmt, Span::fmt, Label::fmt, false)
-    }
-}
-
-fn write_token(
-    f: &mut fmt::Formatter,
-    mut fmt_token: impl FnMut(&Token, &mut fmt::Formatter<'_>) -> fmt::Result,
-    tok: Option<Token>,
-) -> fmt::Result {
-    match tok {
-        Some(tok) => fmt_token(&tok, f),
-        None => write!(f, "end of input"),
     }
 }

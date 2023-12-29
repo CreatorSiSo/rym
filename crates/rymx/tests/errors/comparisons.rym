@@ -1,0 +1,2 @@
+// TODO Should fail with: Chaining comparison operators is not allowed.
+const test = 1 == 2 == 3;

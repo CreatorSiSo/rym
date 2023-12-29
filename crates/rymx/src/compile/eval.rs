@@ -31,15 +31,16 @@ impl ConstEvaluator {
             ast::Expr::Literal(lit) => Self::literal_to_constant(lit),
             ast::Expr::Array(_) => todo!(),
             ast::Expr::ArrayWithRepeat(_, _) => todo!(),
+            ast::Expr::Struct(name, fields) => todo!(),
             ast::Expr::Function(_) => todo!(),
-
-            ast::Expr::Ident(name) => self
-                .resolve_ident(name)
-                .expect(&format!("Could not find {name}")),
 
             ast::Expr::Unary(_, _) => todo!(),
             ast::Expr::Binary(_, _, _) => todo!(),
             ast::Expr::Call(_, _) => todo!(),
+
+            ast::Expr::Ident(name) => self
+                .resolve_ident(name)
+                .expect(&format!("Could not find {name}")),
             ast::Expr::FieldAccess(_, _) => todo!(),
             ast::Expr::Subscript(_, _) => todo!(),
 

@@ -1,0 +1,63 @@
+---
+source: crates/rymx/tests/full.rs
+expression: diag.outputs_dump() + &diag.reports_dump()
+input_file: crates/rymx/tests/errors/ranges.rym
+---
+--- tokenize ---
+Const [const]
+HSpace [ ]
+Ident [full_inclusive]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+BracketOpen [[]
+Int [1]
+Comma [,]
+HSpace [ ]
+Int [0]
+Comma [,]
+HSpace [ ]
+Int [2]
+BracketClose []]
+Dot [.]
+BracketOpen [[]
+DotDot [..]
+Assign [=]
+BracketClose []]
+Semi [;]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [from_inclusive]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+BracketOpen [[]
+Int [1]
+Comma [,]
+HSpace [ ]
+Int [0]
+Comma [,]
+HSpace [ ]
+Int [2]
+BracketClose []]
+Dot [.]
+BracketOpen [[]
+Int [1]
+DotDot [..]
+Assign [=]
+BracketClose []]
+Semi [;]
+VSpace [\n]
+
+--- parse ---
+
+--- reports ---
+Error: Expected expression, found `=`
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/errors/ranges.rym:1:37]
+   │
+ 1 │ const full_inclusive = [1, 0, 2].[..=];
+   │                                     ┬  
+   │                                     ╰── Expected expression
+───╯
+

@@ -39,20 +39,25 @@ impl Display for VariableKind {
 
 #[derive(Clone, PartialEq)]
 pub enum Expr {
+    // Value creation
     Unit,
     Literal(Literal),
     Array(Vec<Expr>),
     ArrayWithRepeat(Box<Expr>, Box<Expr>),
+    Struct(Path, Vec<(String, Expr)>),
     Function(Function),
 
-    Ident(String),
-
+    // Value modification
     Unary(UnaryOp, Box<Expr>),
     Binary(BinaryOp, Box<Expr>, Box<Expr>),
     Call(Box<Expr>, Vec<Expr>),
+
+    // Value access
+    Ident(String),
     Subscript(Box<Expr>, Box<Expr>),
     FieldAccess(Box<Expr>, String),
 
+    // Control flow
     IfElse(
         /// Condition
         Box<Expr>,
@@ -77,9 +82,8 @@ impl std::fmt::Debug for Expr {
                 .field(arg0)
                 .field(arg1)
                 .finish(),
+            Self::Struct(arg0, arg1) => f.debug_tuple("Struct").field(arg0).field(arg1).finish(),
             Self::Function(arg0) => f.write_fmt(format_args!("{arg0:#?}")),
-
-            Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
 
             Self::Unary(arg0, arg1) => f.debug_tuple(&arg0.to_string()).field(arg1).finish(),
             Self::Binary(arg0, arg1, arg2) => f
@@ -88,6 +92,7 @@ impl std::fmt::Debug for Expr {
                 .field(arg2)
                 .finish(),
             Self::Call(arg0, arg1) => f.debug_tuple("Call").field(arg0).field(arg1).finish(),
+
             Self::Subscript(arg0, arg1) => {
                 f.debug_tuple("Subscript").field(arg0).field(arg1).finish()
             }
@@ -96,6 +101,7 @@ impl std::fmt::Debug for Expr {
                 .field(arg0)
                 .field(arg1)
                 .finish(),
+            Self::Ident(arg0) => f.write_fmt(format_args!("Ident({arg0:?})")),
 
             Self::IfElse(arg0, arg1, arg2) => f
                 .debug_tuple("IfElse")

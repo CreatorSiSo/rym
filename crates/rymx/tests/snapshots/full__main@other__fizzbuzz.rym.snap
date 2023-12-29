@@ -1,7 +1,7 @@
 ---
 source: crates/rymx/tests/full.rs
 expression: diag.outputs_dump() + &diag.reports_dump()
-input_file: crates/rymx/tests/mini/fizzbuzz.rym
+input_file: crates/rymx/tests/other/fizzbuzz.rym
 ---
 --- tokenize ---
 Fn [fn]
@@ -131,11 +131,11 @@ VSpace [\n]
 --- parse ---
 
 --- reports ---
-Error: Expected `)` or expression, found `..`
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/mini/fizzbuzz.rym:2:4]
+Error: Expected `)`, `,` or expression, found identifier
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/other/fizzbuzz.rym:2:47]
    │
  2 │     (1..).iter().for_each(fn(i) => println(match i with
-   │       ─┬  
-   │        ╰── Expected `)` or expression
+   │                                                  ┬  
+   │                                                  ╰── Expected `)`, `,` or expression
 ───╯
 

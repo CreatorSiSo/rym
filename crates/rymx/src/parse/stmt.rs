@@ -3,6 +3,15 @@ use crate::{ast::*, tokenize::Token, Span};
 use chumsky::{prelude::*, util::MaybeRef};
 use std::collections::HashMap;
 
+macro_rules! struct_expr {
+    ($typ:expr, $($key:ident : $val:expr),+ $(,)?) => {
+        Expr::Struct(
+            Path::new(vec![$typ.into()]),
+            vec![$((stringify!($key).to_string(), $val),)*],
+        )
+    };
+}
+
 pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
     recursive(|stmt| {
         let expr = expr_parser(src, stmt.clone());
@@ -164,16 +173,17 @@ fn expr_parser<'src>(
                 })
             };
 
+            // https://doc.rust-lang.org/stable/reference/expressions.html#expression-precedence
             atom.clone().pratt((
                 // field ::= atom "." ident
                 postfix(
-                    7,
+                    8,
                     just(Token::Dot).ignore_then(ident_parser(src).map(String::from)),
                     |l, field| Expr::FieldAccess(Box::new(l), field),
                 ),
                 // subscript ::= field "." "[" expr "]"
                 postfix(
-                    6,
+                    7,
                     just(Token::Dot).ignore_then(
                         expr.clone()
                             .delimited_by(just(Token::BracketOpen), just(Token::BracketClose)),
@@ -182,7 +192,7 @@ fn expr_parser<'src>(
                 ),
                 // call ::= field "(" (expr ("," expr)*)? ")"
                 postfix(
-                    6,
+                    7,
                     expr.clone()
                         .separated_by(just(Token::Comma))
                         .collect::<Vec<Expr>>()
@@ -190,31 +200,50 @@ fn expr_parser<'src>(
                     |l, args| Expr::Call(Box::new(l), args),
                 ),
                 // unary ::= ("-" | "not") call
-                prefix(5, just(Token::Not), |r| {
+                prefix(6, just(Token::Not), |r| {
                     Expr::Unary(UnaryOp::Not, Box::new(r))
                 }),
-                prefix(5, just(Token::Minus), |r| {
+                prefix(6, just(Token::Minus), |r| {
                     Expr::Unary(UnaryOp::Neg, Box::new(r))
                 }),
                 // mul_div ::= unary ("*" | "/") unary
-                binary(left(4), Token::Star, BinaryOp::Mul),
-                binary(left(4), Token::Slash, BinaryOp::Div),
+                binary(left(5), Token::Star, BinaryOp::Mul),
+                binary(left(5), Token::Slash, BinaryOp::Div),
                 // add_sub ::= mul_div ("+" | "-") mul_div
-                binary(left(3), Token::Plus, BinaryOp::Add),
-                binary(left(3), Token::Minus, BinaryOp::Sub),
-                // compare ::= add_sub ("==" | "!=" | "<" | "<=" | ">" | ">=") add_sub
+                binary(left(4), Token::Plus, BinaryOp::Add),
+                binary(left(4), Token::Minus, BinaryOp::Sub),
                 // TODO Require parentheses
-                binary(left(2), Token::Eq, BinaryOp::Eq),
-                binary(left(2), Token::NotEq, BinaryOp::NotEq),
-                binary(left(2), Token::LessThan, BinaryOp::LessThan),
-                binary(left(2), Token::LessThanEq, BinaryOp::LessThanEq),
-                binary(left(2), Token::GreaterThan, BinaryOp::GreaterThan),
-                binary(left(2), Token::GreaterThanEq, BinaryOp::GreaterThanEq),
-                // assign ::= compare "=" compare
+                // compare ::= add_sub ("==" | "!=" | "<" | "<=" | ">" | ">=") add_sub
+                binary(left(3), Token::Eq, BinaryOp::Eq),
+                binary(left(3), Token::NotEq, BinaryOp::NotEq),
+                binary(left(3), Token::LessThan, BinaryOp::LessThan),
+                binary(left(3), Token::LessThanEq, BinaryOp::LessThanEq),
+                binary(left(3), Token::GreaterThan, BinaryOp::GreaterThan),
+                binary(left(3), Token::GreaterThanEq, BinaryOp::GreaterThanEq),
+                // TODO Require parentheses
+                // range ::= basic ".." basic
+                infix(
+                    left(2),
+                    just(Token::DotDot),
+                    |l, r| struct_expr! { "Range", start: l, end: r },
+                ),
+                // range_from ::= basic ".."
+                postfix(
+                    2,
+                    just(Token::DotDot),
+                    |l| struct_expr! { "RangeFrom", start: l },
+                ),
+                // range_to ::= ".." basic
+                prefix(
+                    2,
+                    just(Token::DotDot),
+                    |r| struct_expr! { "RangeTo", end: r },
+                ),
+                // assign ::= basic "=" basic
                 binary(right(1), Token::Assign, BinaryOp::Assign),
-                // break ::= "break" assign
+                // break ::= "break" basic
                 prefix(0, just(Token::Break), |r| Expr::Break(Box::new(r))),
-                // return_value ::= "return" assign
+                // return_value ::= "return" basic
                 prefix(0, just(Token::Return), |r| Expr::Return(Box::new(r))),
             ))
         };

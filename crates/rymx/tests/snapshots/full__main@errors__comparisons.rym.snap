@@ -1,0 +1,59 @@
+---
+source: crates/rymx/tests/full.rs
+expression: diag.outputs_dump() + &diag.reports_dump()
+input_file: crates/rymx/tests/errors/comparisons.rym
+---
+--- tokenize ---
+Comment [// TODO Should fail with: Chaining comparison operators is not allowed.]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [test]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Int [1]
+HSpace [ ]
+Eq [==]
+HSpace [ ]
+Int [2]
+HSpace [ ]
+Eq [==]
+HSpace [ ]
+Int [3]
+Semi [;]
+VSpace [\n]
+
+--- parse ---
+Module {
+    name: "",
+    constants: [
+        (
+            "test",
+            Unkown,
+            Eq(
+                Eq(
+                    Literal(Int: 1),
+                    Literal(Int: 2),
+                ),
+                Literal(Int: 3),
+            ),
+        ),
+    ],
+    types: [],
+    sub_modules: [],
+}
+
+--- interpret ---
+const assert = extern fn(1)
+const assert_eq = extern fn(2)
+const false = false
+const fib_native = extern fn(1)
+const print = extern fn(..[]TODO)
+const println = extern fn(..[]TODO)
+const read_to_string = extern fn(1)
+const test = false
+const true = true
+
+--- reports ---
+

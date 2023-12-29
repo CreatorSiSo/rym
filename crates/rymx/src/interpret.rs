@@ -3,6 +3,7 @@ mod function;
 
 use std::{
     cmp::PartialOrd,
+    collections::HashMap,
     ops::{Add, Div, Mul, Sub},
 };
 
@@ -13,14 +14,14 @@ use crate::ast::{BinaryOp, Expr, Function, Literal, Module, Stmt, UnaryOp, Varia
 
 #[derive(Debug, Clone)]
 pub enum Value {
+    Unit,
     Bool(bool),
     Int(i64),
     Float(f64),
     String(String),
+    Struct(HashMap<String, Value>),
     Function(Function),
     NativeFunction(NativeFunction),
-    // Type(Type),
-    Unit,
 }
 
 impl PartialEq for Value {
@@ -47,8 +48,9 @@ impl std::fmt::Display for Value {
             Self::Int(inner) => write!(f, "{inner:#}"),
             Self::Float(inner) => write!(f, "{inner:#}"),
             Self::String(inner) => write!(f, "{inner:#}"),
+            Self::Struct(inner) => write!(f, "<unkown> {inner:#?}"),
             Self::Function(inner) => write!(f, "{inner:#}"),
-            Self::NativeFunction(inner) => write!(f, "{inner}"),
+            Self::NativeFunction(inner) => write!(f, "{inner:#}"),
         }
     }
 }
@@ -138,28 +140,20 @@ impl Interpret for Expr {
                 Literal::Float(inner) => Value::Float(inner),
                 Literal::String(inner) => Value::String(inner),
             },
-            Expr::Ident(name) => match env.get(&name) {
-                // TODO Only clone when needed / faster
-                Some(val) => val.clone(),
-                None => panic!("Unable to find <{name}>"),
-            },
-            Expr::FieldAccess(_lhs, _rhs) => {
-                // TODO
-                debug_todo();
-                Value::Unit
-            }
-            Expr::Subscript(_lhs, _rhs) => {
-                // TODO
-                debug_todo();
-                Value::Unit
-            }
-            Expr::Function(func) => Value::Function(func),
             Expr::Array(array) => {
                 todo!();
             }
             Expr::ArrayWithRepeat(value, length) => {
                 todo!();
             }
+            Expr::Struct(name, fields) => Value::Struct({
+                let mut map = HashMap::with_capacity(fields.len());
+                for (name, expr) in fields {
+                    map.insert(name, default_flow!(expr.eval(env)));
+                }
+                map
+            }),
+            Expr::Function(func) => Value::Function(func),
 
             Expr::Unary(op, expr) => match (op, default_flow!(expr.eval(env))) {
                 (UnaryOp::Neg, Value::Float(val)) => Value::Float(-val),
@@ -213,6 +207,25 @@ impl Interpret for Expr {
                 }
                 _ => todo!("Add error, value is not a function."),
             },
+
+            Expr::Ident(name) => match env.get(&name) {
+                // TODO Only clone when needed / faster
+                Some(val) => val.clone(),
+                None => panic!("Unable to find '{name}'"),
+            },
+            Expr::FieldAccess(lhs, key) => {
+                let val = default_flow!(lhs.eval(env));
+                match &val {
+                    Value::Struct(fields) => fields.get(&key).cloned(),
+                    _ => None,
+                }
+                .expect(&format!("Field '{key}' does not exist on value '{val}'"))
+            }
+            Expr::Subscript(_lhs, _rhs) => {
+                // TODO
+                debug_todo();
+                Value::Unit
+            }
 
             Expr::IfElse(cond_expr, then_expr, else_expr) => {
                 let Value::Bool(condition) = default_flow!(cond_expr.eval(env)) else {

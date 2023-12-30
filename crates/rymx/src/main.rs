@@ -93,9 +93,7 @@ fn cmd_repl(_write_flags: Vec<String>) -> anyhow::Result<()> {
             }
         }
 
-        while let Ok(diagnostic) = emitter.receiver.try_recv() {
-            emitter.emit(diagnostic);
-        }
+        emitter.emit_all();
     }
 
     editor.save_history(".history")?;
@@ -116,18 +114,13 @@ fn cmd_run(_write_flags: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
     let (sender, emitter) = AriadneEmitter::new(std::io::stderr());
 
     std::thread::spawn(move || {
+        let module = compile_module(sender.clone(), &src)?;
         let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);
-
-        // Ignoring the result here as it is already alvailabe
-        // through the Diagnostics
-        if let Some(module) = compile_module(sender.clone(), &src) {
-            interpret(sender, &mut env, module);
-        }
+        interpret(sender, &mut env, module);
+        Some(())
     });
 
-    for diagnostic in emitter.receiver.iter() {
-        emitter.emit(diagnostic);
-    }
+    emitter.emit_all_blocking();
 
     // if write_flags.contains(&"outputs".to_string()) {
     //     emitter.write_outputs()?;

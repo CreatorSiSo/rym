@@ -15,12 +15,7 @@ fn main() {
             Some(())
         });
 
-        for diagnostic in emitter.receiver.iter() {
-            emitter.emit(diagnostic);
-            println!("Finished");
-        }
-
-        drop(emitter);
+        emitter.emit_all_blocking();
         assert_snapshot!(String::from_utf8(out).unwrap());
     })
 }

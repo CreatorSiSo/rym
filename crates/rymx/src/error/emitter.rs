@@ -45,12 +45,19 @@ impl<W: io::Write> AriadneEmitter<W> {
         }
     }
 
-    // /// Waits for a diagnostic, then formats and writes it to self.out
-    // pub fn receive(&mut self) -> anyhow::Result<()> {
-    //     let diagnostic = self.receiver.recv()?;
-    //     self.out.write_all(format!("{diagnostic:?}").as_bytes())?;
-    //     Ok(())
-    // }
+    /// Emit all received [`Diagnostic`]s without blocking
+    pub fn emit_all(&self) {
+        for diagnostic in self.receiver.try_iter() {
+            self.emit(diagnostic);
+        }
+    }
+
+    /// Emit all received [`Diagnostic`]s by blocking until every [Sender] is dropped
+    pub fn emit_all_blocking(self) {
+        for diagnostic in self.receiver.iter() {
+            self.emit(diagnostic);
+        }
+    }
 }
 
 struct SourceMap {

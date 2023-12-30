@@ -4,37 +4,28 @@ use ariadne::{Cache, FileCache, Source};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
+use std::io;
 use std::sync::mpsc::{self, Receiver, Sender};
 
 // pub trait Emitter {
 //     fn emit_diagnostic(&mut self, diagnostic: &Diagnostic);
 // }
 
-pub struct AriadneEmitter<'a> {
-    out: RefCell<Write<'a>>,
-    cache: DynamicSourceMap,
+pub struct AriadneEmitter<W: io::Write> {
+    out: RefCell<W>,
+    cache: SourceMap,
     pub receiver: Receiver<Diagnostic>,
 }
 
-impl<'a> AriadneEmitter<'a> {
-    pub fn new(out: Box<dyn std::io::Write>) -> (Sender<Diagnostic>, Self) {
-        Self::new_inner(Write::Io(out))
-    }
-
-    pub fn new_string_out(out: &'a mut String) -> (Sender<Diagnostic>, Self) {
-        Self::new_inner(Write::String(out))
-    }
-
-    fn new_inner(out: Write<'a>) -> (Sender<Diagnostic>, Self) {
+impl<W: io::Write> AriadneEmitter<W> {
+    pub fn new(out: W) -> (Sender<Diagnostic>, Self) {
         let (sender, receiver) = mpsc::channel();
-        (
-            sender,
-            Self {
-                out: out.into(),
-                cache: DynamicSourceMap::new(),
-                receiver,
-            },
-        )
+        let emitter = Self {
+            out: RefCell::new(out),
+            cache: SourceMap::new(),
+            receiver,
+        };
+        (sender, emitter)
     }
 
     pub fn add_source<'src>(&'src mut self, label: &'static str, src: &'src str) {
@@ -44,12 +35,12 @@ impl<'a> AriadneEmitter<'a> {
     pub fn emit(&self, diagnostic: Diagnostic) {
         self.out
             .borrow_mut()
-            .write_str(&format!("{:?}: {}\n", diagnostic.level, diagnostic.message))
+            .write_all(format!("{:?}: {}\n", diagnostic.level, diagnostic.message).as_bytes())
             .unwrap();
         for diagnostic in diagnostic.children {
             self.out
                 .borrow_mut()
-                .write_str(&format!("{}", diagnostic.message))
+                .write_all(format!("{}", diagnostic.message).as_bytes())
                 .unwrap();
         }
     }
@@ -62,27 +53,12 @@ impl<'a> AriadneEmitter<'a> {
     // }
 }
 
-pub enum Write<'a> {
-    Io(Box<dyn std::io::Write>),
-    String(&'a mut String),
-}
-
-impl Write<'_> {
-    fn write_str(&mut self, str: &str) -> anyhow::Result<()> {
-        match self {
-            Write::Io(inner) => inner.write_all(str.as_bytes())?,
-            Write::String(inner) => std::fmt::Write::write_str(inner, str)?,
-        }
-        Ok(())
-    }
-}
-
-struct DynamicSourceMap {
+struct SourceMap {
     files: FileCache,
     other: HashMap<&'static str, Source>,
 }
 
-impl Cache<SourceId> for &mut DynamicSourceMap {
+impl Cache<SourceId> for &mut SourceMap {
     fn fetch(&mut self, id: &SourceId) -> Result<&Source, Box<dyn Debug + '_>> {
         match id {
             SourceId::File(pathbuf) => self.files.fetch(pathbuf),
@@ -100,7 +76,7 @@ impl Cache<SourceId> for &mut DynamicSourceMap {
     }
 }
 
-impl DynamicSourceMap {
+impl SourceMap {
     fn new() -> Self {
         Self {
             files: FileCache::default(),

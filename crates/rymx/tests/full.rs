@@ -1,18 +1,18 @@
 use insta::assert_snapshot;
-use rymx::{interpret, std_lib, AriadneEmitter, Env};
+use rymx::{std_lib, AriadneEmitter, Env};
 
 #[test]
 fn main() {
     insta::glob!("**/*.rym", |path| {
         let src = std::fs::read_to_string(path).unwrap();
-        let mut out = String::new();
-        let (sender, emitter) = AriadneEmitter::new_string_out(&mut out);
+        let mut out: Vec<u8> = vec![];
+        let (sender, emitter) = AriadneEmitter::new(&mut out);
         let mut env = Env::from_constants(std_lib::CONSTANTS.into_iter().chain(std_lib::OTHER));
 
         std::thread::spawn(move || {
-            if let Some(module) = rymx::compile_module(sender.clone(), &src) {
-                interpret(sender, &mut env, module);
-            }
+            let module = rymx::compile_module(sender.clone(), &src)?;
+            rymx::interpret(sender, &mut env, module);
+            Some(())
         });
 
         for diagnostic in emitter.receiver.iter() {
@@ -20,6 +20,7 @@ fn main() {
             println!("Finished");
         }
 
-        assert_snapshot!(out);
+        drop(emitter);
+        assert_snapshot!(String::from_utf8(out).unwrap());
     })
 }

@@ -51,7 +51,7 @@ fn cmd_repl(_write_flags: Vec<String>) -> anyhow::Result<()> {
     //     Box::new(File::create(PathBuf::from("repl.debug"))?)
     // };
 
-    let (sender, mut emitter) = AriadneEmitter::new(Box::new(std::io::stderr()));
+    let (sender, mut emitter) = AriadneEmitter::new(std::io::stderr());
     let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);
     loop {
         let readline = editor.readline("➤ ");
@@ -107,15 +107,13 @@ fn cmd_run(_write_flags: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
     // TODO reset current_dir when executing non const code
     // let prev_current_dir = std::env::current_dir()?;
     // std::env::set_current_dir(path.parent().unwrap())?;
+    // let debug_out = if write_flags.is_empty() {
+    //     Box::new(std::io::sink())
+    // } else {
+    //     Box::new(File::create(path.with_extension("debug"))?)
+    // };
 
-    let (sender, emitter) = AriadneEmitter::new(
-        // if write_flags.is_empty() {
-        //     Box::new(std::io::sink())
-        // } else {
-        //     Box::new(File::create(path.with_extension("debug"))?)
-        // },
-        Box::new(std::io::stderr()),
-    );
+    let (sender, emitter) = AriadneEmitter::new(std::io::stderr());
 
     std::thread::spawn(move || {
         let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);

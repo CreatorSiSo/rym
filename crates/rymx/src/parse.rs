@@ -1,11 +1,10 @@
 use self::error::{ParseError, Pattern};
 use crate::{
     ast::{Module, Stmt},
-    span::{SourceSpan, Span},
+    error::{Diagnostic, Level},
+    span::Span,
     tokenize::Token,
-    SourceId,
 };
-use ariadne::{Label, Report};
 use chumsky::{input::Input, prelude::*};
 use itertools::Itertools;
 
@@ -19,57 +18,42 @@ pub(self) use file::file_parser;
 pub(self) use r#type::type_parser;
 pub(self) use stmt::stmt_parser;
 
-type ReportBuilder<'a> = ariadne::ReportBuilder<'a, SourceSpan>;
-
 pub fn parse_file<'a>(
     tokens: &'a [(Token, Span)],
     src: &'a str,
-    src_id: SourceId,
-) -> Result<Module, Vec<Report<'a, SourceSpan>>> {
+) -> Result<Module, Vec<Diagnostic>> {
     let parse_result = file_parser(src).parse(tokens.spanned(Span {
         start: src.len(),
         end: src.len(),
     }));
 
-    map_parse_result(parse_result, src_id)
+    map_parse_result(parse_result)
 }
 
-pub fn parse_stmt<'a>(
-    tokens: &'a [(Token, Span)],
-    src: &'a str,
-    src_id: SourceId,
-) -> Result<Stmt, Vec<Report<'a, SourceSpan>>> {
+pub fn parse_stmt<'a>(tokens: &'a [(Token, Span)], src: &'a str) -> Result<Stmt, Vec<Diagnostic>> {
     let parse_result = stmt_parser(src).parse(tokens.spanned(Span {
         start: src.len(),
         end: src.len(),
     }));
 
-    map_parse_result(parse_result, src_id)
+    map_parse_result(parse_result)
 }
 
-fn map_parse_result<'a, T>(
-    parse_result: ParseResult<T, ParseError>,
-    src_id: SourceId,
-) -> Result<T, Vec<Report<'a, SourceSpan>>> {
+fn map_parse_result<'a, T>(parse_result: ParseResult<T, ParseError>) -> Result<T, Vec<Diagnostic>> {
     use self::error::Reason;
 
-    let err_to_report = |err: ParseError| {
-        let builder = Report::build(ariadne::ReportKind::Error, src_id.clone(), err.span().start);
-        let span = SourceSpan(src_id.clone(), err.span());
-        dbg!(err.contexts().collect::<Vec<_>>());
-
-        match err.reason() {
-            Reason::ExpectedFound { expected, found } => match (expected.is_empty(), found) {
-                (true, _) => report_unexpected(builder, span, found),
-                (false, None) => report_expected(builder, span, expected),
-                (false, Some(found)) => report_expected_found(builder, span, expected, found),
-            },
-            Reason::Custom(msg) => builder
-                .with_message("Syntax Error")
-                .with_label(Label::new(SourceSpan(src_id.clone(), err.span())).with_message(msg)),
-            Reason::Many(_) => todo!(),
-        }
-        .finish()
+    let err_to_report = |err: ParseError| match err.reason() {
+        Reason::ExpectedFound { expected, found } => match (expected.is_empty(), found) {
+            (true, _) => report_unexpected(err.span(), found),
+            (false, None) => report_expected(err.span(), expected),
+            (false, Some(found)) => report_expected_found(err.span(), expected, found),
+        },
+        Reason::Custom(message) => Diagnostic::new(Level::Error, "Syntax Error").with_child(
+            err.span(),
+            Level::Error,
+            message,
+        ),
+        Reason::Many(_) => todo!(),
     };
 
     parse_result
@@ -77,43 +61,28 @@ fn map_parse_result<'a, T>(
         .map_err(|errs| errs.into_iter().map(err_to_report).collect())
 }
 
-fn report_expected_found<'a>(
-    builder: ReportBuilder<'a>,
-    span: SourceSpan,
-    expected: &Vec<Pattern>,
-    found: &Token,
-) -> ReportBuilder<'a> {
+fn report_expected_found<'a>(span: Span, expected: &Vec<Pattern>, found: &Token) -> Diagnostic {
     let patterns = patterns_to_string(expected);
-    builder
-        .with_message(format!("Expected {patterns}, found {}", found.display()))
-        .with_label(Label::new(span).with_message(format!("Expected {patterns}")))
+    Diagnostic::new(
+        Level::Error,
+        format!("Expected {patterns}, found {}", found.display()),
+    )
+    .with_child(span, Level::Error, format!("Expected {patterns}"))
 }
 
-fn report_expected<'a>(
-    builder: ReportBuilder<'a>,
-    span: SourceSpan,
-    expected: &Vec<Pattern>,
-) -> ReportBuilder<'a> {
-    let msg = format!("Expected {}", patterns_to_string(expected));
-    builder
-        .with_message(msg.clone())
-        .with_label(Label::new(span).with_message(msg))
+fn report_expected<'a>(span: Span, expected: &Vec<Pattern>) -> Diagnostic {
+    let message = format!("Expected {}", patterns_to_string(expected));
+    Diagnostic::spanned(span, Level::Error, message)
 }
 
-fn report_unexpected<'a>(
-    builder: ReportBuilder<'a>,
-    span: SourceSpan,
-    found: &Option<Token>,
-) -> ReportBuilder<'a> {
-    let msg = format!(
+fn report_unexpected<'a>(span: Span, found: &Option<Token>) -> Diagnostic {
+    let message = format!(
         "Unexpected {}",
         found
             .map(|token| token.display())
             .unwrap_or("end of input".into())
     );
-    builder
-        .with_message(msg.clone())
-        .with_label(Label::new(span).with_message(msg))
+    Diagnostic::spanned(span, Level::Error, message)
 }
 
 fn patterns_to_string(patterns: &Vec<Pattern>) -> String {

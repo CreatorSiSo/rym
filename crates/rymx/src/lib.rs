@@ -1,111 +1,120 @@
-use std::fmt::Write;
+use std::sync::mpsc::Sender;
 
 mod ast;
 mod compile;
-mod diagnostics;
+mod error;
 mod interpret;
 mod parse;
 mod span;
 pub mod std_lib;
 mod tokenize;
-// mod vm;
 
-pub use diagnostics::{Diagnostics, SourceId};
+pub use error::AriadneEmitter;
 pub use interpret::Env;
-pub use span::Span;
+pub use span::SourceId;
 pub use tokenize::tokenizer;
 
+use error::{Diagnostic, Level};
 use interpret::{Interpret, Value};
-use span::SourceSpan;
+use span::Span;
 use tokenize::Token;
 
-pub fn interpret(diag: &mut Diagnostics, env: &mut Env, ast: impl Interpret) -> Value {
-    diag.start_stage("interpret");
+pub fn interpret(emitter: Sender<Diagnostic>, env: &mut Env, ast: impl Interpret) -> Value {
     // TODO does this make sense
     // Ignoring control flow
     let result = ast.eval(env).inner();
 
-    let env_state: String = env
-        .variables()
-        .into_iter()
-        .fold((0, String::new()), |(ident, mut accum), scope| {
-            for (name, (kind, value)) in scope {
-                writeln!(accum, "{}{kind} {name} = {}", "  ".repeat(ident), value)
-                    .expect("Internal Error: Unable to write into String");
-            }
-            (ident + 1, accum)
-        })
-        .1;
-    diag.push_result(&env_state);
+    // let env_state: String = env
+    //     .variables()
+    //     .into_iter()
+    //     .fold((0, String::new()), |(ident, mut accum), scope| {
+    //         for (name, (kind, value)) in scope {
+    //             writeln!(accum, "{}{kind} {name} = {}", "  ".repeat(ident), value)
+    //                 .expect("Internal Error: Unable to write into String");
+    //         }
+    //         (ident + 1, accum)
+    //     })
+    //     .1;
+    // emitter.push_result(&env_state);
+    // emitter.send(t);
 
     result
 }
 
-pub fn compile_module(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Option<ast::Module> {
-    diag.start_stage("tokenize");
-    let tokens: Vec<(Token, Span)> = tokenize(diag, src, src_id.clone())?;
+pub fn compile_module(emitter: Sender<Diagnostic>, src: &str) -> Option<ast::Module> {
+    let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src)?;
 
-    diag.start_stage("parse");
-    let module = match parse::parse_file(&tokens, src, src_id) {
+    let module = match parse::parse_file(&tokens, src) {
         Ok(module) => module,
-        Err(reports) => {
-            for report in reports {
-                diag.push_report(report);
+        Err(diagnostics) => {
+            for diagnostic in diagnostics {
+                emitter.send(diagnostic).unwrap();
             }
             return None;
         }
     };
-    diag.push_result(&format!("{module:#?}\n"));
+    emitter
+        .send(Diagnostic::new(Level::Debug, format!("{module:#?}\n")))
+        .unwrap();
 
     // TODO Name resolution
     // TODO Typechecking
     // TODO Const evaluation
     // TODO Generate intermediate representation
 
-    // i / / / ;
-
     Some(module)
 }
 
 // TODO take a module (for name lookup and so on) as input
-pub fn compile_stmt(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Option<ast::Stmt> {
-    diag.start_stage("tokenize");
-    let tokens: Vec<(Token, Span)> = tokenize(diag, src, src_id.clone())?;
+pub fn compile_stmt(emitter: Sender<Diagnostic>, src: &str) -> Option<ast::Stmt> {
+    let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src)?;
 
-    diag.start_stage("parse");
-    let expr = match parse::parse_stmt(&tokens, src, src_id) {
+    let expr = match parse::parse_stmt(&tokens, src) {
         Ok(expr) => expr,
-        Err(reports) => {
-            for report in reports {
-                diag.push_report(report);
+        Err(diagnostics) => {
+            for diagnostic in diagnostics {
+                emitter.send(diagnostic).unwrap();
             }
             return None;
         }
     };
-    diag.push_result(&format!("{expr:#?}\n"));
+    emitter
+        .send(Diagnostic::new(Level::Debug, format!("{expr:#?}\n")))
+        .unwrap();
 
     Some(expr)
 }
 
-fn tokenize(diag: &mut Diagnostics, src: &str, src_id: SourceId) -> Option<Vec<(Token, Span)>> {
+fn tokenize(emitter: Sender<Diagnostic>, src: &str) -> Option<Vec<(Token, Span)>> {
     let results: Vec<_> = tokenizer(src).collect();
-    diag.push_result(
-        &results.iter().fold(String::new(), |accum, (result, span)| {
-            let (token, span) = match result {
-                Ok(token) => (format!("{token:?}"), span),
-                Err(_) => ("Error".into(), span),
-            };
-            accum + &format!("{token} [{}]\n", span.src(src).escape_debug())
-        }),
-    );
+
+    let tokens_string = results.iter().fold(String::new(), |accum, (result, span)| {
+        let (token, span) = match result {
+            Ok(token) => (format!("{token:?}"), span),
+            Err(_) => ("Error".into(), span),
+        };
+        accum + &format!("{token} [{}]\n", span.src(src).escape_debug())
+    });
+    emitter
+        .send(
+            Diagnostic::new(Level::Debug, "Finished tokenizing").with_child(
+                vec![],
+                Level::Debug,
+                tokens_string,
+            ),
+        )
+        .unwrap();
 
     let mut tokens = vec![];
     for (result, span) in results {
         let Ok(token) = result else {
-            diag.error(
-                format!("Invalid character [{}]", span.src(src)),
-                SourceSpan(src_id, span),
-            );
+            emitter
+                .send(Diagnostic::spanned(
+                    span,
+                    Level::Error,
+                    format!("Invalid character [{}]", span.src(src)),
+                ))
+                .unwrap();
             return None;
         };
         match token {

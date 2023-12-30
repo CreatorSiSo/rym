@@ -1,10 +1,7 @@
 use clap::{arg, command, Command};
 use rustyline::{error::ReadlineError, Editor};
-use rymx::{compile_module, compile_stmt, interpret, Diagnostics, Env, SourceId};
-use std::{
-    fs::{read_to_string, File},
-    path::PathBuf,
-};
+use rymx::{compile_module, compile_stmt, interpret, AriadneEmitter, Env};
+use std::{fs::read_to_string, path::PathBuf};
 
 #[derive(Debug)]
 struct Arguments {}
@@ -37,26 +34,25 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn cmd_repl(write_flags: Vec<String>) -> anyhow::Result<()> {
+fn cmd_repl(_write_flags: Vec<String>) -> anyhow::Result<()> {
     let mut editor: Editor<(), _> = Editor::new()?;
     if editor.load_history(".history").is_err() {
         println!("No previous history.");
     }
-    let mut diag = Diagnostics::new(
-        if write_flags.is_empty() {
-            // Deletes repl.debug to avoid confusion and stupid debugging on
-            // why my program does not output debug info, just because I set
-            // the wrong flags and its not supposed to do anything
-            let _ = std::fs::remove_file("repl.debug");
-            Box::new(std::io::sink())
-        } else {
-            // Overwrites the previous contents of repl.debug
-            Box::new(File::create(PathBuf::from("repl.debug"))?)
-        },
-        Box::new(std::io::stderr()),
-    );
-    let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);
 
+    // let debug_out = if write_flags.is_empty() {
+    //     // Deletes repl.debug to avoid confusion and stupid debugging on
+    //     // why my program does not output debug info, just because I set
+    //     // the wrong flags and its not supposed to do anything
+    //     let _ = std::fs::remove_file("repl.debug");
+    //     Box::new(std::io::sink())
+    // } else {
+    //     // Overwrites the previous contents of repl.debug
+    //     Box::new(File::create(PathBuf::from("repl.debug"))?)
+    // };
+
+    let (sender, mut emitter) = AriadneEmitter::new(Box::new(std::io::stderr()));
+    let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);
     loop {
         let readline = editor.readline("➤ ");
 
@@ -69,19 +65,19 @@ fn cmd_repl(write_flags: Vec<String>) -> anyhow::Result<()> {
                 }
 
                 editor.add_history_entry(&line).unwrap();
-                let id = diag.set_other_src("repl", &line);
+                emitter.add_source("repl", &line);
 
-                if let Some(expr) = compile_stmt(&mut diag, &line, id) {
-                    let val = interpret(&mut diag, &mut env, expr);
+                if let Some(expr) = compile_stmt(sender.clone(), &line) {
+                    let val = interpret(sender.clone(), &mut env, expr);
                     println!("{val}");
                 }
 
-                if write_flags.contains(&"results".to_string()) {
-                    diag.write_outputs()?;
-                }
-                if write_flags.contains(&"reports".to_string()) {
-                    diag.write_reports()?;
-                }
+                // if write_flags.contains(&"results".to_string()) {
+                //     diag.write_outputs()?;
+                // }
+                // if write_flags.contains(&"reports".to_string()) {
+                //     diag.write_reports()?;
+                // }
             }
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
@@ -96,39 +92,50 @@ fn cmd_repl(write_flags: Vec<String>) -> anyhow::Result<()> {
                 break;
             }
         }
+
+        while let Ok(diagnostic) = emitter.receiver.try_recv() {
+            emitter.emit(diagnostic);
+        }
     }
 
     editor.save_history(".history")?;
     Ok(())
 }
 
-fn cmd_run(write_flags: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
+fn cmd_run(_write_flags: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
     let src = read_to_string(&path)?;
     // TODO reset current_dir when executing non const code
     // let prev_current_dir = std::env::current_dir()?;
     // std::env::set_current_dir(path.parent().unwrap())?;
 
-    let mut diag = Diagnostics::new(
-        if write_flags.is_empty() {
-            Box::new(std::io::sink())
-        } else {
-            Box::new(File::create(path.with_extension("debug"))?)
-        },
+    let (sender, emitter) = AriadneEmitter::new(
+        // if write_flags.is_empty() {
+        //     Box::new(std::io::sink())
+        // } else {
+        //     Box::new(File::create(path.with_extension("debug"))?)
+        // },
         Box::new(std::io::stderr()),
     );
-    let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);
 
-    // Ignoring the result here as it is already alvailabe
-    // through the Diagnostics
-    if let Some(module) = compile_module(&mut diag, &src, SourceId::File(path)) {
-        interpret(&mut diag, &mut env, module);
+    std::thread::spawn(move || {
+        let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);
+
+        // Ignoring the result here as it is already alvailabe
+        // through the Diagnostics
+        if let Some(module) = compile_module(sender.clone(), &src) {
+            interpret(sender, &mut env, module);
+        }
+    });
+
+    for diagnostic in emitter.receiver.iter() {
+        emitter.emit(diagnostic);
     }
 
-    if write_flags.contains(&"outputs".to_string()) {
-        diag.write_outputs()?;
-    }
-    if write_flags.contains(&"reports".to_string()) {
-        diag.write_reports()?;
-    }
+    // if write_flags.contains(&"outputs".to_string()) {
+    //     emitter.write_outputs()?;
+    // }
+    // if write_flags.contains(&"reports".to_string()) {
+    //     emitter.write_reports()?;
+    // }
     Ok(())
 }

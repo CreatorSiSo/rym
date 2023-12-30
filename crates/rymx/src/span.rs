@@ -1,6 +1,8 @@
-use crate::SourceId;
 use core::ops::Range;
-use std::fmt::{Debug, Display};
+use std::{
+    fmt::{Debug, Display},
+    path::PathBuf,
+};
 
 #[derive(Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub struct Span {
@@ -69,6 +71,7 @@ impl Display for Span {
     }
 }
 
+#[derive(Clone)]
 pub struct SourceSpan(pub SourceId, pub Span);
 
 impl ariadne::Span for SourceSpan {
@@ -85,4 +88,10 @@ impl ariadne::Span for SourceSpan {
     fn end(&self) -> usize {
         self.1.end
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SourceId {
+    File(PathBuf),
+    Other(&'static str),
 }

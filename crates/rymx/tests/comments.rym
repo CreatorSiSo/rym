@@ -1,0 +1,27 @@
+/// Doc comment
+const test = 0;
+
+fn main() => {
+    return /* Inline comment */;
+}
+
+fn old_main() => {
+    /* return () /* Inline comment */; Nested inline comment */
+}
+
+/// # Person
+/// This just a test but how should this actually work?
+/// TODO check markdown??
+///
+/// ## Other Stuff
+/// ...
+///
+/// ## Code blocks
+/// ```
+/// const test = 0;
+/// ```
+///
+type Person = struct {
+    name: String = "Unkown",
+    age: u32,
+};

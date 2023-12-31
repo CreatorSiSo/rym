@@ -1,0 +1,26 @@
+---
+source: crates/rymx/tests/full.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: crates/rymx/tests/errors/comments.rym
+---
+Debug: Finished tokenizing
+Comment [/* Test */]
+HSpace [ ]
+Star [*]
+Slash [/]
+VSpace [\n\n]
+Comment [// TODO add more test cases]
+VSpace [\n]
+
+Error: Expected `break`, `const`, `fn`, `if`, `let`, `not`, `return`, `type`, `{`, `[`, `(`, `..`, `-`, identifier, literal or EndOfInput, found `*`
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/errors/comments.rym:1:12]
+   │
+ 1 │ /* Test */ */
+   │            ┬  
+   │            ╰── Expected `break`, `const`, `fn`, `if`, `let`, `not`, `return`, `type`, `{`, `[`, `(`, `..`, `-`, identifier, literal or EndOfInput
+───╯
+
+Debug: Finished parsing
+None
+
+

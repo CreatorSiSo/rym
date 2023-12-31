@@ -11,10 +11,10 @@ fn fib_if(n: Int) Uint =>
     else if n == 1 then 1
     else fib_if(n - 1) + fib_if(n - 2);
 
-// const fib_match = fn(n) => match n with
-//     | 0 => 0
-//     | 1 => 1
-//     | _ => fib_match(n - 1) + fib_match(n - 2);
+/* const fib_match = fn(n) => match n with
+    | 0 => 0
+    | 1 => 1
+    | _ => fib_match(n - 1) + fib_match(n - 2); */
 
 // const fib_oneliner = fn(n) => match n with 0 => 0 | 1 => 1 | _ => fib_oneliner(n - 1) + fib_oneliner(n - 2);
 

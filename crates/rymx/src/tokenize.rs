@@ -16,6 +16,31 @@ fn line_comment(lexer: &mut Lexer<Token>) {
     }
 }
 
+fn inline_comment(lexer: &mut Lexer<Token>) {
+    let mut nested = 1;
+    let mut chars = lexer.remainder().chars();
+    let mut offset = 0;
+
+    while let Some(char) = chars.next() {
+        match char {
+            '*' if chars.next() == Some('/') => {
+                nested -= 1;
+                offset += 2;
+            }
+            '/' if chars.next() == Some('*') => {
+                nested += 1;
+                offset += 2;
+            }
+            _ => offset += 1,
+        }
+        if nested == 0 {
+            break;
+        }
+    }
+
+    lexer.bump(offset);
+}
+
 #[derive(
     logos_display::Display, Debug, Clone, Copy, Logos, PartialEq, Eq, PartialOrd, Ord, Hash,
 )]
@@ -42,6 +67,7 @@ pub enum Token {
     DocComment,
     #[display_override("comment")]
     #[token("//", line_comment)]
+    #[token("/*", inline_comment)]
     Comment,
     #[display_override("whitespace")]
     #[regex("(\n|\r\n)+")]

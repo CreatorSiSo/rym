@@ -1,0 +1,177 @@
+---
+source: crates/rymx/tests/full.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: crates/rymx/tests/comments.rym
+---
+Debug: Finished tokenizing
+DocComment [/// Doc comment]
+VSpace [\n]
+Const [const]
+HSpace [ ]
+Ident [test]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Int [0]
+Semi [;]
+VSpace [\n\n]
+Fn [fn]
+HSpace [ ]
+Ident [main]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+Return [return]
+HSpace [ ]
+Comment [/* Inline comment */]
+Semi [;]
+VSpace [\n]
+BraceClose [}]
+VSpace [\n\n]
+Fn [fn]
+HSpace [ ]
+Ident [old_main]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+Comment [/* return () /* Inline comment */; Nested inline comment */]
+VSpace [\n]
+BraceClose [}]
+VSpace [\n\n]
+DocComment [/// # Person]
+VSpace [\n]
+DocComment [/// This just a test but how should this actually work?]
+VSpace [\n]
+DocComment [/// TODO check markdown??]
+VSpace [\n]
+DocComment [///]
+VSpace [\n]
+DocComment [/// ## Other Stuff]
+VSpace [\n]
+DocComment [/// ...]
+VSpace [\n]
+DocComment [///]
+VSpace [\n]
+DocComment [/// ## Code blocks]
+VSpace [\n]
+DocComment [/// ```]
+VSpace [\n]
+DocComment [/// const test = 0;]
+VSpace [\n]
+DocComment [/// ```]
+VSpace [\n]
+DocComment [///]
+VSpace [\n]
+Type [type]
+HSpace [ ]
+Ident [Person]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Struct [struct]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+Ident [name]
+Colon [:]
+HSpace [ ]
+Ident [String]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+String [\"Unkown\"]
+Comma [,]
+VSpace [\n]
+HSpace [    ]
+Ident [age]
+Colon [:]
+HSpace [ ]
+Ident [u32]
+Comma [,]
+VSpace [\n]
+BraceClose [}]
+Semi [;]
+VSpace [\n]
+
+Debug: Finished parsing
+Some(
+    Module {
+        name: "",
+        constants: [
+            (
+                "test",
+                Unkown,
+                Literal(Int: 0),
+            ),
+            (
+                "main",
+                Unkown,
+                Function {
+                    params: [],
+                    named_params: {},
+                    return_type: Unit,
+                    body: Block(
+                        [
+                            Expr(
+                                Return(
+                                    Unit,
+                                ),
+                            ),
+                        ],
+                    ),
+                },
+            ),
+            (
+                "old_main",
+                Unkown,
+                Function {
+                    params: [],
+                    named_params: {},
+                    return_type: Unit,
+                    body: Block(
+                        [],
+                    ),
+                },
+            ),
+        ],
+        types: [
+            (
+                "Person",
+                Struct(
+                    [
+                        (
+                            "name",
+                            Path(
+                                Path(["String"]),
+                            ),
+                            Some(
+                                String: "Unkown",
+                            ),
+                        ),
+                        (
+                            "age",
+                            Path(
+                                Path(["u32"]),
+                            ),
+                            None,
+                        ),
+                    ],
+                ),
+            ),
+        ],
+        sub_modules: [],
+    },
+)
+
+

@@ -74,7 +74,7 @@ fn report_expected_found<'a>(span: Span, expected: &Vec<Pattern>, found: &Token)
 
 fn report_expected<'a>(span: Span, expected: &Vec<Pattern>) -> Diagnostic {
     let message = format!("Expected {}", patterns_to_string(expected));
-    Diagnostic::spanned(span, Level::Error, message)
+    Diagnostic::spanned(span, Level::Error, &message).with_child(span, Level::Error, message)
 }
 
 fn report_unexpected<'a>(span: Span, found: &Option<Token>) -> Diagnostic {
@@ -84,7 +84,7 @@ fn report_unexpected<'a>(span: Span, found: &Option<Token>) -> Diagnostic {
             .map(|token| token.display())
             .unwrap_or("end of input".into())
     );
-    Diagnostic::spanned(span, Level::Error, message)
+    Diagnostic::spanned(span, Level::Error, &message).with_child(span, Level::Error, message)
 }
 
 fn patterns_to_string(patterns: &Vec<Pattern>) -> String {

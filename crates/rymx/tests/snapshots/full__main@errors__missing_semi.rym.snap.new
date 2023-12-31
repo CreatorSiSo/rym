@@ -1,0 +1,88 @@
+---
+source: crates/rymx/tests/full.rs
+assertion_line: 22
+expression: "String::from_utf8(out).unwrap()"
+input_file: crates/rymx/tests/errors/missing_semi.rym
+---
+Debug: Finished tokenizing
+Fn [fn]
+HSpace [ ]
+Ident [main]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+Ident [Result]
+BracketOpen [[]
+ParenOpen [(]
+ParenClose [)]
+Comma [,]
+HSpace [ ]
+Ident [IoError]
+BracketClose []]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [    ]
+Ident [call_some_function]
+ParenOpen [(]
+Ident [testing]
+Comma [,]
+HSpace [ ]
+BraceOpen [{]
+VSpace [\n]
+HSpace [        ]
+Let [let]
+HSpace [ ]
+Ident [test]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Int [0]
+Semi [;]
+VSpace [\n]
+HSpace [        ]
+Ident [test]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Ident [test]
+HSpace [ ]
+Plus [+]
+HSpace [ ]
+Int [0]
+HSpace [ ]
+Comment [// <<-- Missing semicolon]
+VSpace [\n]
+HSpace [        ]
+Ident [test]
+VSpace [\n]
+HSpace [    ]
+BraceClose [}]
+ParenClose [)]
+Semi [;]
+VSpace [\n]
+BraceClose [}]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [test]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Int [0]
+VSpace [\n]
+
+Error: Expected `}`, `(`, `.`, `..`, `;` or an operator, found identifier
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/errors/missing_semi.rym:5:9]
+   │
+ 5 │         test
+   │         ──┬─  
+   │           ╰─── Expected `}`, `(`, `.`, `..`, `;` or an operator
+───╯
+
+Debug: Finished parsing
+None
+
+

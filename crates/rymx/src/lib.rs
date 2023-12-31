@@ -21,15 +21,6 @@ use span::Span;
 use tokenize::Token;
 
 pub fn interpret(env: &mut Env, ast: impl Interpret) -> Option<Value> {
-    // TODO does this make sense
-    // Ignoring control flow
-    let result = match ast.eval(env) {
-        ControlFlow::Exit => None,
-        ControlFlow::None(inner) => Some(inner),
-        ControlFlow::Break(inner) => Some(inner),
-        ControlFlow::Return(inner) => Some(inner),
-    };
-
     // let env_state: String = env
     //     .variables()
     //     .into_iter()
@@ -44,7 +35,14 @@ pub fn interpret(env: &mut Env, ast: impl Interpret) -> Option<Value> {
     // emitter.push_result(&env_state);
     // emitter.send(t);
 
-    result
+    // TODO does this make sense
+    // Ignoring control flow
+    match ast.eval(env) {
+        ControlFlow::Exit => None,
+        ControlFlow::None(inner) => Some(inner),
+        ControlFlow::Break(inner) => Some(inner),
+        ControlFlow::Return(inner) => Some(inner),
+    }
 }
 
 pub fn compile_module(
@@ -102,7 +100,7 @@ fn tokenize(emitter: Sender<Diagnostic>, src: &str, src_id: SourceId) -> Vec<(To
                 }
                 .unwrap();
                 // TODO Add option to display spans as well
-                write!(accum, " [{}]\n", span.src(src).escape_debug()).unwrap();
+                writeln!(accum, " [{}]", span.src(src).escape_debug()).unwrap();
                 accum
             });
         Diagnostic::new(Level::Debug, "Finished tokenizing")

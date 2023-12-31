@@ -2,9 +2,7 @@ use super::{common::*, error::ParseError, stmt::stmt_parser};
 use crate::ast::*;
 use chumsky::prelude::*;
 
-pub fn file_parser<'src>(
-    src: &'src str,
-) -> impl Parser<'src, TokenStream<'src>, Module, Extra<'src>> {
+pub fn file_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
     let definition = stmt_parser(src).validate(|stmt, extra, emitter| {
         match stmt {
             Stmt::Expr(..) => emitter.emit(ParseError::custom(

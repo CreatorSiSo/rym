@@ -18,12 +18,10 @@ pub(super) fn parameters_parser<'src>(
         .labelled("parameter");
 
     // parameters ::= (parameter ("," parameter)*)?
-    let parameters = parameter
+    parameter
         .separated_by(just(Token::Comma))
         .allow_trailing()
-        .collect();
-
-    parameters
+        .collect()
 }
 
 pub fn path_parser<'src>() -> impl Parser<'src, TokenStream<'src>, Path, Extra<'src>> + Clone {

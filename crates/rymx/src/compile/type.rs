@@ -68,7 +68,7 @@ impl Display for Type {
             Type::FloatLiteral => write!(f, "<float_lit>"),
             Type::Float(size) => write!(f, "f{size}"),
             Type::Array(length, element_type) => {
-                write!(f, "{}", Self::array_to_string(&**element_type, *length)?)
+                write!(f, "{}", Self::array_to_string(element_type, *length)?)
             }
             Type::Union(types) => write!(f, "{}", types.iter().join(" | ")),
             Type::Function(FunctionType {

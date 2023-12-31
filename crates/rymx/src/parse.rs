@@ -38,7 +38,7 @@ pub fn parse_stmt<'a>(
     map_parse_result(parse_result, src_id)
 }
 
-fn map_parse_result<'a, T: std::fmt::Debug>(
+fn map_parse_result<T: std::fmt::Debug>(
     parse_result: ParseResult<T, ParseError>,
     src_id: SourceId,
 ) -> (Option<T>, Vec<Diagnostic>) {
@@ -68,7 +68,7 @@ fn map_parse_result<'a, T: std::fmt::Debug>(
     (output, errors.into_iter().map(error_to_diagostic).collect())
 }
 
-fn report_expected_found<'a>(span: Span, expected: &Vec<Pattern>, found: &Token) -> Diagnostic {
+fn report_expected_found(span: Span, expected: &Vec<Pattern>, found: &Token) -> Diagnostic {
     let patterns = patterns_to_string(expected);
     Diagnostic::new(
         Level::Error,
@@ -77,12 +77,12 @@ fn report_expected_found<'a>(span: Span, expected: &Vec<Pattern>, found: &Token)
     .with_child(span, Level::Error, format!("Expected {patterns}"))
 }
 
-fn report_expected<'a>(span: Span, expected: &Vec<Pattern>) -> Diagnostic {
+fn report_expected(span: Span, expected: &Vec<Pattern>) -> Diagnostic {
     let message = format!("Expected {}", patterns_to_string(expected));
     Diagnostic::spanned(span, Level::Error, message)
 }
 
-fn report_unexpected<'a>(span: Span, found: &Option<Token>) -> Diagnostic {
+fn report_unexpected(span: Span, found: &Option<Token>) -> Diagnostic {
     let message = format!(
         "Unexpected {}",
         found
@@ -100,17 +100,17 @@ fn patterns_to_string(patterns: &Vec<Pattern>) -> String {
     use std::collections::HashSet;
     let mut patterns: HashSet<&Pattern> = HashSet::from_iter(patterns.iter());
 
-    fn replace_subset<'a>(
-        super_set: &mut HashSet<&'a Pattern>,
+    fn replace_subset(
+        super_set: &mut HashSet<&Pattern>,
         search: &'static [Pattern],
         replacement: &'static Pattern,
     ) {
         let search_set = HashSet::from_iter(search);
-        if search_set.is_subset(&super_set) {
+        if search_set.is_subset(super_set) {
             for pattern in search_set {
                 super_set.remove(pattern);
             }
-            super_set.insert(&replacement);
+            super_set.insert(replacement);
         }
     }
 

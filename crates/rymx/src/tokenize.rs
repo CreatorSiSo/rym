@@ -186,7 +186,7 @@ impl Token {
             | Self::Comment
             | Self::VSpace
             | Self::HSpace => self.to_string(),
-            token => format!("`{}`", token.to_string()),
+            token => format!("`{}`", token),
         }
     }
 }

@@ -12,9 +12,7 @@ macro_rules! struct_expr {
     };
 }
 
-pub fn stmt_parser<'src>(
-    src: &'src str,
-) -> impl Parser<'src, TokenStream<'src>, Stmt, Extra<'src>> + Clone {
+pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
     recursive(|stmt| {
         let expr = expr_parser(stmt.clone());
 

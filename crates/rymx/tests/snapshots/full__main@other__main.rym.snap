@@ -237,4 +237,6 @@ Some(
     },
 )
 
+Error: Unable to find 'example_package'
+
 

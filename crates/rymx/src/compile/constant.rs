@@ -19,7 +19,7 @@ impl Display for Constant {
             Constant::Bool(inner) => write!(f, "{inner}"),
             Constant::Int(inner) => write!(f, "{inner}"),
             Constant::Float(inner) => write!(f, "{inner}"),
-            Constant::Array(inner) => write!(f, "[{}]", inner.into_iter().join(", ")),
+            Constant::Array(inner) => write!(f, "[{}]", inner.iter().join(", ")),
             Constant::String(inner) => write!(f, "{inner}"),
         }
     }

@@ -34,24 +34,22 @@ impl<W: io::Write> AriadneEmitter<W> {
     pub fn emit(&self, diagnostic: Diagnostic) {
         type Report<'a> = ariadne::Report<'a, crate::Span>;
 
-        if let None = diagnostic.span {
-            if diagnostic.level == Level::Debug {
-                let mut out = self.out.borrow_mut();
-                Report::build(
-                    level_to_kind(diagnostic.level),
-                    SourceId::INVALID,
-                    diagnostic.span.unwrap_or(Span::new(0, 0)).start,
-                )
-                .with_message(&diagnostic.message)
-                .finish()
-                .write(&self.source_map, out.by_ref())
-                .unwrap();
-                for child in &diagnostic.children {
-                    write!(out, "{}", child.message).unwrap();
-                }
-                writeln!(out).unwrap();
-                return;
+        if diagnostic.span.is_none() && diagnostic.level == Level::Debug {
+            let mut out = self.out.borrow_mut();
+            Report::build(
+                level_to_kind(diagnostic.level),
+                SourceId::INVALID,
+                diagnostic.span.unwrap_or(Span::new(0, 0)).start,
+            )
+            .with_message(&diagnostic.message)
+            .finish()
+            .write(&self.source_map, out.by_ref())
+            .unwrap();
+            for child in &diagnostic.children {
+                write!(out, "{}", child.message).unwrap();
             }
+            writeln!(out).unwrap();
+            return;
         };
 
         fn map_children(

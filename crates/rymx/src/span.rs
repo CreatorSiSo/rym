@@ -30,7 +30,7 @@ impl Span {
     }
 
     pub fn src(self, src: &str) -> &str {
-        &src[(self.start as usize)..(self.end as usize)]
+        &src[self.start..self.end]
     }
 
     pub fn with_id(mut self, id: SourceId) -> Self {

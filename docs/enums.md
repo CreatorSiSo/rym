@@ -1,9 +1,8 @@
 ```rym
-const EventKind = enum {
-	Seminar,
-	Party,
-	Blocking
-}
+const EventKind = enum
+	| Seminar
+	| Party
+	| Blocking;
 ```
 
 ```rym
@@ -13,14 +12,14 @@ const Enum = struct {
 	kinds: [EnumKind],
 }
 
-const func [Enum] from_kinds(...args: [EnumKind]) -> Self {
+fn [Enum] from_kinds(...args: []EnumKind) Self => {
 	Enum {
 		repr: EnumRepr::optimal(kinds),
 		kinds,
 	}
 }
 
-const func [Enum] concat(self, other: Enum) -> Self {
+fn [Enum] concat(self, other: Enum) Self => {
 	let kinds = self.kinds.extend(other.kinds);
 	let repr = if self.repr == other.repr {
 		self.repr
@@ -40,9 +39,10 @@ const EnumRepr = enum {
 	U16,
 	U32,
 	U64,
+    // ...
 }
 
-const func [EnumRepr] optimal(kinds: [EnumKind]) -> Self {
+fn [EnumRepr] optimal(kinds: [EnumKind]) Self => {
 	/* TODO */
 }
 ```

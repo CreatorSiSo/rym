@@ -53,6 +53,7 @@ fn cmd_repl(_write_flags: Vec<String>) -> anyhow::Result<()> {
 
     let (sender, mut emitter) = AriadneEmitter::new(std::io::stderr());
     let mut env = Env::new(sender.clone()).with_constants(rymx::std_lib::CONSTANTS);
+    let src_id = emitter.source_map.add("repl", "");
     loop {
         let readline = editor.readline("➤ ");
 
@@ -65,7 +66,7 @@ fn cmd_repl(_write_flags: Vec<String>) -> anyhow::Result<()> {
                 }
 
                 editor.add_history_entry(&line).unwrap();
-                let src_id = emitter.source_map.add("repl", &line);
+                emitter.source_map.replace(src_id, &line);
 
                 compile_stmt(sender.clone(), &line, src_id)
                     .and_then(|expr| interpret(&mut env, expr))

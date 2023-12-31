@@ -6,12 +6,15 @@ fn main() {
     insta::glob!("**/*.rym", |path| {
         let src = std::fs::read_to_string(path).unwrap();
         let mut out: Vec<u8> = vec![];
-        let (sender, emitter) = AriadneEmitter::new(&mut out);
-        let mut env = Env::from_constants(std_lib::CONSTANTS.into_iter().chain(std_lib::OTHER));
+        let writer = strip_ansi_escapes::Writer::new(&mut out);
+        let (sender, mut emitter) = AriadneEmitter::new(writer);
+        let src_id = emitter.source_map.add(path.to_string_lossy(), &src);
 
         std::thread::spawn(move || {
-            let module = rymx::compile_module(sender.clone(), &src)?;
-            rymx::interpret(sender, &mut env, module);
+            let mut env = Env::new(sender.clone())
+                .with_constants(std_lib::CONSTANTS.into_iter().chain(std_lib::OTHER));
+            let module = rymx::compile_module(sender, &src, src_id)?;
+            rymx::interpret(&mut env, module);
             Some(())
         });
 

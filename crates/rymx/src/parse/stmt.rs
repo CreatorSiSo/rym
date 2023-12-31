@@ -1,5 +1,5 @@
 use super::{common::*, error::ParseError, type_parser};
-use crate::{ast::*, tokenize::Token, Span};
+use crate::{ast::*, tokenize::Token};
 use chumsky::{prelude::*, util::MaybeRef};
 use std::collections::HashMap;
 
@@ -12,15 +12,17 @@ macro_rules! struct_expr {
     };
 }
 
-pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
+pub fn stmt_parser<'src>(
+    src: &'src str,
+) -> impl Parser<'src, TokenStream<'src>, Stmt, Extra<'src>> + Clone {
     recursive(|stmt| {
-        let expr = expr_parser(src, stmt.clone());
+        let expr = expr_parser(stmt.clone());
 
         // type_def ::=  "type" ident "=" type ";"
         let type_def = just(Token::Type)
-            .ignore_then(ident_parser(src))
+            .ignore_then(ident_parser())
             .then_ignore(just(Token::Assign))
-            .then(type_parser(src))
+            .then(type_parser())
             .then_ignore(just(Token::Semi))
             .map(|(name, rhs)| Stmt::Type(name.into(), rhs))
             .labelled("type definition")
@@ -28,14 +30,11 @@ pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
 
         // function_def ::= "fn" ident "(" parameters ")" type? "=>" expr ";"?
         let function_def = just(Token::Fn)
-            .ignore_then(ident_parser(src))
-            .then(
-                parameters_parser(src)
-                    .delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
-            )
-            .then(type_parser(src).or_not())
+            .ignore_then(ident_parser())
+            .then(parameters_parser().delimited_by(just(Token::ParenOpen), just(Token::ParenClose)))
+            .then(type_parser().or_not())
             .then_ignore(just(Token::ThickArrow))
-            .then(expr_parser(src, stmt))
+            .then(expr_parser(stmt))
             .then(just(Token::Semi).or_not().map(|semi| semi.is_none()))
             .validate(|((rest, body), missing_semi), extra, emitter| {
                 // Not emitting "missing semicolon error" for functions
@@ -44,7 +43,11 @@ pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
                     emitter.emit(ParseError::expected_found(
                         [Some(MaybeRef::Val(Token::Semi))],
                         None,
-                        Span::new(extra.span().end, extra.span().end),
+                        {
+                            let mut span = current_span(extra);
+                            span.start = span.end;
+                            span
+                        },
                     ))
                 }
                 (rest, body)
@@ -72,8 +75,8 @@ pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
                 .to(VariableKind::LetMut),
             just(Token::Let).to(VariableKind::Let),
         ))
-        .then(ident_parser(src))
-        .then(just(Token::Colon).ignore_then(type_parser(src)).or_not())
+        .then(ident_parser())
+        .then(just(Token::Colon).ignore_then(type_parser()).or_not())
         .then_ignore(just(Token::Assign))
         .then(expr.clone())
         .then_ignore(just(Token::Semi))
@@ -90,24 +93,23 @@ pub fn stmt_parser(src: &str) -> impl Parser<TokenStream, Stmt, Extra> + Clone {
             variable,
         ))
     })
+    .with_ctx(src)
 }
 
 /// Only works when called from stmt_parser!
 fn expr_parser<'src>(
-    src: &'src str,
     stmt: impl Parser<'src, TokenStream<'src>, Stmt, Extra<'src>> + Clone + 'src,
-) -> impl Parser<TokenStream, Expr, Extra> + Clone {
+) -> impl Parser<'src, TokenStream<'src>, Expr, Extra<'src>> + Clone {
     recursive(|expr| {
         // literal ::= int | float | string
-        let literal = literal_parser(src).map(Expr::Literal);
+        let literal = literal_parser().map(Expr::Literal);
 
         // function ::= fn "(" parameters ")" type? "=>" expr
         let function = just(Token::Fn)
             .ignore_then(
-                parameters_parser(src)
-                    .delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
+                parameters_parser().delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
             )
-            .then(type_parser(src).or_not())
+            .then(type_parser().or_not())
             .then(just(Token::ThickArrow).ignore_then(expr.clone()))
             .map(|((params, return_type), body)| {
                 Expr::Function(Function {
@@ -156,7 +158,7 @@ fn expr_parser<'src>(
         // atom ::= literal | ident | array | "(" expr ")" | block
         let atom = choice((
             literal,
-            ident_parser(src).map(String::from).map(Expr::Ident),
+            ident_parser().map(String::from).map(Expr::Ident),
             array,
             expr.clone()
                 .delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
@@ -178,7 +180,7 @@ fn expr_parser<'src>(
                 // field ::= atom "." ident
                 postfix(
                     8,
-                    just(Token::Dot).ignore_then(ident_parser(src).map(String::from)),
+                    just(Token::Dot).ignore_then(ident_parser().map(String::from)),
                     |l, field| Expr::FieldAccess(Box::new(l), field),
                 ),
                 // subscript ::= field "." "[" expr "]"

@@ -1,9 +1,9 @@
-use std::sync::mpsc::SyncSender;
+use std::{fmt::Display, sync::mpsc::SyncSender};
 
 use crate::Span;
 
 /// An enum representing a diagnostic level.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Level {
     /// An error.
@@ -18,14 +18,26 @@ pub enum Level {
     Debug,
 }
 
+impl Display for Level {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Level::Error => write!(f, "Error"),
+            Level::Warning => write!(f, "Warning"),
+            Level::Note => write!(f, "Note"),
+            Level::Help => write!(f, "Help"),
+            Level::Debug => write!(f, "Debug"),
+        }
+    }
+}
+
 /// A structure representing a diagnostic message and associated children messages.
 #[must_use]
 #[derive(Clone, Debug)]
 pub struct Diagnostic {
     pub level: Level,
     pub message: String,
-    pub spans: Vec<Span>,
-    pub children: Vec<Diagnostic>,
+    pub span: Option<Span>,
+    pub children: Vec<SubDiagnostic>,
 }
 
 impl Diagnostic {
@@ -33,16 +45,16 @@ impl Diagnostic {
         Diagnostic {
             level,
             message: message.into(),
-            spans: vec![],
+            span: None,
             children: vec![],
         }
     }
 
-    pub fn spanned(spans: impl MultiSpan, level: Level, message: impl Into<String>) -> Self {
+    pub fn spanned(span: Span, level: Level, message: impl Into<String>) -> Self {
         Diagnostic {
             level,
             message: message.into(),
-            spans: spans.into_vec(),
+            span: Some(span),
             children: vec![],
         }
     }
@@ -53,7 +65,11 @@ impl Diagnostic {
         level: Level,
         message: impl Into<String>,
     ) -> Self {
-        self.children.push(Self::spanned(spans, level, message));
+        self.children.push(SubDiagnostic {
+            level,
+            message: message.into(),
+            spans: spans.into_vec(),
+        });
         self
     }
 
@@ -62,6 +78,13 @@ impl Diagnostic {
             .send(self)
             .expect("Internal error: Could not emit diagnostic")
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct SubDiagnostic {
+    pub level: Level,
+    pub message: String,
+    pub spans: Vec<Span>,
 }
 
 /// Trait implemented by types that can be converted into a set of `Span`s.

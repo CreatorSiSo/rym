@@ -1,7 +1,7 @@
 use self::error::{ParseError, Pattern};
 use crate::{
     ast::{Module, Stmt},
-    error::{Diagnostic, Level},
+    error::{Diagnostic, Level, SourceId},
     span::Span,
     tokenize::Token,
 };
@@ -21,40 +21,44 @@ pub(self) use stmt::stmt_parser;
 pub fn parse_file<'a>(
     tokens: &'a [(Token, Span)],
     src: &'a str,
+    src_id: SourceId,
 ) -> Result<Module, Vec<Diagnostic>> {
-    let parse_result = file_parser(src).parse(tokens.spanned(Span {
-        start: src.len(),
-        end: src.len(),
-    }));
+    let parse_result = file_parser(src).parse(tokens.spanned(Span::new(src.len(), src.len())));
 
-    map_parse_result(parse_result)
+    map_parse_result(parse_result, src_id)
 }
 
-pub fn parse_stmt<'a>(tokens: &'a [(Token, Span)], src: &'a str) -> Result<Stmt, Vec<Diagnostic>> {
-    let parse_result = stmt_parser(src).parse(tokens.spanned(Span {
-        start: src.len(),
-        end: src.len(),
-    }));
+pub fn parse_stmt<'a>(
+    tokens: &'a [(Token, Span)],
+    src: &'a str,
+    src_id: SourceId,
+) -> Result<Stmt, Vec<Diagnostic>> {
+    let parse_result = stmt_parser(src).parse(tokens.spanned(Span::new(src.len(), src.len())));
 
-    map_parse_result(parse_result)
+    map_parse_result(parse_result, src_id)
 }
 
-fn map_parse_result<'a, T>(parse_result: ParseResult<T, ParseError>) -> Result<T, Vec<Diagnostic>> {
+fn map_parse_result<'a, T: std::fmt::Debug>(
+    parse_result: ParseResult<T, ParseError>,
+    src_id: SourceId,
+) -> Result<T, Vec<Diagnostic>> {
     use self::error::Reason;
 
-    let err_to_report = |err: ParseError| match err.reason() {
-        Reason::ExpectedFound { expected, found } => match (expected.is_empty(), found) {
-            (true, _) => report_unexpected(err.span(), found),
-            (false, None) => report_expected(err.span(), expected),
-            (false, Some(found)) => report_expected_found(err.span(), expected, found),
-        },
-        Reason::Custom(message) => Diagnostic::new(Level::Error, "Syntax Error").with_child(
-            err.span(),
-            Level::Error,
-            message,
-        ),
-        Reason::Many(_) => todo!(),
-    };
+    let err_to_report =
+        |err: ParseError| {
+            let span = err.span().with_id(src_id);
+
+            match err.reason() {
+                Reason::ExpectedFound { expected, found } => match (expected.is_empty(), found) {
+                    (true, _) => report_unexpected(span, found),
+                    (false, None) => report_expected(span, expected),
+                    (false, Some(found)) => report_expected_found(span, expected, found),
+                },
+                Reason::Custom(message) => Diagnostic::new(Level::Error, "Syntax Error")
+                    .with_child(span, Level::Error, message),
+                Reason::Many(_) => todo!(),
+            }
+        };
 
     parse_result
         .into_result()

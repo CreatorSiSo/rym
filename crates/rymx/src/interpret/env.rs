@@ -1,24 +1,28 @@
 use super::Value;
-use crate::ast::VariableKind;
-use std::collections::HashMap;
+use crate::{ast::VariableKind, error::Diagnostic};
+use std::{collections::HashMap, sync::mpsc::Sender};
 
 pub struct Env {
     scopes: Vec<Scope>,
+    emitter: Sender<Diagnostic>,
 }
 
 impl Env {
-    pub fn new() -> Self {
+    pub fn new(sender: Sender<Diagnostic>) -> Self {
         Self {
             scopes: vec![Scope::new(ScopeKind::Module)],
+            emitter: sender,
         }
     }
 
-    pub fn from_constants(constants: impl IntoIterator<Item = (&'static str, Value)>) -> Self {
-        let mut env = Self::new();
+    pub fn with_constants(
+        mut self,
+        constants: impl IntoIterator<Item = (&'static str, Value)>,
+    ) -> Self {
         for (name, value) in constants {
-            env.create(name, VariableKind::Const, value)
+            self.create(name, VariableKind::Const, value)
         }
-        env
+        self
     }
 
     pub fn push_scope(&mut self, kind: ScopeKind) {
@@ -83,12 +87,6 @@ impl Env {
         // }
 
         None
-    }
-}
-
-impl Default for Env {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

@@ -2,12 +2,12 @@ use super::{common::*, error::ParseError};
 use crate::{ast::*, tokenize::Token};
 use chumsky::{prelude::*, util::Maybe};
 
-pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
+pub fn type_parser<'src>() -> impl Parser<'src, TokenStream<'src>, Type, Extra<'src>> + Clone {
     recursive(|type_| {
         // literal ::= int | float | string
-        let literal = literal_parser(src).map(Type::Literal);
+        let literal = literal_parser().map(Type::Literal);
 
-        let ident = ident_parser(src).map(String::from);
+        let ident = ident_parser().map(String::from);
 
         // atom ::= "(" ")" | literal | path | "(" type ")"
         let atom = choice((
@@ -15,7 +15,7 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
                 .then(just(Token::ParenClose))
                 .to(Type::Unit),
             literal,
-            path_parser(src).map(Type::Path),
+            path_parser().map(Type::Path),
             type_
                 .clone()
                 .delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
@@ -43,11 +43,7 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
             .clone()
             .then_ignore(just(Token::Colon))
             .then(type_.clone())
-            .then(
-                just(Token::Assign)
-                    .ignore_then(literal_parser(src))
-                    .or_not(),
-            )
+            .then(just(Token::Assign).ignore_then(literal_parser()).or_not())
             .map(|((name, typ), default)| (name, typ, default));
         // struct_fields ::= (struct_field ",")* struct_field?
         let struct_fields = struct_field
@@ -88,9 +84,9 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
             .labelled("union");
 
         // size ::= (path | int)
-        let size = path_parser(src)
+        let size = path_parser()
             .map(ArraySize::Path)
-            .or(literal_parser(src).validate(|lit, extra, emitter| {
+            .or(literal_parser().validate(|lit, extra, emitter| {
                 let found = match lit {
                     Literal::Int(inner) => return ArraySize::Int(inner as u64),
                     Literal::Bool(_) => Token::Ident,
@@ -100,7 +96,7 @@ pub fn type_parser(src: &str) -> impl Parser<TokenStream, Type, Extra> + Clone {
                 emitter.emit(ParseError::expected_found(
                     [Some(Maybe::Val(Token::Int))],
                     Some(Maybe::Val(found)),
-                    extra.span(),
+                    current_span(extra),
                 ));
                 ArraySize::Unknown
             }));

@@ -11,15 +11,14 @@ mod tokenize;
 
 pub use error::AriadneEmitter;
 pub use interpret::Env;
-pub use span::SourceId;
 pub use tokenize::tokenizer;
 
-use error::{Diagnostic, Level};
+use error::{Diagnostic, Level, SourceId};
 use interpret::{Interpret, Value};
 use span::Span;
 use tokenize::Token;
 
-pub fn interpret(emitter: Sender<Diagnostic>, env: &mut Env, ast: impl Interpret) -> Value {
+pub fn interpret(env: &mut Env, ast: impl Interpret) -> Value {
     // TODO does this make sense
     // Ignoring control flow
     let result = ast.eval(env).inner();
@@ -41,10 +40,17 @@ pub fn interpret(emitter: Sender<Diagnostic>, env: &mut Env, ast: impl Interpret
     result
 }
 
-pub fn compile_module(emitter: Sender<Diagnostic>, src: &str) -> Option<ast::Module> {
-    let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src)?;
+pub fn compile_module(
+    emitter: Sender<Diagnostic>,
+    src: &str,
+    src_id: SourceId,
+) -> Option<ast::Module> {
+    let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src)?
+        .into_iter()
+        .map(|(token, span)| (token, span.with_id(src_id)))
+        .collect();
 
-    let module = match parse::parse_file(&tokens, src) {
+    let module = match parse::parse_file(&tokens, src, src_id) {
         Ok(module) => module,
         Err(diagnostics) => {
             for diagnostic in diagnostics {
@@ -66,10 +72,13 @@ pub fn compile_module(emitter: Sender<Diagnostic>, src: &str) -> Option<ast::Mod
 }
 
 // TODO take a module (for name lookup and so on) as input
-pub fn compile_stmt(emitter: Sender<Diagnostic>, src: &str) -> Option<ast::Stmt> {
-    let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src)?;
+pub fn compile_stmt(emitter: Sender<Diagnostic>, src: &str, src_id: SourceId) -> Option<ast::Stmt> {
+    let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src)?
+        .into_iter()
+        .map(|(token, span)| (token, span.with_id(src_id)))
+        .collect();
 
-    let expr = match parse::parse_stmt(&tokens, src) {
+    let expr = match parse::parse_stmt(&tokens, src, src_id) {
         Ok(expr) => expr,
         Err(diagnostics) => {
             for diagnostic in diagnostics {

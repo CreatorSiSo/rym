@@ -3,9 +3,12 @@ use logos::{Lexer, Logos};
 use std::fmt::Debug;
 
 pub fn tokenizer(src: &str) -> impl Iterator<Item = (Result<Token, ()>, Span)> + '_ {
-    Token::lexer(src)
-        .spanned()
-        .map(|(maybe_token, span)| (maybe_token, span.into()))
+    Token::lexer(src).spanned().map(|(maybe_token, span)| {
+        (
+            maybe_token,
+            span.try_into().expect("Internal Error: Span too large"),
+        )
+    })
 }
 
 fn line_comment(lexer: &mut Lexer<Token>) {

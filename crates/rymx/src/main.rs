@@ -52,32 +52,25 @@ fn cmd_repl(_write_flags: Vec<String>) -> anyhow::Result<()> {
     // };
 
     let (sender, mut emitter) = AriadneEmitter::new(std::io::stderr());
-    let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);
+    let mut env = Env::new(sender.clone()).with_constants(rymx::std_lib::CONSTANTS);
     loop {
         let readline = editor.readline("➤ ");
 
         match readline {
             Ok(line) => {
-                match line.as_str() {
+                match line.as_str().trim_end() {
                     "" => continue,
                     ":help" => continue,
                     _ => (),
                 }
 
                 editor.add_history_entry(&line).unwrap();
-                emitter.add_source("repl", &line);
+                let src_id = emitter.source_map.add("repl", &line);
 
-                if let Some(expr) = compile_stmt(sender.clone(), &line) {
-                    let val = interpret(sender.clone(), &mut env, expr);
+                if let Some(expr) = compile_stmt(sender.clone(), &line, src_id) {
+                    let val = interpret(&mut env, expr);
                     println!("{val}");
                 }
-
-                // if write_flags.contains(&"results".to_string()) {
-                //     diag.write_outputs()?;
-                // }
-                // if write_flags.contains(&"reports".to_string()) {
-                //     diag.write_reports()?;
-                // }
             }
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
@@ -111,22 +104,16 @@ fn cmd_run(_write_flags: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
     //     Box::new(File::create(path.with_extension("debug"))?)
     // };
 
-    let (sender, emitter) = AriadneEmitter::new(std::io::stderr());
+    let (sender, mut emitter) = AriadneEmitter::new(std::io::stderr());
+    let src_id = emitter.source_map.add(path.to_string_lossy(), &src);
 
     std::thread::spawn(move || {
-        let module = compile_module(sender.clone(), &src)?;
-        let mut env = Env::from_constants(rymx::std_lib::CONSTANTS);
-        interpret(sender, &mut env, module);
+        let module = compile_module(sender.clone(), &src, src_id)?;
+        let mut env = Env::new(sender).with_constants(rymx::std_lib::CONSTANTS);
+        interpret(&mut env, module);
         Some(())
     });
 
     emitter.emit_all_blocking();
-
-    // if write_flags.contains(&"outputs".to_string()) {
-    //     emitter.write_outputs()?;
-    // }
-    // if write_flags.contains(&"reports".to_string()) {
-    //     emitter.write_reports()?;
-    // }
     Ok(())
 }

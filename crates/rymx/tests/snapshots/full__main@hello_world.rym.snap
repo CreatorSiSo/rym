@@ -1,9 +1,9 @@
 ---
 source: crates/rymx/tests/full.rs
-expression: diag.outputs_dump() + &diag.reports_dump()
+expression: "String::from_utf8(out).unwrap()"
 input_file: crates/rymx/tests/hello_world.rym
 ---
---- tokenize ---
+Debug: Finished tokenizing
 Fn [fn]
 HSpace [ ]
 Ident [main]
@@ -24,8 +24,7 @@ VSpace [\n]
 BraceClose [}]
 VSpace [\n]
 
---- parse ---
-Module {
+Debug: Module {
     name: "",
     constants: [
         (
@@ -54,16 +53,5 @@ Module {
     sub_modules: [],
 }
 
---- interpret ---
-const assert = extern fn(1)
-const assert_eq = extern fn(2)
-const false = false
-const fib_native = extern fn(1)
-const main = fn() ()
-const print = extern fn(..[]TODO)
-const println = extern fn(..[]TODO)
-const read_to_string = extern fn(1)
-const true = true
 
---- reports ---
 

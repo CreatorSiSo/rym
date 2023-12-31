@@ -2,15 +2,17 @@ use super::{common::*, error::ParseError, stmt::stmt_parser};
 use crate::ast::*;
 use chumsky::prelude::*;
 
-pub fn file_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
+pub fn file_parser<'src>(
+    src: &'src str,
+) -> impl Parser<'src, TokenStream<'src>, Module, Extra<'src>> {
     let definition = stmt_parser(src).validate(|stmt, extra, emitter| {
         match stmt {
             Stmt::Expr(..) => emitter.emit(ParseError::custom(
-                extra.span(),
+                current_span(extra),
                 "Top-level expressions are not allowed.",
             )),
             Stmt::Variable(VariableKind::Let | VariableKind::LetMut, ..) => {
-                emitter.emit(ParseError::custom(extra.span(), "todo"))
+                emitter.emit(ParseError::custom(current_span(extra), "todo"))
             }
             _ => {}
         }
@@ -18,28 +20,32 @@ pub fn file_parser(src: &str) -> impl Parser<TokenStream, Module, Extra> {
     });
 
     // file ::= (definition)*
-    definition.repeated().collect().map(|stmts: Vec<Stmt>| {
-        let mut constants = vec![];
-        let mut types = vec![];
+    definition
+        .repeated()
+        .collect()
+        .map(|stmts: Vec<Stmt>| {
+            let mut constants = vec![];
+            let mut types = vec![];
 
-        for stmt in stmts {
-            match stmt {
-                Stmt::Variable(VariableKind::Const, name, typ, rhs) => {
-                    constants.push((name, typ, rhs))
+            for stmt in stmts {
+                match stmt {
+                    Stmt::Variable(VariableKind::Const, name, typ, rhs) => {
+                        constants.push((name, typ, rhs))
+                    }
+                    Stmt::Type(name, rhs) => types.push((name, rhs)),
+
+                    // Already emitted an error for these
+                    _ => {}
                 }
-                Stmt::Type(name, rhs) => types.push((name, rhs)),
-
-                // Already emitted an error for these
-                _ => {}
             }
-        }
 
-        Module {
-            // TODO
-            name: "".into(),
-            constants,
-            types,
-            sub_modules: vec![],
-        }
-    })
+            Module {
+                // TODO
+                name: "".into(),
+                constants,
+                types,
+                sub_modules: vec![],
+            }
+        })
+        .with_ctx(src)
 }

@@ -1,36 +1,98 @@
+use crate::error::SourceId;
 use core::ops::Range;
-use std::{
-    fmt::{Debug, Display},
-    path::PathBuf,
-};
+use std::fmt::{Debug, Display};
 
-#[derive(Clone, Copy, Default, PartialEq, Eq, Hash)]
+type Index = usize;
+
+#[derive(Debug)]
+pub struct Spanned<T> {
+    val: T,
+    span: Span,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Span {
     /// Inclusive first index
-    pub start: usize,
+    pub start: Index,
     /// Exclusive last index
-    pub end: usize,
+    pub end: Index,
+    /// Id to corresponding source code
+    pub id: SourceId,
 }
 
 impl Span {
-    pub fn new(start: usize, end: usize) -> Self {
-        Self { start, end }
+    pub fn new(start: Index, end: Index) -> Self {
+        Self {
+            start,
+            end,
+            id: SourceId::INVALID,
+        }
     }
 
     pub fn src(self, src: &str) -> &str {
-        &src[std::ops::Range::<usize>::from(self)]
+        &src[(self.start as usize)..(self.end as usize)]
+    }
+
+    pub fn with_id(mut self, id: SourceId) -> Self {
+        self.id = id;
+        self
+    }
+}
+
+impl From<Span> for Range<Index> {
+    fn from(value: Span) -> Self {
+        Self {
+            start: value.start,
+            end: value.end,
+        }
+    }
+}
+
+impl From<Range<Index>> for Span {
+    fn from(value: Range<Index>) -> Self {
+        Self {
+            start: value.start,
+            end: value.end,
+            id: SourceId::INVALID,
+        }
+    }
+}
+
+// impl TryFrom<Range<usize>> for Span {
+//     type Error = std::num::TryFromIntError;
+
+//     fn try_from(value: Range<usize>) -> Result<Self, Self::Error> {
+//         Ok(Self {
+//             start: value.start.try_into()?,
+//             end: value.end.try_into()?,
+//             ..Self::default()
+//         })
+//     }
+// }
+
+impl Debug for Span {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.to_string())
+    }
+}
+
+impl Display for Span {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}..{} {}", self.start, self.end, self.id))
     }
 }
 
 impl chumsky::span::Span for Span {
-    type Context = ();
-    type Offset = usize;
+    type Context = SourceId;
+    type Offset = Index;
 
-    fn new(_context: Self::Context, range: Range<Self::Offset>) -> Self {
-        range.into()
+    fn new(context: Self::Context, range: Range<Self::Offset>) -> Self {
+        Span::from(range).with_id(context)
     }
 
-    fn context(&self) -> Self::Context {}
+    fn context(&self) -> Self::Context {
+        self.id
+    }
 
     fn start(&self) -> Self::Offset {
         self.start
@@ -41,57 +103,18 @@ impl chumsky::span::Span for Span {
     }
 }
 
-impl From<Range<usize>> for Span {
-    fn from(value: Range<usize>) -> Self {
-        Self {
-            start: value.start,
-            end: value.end,
-        }
-    }
-}
-
-impl From<Span> for Range<usize> {
-    fn from(value: Span) -> Self {
-        Self {
-            start: value.start,
-            end: value.end,
-        }
-    }
-}
-
-impl Debug for Span {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.to_string())
-    }
-}
-
-impl Display for Span {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}..{}", self.start, self.end))
-    }
-}
-
-#[derive(Clone)]
-pub struct SourceSpan(pub SourceId, pub Span);
-
-impl ariadne::Span for SourceSpan {
+impl ariadne::Span for Span {
     type SourceId = SourceId;
 
     fn source(&self) -> &Self::SourceId {
-        &self.0
+        &self.id
     }
 
     fn start(&self) -> usize {
-        self.1.start
+        self.start
     }
 
     fn end(&self) -> usize {
-        self.1.end
+        self.end
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SourceId {
-    File(PathBuf),
-    Other(&'static str),
 }

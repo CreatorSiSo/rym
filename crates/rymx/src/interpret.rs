@@ -10,7 +10,10 @@ use std::{
 pub use self::env::Env;
 use self::env::ScopeKind;
 pub use self::function::{Call, NativeFunction};
-use crate::ast::{BinaryOp, Expr, Function, Literal, Module, Stmt, UnaryOp, VariableKind};
+use crate::{
+    ast::{BinaryOp, Expr, Function, Literal, Module, Stmt, UnaryOp, VariableKind},
+    error::{Diagnostic, Level},
+};
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -56,19 +59,11 @@ impl std::fmt::Display for Value {
 }
 
 pub enum ControlFlow {
+    /// Crashes the entire evaluation context
+    Exit,
     None(Value),
     Break(Value),
     Return(Value),
-}
-
-impl ControlFlow {
-    pub fn inner(self) -> Value {
-        match self {
-            ControlFlow::None(inner) | ControlFlow::Break(inner) | ControlFlow::Return(inner) => {
-                inner
-            }
-        }
-    }
 }
 
 macro_rules! default_flow {
@@ -97,6 +92,7 @@ impl Interpret for Module {
                 ControlFlow::None(inner)
                 | ControlFlow::Break(inner)
                 | ControlFlow::Return(inner) => inner,
+                exit => return exit,
             };
             env.create(name, VariableKind::Const, val);
         }
@@ -190,36 +186,55 @@ impl Interpret for Expr {
 
                 (_op, _lhs, _rhs) => todo!(),
             },
-            Expr::Call(lhs, args) => match default_flow!(lhs.eval(env)) {
-                Value::Function(inner) => {
-                    let mut arg_values = vec![];
-                    for expr in args {
-                        arg_values.push(default_flow!(expr.eval(env)));
+            Expr::Call(lhs, args) => {
+                let result = match default_flow!(lhs.eval(env)) {
+                    Value::Function(inner) => {
+                        let mut arg_values = vec![];
+                        for expr in args {
+                            arg_values.push(default_flow!(expr.eval(env)));
+                        }
+                        inner.call(env, arg_values)
                     }
-                    inner.call(env, arg_values)
-                }
-                Value::NativeFunction(inner) => {
-                    let mut arg_values = vec![];
-                    for expr in args {
-                        arg_values.push(default_flow!(expr.eval(env)));
+                    Value::NativeFunction(inner) => {
+                        let mut arg_values = vec![];
+                        for expr in args {
+                            arg_values.push(default_flow!(expr.eval(env)));
+                        }
+                        inner.call(env, arg_values)
                     }
-                    inner.call(env, arg_values)
+                    _ => todo!("Add error, value is not a function."),
+                };
+                match result {
+                    ControlFlow::Exit => return ControlFlow::Exit,
+                    ControlFlow::None(inner) => inner,
+                    ControlFlow::Break(inner) => inner,
+                    ControlFlow::Return(inner) => inner,
                 }
-                _ => todo!("Add error, value is not a function."),
-            },
+            }
 
             Expr::Ident(name) => match env.get(&name) {
                 // TODO Only clone when needed / faster
                 Some(val) => val.clone(),
-                None => panic!("Unable to find '{name}'"),
+                None => {
+                    Diagnostic::new(Level::Error, format!("Unable to find '{name}'"))
+                        .emit(env.emitter.clone());
+                    return ControlFlow::Exit;
+                }
             },
             Expr::FieldAccess(lhs, key) => {
                 let val = default_flow!(lhs.eval(env));
-                match &val {
+                let Some(field) = (match &val {
                     Value::Struct(fields) => fields.get(&key).cloned(),
                     _ => None,
-                }
-                .expect(&format!("Field '{key}' does not exist on value '{val}'"))
+                }) else {
+                    Diagnostic::new(
+                        Level::Error,
+                        format!("Field '{key}' does not exist on value '{val}'"),
+                    )
+                    .emit(env.emitter.clone());
+                    return ControlFlow::Exit;
+                };
+                field
             }
             Expr::Subscript(_lhs, _rhs) => {
                 // TODO

@@ -16,14 +16,19 @@ pub use interpret::Env;
 pub use tokenize::tokenizer;
 
 use error::{Diagnostic, Level, SourceId};
-use interpret::{Interpret, Value};
+use interpret::{ControlFlow, Interpret, Value};
 use span::Span;
 use tokenize::Token;
 
-pub fn interpret(env: &mut Env, ast: impl Interpret) -> Value {
+pub fn interpret(env: &mut Env, ast: impl Interpret) -> Option<Value> {
     // TODO does this make sense
     // Ignoring control flow
-    let result = ast.eval(env).inner();
+    let result = match ast.eval(env) {
+        ControlFlow::Exit => None,
+        ControlFlow::None(inner) => Some(inner),
+        ControlFlow::Break(inner) => Some(inner),
+        ControlFlow::Return(inner) => Some(inner),
+    };
 
     // let env_state: String = env
     //     .variables()

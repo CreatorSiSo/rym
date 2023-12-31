@@ -1,4 +1,4 @@
-use super::Value;
+use super::{ControlFlow, Value};
 use crate::{
     ast,
     interpret::{env::ScopeKind, Env, Interpret, VariableKind},
@@ -6,11 +6,11 @@ use crate::{
 use std::fmt::Display;
 
 pub trait Call {
-    fn call(&self, env: &mut Env, args: Vec<Value>) -> Value;
+    fn call(&self, env: &mut Env, args: Vec<Value>) -> ControlFlow;
 }
 
 impl Call for ast::Function {
-    fn call(&self, env: &mut Env, args: Vec<Value>) -> Value {
+    fn call(&self, env: &mut Env, args: Vec<Value>) -> ControlFlow {
         assert!(self.params.len() == args.len());
         env.push_scope(ScopeKind::Function);
 
@@ -20,7 +20,7 @@ impl Call for ast::Function {
         let result = self.body.clone().eval(env);
 
         env.pop_scope();
-        result.inner()
+        result
     }
 }
 
@@ -32,17 +32,17 @@ pub enum NativeFunction {
 }
 
 impl Call for NativeFunction {
-    fn call(&self, _env: &mut Env, args: Vec<Value>) -> Value {
+    fn call(&self, _env: &mut Env, args: Vec<Value>) -> ControlFlow {
         match self {
             NativeFunction::Params1(inner) => {
                 assert!(args.len() == 1);
-                inner(&args[0])
+                ControlFlow::None(inner(&args[0]))
             }
             NativeFunction::Params2(inner) => {
                 assert!(args.len() == 2);
-                inner(&args[0], &args[1])
+                ControlFlow::None(inner(&args[0], &args[1]))
             }
-            NativeFunction::ParamsVar(inner) => inner(&args),
+            NativeFunction::ParamsVar(inner) => ControlFlow::None(inner(&args)),
         }
     }
 }

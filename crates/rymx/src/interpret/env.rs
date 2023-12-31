@@ -4,7 +4,7 @@ use std::{collections::HashMap, sync::mpsc::Sender};
 
 pub struct Env {
     scopes: Vec<Scope>,
-    emitter: Sender<Diagnostic>,
+    pub emitter: Sender<Diagnostic>,
 }
 
 impl Env {

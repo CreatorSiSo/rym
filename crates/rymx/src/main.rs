@@ -67,10 +67,9 @@ fn cmd_repl(_write_flags: Vec<String>) -> anyhow::Result<()> {
                 editor.add_history_entry(&line).unwrap();
                 let src_id = emitter.source_map.add("repl", &line);
 
-                if let Some(expr) = compile_stmt(sender.clone(), &line, src_id) {
-                    let val = interpret(&mut env, expr);
-                    println!("{val}");
-                }
+                compile_stmt(sender.clone(), &line, src_id)
+                    .and_then(|expr| interpret(&mut env, expr))
+                    .inspect(|value| println!("{value}"));
             }
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");

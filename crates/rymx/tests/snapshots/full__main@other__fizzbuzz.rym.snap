@@ -136,4 +136,7 @@ Error: Expected `)`, `,` or expression, found identifier
    │                                                  ╰── Expected `)`, `,` or expression
 ───╯
 
+Debug: Finished parsing
+None
+
 

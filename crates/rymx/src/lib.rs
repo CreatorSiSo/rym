@@ -45,91 +45,76 @@ pub fn compile_module(
     src: &str,
     src_id: SourceId,
 ) -> Option<ast::Module> {
-    let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src)?
-        .into_iter()
-        .map(|(token, span)| (token, span.with_id(src_id)))
-        .collect();
+    let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src, src_id);
 
-    let module = match parse::parse_file(&tokens, src, src_id) {
-        Ok(module) => module,
-        Err(diagnostics) => {
-            for diagnostic in diagnostics {
-                emitter.send(diagnostic).unwrap();
-            }
-            return None;
-        }
-    };
-    emitter
-        .send(Diagnostic::new(Level::Debug, format!("{module:#?}\n")))
-        .unwrap();
+    let (module, diagnostics) = parse::parse_file(&tokens, src, src_id);
+    for diagnostic in diagnostics {
+        emitter.send(diagnostic).unwrap();
+    }
+    Diagnostic::new(Level::Debug, "Finished parsing")
+        .with_child(vec![], Level::Debug, format!("{module:#?}\n"))
+        .emit(emitter);
 
     // TODO Name resolution
     // TODO Typechecking
     // TODO Const evaluation
     // TODO Generate intermediate representation
 
-    Some(module)
+    module
 }
 
 // TODO take a module (for name lookup and so on) as input
 pub fn compile_stmt(emitter: Sender<Diagnostic>, src: &str, src_id: SourceId) -> Option<ast::Stmt> {
-    let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src)?
-        .into_iter()
+    let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src, src_id);
+
+    let (expr, diagnostics) = parse::parse_stmt(&tokens, src, src_id);
+    for diagnostic in diagnostics {
+        emitter.send(diagnostic).unwrap();
+    }
+    Diagnostic::new(Level::Debug, "Finished parsing")
+        .with_child(vec![], Level::Debug, format!("{expr:#?}\n"))
+        .emit(emitter);
+
+    expr
+}
+
+fn tokenize(emitter: Sender<Diagnostic>, src: &str, src_id: SourceId) -> Vec<(Token, Span)> {
+    let results: Vec<(Option<Token>, Span)> = tokenizer(src)
         .map(|(token, span)| (token, span.with_id(src_id)))
         .collect();
 
-    let expr = match parse::parse_stmt(&tokens, src, src_id) {
-        Ok(expr) => expr,
-        Err(diagnostics) => {
-            for diagnostic in diagnostics {
-                emitter.send(diagnostic).unwrap();
-            }
-            return None;
-        }
-    };
-    emitter
-        .send(Diagnostic::new(Level::Debug, format!("{expr:#?}\n")))
-        .unwrap();
-
-    Some(expr)
-}
-
-fn tokenize(emitter: Sender<Diagnostic>, src: &str) -> Option<Vec<(Token, Span)>> {
-    let results: Vec<_> = tokenizer(src).collect();
-
-    let tokens_string = results.iter().fold(String::new(), |accum, (result, span)| {
-        let (token, span) = match result {
-            Ok(token) => (format!("{token:?}"), span),
-            Err(_) => ("Error".into(), span),
-        };
-        accum + &format!("{token} [{}]\n", span.src(src).escape_debug())
-    });
-    emitter
-        .send(
-            Diagnostic::new(Level::Debug, "Finished tokenizing").with_child(
-                vec![],
-                Level::Debug,
-                tokens_string,
-            ),
-        )
-        .unwrap();
-
-    let mut tokens = vec![];
-    for (result, span) in results {
-        let Ok(token) = result else {
-            emitter
-                .send(Diagnostic::spanned(
-                    span,
-                    Level::Error,
-                    format!("Invalid character [{}]", span.src(src)),
-                ))
+    // Debugging stuff
+    {
+        use std::fmt::Write;
+        let tokens_string = results
+            .iter()
+            .fold(String::new(), |mut accum, (result, span)| {
+                match result {
+                    Some(token) => write!(accum, "{token:?}"),
+                    None => write!(accum, "Error"),
+                }
                 .unwrap();
-            return None;
-        };
-        match token {
-            Token::DocComment | Token::Comment | Token::VSpace | Token::HSpace => continue,
-            _ => tokens.push((token, span)),
-        }
+                write!(accum, " [{}]\n", span.src(src).escape_debug()).unwrap();
+                accum
+            });
+        Diagnostic::new(Level::Debug, "Finished tokenizing")
+            .with_child(vec![], Level::Debug, tokens_string)
+            .emit(emitter.clone());
     }
-    Some(tokens)
+
+    // Report and ignore invalid characters
+    results
+        .into_iter()
+        .flat_map(|(maybe_token, span)| match maybe_token {
+            Some(Token::DocComment | Token::Comment | Token::VSpace | Token::HSpace) => None,
+            Some(token) => Some((token, span)),
+            None => {
+                let message = format!("Invalid character `{}`", span.src(src));
+                Diagnostic::spanned(span, Level::Error, message.clone())
+                    .with_child(span, Level::Error, message)
+                    .emit(emitter.clone());
+                None
+            }
+        })
+        .collect()
 }

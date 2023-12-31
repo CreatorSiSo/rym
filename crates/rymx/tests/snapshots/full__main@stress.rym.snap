@@ -97,87 +97,89 @@ VSpace [\n]
 BraceClose [}]
 VSpace [\n]
 
-Debug: Module {
-    name: "",
-    constants: [
-        (
-            "main",
-            Unkown,
-            Function {
-                params: [],
-                named_params: {},
-                return_type: Unit,
-                body: Block(
-                    [],
-                ),
-            },
-        ),
-        (
-            "pi",
-            Unkown,
-            Literal(Float: 3.141592653589793),
-        ),
-        (
-            "create_death_chain",
-            Unkown,
-            Function {
-                params: [],
-                named_params: {},
-                return_type: Path(
-                    Path(["chain"]),
-                ),
-                body: Block(
-                    [
-                        Expr(
-                            Break(
-                                Call(
-                                    FieldAccess(
-                                        Call(
-                                            FieldAccess(
+Debug: Finished parsing
+Some(
+    Module {
+        name: "",
+        constants: [
+            (
+                "main",
+                Unkown,
+                Function {
+                    params: [],
+                    named_params: {},
+                    return_type: Unit,
+                    body: Block(
+                        [],
+                    ),
+                },
+            ),
+            (
+                "pi",
+                Unkown,
+                Literal(Float: 3.141592653589793),
+            ),
+            (
+                "create_death_chain",
+                Unkown,
+                Function {
+                    params: [],
+                    named_params: {},
+                    return_type: Path(
+                        Path(["chain"]),
+                    ),
+                    body: Block(
+                        [
+                            Expr(
+                                Break(
+                                    Call(
+                                        FieldAccess(
+                                            Call(
                                                 FieldAccess(
-                                                    Sub(
-                                                        Ident("pi"),
-                                                        Call(
-                                                            FieldAccess(
-                                                                Mul(
-                                                                    Neg(
-                                                                        Literal(Int: 1),
+                                                    FieldAccess(
+                                                        Sub(
+                                                            Ident("pi"),
+                                                            Call(
+                                                                FieldAccess(
+                                                                    Mul(
+                                                                        Neg(
+                                                                            Literal(Int: 1),
+                                                                        ),
+                                                                        Ident("pi"),
                                                                     ),
-                                                                    Ident("pi"),
+                                                                    "abs",
                                                                 ),
-                                                                "abs",
+                                                                [],
                                                             ),
-                                                            [],
                                                         ),
+                                                        "try",
                                                     ),
-                                                    "try",
+                                                    "test_with_values",
                                                 ),
-                                                "test_with_values",
+                                                [
+                                                    Literal(Int: 0),
+                                                    Literal(Int: 1),
+                                                    Literal(Int: 2),
+                                                    Literal(String: "Hello World!"),
+                                                ],
                                             ),
-                                            [
-                                                Literal(Int: 0),
-                                                Literal(Int: 1),
-                                                Literal(Int: 2),
-                                                Literal(String: "Hello World!"),
-                                            ],
+                                            "make_new",
                                         ),
-                                        "make_new",
+                                        [
+                                            Literal(Int: 2),
+                                            Literal(Int: 2),
+                                        ],
                                     ),
-                                    [
-                                        Literal(Int: 2),
-                                        Literal(Int: 2),
-                                    ],
                                 ),
                             ),
-                        ),
-                    ],
-                ),
-            },
-        ),
-    ],
-    types: [],
-    sub_modules: [],
-}
-
+                        ],
+                    ),
+                },
+            ),
+        ],
+        types: [],
+        sub_modules: [],
+    },
+)
 
 

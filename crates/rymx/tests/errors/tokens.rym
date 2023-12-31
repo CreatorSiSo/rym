@@ -1,0 +1,9 @@
+fn testing() ~Test => { // <<-- `~` is not a valid token
+    // Test {
+    //     one: 1,
+    //     two: 2,
+    //     and_so_on: "YAAAY",
+    // }
+}
+
+const test = $invalid +/ testing(); // <<-- `$` is not a valid token, should also detect invalid `+/` syntax

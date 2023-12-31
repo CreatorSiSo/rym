@@ -125,114 +125,116 @@ BraceClose [}]
 Semi [;]
 VSpace [\n]
 
-Debug: Module {
-    name: "",
-    constants: [
-        (
-            "import",
-            Unkown,
-            Function {
-                params: [
-                    (
-                        "string",
-                        Path(
-                            Path(["String"]),
+Debug: Finished parsing
+Some(
+    Module {
+        name: "",
+        constants: [
+            (
+                "import",
+                Unkown,
+                Function {
+                    params: [
+                        (
+                            "string",
+                            Path(
+                                Path(["String"]),
+                            ),
                         ),
+                    ],
+                    named_params: {},
+                    return_type: Path(
+                        Path(["RymModule"]),
                     ),
-                ],
-                named_params: {},
-                return_type: Path(
-                    Path(["RymModule"]),
-                ),
-                body: Block(
-                    [],
-                ),
-            },
-        ),
-        (
-            "io",
-            Unkown,
-            Call(
-                Ident("import"),
-                [
-                    Literal(String: "std.io"),
-                ],
-            ),
-        ),
-        (
-            "ParseError",
-            Unkown,
-            FieldAccess(
-                Ident("example_package"),
-                "Error",
-            ),
-        ),
-        (
-            "main",
-            Unkown,
-            Function {
-                params: [],
-                named_params: {},
-                return_type: Generic(
-                    Path(
-                        Path(["Result"]),
+                    body: Block(
+                        [],
                     ),
+                },
+            ),
+            (
+                "io",
+                Unkown,
+                Call(
+                    Ident("import"),
                     [
-                        Unit,
+                        Literal(String: "std.io"),
+                    ],
+                ),
+            ),
+            (
+                "ParseError",
+                Unkown,
+                FieldAccess(
+                    Ident("example_package"),
+                    "Error",
+                ),
+            ),
+            (
+                "main",
+                Unkown,
+                Function {
+                    params: [],
+                    named_params: {},
+                    return_type: Generic(
                         Path(
-                            Path(["Error"]),
+                            Path(["Result"]),
+                        ),
+                        [
+                            Unit,
+                            Path(
+                                Path(["Error"]),
+                            ),
+                        ],
+                    ),
+                    body: Block(
+                        [],
+                    ),
+                },
+            ),
+        ],
+        types: [
+            (
+                "Error",
+                Enum(
+                    [
+                        (
+                            "Io",
+                            Some(
+                                Path(
+                                    Path(["io", "Error"]),
+                                ),
+                            ),
+                        ),
+                        (
+                            "Parse",
+                            Some(
+                                Path(
+                                    Path(["ParseError"]),
+                                ),
+                            ),
+                        ),
+                        (
+                            "Other",
+                            Some(
+                                Struct(
+                                    [
+                                        (
+                                            "message",
+                                            Path(
+                                                Path(["String"]),
+                                            ),
+                                            None,
+                                        ),
+                                    ],
+                                ),
+                            ),
                         ),
                     ],
                 ),
-                body: Block(
-                    [],
-                ),
-            },
-        ),
-    ],
-    types: [
-        (
-            "Error",
-            Enum(
-                [
-                    (
-                        "Io",
-                        Some(
-                            Path(
-                                Path(["io", "Error"]),
-                            ),
-                        ),
-                    ),
-                    (
-                        "Parse",
-                        Some(
-                            Path(
-                                Path(["ParseError"]),
-                            ),
-                        ),
-                    ),
-                    (
-                        "Other",
-                        Some(
-                            Struct(
-                                [
-                                    (
-                                        "message",
-                                        Path(
-                                            Path(["String"]),
-                                        ),
-                                        None,
-                                    ),
-                                ],
-                            ),
-                        ),
-                    ),
-                ],
             ),
-        ),
-    ],
-    sub_modules: [],
-}
-
+        ],
+        sub_modules: [],
+    },
+)
 
 

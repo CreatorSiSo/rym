@@ -24,24 +24,26 @@ Int [3]
 Semi [;]
 VSpace [\n]
 
-Debug: Module {
-    name: "",
-    constants: [
-        (
-            "test",
-            Unkown,
-            Eq(
+Debug: Finished parsing
+Some(
+    Module {
+        name: "",
+        constants: [
+            (
+                "test",
+                Unkown,
                 Eq(
-                    Literal(Int: 1),
-                    Literal(Int: 2),
+                    Eq(
+                        Literal(Int: 1),
+                        Literal(Int: 2),
+                    ),
+                    Literal(Int: 3),
                 ),
-                Literal(Int: 3),
             ),
-        ),
-    ],
-    types: [],
-    sub_modules: [],
-}
-
+        ],
+        types: [],
+        sub_modules: [],
+    },
+)
 
 

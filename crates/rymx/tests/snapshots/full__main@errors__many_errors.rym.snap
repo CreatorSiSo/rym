@@ -45,4 +45,35 @@ Error: Expected integer, found float
    │                                  ╰─── Expected integer
 ───╯
 
+Debug: Finished parsing
+Some(
+    Module {
+        name: "",
+        constants: [
+            (
+                "test",
+                Union(
+                    [
+                        Array(
+                            Unknown,
+                            Path(
+                                Path(["u8"]),
+                            ),
+                        ),
+                        Array(
+                            Unknown,
+                            Path(
+                                Path(["usihf"]),
+                            ),
+                        ),
+                    ],
+                ),
+                Literal(Int: 0),
+            ),
+        ],
+        types: [],
+        sub_modules: [],
+    },
+)
+
 

@@ -24,34 +24,36 @@ VSpace [\n]
 BraceClose [}]
 VSpace [\n]
 
-Debug: Module {
-    name: "",
-    constants: [
-        (
-            "main",
-            Unkown,
-            Function {
-                params: [],
-                named_params: {},
-                return_type: Unit,
-                body: Block(
-                    [
-                        Expr(
-                            Call(
-                                Ident("println"),
-                                [
-                                    Literal(String: "Hello World!"),
-                                ],
+Debug: Finished parsing
+Some(
+    Module {
+        name: "",
+        constants: [
+            (
+                "main",
+                Unkown,
+                Function {
+                    params: [],
+                    named_params: {},
+                    return_type: Unit,
+                    body: Block(
+                        [
+                            Expr(
+                                Call(
+                                    Ident("println"),
+                                    [
+                                        Literal(String: "Hello World!"),
+                                    ],
+                                ),
                             ),
-                        ),
-                    ],
-                ),
-            },
-        ),
-    ],
-    types: [],
-    sub_modules: [],
-}
-
+                        ],
+                    ),
+                },
+            ),
+        ],
+        types: [],
+        sub_modules: [],
+    },
+)
 
 

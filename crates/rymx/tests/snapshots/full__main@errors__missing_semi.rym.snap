@@ -73,4 +73,7 @@ Error: Expected `}`, `(`, `.`, `..`, `;` or an operator, found identifier
    │           ╰─── Expected `}`, `(`, `.`, `..`, `;` or an operator
 ───╯
 
+Debug: Finished parsing
+None
+
 

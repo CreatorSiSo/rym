@@ -160,100 +160,86 @@ ParenClose [)]
 Semi [;]
 VSpace [\n]
 
-Debug: Module {
-    name: "",
-    constants: [
-        (
-            "int_eq_0",
-            Unkown,
-            Eq(
-                Literal(Int: 0),
-                Literal(Int: 0),
-            ),
-        ),
-        (
-            "int_eq_1",
-            Unkown,
-            Eq(
-                Literal(Int: 1),
-                Literal(Int: 1),
-            ),
-        ),
-        (
-            "int_eq_2",
-            Unkown,
-            Eq(
-                Literal(Int: 1),
-                Literal(Int: 2),
-            ),
-        ),
-        (
-            "int_eq_3",
-            Unkown,
-            GreaterThan(
-                Literal(Int: 1),
-                Literal(Int: 2),
-            ),
-        ),
-        (
-            "int_eq_4",
-            Unkown,
-            LessThanEq(
-                Literal(Int: 1),
-                Literal(Int: 2),
-            ),
-        ),
-        (
-            "int_eq_5",
-            Unkown,
-            Eq(
-                Literal(Int: 255),
-                Neg(
-                    Literal(Int: 2132426873),
+Debug: Finished parsing
+Some(
+    Module {
+        name: "",
+        constants: [
+            (
+                "int_eq_0",
+                Unkown,
+                Eq(
+                    Literal(Int: 0),
+                    Literal(Int: 0),
                 ),
             ),
-        ),
-        (
-            "int_eq_6",
-            Unkown,
-            Eq(
-                Neg(
-                    Literal(Int: 2132426873),
-                ),
-                Neg(
-                    Literal(Int: 2132426873),
+            (
+                "int_eq_1",
+                Unkown,
+                Eq(
+                    Literal(Int: 1),
+                    Literal(Int: 1),
                 ),
             ),
-        ),
-        (
-            "fn_native_eq_0",
-            Unkown,
-            Eq(
-                Ident("print"),
-                Ident("print"),
+            (
+                "int_eq_2",
+                Unkown,
+                Eq(
+                    Literal(Int: 1),
+                    Literal(Int: 2),
+                ),
             ),
-        ),
-        (
-            "fn_native_eq_1",
-            Unkown,
-            Eq(
-                Ident("print"),
-                Function {
-                    params: [],
-                    named_params: {},
-                    return_type: Path(
-                        Path(["fn_type"]),
+            (
+                "int_eq_3",
+                Unkown,
+                GreaterThan(
+                    Literal(Int: 1),
+                    Literal(Int: 2),
+                ),
+            ),
+            (
+                "int_eq_4",
+                Unkown,
+                LessThanEq(
+                    Literal(Int: 1),
+                    Literal(Int: 2),
+                ),
+            ),
+            (
+                "int_eq_5",
+                Unkown,
+                Eq(
+                    Literal(Int: 255),
+                    Neg(
+                        Literal(Int: 2132426873),
                     ),
-                    body: Ident("print"),
-                },
+                ),
             ),
-        ),
-        (
-            "fn_native_eq_2",
-            Unkown,
-            Eq(
-                Ident("print"),
-                Call(
+            (
+                "int_eq_6",
+                Unkown,
+                Eq(
+                    Neg(
+                        Literal(Int: 2132426873),
+                    ),
+                    Neg(
+                        Literal(Int: 2132426873),
+                    ),
+                ),
+            ),
+            (
+                "fn_native_eq_0",
+                Unkown,
+                Eq(
+                    Ident("print"),
+                    Ident("print"),
+                ),
+            ),
+            (
+                "fn_native_eq_1",
+                Unkown,
+                Eq(
+                    Ident("print"),
                     Function {
                         params: [],
                         named_params: {},
@@ -262,14 +248,30 @@ Debug: Module {
                         ),
                         body: Ident("print"),
                     },
-                    [],
                 ),
             ),
-        ),
-    ],
-    types: [],
-    sub_modules: [],
-}
-
+            (
+                "fn_native_eq_2",
+                Unkown,
+                Eq(
+                    Ident("print"),
+                    Call(
+                        Function {
+                            params: [],
+                            named_params: {},
+                            return_type: Path(
+                                Path(["fn_type"]),
+                            ),
+                            body: Ident("print"),
+                        },
+                        [],
+                    ),
+                ),
+            ),
+        ],
+        types: [],
+        sub_modules: [],
+    },
+)
 
 

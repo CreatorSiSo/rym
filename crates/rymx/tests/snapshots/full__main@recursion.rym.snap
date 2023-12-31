@@ -762,729 +762,685 @@ VSpace [\n]
 BraceClose [}]
 VSpace [\n]
 
-Debug: Module {
-    name: "",
-    constants: [
-        (
-            "main",
-            Unkown,
-            Function {
-                params: [],
-                named_params: {},
-                return_type: Unit,
-                body: Block(
-                    [
-                        Expr(
-                            Call(
-                                Ident("test_fib"),
-                                [
-                                    Literal(String: "fib_if"),
-                                    Ident("fib_if"),
-                                ],
+Debug: Finished parsing
+Some(
+    Module {
+        name: "",
+        constants: [
+            (
+                "main",
+                Unkown,
+                Function {
+                    params: [],
+                    named_params: {},
+                    return_type: Unit,
+                    body: Block(
+                        [
+                            Expr(
+                                Call(
+                                    Ident("test_fib"),
+                                    [
+                                        Literal(String: "fib_if"),
+                                        Ident("fib_if"),
+                                    ],
+                                ),
                             ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("test_countdown"),
-                                [],
+                            Expr(
+                                Call(
+                                    Ident("test_countdown"),
+                                    [],
+                                ),
                             ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("test_fake_loops"),
-                                [],
+                            Expr(
+                                Call(
+                                    Ident("test_fake_loops"),
+                                    [],
+                                ),
+                            ),
+                        ],
+                    ),
+                },
+            ),
+            (
+                "fib_if",
+                Unkown,
+                Function {
+                    params: [
+                        (
+                            "n",
+                            Path(
+                                Path(["Int"]),
                             ),
                         ),
                     ],
-                ),
-            },
-        ),
-        (
-            "fib_if",
-            Unkown,
-            Function {
-                params: [
-                    (
-                        "n",
-                        Path(
-                            Path(["Int"]),
-                        ),
+                    named_params: {},
+                    return_type: Path(
+                        Path(["Uint"]),
                     ),
-                ],
-                named_params: {},
-                return_type: Path(
-                    Path(["Uint"]),
-                ),
-                body: IfElse(
-                    LessThanEq(
-                        Ident("n"),
-                        Literal(Int: 0),
-                    ),
-                    Literal(Int: 0),
-                    IfElse(
-                        Eq(
+                    body: IfElse(
+                        LessThanEq(
                             Ident("n"),
+                            Literal(Int: 0),
+                        ),
+                        Literal(Int: 0),
+                        IfElse(
+                            Eq(
+                                Ident("n"),
+                                Literal(Int: 1),
+                            ),
                             Literal(Int: 1),
-                        ),
-                        Literal(Int: 1),
-                        Add(
-                            Call(
-                                Ident("fib_if"),
-                                [
-                                    Sub(
-                                        Ident("n"),
-                                        Literal(Int: 1),
-                                    ),
-                                ],
-                            ),
-                            Call(
-                                Ident("fib_if"),
-                                [
-                                    Sub(
-                                        Ident("n"),
-                                        Literal(Int: 2),
-                                    ),
-                                ],
-                            ),
-                        ),
-                    ),
-                ),
-            },
-        ),
-        (
-            "test_fib",
-            Unkown,
-            Function {
-                params: [
-                    (
-                        "name",
-                        Unkown,
-                    ),
-                    (
-                        "fib",
-                        Unkown,
-                    ),
-                ],
-                named_params: {},
-                return_type: Unit,
-                body: Block(
-                    [
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 0),
-                                        ],
-                                    ),
-                                    Literal(Int: 0),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
+                            Add(
+                                Call(
+                                    Ident("fib_if"),
+                                    [
+                                        Sub(
+                                            Ident("n"),
                                             Literal(Int: 1),
-                                        ],
-                                    ),
-                                    Literal(Int: 1),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 2),
-                                        ],
-                                    ),
-                                    Literal(Int: 1),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 3),
-                                        ],
-                                    ),
-                                    Literal(Int: 2),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 4),
-                                        ],
-                                    ),
-                                    Literal(Int: 3),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 5),
-                                        ],
-                                    ),
-                                    Literal(Int: 5),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 6),
-                                        ],
-                                    ),
-                                    Literal(Int: 8),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 7),
-                                        ],
-                                    ),
-                                    Literal(Int: 13),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 8),
-                                        ],
-                                    ),
-                                    Literal(Int: 21),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 9),
-                                        ],
-                                    ),
-                                    Literal(Int: 34),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 10),
-                                        ],
-                                    ),
-                                    Literal(Int: 55),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("assert_eq"),
-                                [
-                                    Call(
-                                        Ident("fib"),
-                                        [
-                                            Literal(Int: 20),
-                                        ],
-                                    ),
-                                    Literal(Int: 6765),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("println"),
-                                [
-                                    Literal(String: "Successfully tested "),
-                                    Ident("name"),
-                                    Literal(String: "!"),
-                                ],
-                            ),
-                        ),
-                    ],
-                ),
-            },
-        ),
-        (
-            "countdown",
-            Unkown,
-            Function {
-                params: [
-                    (
-                        "n",
-                        Unkown,
-                    ),
-                    (
-                        "step",
-                        Unkown,
-                    ),
-                ],
-                named_params: {},
-                return_type: Unit,
-                body: Block(
-                    [
-                        Expr(
-                            Call(
-                                Ident("print"),
-                                [
-                                    Ident("n"),
-                                    Literal(String: " "),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            IfElse(
-                                GreaterThan(
-                                    Ident("n"),
-                                    Literal(Int: 0),
+                                        ),
+                                    ],
                                 ),
                                 Call(
-                                    Ident("countdown"),
+                                    Ident("fib_if"),
+                                    [
+                                        Sub(
+                                            Ident("n"),
+                                            Literal(Int: 2),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                        ),
+                    ),
+                },
+            ),
+            (
+                "test_fib",
+                Unkown,
+                Function {
+                    params: [
+                        (
+                            "name",
+                            Unkown,
+                        ),
+                        (
+                            "fib",
+                            Unkown,
+                        ),
+                    ],
+                    named_params: {},
+                    return_type: Unit,
+                    body: Block(
+                        [
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
                                     [
                                         Call(
-                                            Ident("min"),
+                                            Ident("fib"),
                                             [
-                                                Sub(
-                                                    Ident("n"),
-                                                    Ident("step"),
-                                                ),
                                                 Literal(Int: 0),
                                             ],
                                         ),
-                                        Ident("step"),
+                                        Literal(Int: 0),
                                     ],
                                 ),
-                                Unit,
                             ),
-                        ),
-                    ],
-                ),
-            },
-        ),
-        (
-            "test_countdown",
-            Unkown,
-            Function {
-                params: [],
-                named_params: {},
-                return_type: Unit,
-                body: Block(
-                    [
-                        Expr(
-                            Call(
-                                Ident("countdown"),
-                                [
-                                    Literal(Int: 0),
-                                    Literal(Int: 5),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("println"),
-                                [],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("countdown"),
-                                [
-                                    Literal(Int: 1),
-                                    Literal(Int: 1),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("println"),
-                                [],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("countdown"),
-                                [
-                                    Literal(Int: 10),
-                                    Literal(Int: 1),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("println"),
-                                [],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("countdown"),
-                                [
-                                    Literal(Int: 100),
-                                    Literal(Int: 8),
-                                ],
-                            ),
-                        ),
-                        Expr(
-                            Call(
-                                Ident("println"),
-                                [],
-                            ),
-                        ),
-                    ],
-                ),
-            },
-        ),
-        (
-            "test_fake_loops",
-            Unkown,
-            Function {
-                params: [],
-                named_params: {},
-                return_type: Unit,
-                body: Block(
-                    [
-                        Variable(
-                            Const,
-                            "while_do",
-                            Unkown,
-                            Function {
-                                params: [
-                                    (
-                                        "i",
-                                        Path(
-                                            Path(["Int"]),
-                                        ),
-                                    ),
-                                    (
-                                        "increment",
-                                        Unkown,
-                                    ),
-                                    (
-                                        "condition",
-                                        Unkown,
-                                    ),
-                                    (
-                                        "body",
-                                        Unkown,
-                                    ),
-                                ],
-                                named_params: {},
-                                return_type: Unit,
-                                body: Block(
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
                                     [
-                                        Expr(
-                                            IfElse(
-                                                Not(
-                                                    Call(
-                                                        Ident("condition"),
-                                                        [
-                                                            Ident("i"),
-                                                        ],
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 1),
+                                            ],
+                                        ),
+                                        Literal(Int: 1),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
+                                    [
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 2),
+                                            ],
+                                        ),
+                                        Literal(Int: 1),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
+                                    [
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 3),
+                                            ],
+                                        ),
+                                        Literal(Int: 2),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
+                                    [
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 4),
+                                            ],
+                                        ),
+                                        Literal(Int: 3),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
+                                    [
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 5),
+                                            ],
+                                        ),
+                                        Literal(Int: 5),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
+                                    [
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 6),
+                                            ],
+                                        ),
+                                        Literal(Int: 8),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
+                                    [
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 7),
+                                            ],
+                                        ),
+                                        Literal(Int: 13),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
+                                    [
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 8),
+                                            ],
+                                        ),
+                                        Literal(Int: 21),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
+                                    [
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 9),
+                                            ],
+                                        ),
+                                        Literal(Int: 34),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
+                                    [
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 10),
+                                            ],
+                                        ),
+                                        Literal(Int: 55),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("assert_eq"),
+                                    [
+                                        Call(
+                                            Ident("fib"),
+                                            [
+                                                Literal(Int: 20),
+                                            ],
+                                        ),
+                                        Literal(Int: 6765),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("println"),
+                                    [
+                                        Literal(String: "Successfully tested "),
+                                        Ident("name"),
+                                        Literal(String: "!"),
+                                    ],
+                                ),
+                            ),
+                        ],
+                    ),
+                },
+            ),
+            (
+                "countdown",
+                Unkown,
+                Function {
+                    params: [
+                        (
+                            "n",
+                            Unkown,
+                        ),
+                        (
+                            "step",
+                            Unkown,
+                        ),
+                    ],
+                    named_params: {},
+                    return_type: Unit,
+                    body: Block(
+                        [
+                            Expr(
+                                Call(
+                                    Ident("print"),
+                                    [
+                                        Ident("n"),
+                                        Literal(String: " "),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                IfElse(
+                                    GreaterThan(
+                                        Ident("n"),
+                                        Literal(Int: 0),
+                                    ),
+                                    Call(
+                                        Ident("countdown"),
+                                        [
+                                            Call(
+                                                Ident("min"),
+                                                [
+                                                    Sub(
+                                                        Ident("n"),
+                                                        Ident("step"),
                                                     ),
-                                                ),
-                                                Return(
-                                                    Unit,
-                                                ),
-                                                Unit,
+                                                    Literal(Int: 0),
+                                                ],
+                                            ),
+                                            Ident("step"),
+                                        ],
+                                    ),
+                                    Unit,
+                                ),
+                            ),
+                        ],
+                    ),
+                },
+            ),
+            (
+                "test_countdown",
+                Unkown,
+                Function {
+                    params: [],
+                    named_params: {},
+                    return_type: Unit,
+                    body: Block(
+                        [
+                            Expr(
+                                Call(
+                                    Ident("countdown"),
+                                    [
+                                        Literal(Int: 0),
+                                        Literal(Int: 5),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("println"),
+                                    [],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("countdown"),
+                                    [
+                                        Literal(Int: 1),
+                                        Literal(Int: 1),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("println"),
+                                    [],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("countdown"),
+                                    [
+                                        Literal(Int: 10),
+                                        Literal(Int: 1),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("println"),
+                                    [],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("countdown"),
+                                    [
+                                        Literal(Int: 100),
+                                        Literal(Int: 8),
+                                    ],
+                                ),
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("println"),
+                                    [],
+                                ),
+                            ),
+                        ],
+                    ),
+                },
+            ),
+            (
+                "test_fake_loops",
+                Unkown,
+                Function {
+                    params: [],
+                    named_params: {},
+                    return_type: Unit,
+                    body: Block(
+                        [
+                            Variable(
+                                Const,
+                                "while_do",
+                                Unkown,
+                                Function {
+                                    params: [
+                                        (
+                                            "i",
+                                            Path(
+                                                Path(["Int"]),
                                             ),
                                         ),
-                                        Expr(
-                                            Call(
-                                                Ident("body"),
+                                        (
+                                            "increment",
+                                            Unkown,
+                                        ),
+                                        (
+                                            "condition",
+                                            Unkown,
+                                        ),
+                                        (
+                                            "body",
+                                            Unkown,
+                                        ),
+                                    ],
+                                    named_params: {},
+                                    return_type: Unit,
+                                    body: Block(
+                                        [
+                                            Expr(
+                                                IfElse(
+                                                    Not(
+                                                        Call(
+                                                            Ident("condition"),
+                                                            [
+                                                                Ident("i"),
+                                                            ],
+                                                        ),
+                                                    ),
+                                                    Return(
+                                                        Unit,
+                                                    ),
+                                                    Unit,
+                                                ),
+                                            ),
+                                            Expr(
+                                                Call(
+                                                    Ident("body"),
+                                                    [
+                                                        Ident("i"),
+                                                    ],
+                                                ),
+                                            ),
+                                            Expr(
+                                                Call(
+                                                    Ident("while_do"),
+                                                    [
+                                                        Call(
+                                                            Ident("increment"),
+                                                            [
+                                                                Ident("i"),
+                                                            ],
+                                                        ),
+                                                        Ident("increment"),
+                                                        Ident("condition"),
+                                                        Ident("body"),
+                                                    ],
+                                                ),
+                                            ),
+                                        ],
+                                    ),
+                                },
+                            ),
+                            Expr(
+                                Call(
+                                    Ident("while_do"),
+                                    [
+                                        Literal(Int: 0),
+                                        Function {
+                                            params: [
+                                                (
+                                                    "i",
+                                                    Unkown,
+                                                ),
+                                            ],
+                                            named_params: {},
+                                            return_type: Unkown,
+                                            body: Add(
+                                                Ident("i"),
+                                                Literal(Int: 2),
+                                            ),
+                                        },
+                                        Function {
+                                            params: [
+                                                (
+                                                    "i",
+                                                    Unkown,
+                                                ),
+                                            ],
+                                            named_params: {},
+                                            return_type: Unkown,
+                                            body: LessThan(
+                                                Ident("i"),
+                                                Literal(Int: 10),
+                                            ),
+                                        },
+                                        Function {
+                                            params: [
+                                                (
+                                                    "i",
+                                                    Unkown,
+                                                ),
+                                            ],
+                                            named_params: {},
+                                            return_type: Unkown,
+                                            body: Call(
+                                                Ident("println"),
                                                 [
+                                                    Literal(String: "i = "),
                                                     Ident("i"),
                                                 ],
                                             ),
+                                        },
+                                    ],
+                                ),
+                            ),
+                        ],
+                    ),
+                },
+            ),
+            (
+                "outer",
+                Unkown,
+                Function {
+                    params: [
+                        (
+                            "n",
+                            Unkown,
+                        ),
+                    ],
+                    named_params: {},
+                    return_type: Unit,
+                    body: Block(
+                        [
+                            Variable(
+                                Const,
+                                "inner",
+                                Unkown,
+                                Function {
+                                    params: [
+                                        (
+                                            "n",
+                                            Unkown,
                                         ),
-                                        Expr(
+                                    ],
+                                    named_params: {},
+                                    return_type: Unit,
+                                    body: Add(
+                                        Ident("n"),
+                                        Literal(Int: 1),
+                                    ),
+                                },
+                            ),
+                            Expr(
+                                Break(
+                                    Sub(
+                                        Ident("n"),
+                                        IfElse(
+                                            LessThan(
+                                                Ident("n"),
+                                                Literal(Int: 0),
+                                            ),
                                             Call(
-                                                Ident("while_do"),
+                                                Ident("inner"),
                                                 [
-                                                    Call(
-                                                        Ident("increment"),
-                                                        [
-                                                            Ident("i"),
-                                                        ],
-                                                    ),
-                                                    Ident("increment"),
-                                                    Ident("condition"),
-                                                    Ident("body"),
+                                                    Ident("n"),
+                                                ],
+                                            ),
+                                            Call(
+                                                Ident("outer"),
+                                                [
+                                                    Ident("n"),
                                                 ],
                                             ),
                                         ),
-                                    ],
+                                    ),
                                 ),
-                            },
-                        ),
-                        Expr(
-                            Call(
-                                Ident("while_do"),
-                                [
-                                    Literal(Int: 0),
-                                    Function {
-                                        params: [
-                                            (
-                                                "i",
-                                                Unkown,
-                                            ),
-                                        ],
-                                        named_params: {},
-                                        return_type: Unkown,
-                                        body: Add(
-                                            Ident("i"),
-                                            Literal(Int: 2),
-                                        ),
-                                    },
-                                    Function {
-                                        params: [
-                                            (
-                                                "i",
-                                                Unkown,
-                                            ),
-                                        ],
-                                        named_params: {},
-                                        return_type: Unkown,
-                                        body: LessThan(
-                                            Ident("i"),
-                                            Literal(Int: 10),
-                                        ),
-                                    },
-                                    Function {
-                                        params: [
-                                            (
-                                                "i",
-                                                Unkown,
-                                            ),
-                                        ],
-                                        named_params: {},
-                                        return_type: Unkown,
-                                        body: Call(
-                                            Ident("println"),
-                                            [
-                                                Literal(String: "i = "),
-                                                Ident("i"),
-                                            ],
-                                        ),
-                                    },
-                                ],
                             ),
+                        ],
+                    ),
+                },
+            ),
+            (
+                "min",
+                Unkown,
+                Function {
+                    params: [
+                        (
+                            "value",
+                            Unkown,
+                        ),
+                        (
+                            "min",
+                            Unkown,
                         ),
                     ],
-                ),
-            },
-        ),
-        (
-            "outer",
-            Unkown,
-            Function {
-                params: [
-                    (
-                        "n",
-                        Unkown,
+                    named_params: {},
+                    return_type: Path(
+                        Path(["any"]),
                     ),
-                ],
-                named_params: {},
-                return_type: Unit,
-                body: Block(
-                    [
-                        Variable(
-                            Const,
-                            "inner",
-                            Unkown,
-                            Function {
-                                params: [
-                                    (
-                                        "n",
-                                        Unkown,
-                                    ),
-                                ],
-                                named_params: {},
-                                return_type: Unit,
-                                body: Add(
-                                    Ident("n"),
-                                    Literal(Int: 1),
-                                ),
-                            },
-                        ),
-                        Expr(
-                            Break(
-                                Sub(
-                                    Ident("n"),
+                    body: Block(
+                        [
+                            Expr(
+                                Break(
                                     IfElse(
                                         LessThan(
-                                            Ident("n"),
-                                            Literal(Int: 0),
+                                            Ident("value"),
+                                            Ident("min"),
                                         ),
-                                        Call(
-                                            Ident("inner"),
-                                            [
-                                                Ident("n"),
-                                            ],
-                                        ),
-                                        Call(
-                                            Ident("outer"),
-                                            [
-                                                Ident("n"),
-                                            ],
-                                        ),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ],
-                ),
-            },
-        ),
-        (
-            "min",
-            Unkown,
-            Function {
-                params: [
-                    (
-                        "value",
-                        Unkown,
-                    ),
-                    (
-                        "min",
-                        Unkown,
-                    ),
-                ],
-                named_params: {},
-                return_type: Path(
-                    Path(["any"]),
-                ),
-                body: Block(
-                    [
-                        Expr(
-                            Break(
-                                IfElse(
-                                    LessThan(
-                                        Ident("value"),
                                         Ident("min"),
+                                        Ident("value"),
                                     ),
-                                    Ident("min"),
-                                    Ident("value"),
                                 ),
                             ),
+                        ],
+                    ),
+                },
+            ),
+            (
+                "max",
+                Unkown,
+                Function {
+                    params: [
+                        (
+                            "value",
+                            Unkown,
+                        ),
+                        (
+                            "max",
+                            Unkown,
                         ),
                     ],
-                ),
-            },
-        ),
-        (
-            "max",
-            Unkown,
-            Function {
-                params: [
-                    (
-                        "value",
-                        Unkown,
+                    named_params: {},
+                    return_type: Path(
+                        Path(["any"]),
                     ),
-                    (
-                        "max",
-                        Unkown,
-                    ),
-                ],
-                named_params: {},
-                return_type: Path(
-                    Path(["any"]),
-                ),
-                body: Block(
-                    [
-                        Expr(
-                            Break(
-                                IfElse(
-                                    GreaterThan(
-                                        Ident("value"),
-                                        Ident("max"),
-                                    ),
-                                    Ident("max"),
-                                    Ident("value"),
-                                ),
-                            ),
-                        ),
-                    ],
-                ),
-            },
-        ),
-        (
-            "clamp",
-            Unkown,
-            Function {
-                params: [
-                    (
-                        "value",
-                        Unkown,
-                    ),
-                    (
-                        "min",
-                        Unkown,
-                    ),
-                    (
-                        "max",
-                        Unkown,
-                    ),
-                ],
-                named_params: {},
-                return_type: Path(
-                    Path(["any"]),
-                ),
-                body: Block(
-                    [
-                        Expr(
-                            Break(
-                                IfElse(
-                                    LessThan(
-                                        Ident("value"),
-                                        Ident("min"),
-                                    ),
-                                    Ident("min"),
+                    body: Block(
+                        [
+                            Expr(
+                                Break(
                                     IfElse(
                                         GreaterThan(
                                             Ident("value"),
@@ -1495,15 +1451,61 @@ Debug: Module {
                                     ),
                                 ),
                             ),
+                        ],
+                    ),
+                },
+            ),
+            (
+                "clamp",
+                Unkown,
+                Function {
+                    params: [
+                        (
+                            "value",
+                            Unkown,
+                        ),
+                        (
+                            "min",
+                            Unkown,
+                        ),
+                        (
+                            "max",
+                            Unkown,
                         ),
                     ],
-                ),
-            },
-        ),
-    ],
-    types: [],
-    sub_modules: [],
-}
-
+                    named_params: {},
+                    return_type: Path(
+                        Path(["any"]),
+                    ),
+                    body: Block(
+                        [
+                            Expr(
+                                Break(
+                                    IfElse(
+                                        LessThan(
+                                            Ident("value"),
+                                            Ident("min"),
+                                        ),
+                                        Ident("min"),
+                                        IfElse(
+                                            GreaterThan(
+                                                Ident("value"),
+                                                Ident("max"),
+                                            ),
+                                            Ident("max"),
+                                            Ident("value"),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ],
+                    ),
+                },
+            ),
+        ],
+        types: [],
+        sub_modules: [],
+    },
+)
 
 

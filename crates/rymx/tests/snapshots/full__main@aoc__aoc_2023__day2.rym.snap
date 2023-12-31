@@ -1206,4 +1206,7 @@ Error: Expected `;` or expression, found `{`
     │                           ╰── Expected `;` or expression
 ────╯
 
+Debug: Finished parsing
+None
+
 

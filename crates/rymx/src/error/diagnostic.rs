@@ -1,4 +1,4 @@
-use std::{fmt::Display, sync::mpsc::SyncSender};
+use std::{fmt::Display, sync::mpsc::Sender};
 
 use crate::Span;
 
@@ -73,7 +73,7 @@ impl Diagnostic {
         self
     }
 
-    pub fn emit(self, emitter: SyncSender<Diagnostic>) {
+    pub fn emit(self, emitter: Sender<Diagnostic>) {
         emitter
             .send(self)
             .expect("Internal error: Could not emit diagnostic")

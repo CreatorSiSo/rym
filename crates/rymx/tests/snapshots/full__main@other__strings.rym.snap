@@ -34,30 +34,32 @@ String [\'invalid\']
 Semi [;]
 VSpace [\n]
 
-Debug: Module {
-    name: "",
-    constants: [
-        (
-            "long",
-            Unkown,
-            Add(
+Debug: Finished parsing
+Some(
+    Module {
+        name: "",
+        constants: [
+            (
+                "long",
+                Unkown,
                 Add(
                     Add(
                         Add(
-                            Literal(String: "Hello World!"),
-                            Literal(String: "\\\" --- ' --- \\\" --- ’ --- \\\""),
+                            Add(
+                                Literal(String: "Hello World!"),
+                                Literal(String: "\\\" --- ' --- \\\" --- ’ --- \\\""),
+                            ),
+                            Literal(String: "c"),
                         ),
-                        Literal(String: "c"),
+                        Literal(String: "\\'"),
                     ),
-                    Literal(String: "\\'"),
+                    Literal(String: "invalid"),
                 ),
-                Literal(String: "invalid"),
             ),
-        ),
-    ],
-    types: [],
-    sub_modules: [],
-}
-
+        ],
+        types: [],
+        sub_modules: [],
+    },
+)
 
 

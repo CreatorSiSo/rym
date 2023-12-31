@@ -22,7 +22,7 @@ pub fn parse_file<'a>(
     tokens: &'a [(Token, Span)],
     src: &'a str,
     src_id: SourceId,
-) -> Result<Module, Vec<Diagnostic>> {
+) -> (Option<Module>, Vec<Diagnostic>) {
     let parse_result = file_parser(src).parse(tokens.spanned(Span::new(src.len(), src.len())));
 
     map_parse_result(parse_result, src_id)
@@ -32,7 +32,7 @@ pub fn parse_stmt<'a>(
     tokens: &'a [(Token, Span)],
     src: &'a str,
     src_id: SourceId,
-) -> Result<Stmt, Vec<Diagnostic>> {
+) -> (Option<Stmt>, Vec<Diagnostic>) {
     let parse_result = stmt_parser(src).parse(tokens.spanned(Span::new(src.len(), src.len())));
 
     map_parse_result(parse_result, src_id)
@@ -41,11 +41,10 @@ pub fn parse_stmt<'a>(
 fn map_parse_result<'a, T: std::fmt::Debug>(
     parse_result: ParseResult<T, ParseError>,
     src_id: SourceId,
-) -> Result<T, Vec<Diagnostic>> {
-    use self::error::Reason;
-
-    let err_to_report =
-        |err: ParseError| {
+) -> (Option<T>, Vec<Diagnostic>) {
+    let error_to_diagostic =
+        |err: ParseError| -> Diagnostic {
+            use self::error::Reason;
             let span = err.span().with_id(src_id);
 
             match err.reason() {
@@ -60,9 +59,8 @@ fn map_parse_result<'a, T: std::fmt::Debug>(
             }
         };
 
-    parse_result
-        .into_result()
-        .map_err(|errs| errs.into_iter().map(err_to_report).collect())
+    let (output, errors) = parse_result.into_output_errors();
+    (output, errors.into_iter().map(error_to_diagostic).collect())
 }
 
 fn report_expected_found<'a>(span: Span, expected: &Vec<Pattern>, found: &Token) -> Diagnostic {

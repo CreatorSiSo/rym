@@ -2,13 +2,10 @@ use crate::Span;
 use logos::{Lexer, Logos};
 use std::fmt::Debug;
 
-pub fn tokenizer(src: &str) -> impl Iterator<Item = (Result<Token, ()>, Span)> + '_ {
-    Token::lexer(src).spanned().map(|(maybe_token, span)| {
-        (
-            maybe_token,
-            span.try_into().expect("Internal Error: Span too large"),
-        )
-    })
+pub fn tokenizer(src: &str) -> impl Iterator<Item = (Option<Token>, Span)> + '_ {
+    Token::lexer(src)
+        .spanned()
+        .map(|(maybe_token, span)| (maybe_token.ok(), span.into()))
 }
 
 fn line_comment(lexer: &mut Lexer<Token>) {

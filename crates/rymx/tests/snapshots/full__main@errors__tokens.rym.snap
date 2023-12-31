@@ -1,0 +1,86 @@
+---
+source: crates/rymx/tests/full.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: crates/rymx/tests/errors/tokens.rym
+---
+Debug: Finished tokenizing
+Fn [fn]
+HSpace [ ]
+Ident [testing]
+ParenOpen [(]
+ParenClose [)]
+HSpace [ ]
+Error [~]
+Ident [Test]
+HSpace [ ]
+ThickArrow [=>]
+HSpace [ ]
+BraceOpen [{]
+HSpace [ ]
+Comment [// <<-- `~` is not a valid token]
+VSpace [\n]
+HSpace [    ]
+Comment [// Test {]
+VSpace [\n]
+HSpace [    ]
+Comment [//     one: 1,]
+VSpace [\n]
+HSpace [    ]
+Comment [//     two: 2,]
+VSpace [\n]
+HSpace [    ]
+Comment [//     and_so_on: \"YAAAY\",]
+VSpace [\n]
+HSpace [    ]
+Comment [// }]
+VSpace [\n]
+BraceClose [}]
+VSpace [\n\n]
+Const [const]
+HSpace [ ]
+Ident [test]
+HSpace [ ]
+Assign [=]
+HSpace [ ]
+Error [$]
+Ident [invalid]
+HSpace [ ]
+Plus [+]
+Slash [/]
+HSpace [ ]
+Ident [testing]
+ParenOpen [(]
+ParenClose [)]
+Semi [;]
+HSpace [ ]
+Comment [// <<-- `$` is not a valid token, should also detect invalid `+/` syntax]
+VSpace [\n]
+
+Error: Invalid character `~`
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/errors/tokens.rym:1:14]
+   │
+ 1 │ fn testing() ~Test => { // <<-- `~` is not a valid token
+   │              ┬  
+   │              ╰── Invalid character `~`
+───╯
+
+Error: Invalid character `$`
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/errors/tokens.rym:9:14]
+   │
+ 9 │ const test = $invalid +/ testing(); // <<-- `$` is not a valid token, should also detect invalid `+/` syntax
+   │              ┬  
+   │              ╰── Invalid character `$`
+───╯
+
+Error: Expected `break`, `not`, `return`, `{`, `[`, `(`, `..`, `-`, identifier or literal, found `/`
+   ╭─[/home/simon/dev/rym/crates/rymx/tests/errors/tokens.rym:9:24]
+   │
+ 9 │ const test = $invalid +/ testing(); // <<-- `$` is not a valid token, should also detect invalid `+/` syntax
+   │                        ┬  
+   │                        ╰── Expected `break`, `not`, `return`, `{`, `[`, `(`, `..`, `-`, identifier or literal
+───╯
+
+Debug: Finished parsing
+None
+
+

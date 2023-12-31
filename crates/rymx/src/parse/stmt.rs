@@ -46,7 +46,6 @@ pub fn stmt_parser<'src>(
                         {
                             let mut span = current_span(extra);
                             span.start = span.end;
-                            span.end += 1;
                             span
                         },
                     ))

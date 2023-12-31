@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 use std::sync::mpsc::Sender;
 
 mod ast;
@@ -94,6 +96,7 @@ fn tokenize(emitter: Sender<Diagnostic>, src: &str, src_id: SourceId) -> Vec<(To
                     None => write!(accum, "Error"),
                 }
                 .unwrap();
+                // TODO Add option to display spans as well
                 write!(accum, " [{}]\n", span.src(src).escape_debug()).unwrap();
                 accum
             });
@@ -110,9 +113,7 @@ fn tokenize(emitter: Sender<Diagnostic>, src: &str, src_id: SourceId) -> Vec<(To
             Some(token) => Some((token, span)),
             None => {
                 let message = format!("Invalid character `{}`", span.src(src));
-                Diagnostic::spanned(span, Level::Error, message.clone())
-                    .with_child(span, Level::Error, message)
-                    .emit(emitter.clone());
+                Diagnostic::spanned(span, Level::Error, message).emit(emitter.clone());
                 None
             }
         })

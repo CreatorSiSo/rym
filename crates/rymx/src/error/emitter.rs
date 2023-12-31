@@ -54,26 +54,6 @@ impl<W: io::Write> AriadneEmitter<W> {
             }
         };
 
-        fn level_to_kind(level: Level) -> ReportKind<'static> {
-            match level {
-                Level::Error => ReportKind::Error,
-                Level::Warning => ReportKind::Warning,
-                Level::Note => ReportKind::Advice,
-                Level::Help => ReportKind::Advice,
-                Level::Debug => ReportKind::Custom("Debug", Color::Cyan),
-            }
-        }
-
-        fn level_to_color(level: Level) -> Color {
-            match level {
-                Level::Error => Color::Red,
-                Level::Warning => Color::Yellow,
-                Level::Note => Color::Unset,
-                Level::Help => Color::Unset,
-                Level::Debug => Color::Unset,
-            }
-        }
-
         fn map_children(
             children: &[SubDiagnostic],
         ) -> (Vec<Label<Span>>, Vec<&String>, Vec<&String>) {
@@ -100,22 +80,32 @@ impl<W: io::Write> AriadneEmitter<W> {
             (labels, notes, helps)
         }
 
-        let (labels, notes, helps) = map_children(&diagnostic.children);
-
         let mut builder = Report::build(
             level_to_kind(diagnostic.level),
             SourceId::INVALID,
             diagnostic.span.unwrap_or(Span::new(0, 0)).start,
         )
-        .with_message(diagnostic.message)
-        .with_labels(labels);
+        .with_message(&diagnostic.message);
 
-        // TODO Properly render multiple notes/helps
-        if !notes.is_empty() {
-            builder.set_note(notes.into_iter().join(", "));
-        }
-        if !helps.is_empty() {
-            builder.set_help(helps.into_iter().join(", "));
+        if diagnostic.children.is_empty()
+            && let Some(span) = diagnostic.span
+        {
+            builder.add_label(
+                Label::new(span)
+                    .with_color(level_to_color(diagnostic.level))
+                    .with_message(diagnostic.message),
+            )
+        } else {
+            let (labels, notes, helps) = map_children(&diagnostic.children);
+            builder.add_labels(labels);
+
+            // TODO Properly render multiple notes/helps
+            if !notes.is_empty() {
+                builder.set_note(notes.into_iter().join(", "));
+            }
+            if !helps.is_empty() {
+                builder.set_help(helps.into_iter().join(", "));
+            }
         }
 
         let mut out = self.out.borrow_mut();
@@ -138,6 +128,26 @@ impl<W: io::Write> AriadneEmitter<W> {
         for diagnostic in self.receiver.iter() {
             self.emit(diagnostic);
         }
+    }
+}
+
+fn level_to_kind(level: Level) -> ReportKind<'static> {
+    match level {
+        Level::Error => ReportKind::Error,
+        Level::Warning => ReportKind::Warning,
+        Level::Note => ReportKind::Advice,
+        Level::Help => ReportKind::Advice,
+        Level::Debug => ReportKind::Custom("Debug", Color::Cyan),
+    }
+}
+
+fn level_to_color(level: Level) -> Color {
+    match level {
+        Level::Error => Color::Red,
+        Level::Warning => Color::Yellow,
+        Level::Note => Color::Unset,
+        Level::Help => Color::Unset,
+        Level::Debug => Color::Unset,
     }
 }
 

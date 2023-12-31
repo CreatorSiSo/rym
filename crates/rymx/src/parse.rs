@@ -45,7 +45,12 @@ fn map_parse_result<'a, T: std::fmt::Debug>(
     let error_to_diagostic =
         |err: ParseError| -> Diagnostic {
             use self::error::Reason;
-            let span = err.span().with_id(src_id);
+            let mut span = err.span().with_id(src_id);
+            // TODO Why are these spans generated?
+            // The input from the tokenizer looks correct...
+            if span.end < span.start {
+                std::mem::swap(&mut span.start, &mut span.end);
+            }
 
             match err.reason() {
                 Reason::ExpectedFound { expected, found } => match (expected.is_empty(), found) {
@@ -74,7 +79,7 @@ fn report_expected_found<'a>(span: Span, expected: &Vec<Pattern>, found: &Token)
 
 fn report_expected<'a>(span: Span, expected: &Vec<Pattern>) -> Diagnostic {
     let message = format!("Expected {}", patterns_to_string(expected));
-    Diagnostic::spanned(span, Level::Error, &message).with_child(span, Level::Error, message)
+    Diagnostic::spanned(span, Level::Error, message)
 }
 
 fn report_unexpected<'a>(span: Span, found: &Option<Token>) -> Diagnostic {
@@ -84,7 +89,7 @@ fn report_unexpected<'a>(span: Span, found: &Option<Token>) -> Diagnostic {
             .map(|token| token.display())
             .unwrap_or("end of input".into())
     );
-    Diagnostic::spanned(span, Level::Error, &message).with_child(span, Level::Error, message)
+    Diagnostic::spanned(span, Level::Error, message)
 }
 
 fn patterns_to_string(patterns: &Vec<Pattern>) -> String {

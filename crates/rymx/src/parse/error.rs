@@ -122,7 +122,7 @@ impl Reason {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ParseError {
     span: Span,
-    reason: Box<Reason>,
+    reason: Reason,
     context: Vec<(Label, Span)>,
 }
 
@@ -132,7 +132,7 @@ impl ParseError {
     pub fn custom<M: ToString>(span: Span, msg: M) -> Self {
         ParseError {
             span,
-            reason: Box::new(Reason::Custom(msg.to_string())),
+            reason: Reason::Custom(msg.to_string()),
             context: Vec::new(),
         }
     }
@@ -184,7 +184,7 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
     ) -> Self {
         Self {
             span,
-            reason: Box::new(Reason::ExpectedFound {
+            reason: Reason::ExpectedFound {
                 expected: expected
                     .into_iter()
                     .map(|tok| {
@@ -193,17 +193,17 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
                     })
                     .collect(),
                 found: found.map(|inner| *inner),
-            }),
+            },
             context: Vec::new(),
         }
     }
 
     #[inline]
     fn merge(mut self, mut other: Self) -> Self {
-        let new_reason = self.reason.flat_merge(*other.reason);
+        let new_reason = self.reason.flat_merge(other.reason);
         Self {
             span: self.span,
-            reason: Box::new(new_reason),
+            reason: new_reason,
             // TODO Merging contexts correctly?
             context: {
                 self.context.append(&mut other.context);
@@ -220,7 +220,7 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
         found: Option<MaybeRef<'a, Token>>,
         _span: Span,
     ) -> Self {
-        match &mut *self.reason {
+        match &mut self.reason {
             Reason::ExpectedFound { expected, found: _ } => {
                 for new_expected in new_expected {
                     let new_expected = new_expected
@@ -242,8 +242,8 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
                 found: found.map(|inner| *inner),
             }),
             Reason::Custom(_) => {
-                let old = core::mem::replace(&mut *self.reason, Reason::Many(Vec::new()));
-                self.reason = Box::new(Reason::Many(vec![
+                let old = core::mem::replace(&mut self.reason, Reason::Many(Vec::new()));
+                self.reason = Reason::Many(vec![
                     old,
                     Reason::ExpectedFound {
                         expected: new_expected
@@ -255,7 +255,7 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
                             .collect(),
                         found: found.map(|inner| *inner),
                     },
-                ]));
+                ]);
             }
         }
         // TOOD: Merge contexts
@@ -270,7 +270,7 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
         span: Span,
     ) -> Self {
         self.span = span;
-        match &mut *self.reason {
+        match &mut self.reason {
             Reason::ExpectedFound { expected, found } => {
                 expected.clear();
                 expected.extend(new_expected.into_iter().map(|tok| {
@@ -280,7 +280,7 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
                 *found = new_found.map(|inner| *inner);
             }
             _ => {
-                self.reason = Box::new(Reason::ExpectedFound {
+                self.reason = Reason::ExpectedFound {
                     expected: new_expected
                         .into_iter()
                         .map(|tok| {
@@ -289,7 +289,7 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
                         })
                         .collect(),
                     found: new_found.map(|inner| *inner),
-                });
+                };
             }
         }
         self.context.clear();
@@ -301,16 +301,16 @@ impl<'a> chumsky::label::LabelError<'a, TokenStream<'a>, Label> for ParseError {
     #[inline]
     fn label_with(&mut self, label: Label) {
         // Opportunistically attempt to reuse allocations if we can
-        match &mut *self.reason {
+        match &mut self.reason {
             Reason::ExpectedFound { expected, found: _ } => {
                 expected.clear();
                 expected.push(Pattern::Label(label));
             }
             _ => {
-                self.reason = Box::new(Reason::ExpectedFound {
+                self.reason = Reason::ExpectedFound {
                     expected: vec![Pattern::Label(label)],
                     found: self.reason.take_found(),
-                });
+                };
             }
         }
     }

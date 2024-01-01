@@ -1,25 +1,28 @@
 # Modules
 
 ```rym
-mod something {
-	pub(crate) func welcome_msg() -> String {
+module lib;
+
+module something {
+	pub(package) fn welcome_msg() String => {
 		"Hello World :)"
 	}
 
-	pub(super) const startup_msg = |machine_name: String| "...Hello there" + machine_name + "..."
+	pub(super) fn startup_msg(machine_name: String) String => {
+        "...Hello there" + machine_name + "..."
+    }
 
-	// Forbidded, it makes no sense to mutate a value from outside of the module
-	pub mut crash_msg = "...Nope..."
+	// Forbidded, only constant values allowed as module items.
+	pub let mut crash_msg = "...Nope...";
 }
 
-mod somewhere {
-	use super.something.{welcome_msg, startup_msg}
-	use crate.something.{welcome_msg, startup_msg}
+module somewhere {
+	use super.something.{welcome_msg, startup_msg};
+	use package.something.{welcome_msg, startup_msg};
 
-	func main() {
-		const msg = startup_msg("pcbeepboop")
-		const msg = welcome_msg()
+	fn main() {
+		const msg = startup_msg("pcbeepboop");
+		const msg = welcome_msg();
 	}
 }
-
 ```

@@ -24,19 +24,19 @@ fn greet(person: String) String => {
 To call this function, you would use its name followed by arguments in parentheses, like this:
 
 ```rym
-const greeting = greet(person: "Max")
-assert_eq(greeting, "Hello, Max!")
+const greeting = greet(person: "Max");
+assert_eq(greeting, "Hello, Max!");
 ```
 
 You can also define default values for parameters to make the function easier to call. For example:
 
 ```rym
 fn greet(person: String, greeting: String = "Hello") String => {
-	greeting + ", " + person + "!"
+    greeting + ", " + person + "!"
 }
 
-const default_greeting = greet(person: "Max") // "Hello, Max!"
-const custom_greeting = greet(person: "Max", greeting: "Bonjour") // "Bonjour, Max!"
+const default_greeting = greet(person: "Max"); // "Hello, Max!"
+const custom_greeting = greet(greeting: "Bonjour", person: "Max"); // "Bonjour, Max!"
 ```
 
 Finally, you can pass parameters as mutable values to allow the outer value to be modified within the function body.
@@ -52,42 +52,47 @@ fn get_content(file_cache: mut HashMap[Path, String], path: std.fs.Path) io.Resu
 
 fn other() {
     let mut file_cache = HashMap.new();
-    let file_content = get_content(mut file_cache, Path.from("./test.txt"));
+
+    let path = Path.from("./test.txt");
+    let file_content = get_content(mut file_cache, path);
+    assert(file_chache.contains_key(path));
 }
 ```
 
-Every function in Rym has a type, consisting of the function’s parameter types and return type. This allows you to pass functions as parameters to other functions, and to return functions from functions. Functions can also be written within other functions to encapsulate useful functionality within a nested function scope.
+Every function in Rym has a type, consisting of the function’s parameter types and return type.
+This allows you to pass functions as parameters to other functions, and to return functions from functions.
+Functions can also be written within other functions to encapsulate useful functionality within a nested function scope.
 
 ## Defining Functions
 
 ## Functions Without Parameters
 
 ```rym
-fn hello_world() -> String {
-	"Hello World!"
+fn hello_world() String => {
+    "Hello World!"
 }
 
-assert_eq(hello_world(), "Hello World!")
+assert_eq(hello_world(), "Hello World!");
 ```
 
 ```rym
-fn no_params() -> bool {
-	true
+fn no_params() Bool => {
+    Bool.True
 }
 
-assert_eq(no_params(no_params(), true))
+assert_eq(no_params(no_params(), Bool.True))
 ```
 
 ```rym
-fn no_params_no_return() {}
-fn no_params_no_return() -> () {}
+fn no_params_no_return() => {}
+fn no_params_no_return() () => {}
 ```
 
 ## Functions With Paramaters
 
 ```rym
-fn greet(person: String) -> String {
-	"Hello, " + person + "!"
+fn greet(person: String) String => {
+    "Hello, " + person + "!"
 }
 
 const greeting = greet(person: "Max")
@@ -95,32 +100,53 @@ assert_eq(greeting, "Hello, Max!")
 ```
 
 ```rym
-fn add(_ a: int, _ b: int) -> int {
-	a + b
-}
+fn add(lhs: Int, rhs: Int) Int => lhs + rhs;
 
-const sum = add(4, 3)
-assert_eq(sum, 7)
+const sum = add(4, 3);
+assert_eq(sum, 7);
 ```
 
 ## Default Values
 
 ```rym
-fn round(_ number: float, precision = 0) {
-	..
+fn round(number: Float, precision: u32 = 0) Int => {
+    // ..
 }
 ```
 
 ## Rest Parameters
 
 ```rym
-fn print(..values: [impl Dispay], seperator = " ", end = "\n", flush = false) -> @Io {
-	..
+fn print(
+    ...values: []impl Display,
+    seperator = " ",
+    end = "",
+    flush = False,
+) @Io => {
+    // ..
 }
 
-print(1, "+", 2) // Prints: "1 + 2\n"
-print(1, 2, 3, seperator: ", ") // Prints: "1, 2, 3\n"
-print(1, 2, 3, seperator: ", ") // Prints: "1, 2, 3\n"
+print(1, "+", 2); // Prints: "1 + 2"
+print(1, 2, 3, seperator: ", "); // Prints: "1, 2, 3"
+const values = [1, 2, 3, 4];
+print(...values, seperator: ", "); // Prints: "1, 2, 3, 4"
+```
+
+## Partial application
+
+```rym
+fn print(
+    ...values: []impl Display,
+    seperator = " ",
+    end = "",
+    flush = False,
+) @Io => {
+    // ..
+}
+
+const println = print.with(end: "\n");
+
+println(1, "+", 2); // Prints
 ```
 
 ## Side Effects
@@ -131,46 +157,36 @@ print(1, 2, 3, seperator: ", ") // Prints: "1, 2, 3\n"
 - ...
 
 ```rym
-fn function() -> Number {} // returns a Number, pure function
-fn function() -> Number, @Io {} // returns a Number, Io side effects allowed
-fn function() -> @Io {} // returns (), Io side effects allowed
-fn function() -> (), @Io {} // returns (), Io side effects allowed
-fn function() -> ! {} // Function that is never going to return
+fn function() Number => {} // returns a Number, pure function
+fn function() @Io, Number => {} // returns a Number, Io side effects allowed
+fn function() @Io => {} // returns (), Io side effects allowed
+fn function() @Io, () => {} // returns (), Io side effects allowed
+fn function() @Div => {} // Function might never return
+fn function() Never => {} // Function is never going to return
 ```
 
 ```rym
-fn main() -> Result<(), Error>, @Io {
-	might_return_error()?
-	const testing = 24
-	const maybe_value = do_stuff(testing).even_more(false)
-	print(maybe_value)
+fn main() @Io, Result[(), Error] => {
+    might_return_error().try;
+    const testing = 24;
+    const maybe_value = do_stuff(testing).even_more(false);
+    print(maybe_value);
 
-	Ok(())
+    Ok(())
 }
 ```
 
 ## Clojures
 
 ```rym
-const add = |a: int, b: int| a + b
-```
+fn main() => {
+    let mut outer = 0;
+    fn increment(by: Int) => outer += by;
 
-## Type functions
+    increment(1);
+    increment(10);
+    increment(-10);
 
-```rym
-  type SizeString = fn (value: String) -> Result<(), TypeError> {
-  	if value.ends_with("px") {
-  		Ok(())
-  	} else {
-  		Err(.Mismatch("Expected `px` at the end of a WidthString."))
-  	}
-  }
-
-  type fn SizeString(value: String) -> Result<(), TypeError> {
-  	if value.ends_with("px") {
-  		Ok(())
-  	} else {
-  		Err(.Mismatch("Expected `px` at the end of a WidthString."))
-  	}
-  }
+    assert_eq(outer, 1);
+}
 ```

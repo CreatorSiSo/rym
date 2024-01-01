@@ -4,22 +4,28 @@
 
 ```rym
 loop {
-	...
+	// ..
 }
+
+loop /* .. */
 ```
 
 ## While
 
 ```rym
-while expr {
-	...
+while expr: {
+	// ..
 }
+
+while expr: /* .. */
 ```
 
 ## For
 
 ```rym
-for element in collection {
-	...
+for element in iterator: {
+	// ..
 }
+
+for element in iterator: /* .. */
 ```

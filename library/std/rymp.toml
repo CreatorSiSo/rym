@@ -1,0 +1,5 @@
+[package]
+name = "std"
+version = "0.0.0"
+description = "The standard library for Rym"
+authors = ["ciso <to.do@example.xyz>"]

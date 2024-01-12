@@ -153,7 +153,7 @@
             "patterns": [
                 {
                     "name": "keyword.other.rym",
-                    "match": "\\b(use|pub|module|package)\\b"
+                    "match": "\\b(use|pub|module|package|self|Self)\\b"
                 },
                 {
                     "name": "keyword.other.rym",
@@ -167,7 +167,7 @@
                 {
                     "comment": "storage keywords",
                     "name": "keyword.other.rym storage.type.rym",
-                    "match": "\\b(struct|enum|union|let|const)\\b"
+                    "match": "\\b(struct|enum|union|effect|let|const)\\b"
                 },
                 {
                     "comment": "storage modifier keywords",
@@ -241,6 +241,11 @@
                     "comment": "question mark",
                     "name": "punctuation.question.rym",
                     "match": "\\?"
+                },
+                {
+                    "comment": "tilde",
+                    "name": "punctuation.tilde.rym",
+                    "match": "~"
                 },
                 {
                     "comment": "thin arrow",

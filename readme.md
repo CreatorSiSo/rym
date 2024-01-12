@@ -16,7 +16,7 @@
 
 ## Disclaimer
 
-This is just a hobby project. It is very far from being production ready!
+**⚠️ This is just a hobby project. It is very far from being production ready! ⚠️**
 
 ## Intro
 
@@ -28,8 +28,13 @@ which inspired me to start and continue working on this language.
 
 ## Examples
 
-```rym
-const game = fn(x: Uint) String => {
+```rust
+fn main() ~Io {
+    for i in 0..=100:
+        println(game(i));
+}
+
+fn game(x: Uint) String => {
     const rule = fn(acc, num, word) =>
         if (x mod num) == 0 then acc ++ word else acc;
 
@@ -41,15 +46,10 @@ const game = fn(x: Uint) String => {
       .rule(7, "Splash")
       .default_rule()
 }
-
-const main = fn() {
-    for i in 0..=100:
-        println(game(i))
-}
 ```
 
 ```rust
-const main = fn() @Io, Result[(), Error] => {
+fn main() ~Io, Result[(), Error] => {
     let msg = "Hello World";
     println(msg);
 
@@ -64,31 +64,30 @@ const main = fn() @Io, Result[(), Error] => {
 Early returns when unwrapping `Tryable`s
 
 ```rust
-const main = fn() @Io, Result[i32, String] => {
-    let number = maybe_error().try;
-    println(number);
+fn main() Result[String, SpecificError] => {
+    let chained = maybe_error().try;
+    // Same as:
+    let expanded = match maybe_error():
+        | Ok(val) => Ok(val.to_string()),
+        \ err => return err;
 
-    // Same as
-    let number = match maybe_error():
-        | Ok(inner) => inner,
-        | Err(err) => return Err(err);
-    println(number);
+    // ...
+    Ok(chained)
 }
 ```
 
-<!-- Tryable chaining
-
-```dart
+<!--
+```rust
 const chained = maybe_error()&.to_string()
 
 // Short form of:
-const chained = match maybe_error() {
-    Ok(val) => Ok(val.to_string()),
-    err => err,
-}
+const chained = match maybe_error():
+    | Ok(val) => Ok(val.to_string()),
+    \ err => err;
 // or:
-const chained = maybe_error().and_then(|val| Ok(val.to_string()))
-``` -->
+const chained = maybe_error().and_then(fn(val) Ok(val.to_string()))
+```
+-->
 
 ## About
 

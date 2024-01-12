@@ -1,20 +1,22 @@
 use package.{Unwrap, Div, panic}
 
 pub enum Option[T] {
-	Some(T),
-	None,
+    Some(T),
+    None,
 }
 
 impl[T] Unwrap[T] for Option[T] {
-	fn unwrap(self: Self) T, ~Div {
-		match self:
-			| Some(value) => value,
-			\ None => panic("Called Option.unwrap() on Option.None")
+    fn unwrap(self: Self) T, ~Div {
+        match self {
+            Some(value) => value,
+            None => panic("Called Option.unwrap() on Option.None"),
+        }
     }
 
-	fn expect(self: Self, message: String) T, ~Div {
-        match self:
-			| Some(value) => value,
-			\ None => panic(message),
-	}
+    fn expect(self: Self, message: String) T, ~Div {
+        match self {
+            Some(value) => value,
+            None => panic(message),
+        }
+    }
 }

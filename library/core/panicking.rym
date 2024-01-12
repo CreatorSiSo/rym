@@ -5,7 +5,7 @@ pub fn panic(msg: String) ~Div {
 }
 
 pub fn todo(msg: String) ~Div {
-	panic("__TODO__")
+	panic("__TODO__");
 }
 
 pub fn unreachable(msg: String) ~Div {

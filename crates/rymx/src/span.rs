@@ -10,7 +10,7 @@ pub struct Spanned<T> {
     span: Span,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Span {
     /// Inclusive first index
     pub start: Index,

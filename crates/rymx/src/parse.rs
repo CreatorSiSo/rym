@@ -42,33 +42,30 @@ fn map_parse_result<T: std::fmt::Debug>(
     parse_result: ParseResult<T, ParseError>,
     src_id: SourceId,
 ) -> (Option<T>, Vec<Diagnostic>) {
-    let error_to_diagostic =
-        |err: ParseError| -> Diagnostic {
-            use self::error::Reason;
-            let mut span = err.span().with_id(src_id);
-            // TODO Why are these spans generated?
-            // The input from the tokenizer looks correct...
-            if span.end < span.start {
-                std::mem::swap(&mut span.start, &mut span.end);
-            }
+    let error_to_diagostic = |err: ParseError| -> Diagnostic {
+        use self::error::Reason;
+        let mut span = err.span().with_id(src_id);
+        // TODO Why are these spans generated?
+        // The input from the tokenizer looks correct...
+        if span.end < span.start {
+            std::mem::swap(&mut span.start, &mut span.end);
+        }
 
-            match err.reason() {
-                Reason::ExpectedFound { expected, found } => match (expected.is_empty(), found) {
-                    (true, _) => report_unexpected(span, found),
-                    (false, None) => report_expected(span, expected),
-                    (false, Some(found)) => report_expected_found(span, expected, found),
-                },
-                Reason::Custom(message) => Diagnostic::new(Level::Error, "Syntax Error")
-                    .with_child(span, Level::Error, message),
-                Reason::Many(_) => todo!(),
-            }
-        };
+        match err.reason {
+            Reason::ExpectedFound { expected, found } => match (expected.is_empty(), found) {
+                (true, _) => report_unexpected(span, found),
+                (false, None) => report_expected(span, expected),
+                (false, Some(found)) => report_expected_found(span, expected, found),
+            },
+            Reason::Custom(diagnostic) => diagnostic,
+        }
+    };
 
     let (output, errors) = parse_result.into_output_errors();
     (output, errors.into_iter().map(error_to_diagostic).collect())
 }
 
-fn report_expected_found(span: Span, expected: &Vec<Pattern>, found: &Token) -> Diagnostic {
+fn report_expected_found(span: Span, expected: Vec<Pattern>, found: Token) -> Diagnostic {
     let patterns = patterns_to_string(expected);
     Diagnostic::new(
         Level::Error,
@@ -77,12 +74,12 @@ fn report_expected_found(span: Span, expected: &Vec<Pattern>, found: &Token) -> 
     .with_child(span, Level::Error, format!("Expected {patterns}"))
 }
 
-fn report_expected(span: Span, expected: &Vec<Pattern>) -> Diagnostic {
+fn report_expected(span: Span, expected: Vec<Pattern>) -> Diagnostic {
     let message = format!("Expected {}", patterns_to_string(expected));
     Diagnostic::spanned(span, Level::Error, message)
 }
 
-fn report_unexpected(span: Span, found: &Option<Token>) -> Diagnostic {
+fn report_unexpected(span: Span, found: Option<Token>) -> Diagnostic {
     let message = format!(
         "Unexpected {}",
         found
@@ -92,7 +89,7 @@ fn report_unexpected(span: Span, found: &Option<Token>) -> Diagnostic {
     Diagnostic::spanned(span, Level::Error, message)
 }
 
-fn patterns_to_string(patterns: &Vec<Pattern>) -> String {
+fn patterns_to_string(patterns: Vec<Pattern>) -> String {
     if patterns.is_empty() {
         return "nothing".into();
     };

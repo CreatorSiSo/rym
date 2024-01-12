@@ -1,5 +1,9 @@
 use super::common::TokenStream;
-use crate::{tokenize::Token, Span};
+use crate::{
+    error::{Diagnostic, Level},
+    tokenize::Token,
+    Span,
+};
 use chumsky::util::MaybeRef;
 use core::fmt;
 
@@ -37,7 +41,7 @@ impl fmt::Debug for Pattern {
 
 // TODO: Maybe should make ExpectedFound encapsulated a bit more
 /// The reason for a [`Rich`] error.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Reason {
     /// An unexpected input was found
     ExpectedFound {
@@ -47,11 +51,7 @@ pub enum Reason {
         found: Option<Token>,
     },
     /// An error with a custom message
-    Custom(String),
-    /// Multiple unrelated reasons were merged
-    // TODO: Should we really do this? Possibly better to just unify the unrelated reasons. It's not like consumers
-    // probably care about reporting 5 different errors for the same location anyway!
-    Many(Vec<Self>),
+    Custom(Diagnostic),
 }
 
 impl Reason {
@@ -60,7 +60,6 @@ impl Reason {
         match self {
             Self::ExpectedFound { found, .. } => *found,
             Self::Custom(_) => None,
-            Self::Many(many) => many.iter().find_map(|r| r.found()),
         }
     }
 
@@ -68,7 +67,6 @@ impl Reason {
         match self {
             Reason::ExpectedFound { found, .. } => found.take(),
             Reason::Custom(_) => None,
-            Reason::Many(many) => many.iter_mut().find_map(|r| r.take_found()),
         }
     }
 }
@@ -101,28 +99,18 @@ impl Reason {
                     found,
                 }
             }
-            (Reason::Many(mut m1), Reason::Many(m2)) => {
-                m1.extend(m2);
-                Reason::Many(m1)
-            }
-            (Reason::Many(mut m), other) => {
-                m.push(other);
-                Reason::Many(m)
-            }
-            (this, Reason::Many(mut m)) => {
-                m.push(this);
-                Reason::Many(m)
-            }
-            (this, other) => Reason::Many(vec![this, other]),
+            (Reason::Custom(this), Reason::Custom(other)) => todo!(),
+            (this @ Reason::Custom(_), _) => this,
+            (_, other @ Reason::Custom(_)) => other,
         }
     }
 }
 
 /// A rich default error type that tracks error spans, expected inputs, and the actual input found at an error site.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ParseError {
+    pub reason: Reason,
     span: Span,
-    reason: Reason,
     context: Vec<(Label, Span)>,
 }
 
@@ -132,7 +120,7 @@ impl ParseError {
     pub fn custom<M: ToString>(span: Span, msg: M) -> Self {
         ParseError {
             span,
-            reason: Reason::Custom(msg.to_string()),
+            reason: Reason::Custom(Diagnostic::new(Level::Error, msg.to_string())),
             context: Vec::new(),
         }
     }
@@ -166,7 +154,6 @@ impl ParseError {
             match reason {
                 Reason::ExpectedFound { expected, .. } => v.extend(expected.iter()),
                 Reason::Custom(_) => {}
-                Reason::Many(many) => many.iter().for_each(|r| push_expected(r, v)),
             }
         }
         let mut v = Vec::new();
@@ -217,7 +204,7 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
     fn merge_expected_found<E: IntoIterator<Item = Option<MaybeRef<'a, Token>>>>(
         mut self,
         new_expected: E,
-        found: Option<MaybeRef<'a, Token>>,
+        _found: Option<MaybeRef<'a, Token>>,
         _span: Span,
     ) -> Self {
         match &mut self.reason {
@@ -231,32 +218,7 @@ impl<'a> chumsky::error::Error<'a, TokenStream<'a>> for ParseError {
                     }
                 }
             }
-            Reason::Many(m) => m.push(Reason::ExpectedFound {
-                expected: new_expected
-                    .into_iter()
-                    .map(|tok| {
-                        tok.map(|inner| Pattern::Token(*inner))
-                            .unwrap_or(Pattern::EndOfInput)
-                    })
-                    .collect(),
-                found: found.map(|inner| *inner),
-            }),
-            Reason::Custom(_) => {
-                let old = core::mem::replace(&mut self.reason, Reason::Many(Vec::new()));
-                self.reason = Reason::Many(vec![
-                    old,
-                    Reason::ExpectedFound {
-                        expected: new_expected
-                            .into_iter()
-                            .map(|tok| {
-                                tok.map(|inner| Pattern::Token(*inner))
-                                    .unwrap_or(Pattern::EndOfInput)
-                            })
-                            .collect(),
-                        found: found.map(|inner| *inner),
-                    },
-                ]);
-            }
+            Reason::Custom(_) => todo!(),
         }
         // TOOD: Merge contexts
         self

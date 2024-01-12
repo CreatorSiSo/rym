@@ -3,7 +3,7 @@ use std::{fmt::Display, sync::mpsc::Sender};
 use crate::Span;
 
 /// An enum representing a diagnostic level.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum Level {
     /// An error.
@@ -32,7 +32,7 @@ impl Display for Level {
 
 /// A structure representing a diagnostic message and associated children messages.
 #[must_use]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Diagnostic {
     pub level: Level,
     pub message: String,
@@ -80,7 +80,7 @@ impl Diagnostic {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SubDiagnostic {
     pub level: Level,
     pub message: String,

@@ -1,13 +1,13 @@
-pub use panicking.{panic, todo, unreachable}
-pub use option.{Option, Option.Some, Option.None}
-pub use result.{Result, Result.Ok, Result.Err}
+pub use package.panicking.{panic, todo, unreachable}
+pub use package.option.{Option, Option.Some, Option.None}
+pub use package.result.{Result, Result.Ok, Result.Err}
 
 pub effect Div
 pub effect WriteIo
 pub effect ReadIo
 pub effect Ffi
 
-pub trait Unwrap<T> where T: Debug {
-	func unwrap(move self) -> T, ?Div
-	func expect(move self, message: String) -> T, ?Div
+pub trait Unwrap[T: Debug] {
+	fn unwrap(self: Self) T, ~Div;
+	fn expect(self: Self, message: String) T, ~Div;
 }

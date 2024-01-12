@@ -1,18 +1,18 @@
 # Rym
 
--   [Rym](#rym)
-    -   [Disclaimer](#disclaimer)
-    -   [Intro](#intro)
-    -   [Examples](#examples)
-    -   [About](#about)
-        -   [Name](#name)
-        -   [Goals](#goals)
-    -   [Installation](#installation)
-    -   [Inspired by](#inspired-by)
-    -   [Other languages written in Rust](#other-languages-written-in-rust)
-    -   [Project Structure](#project-structure)
-        -   [Tests](#tests)
-    -   [Todos](#todos)
+- [Rym](#rym)
+  - [Disclaimer](#disclaimer)
+  - [Intro](#intro)
+  - [Examples](#examples)
+  - [About](#about)
+    - [Name](#name)
+    - [Goals](#goals)
+  - [Installation](#installation)
+  - [Project Structure](#project-structure)
+    - [Tests](#tests)
+  - [Todos](#todos)
+  - [Inspired by](#inspired-by)
+  - [Other languages written in Rust](#other-languages-written-in-rust)
 
 ## Disclaimer
 
@@ -49,7 +49,7 @@ fn game(x: Uint) String => {
 ```
 
 ```rust
-fn main() ~Io, Result[(), Error] => {
+fn main() ~Io, Result[(), Error] {
     let msg = "Hello World";
     println(msg);
 
@@ -64,14 +64,16 @@ fn main() ~Io, Result[(), Error] => {
 Early returns when unwrapping `Tryable`s
 
 ```rust
-fn main() Result[String, SpecificError] => {
+fn main() Result[String, SpecificError] {
     let chained = maybe_error().try;
+
     // Same as:
     let expanded = match maybe_error():
         | Ok(val) => Ok(val.to_string()),
         \ err => return err;
 
     // ...
+
     Ok(chained)
 }
 ```
@@ -102,25 +104,41 @@ const chained = maybe_error().and_then(fn(val) Ok(val.to_string()))
 The language should be as powerful as possible while only providing a small set of consistent features. (Kind of like Go)
 
 Apart from that Rym just gets used to try out a bunch of my ideas...
-I am trying my best to combine all of them in a meaningful manner ;)
+I am trying my best to combine all of them in a meaningful manner =)
 
 -   Features
-    -   Static types
-        -   inferred
-    -   Complex types
+    -   Static (but inferred) type system
+    -   Data types
         -   struct
-        -   enum / tagged union
+        -   enum (tagged union)
+        -   union (set of types)
+    -   Traits? Interfaces?
     -   Iterators
-    -   Zig like comp time
+    -   Zig like comptime
 -   Nice developer experience
     -   Informative errors and warnings
-    -   Builtin tools
+    -   Tools
+        -   Compiler
         -   First party REPL
         -   Package manager
 
 ## Installation
 
 **TODO**
+
+## Project Structure
+
+The project is split into many crates that are part of one Cargo workspace:
+
+`crates/rymx` ⇒ command line tool for executing `.rym` files and to run the repl
+
+### Tests
+
+For now just `cargo test`, there is no special setup.
+
+## Todos
+
+-   [ ] add benchmarking capabilities
 
 ## Inspired by
 
@@ -139,19 +157,3 @@ I am trying my best to combine all of them in a meaningful manner ;)
 -   [Tao](https://github.com/zesterer/tao): Statically-typed functional language with polymorphism, typeclasses, algebraic effects, sum types, pattern-matching, first-class functions, currying, good diagnostics, and much more!
 -   [Rhai](https://github.com/rhaiscript/rhai): Embedded scripting language for Rust.
 -   [Rune](https://github.com/rune-rs/rune): Embeddable dynamic programming language for Rust.
-
-## Project Structure
-
-The project is split into many crates that are part of one Cargo workspace:
-
-`crates/rymx` ⇒ command line tool for executing `.rym` files
-
-### Tests
-
-For now just run `cargo test`, there is no special setup.
-
-**TODO**
-
-## Todos
-
--   [ ] add benchmarking capabilities

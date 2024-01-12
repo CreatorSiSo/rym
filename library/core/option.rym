@@ -1,24 +1,20 @@
-use crate.Unwrap
-use crate.Div
-use crate.panic
+use package.{Unwrap, Div, panic}
 
-pub enum Option<T> {
+pub enum Option[T] {
 	Some(T),
 	None,
 }
 
-impl<T> Unwrap<T> for Option<T> {
-	func unwrap(move self) -> T, @Div {
-		match self {
-			Some(value) => value,
-			None => panic("Called Option.unwrap() on Option.None"),
-		}
-	}
+impl[T] Unwrap[T] for Option[T] {
+	fn unwrap(self: Self) T, ~Div {
+		match self:
+			| Some(value) => value,
+			\ None => panic("Called Option.unwrap() on Option.None")
+    }
 
-	func expect(move self, panic_msg: String) -> T, @Div {
-		match self {
-			Some(value) => value,
-			None => panic(panic_msg),
-		}
+	fn expect(self: Self, message: String) T, ~Div {
+        match self:
+			| Some(value) => value,
+			\ None => panic(message),
 	}
 }

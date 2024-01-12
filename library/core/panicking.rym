@@ -1,13 +1,13 @@
-use crate.Div
+use package.Div
 
-pub func panic(msg: String) -> !Div {
+pub fn panic(msg: String) ~Div {
 	// TODO
 }
 
-pub func todo(msg: String) -> !Div {
+pub fn todo(msg: String) ~Div {
 	panic("__TODO__")
 }
 
-pub func unreachable(msg: String) -> !Div {
+pub fn unreachable(msg: String) ~Div {
 	// TODO
 }

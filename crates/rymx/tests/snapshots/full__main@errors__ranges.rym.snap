@@ -51,7 +51,7 @@ Semi [;]
 VSpace [\n]
 
 Error: Expected expression, found `=`
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/errors/ranges.rym:1:37]
+   ╭─[/home/nika/dev/rym/crates/rymx/tests/errors/ranges.rym:1:37]
    │
  1 │ const full_inclusive = [1, 0, 2].[..=];
    │                                     ┬  

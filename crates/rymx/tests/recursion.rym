@@ -1,4 +1,4 @@
-fn main() => {
+fn main() {
     test_fib("fib_if", fib_if);
     // test_fib("fib_match", fib_match);
     // test_fib("fib_oneliner", fib_oneliner);
@@ -6,10 +6,15 @@ fn main() => {
     test_fake_loops();
 }
 
-fn fib_if(n: Int) Uint =>
-    if n <= 0 then 0
-    else if n == 1 then 1
-    else fib_if(n - 1) + fib_if(n - 2);
+fn fib_if(n: Int) -> Uint {
+    if n <= 0 {
+        0
+    } else if n == 1 {
+        1
+    } else {
+        fib_if(n - 1) + fib_if(n - 2)
+    }
+}
 
 /* const fib_match = fn(n) => match n with
     | 0 => 0
@@ -18,7 +23,7 @@ fn fib_if(n: Int) Uint =>
 
 // const fib_oneliner = fn(n) => match n with 0 => 0 | 1 => 1 | _ => fib_oneliner(n - 1) + fib_oneliner(n - 2);
 
-fn test_fib(name, fib) => {
+fn test_fib(name, fib) {
     assert_eq(fib(0), 0);
     assert_eq(fib(1), 1);
     assert_eq(fib(2), 1);
@@ -35,12 +40,14 @@ fn test_fib(name, fib) => {
     println("Successfully tested ", name, "!");
 }
 
-fn countdown(n, step) => {
+fn countdown(n, step) {
     print(n, " ");
-    if n > 0 then countdown(min(n - step, 0), step);
+    if n > 0 {
+        countdown(min(n - step, 0), step)
+    }
 }
 
-fn test_countdown() => {
+fn test_countdown() {
     countdown(0, 5);
     println();
     countdown(1, 1);
@@ -51,9 +58,11 @@ fn test_countdown() => {
     println();
 }
 
-fn test_fake_loops() => {
-    fn while_do(i: Int, increment, condition, body) => {
-        if not condition(i) then return;
+fn test_fake_loops() {
+    fn while_do(i: Int, increment, condition, body) {
+        if not condition(i) {
+            return;
+        }
         body(i);
         while_do(increment(i), increment, condition, body);
     }
@@ -66,24 +75,25 @@ fn test_fake_loops() => {
     );
 }
 
-fn outer(n) => {
+fn outer(n) {
     fn inner(n) => n + 1;
-    n - (if n < 0 then inner(n) else outer(n))
+    n - (if n < 0 { inner(n) } else { outer(n) })
 }
 
-fn min(value, min) any => {
-    if value < min then min else value
+fn min(value, min) -> Any {
+    if value < min { min } else { value }
 }
 
-fn max(value, max) any => {
-    if value > max then max else value
+fn max(value, max) -> Any {
+    if value > max { max } else { value }
 }
 
-fn clamp(value, min, max) any => {
-    if value < min then
+fn clamp(value, min, max) -> Any {
+    if value < min {
         min
-    else if value > max then
+    } else if value > max {
         max
-    else
+    } else {
         value
+    }
 }

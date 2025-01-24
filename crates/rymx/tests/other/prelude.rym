@@ -1,3 +1,88 @@
-fn println(fmt: String, ..args: [impl Display]) => {
-	// TODO
+/// Overridden by compiler internal implementation
+const fn lang(decl: TypeDecl, _name: StringLiteral) -> TypeDecl { decl }
+
+const fn derive(decl: TypeDecl, ..traits: [Derive]) -> TypeDecl {
+    let mut new_decl = decl;
+    for trait_ in traits {
+        new_decl = trait_.derive(new_decl);
+    }
+
+    todo("Return new TypeDecl")
+}
+
+pub trait Default {
+    fn default() -> Self;
+}
+
+@lang("Result")
+pub enum Result(o, e) {
+    Ok(o),
+    Err(e),
+}
+pub use Result.*;
+
+
+@lang("Option")
+@derive(Default)
+pub type Option(t) {
+    Some(t),
+    @default
+    None,
+}
+pub use Option.*;
+
+@lang("Bool")
+@derive(Default)
+pub type Bool {
+    True,
+    @default
+    False,
+}
+pub use Bool.*;
+
+@lang("Never")
+pub enum Never {};
+
+pub fn println(writer: mut Writer, fmt: StringLiteral, ..args: [Display]) -> Result((), io.Error) {
+    enum State { Start, OpenBrace, CloseBrace, }
+    let mut state = State.Start;
+    let mut start_index: usize = 0;
+
+    for (char, i) in fmt.chars().enumerate() {
+        match state {
+            .Start => match char {
+                '{' => {
+                    if start_index < i {
+                        writer.write(format[start_index..i]).try;
+                    }
+                    state = .OpenBrace;
+                }
+                '}' => {
+                    @todo();
+                    state = .CloseBrace;
+                }
+            }
+            .OpenBrace => match char {
+                '{' => {
+                    state = .Start;
+                    start_index = i;
+                },
+                '}' => {
+                    writer.printValue(args[next_arg]).try;
+                    next_arg += 1;
+                    state = .Start;
+                    start_index = i + 1;
+                },
+                's' => continue,
+                else => @compileError("Unknown format character: " ++ char),
+            },
+            .CloseBrace => match char {
+                '}' => {
+                    state = .Start;
+                    start_index = i;
+                },
+                else => @compileError("Single '}' encountered in format string"),
+            },
+        }
+    }
 }

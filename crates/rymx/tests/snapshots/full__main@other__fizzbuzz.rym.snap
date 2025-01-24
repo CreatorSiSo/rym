@@ -129,7 +129,7 @@ BraceClose [}]
 VSpace [\n]
 
 Error: Expected `)`, `,` or expression, found identifier
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/other/fizzbuzz.rym:2:47]
+   ╭─[/home/nika/dev/rym/crates/rymx/tests/other/fizzbuzz.rym:2:47]
    │
  2 │     (1..).iter().for_each(fn(i) => println(match i with
    │                                                  ┬  

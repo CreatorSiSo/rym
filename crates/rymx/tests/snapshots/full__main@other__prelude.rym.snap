@@ -36,7 +36,7 @@ BraceClose [}]
 VSpace [\n]
 
 Error: Expected `)` or identifier, found `..`
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/other/prelude.rym:1:25]
+   ╭─[/home/nika/dev/rym/crates/rymx/tests/other/prelude.rym:1:25]
    │
  1 │ fn println(fmt: String, ..args: [impl Display]) => {
    │                         ─┬  

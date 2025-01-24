@@ -136,7 +136,7 @@ VSpace [\n]
 
 --- reports ---
 Error: 
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/aoc/y_2023/day1.rym:7:46]
+   ╭─[/home/nika/dev/rym/crates/rymx/tests/aoc/y_2023/day1.rym:7:46]
    │
  7 │          let left = line.iter().find(char.is_digit)?;
    │                                                    ┬  

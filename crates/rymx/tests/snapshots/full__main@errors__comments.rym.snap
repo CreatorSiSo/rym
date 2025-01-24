@@ -13,7 +13,7 @@ Comment [// TODO add more test cases]
 VSpace [\n]
 
 Error: Expected `break`, `const`, `fn`, `if`, `let`, `not`, `return`, `type`, `{`, `[`, `(`, `..`, `-`, identifier, literal or EndOfInput, found `*`
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/errors/comments.rym:1:12]
+   ╭─[/home/nika/dev/rym/crates/rymx/tests/errors/comments.rym:1:12]
    │
  1 │ /* Test */ */
    │            ┬  

@@ -1,48 +1,44 @@
 ```rym
-const EventKind = enum
-	| Seminar
-	| Party
-	| Blocking;
+const EventKind = type {
+	Seminar,
+	Party,
+	Blocking,
+}
 ```
 
 ```rym
 /// The compile time only enum type
-const Enum = struct {
+const fn EnumType(N: uint) Type => struct {
 	repr: EnumRepr,
-	kinds: [EnumKind],
+	kinds: [EnumKind; N],
 }
 
-fn [Enum] from_kinds(...args: []EnumKind) Self => {
-	Enum {
-		repr: EnumRepr::optimal(kinds),
-		kinds,
-	}
+impl EnumType {
+    pub const fn from_kinds(..args: [EnumKind; _]) Self => {
+        Self {
+            repr: EnumRepr::optimal(kinds),
+            kinds,
+        }
+    }
+
+    pub const fn concat(self, other: EnumType) Self => {
+        let kinds = self.kinds.extend(other.kinds);
+        Self { repr: EnumRepr::optimal(kinds), kinds }
+    }
 }
 
-fn [Enum] concat(self, other: Enum) Self => {
-	let kinds = self.kinds.extend(other.kinds);
-	let repr = if self.repr == other.repr {
-		self.repr
-	} else {
-		EnumRepr::optimal(kinds)
-	};
-
-	Enum { repr, kinds }
-}
 
 const EnumKind = enum {
-	/* TODO */
+    Fieldless(Str),
+    Tuple([(?Str, Type)]),
+    Struct([(Str, Type)]),
 }
 
-const EnumRepr = enum {
-	U8,
-	U16,
-	U32,
-	U64,
-    // ...
-}
+const EnumRepr = enum {}
 
-fn [EnumRepr] optimal(kinds: [EnumKind]) Self => {
-	/* TODO */
+impl EnumRepr {
+    pub const fn optimal(kinds: [EnumKind]) Self => {
+        /* TODO */
+    }
 }
 ```

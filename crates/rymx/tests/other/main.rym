@@ -11,11 +11,13 @@ const ParseError = example_package.Error;
 // use package.prelude.*;
 
 /// Combined error type
-type Error = enum
-	| Io io.Error
-	| Parse ParseError
-	| Other struct { message: String };
+enum Error {
+	Io(io.Error),
+	Parse(ParseError),
+	Other { message: String },
+    Unkown,
+}
 
-fn main() Result[(), Error] => {
+fn main() Result((), Error) => {
 	// TODO read cli arguments
 };

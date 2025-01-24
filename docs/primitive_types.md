@@ -1,0 +1,3 @@
+```rym
+const Never = enum {};
+```

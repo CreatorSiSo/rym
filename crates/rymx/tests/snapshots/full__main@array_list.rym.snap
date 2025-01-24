@@ -510,7 +510,7 @@ BraceClose [}]
 VSpace [\n]
 
 Error: Invalid character `@`
-    ╭─[/home/simon/dev/rym/crates/rymx/tests/array_list.rym:19:40]
+    ╭─[/home/nika/dev/rym/crates/rymx/tests/array_list.rym:19:40]
     │
  19 │     const MIN_NON_ZERO_CAP: usize = if @size_of(T) == 1 then
     │                                        ┬  
@@ -518,7 +518,7 @@ Error: Invalid character `@`
 ────╯
 
 Error: Invalid character `@`
-    ╭─[/home/simon/dev/rym/crates/rymx/tests/array_list.rym:21:13]
+    ╭─[/home/nika/dev/rym/crates/rymx/tests/array_list.rym:21:13]
     │
  21 │     else if @size_of(T) <= 1024 then
     │             ┬  
@@ -526,7 +526,7 @@ Error: Invalid character `@`
 ────╯
 
 Error: Invalid character `@`
-    ╭─[/home/simon/dev/rym/crates/rymx/tests/array_list.rym:64:15]
+    ╭─[/home/nika/dev/rym/crates/rymx/tests/array_list.rym:64:15]
     │
  64 │     assert_eq(@size_of(list.data()), 10 * 8);
     │               ┬  
@@ -534,7 +534,7 @@ Error: Invalid character `@`
 ────╯
 
 Error: Invalid character `@`
-    ╭─[/home/simon/dev/rym/crates/rymx/tests/array_list.rym:69:15]
+    ╭─[/home/nika/dev/rym/crates/rymx/tests/array_list.rym:69:15]
     │
  69 │     assert_eq(@size_of(list.data()), 32 * 8);
     │               ┬  
@@ -542,7 +542,7 @@ Error: Invalid character `@`
 ────╯
 
 Error: Expected type, found `[`
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/array_list.rym:5:24]
+   ╭─[/home/nika/dev/rym/crates/rymx/tests/array_list.rym:5:24]
    │
  5 │ type ArrayList = struct[T] {
    │                        ┬  

@@ -1,4 +1,4 @@
-fn main() => {
+fn main() {
     // assert_eq(ones, 304);
 }
 
@@ -7,7 +7,7 @@ fn main() => {
 
 const pi = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282;
 
-fn create_death_chain() chain => {
+fn create_death_chain() -> chain {
     (pi - (-1 * pi).abs())
         .try
         .test_with_values(0, 1, 2, "Hello World!")

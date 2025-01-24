@@ -1,11 +1,11 @@
 /// Doc comment
 const test = 0;
 
-fn main() => {
+fn main() {
     return /* Inline comment */;
 }
 
-fn old_main() => {
+fn old_main() {
     /* return () /* Inline comment */; Nested inline comment */
 }
 
@@ -21,7 +21,7 @@ fn old_main() => {
 /// const test = 0;
 /// ```
 ///
-type Person = struct {
+struct Person {
     name: String = "Unkown",
     age: u32,
-};
+}

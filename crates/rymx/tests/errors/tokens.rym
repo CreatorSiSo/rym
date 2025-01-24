@@ -1,4 +1,4 @@
-fn testing() ~Test => { // <<-- `~` is not a valid token
+fn testing() -> ~Test { // <<-- `~` is not a valid token
     // Test {
     //     one: 1,
     //     two: 2,

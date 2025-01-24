@@ -30,7 +30,7 @@ Semi [;]
 VSpace [\n]
 
 Error: Expected integer, found string
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/errors/many_errors.rym:1:20]
+   ╭─[/home/nika/dev/rym/crates/rymx/tests/errors/many_errors.rym:1:20]
    │
  1 │ const test: union ["test"]u8 | [1.0]usihf = 0;
    │                    ───┬──  
@@ -38,7 +38,7 @@ Error: Expected integer, found string
 ───╯
 
 Error: Expected integer, found float
-   ╭─[/home/simon/dev/rym/crates/rymx/tests/errors/many_errors.rym:1:33]
+   ╭─[/home/nika/dev/rym/crates/rymx/tests/errors/many_errors.rym:1:33]
    │
  1 │ const test: union ["test"]u8 | [1.0]usihf = 0;
    │                                 ─┬─  

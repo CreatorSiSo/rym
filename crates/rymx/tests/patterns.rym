@@ -1,0 +1,79 @@
+type Colour = [u8; 8];
+
+struct Context {}
+
+trait PaintableCircle: core.fmt.Debug {
+    fn circle(self) -> Circle;
+    fn paint(self, context: mut Context);
+
+    fn with_border(self, width: f32, colour: Colour) -> Bordered(PaintableCircle) {
+        Bordered {
+            inner = self,
+            width,
+            colour,
+        }
+    }
+
+    fn with_fill(self, colour: Colour) -> Filled(PaintableCircle) {
+        Filled {
+            inner = self,
+            colour,
+        }
+    }
+}
+
+@derive(Debug)
+struct Circle {
+    x: u32,
+    y: u32,
+    radius: u32,
+}
+
+impl PaintableCircle for Circle {
+    fn circle(self) -> Circle {
+        self
+    }
+
+    fn paint(self, context: mut Context) {}
+}
+
+@derive(Debug)
+const struct Filled(I: PaintableCircle) {
+    inner: I,
+    colour: Colour,
+}
+
+impl(I: PaintableCircle) PaintableCircle for Filled(I) {
+    fn circle(self) -> Circle {
+        self.inner.circle()
+    }
+
+    fn paint(self, context: mut Context) {}
+}
+
+@derive(Debug)
+struct Bordered(I: PaintableCircle) {
+    inner: I,
+    width: f32,
+    colour: Colour,
+}
+
+impl(I: PaintableCircle) PaintableCircle for Bordered(I) {
+    fn circle(self) -> Circle {
+        self.inner.circle()
+    }
+
+    fn paint(self, context: mut Context) {}
+}
+
+fn main() {
+    let circle = Circle {
+        x = 530,
+        y = 200,
+        radius = 50,
+    }
+    .with_fill(b"00ffff0f")
+    .with_border(2.5, b"ff0000ff");
+    println("{circle:#?}");
+    dbg(size_of_val(circle));
+}

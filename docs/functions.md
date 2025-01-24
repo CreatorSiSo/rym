@@ -24,7 +24,7 @@ fn greet(person: String) String => {
 To call this function, you would use its name followed by arguments in parentheses, like this:
 
 ```rym
-const greeting = greet(person: "Max");
+let greeting = greet(person: "Max");
 assert_eq(greeting, "Hello, Max!");
 ```
 
@@ -35,8 +35,8 @@ fn greet(person: String, greeting: String = "Hello") String => {
     greeting + ", " + person + "!"
 }
 
-const default_greeting = greet(person: "Max"); // "Hello, Max!"
-const custom_greeting = greet(greeting: "Bonjour", person: "Max"); // "Bonjour, Max!"
+let default_greeting = greet(person: "Max"); // "Hello, Max!"
+let custom_greeting = greet(greeting: "Bonjour", person: "Max"); // "Bonjour, Max!"
 ```
 
 Finally, you can pass parameters as mutable values to allow the outer value to be modified within the function body.
@@ -46,7 +46,7 @@ To do this, you prefix the parameter type with the `mut` keyword. For example:
 use std.fs.{Path, read_to_string};
 use std.io;
 
-fn get_content(file_cache: mut HashMap[Path, String], path: std.fs.Path) io.Result[String] => {
+fn get_content(file_cache: mut HashMap(Path, String), path: std.fs.Path) io.Result(String) => {
     Ok(file_cache.entry(path).or_insert(read_to_string(path).try))
 }
 
@@ -95,7 +95,7 @@ fn greet(person: String) String => {
     "Hello, " + person + "!"
 }
 
-const greeting = greet(person: "Max")
+let greeting = greet(person: "Max")
 assert_eq(greeting, "Hello, Max!")
 ```
 

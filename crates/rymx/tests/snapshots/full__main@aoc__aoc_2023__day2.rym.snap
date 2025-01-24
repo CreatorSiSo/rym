@@ -1199,7 +1199,7 @@ Semi [;]
 VSpace [\n]
 
 Error: Expected `;` or expression, found `{`
-    ╭─[/home/simon/dev/rym/crates/rymx/tests/aoc/aoc_2023/day2.rym:13:27]
+    ╭─[/home/nika/dev/rym/crates/rymx/tests/aoc/aoc_2023/day2.rym:13:27]
     │
  13 │     const max_step = Step { red = 12, green = 13, blue = 14 };
     │                           ┬  

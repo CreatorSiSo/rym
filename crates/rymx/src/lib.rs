@@ -1,11 +1,8 @@
 #![feature(let_chains)]
 
-use std::sync::mpsc::Sender;
-
 mod ast;
 mod compile;
 // mod error;
-mod interpret;
 // mod parse;
 // mod span;
 // pub mod std_lib;

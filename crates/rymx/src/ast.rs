@@ -1,23 +1,20 @@
 use itertools::Itertools;
-use std::{
-    collections::HashMap,
-    fmt::{Debug, Display},
-};
+use std::fmt::{Debug, Display};
 
 #[derive(Debug, Clone)]
-pub struct Module {
+pub struct Module<'a> {
     pub name: String,
-    pub constants: Vec<(String, Type, Expr)>,
+    pub constants: &'a [(String, Type, Expr<'a>)],
     pub types: Vec<(String, Type)>,
-    pub sub_modules: Vec<Module>,
+    pub sub_modules: Vec<Module<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Stmt {
-    Expr(Expr),
-    Function(Function),
+pub enum Stmt<'a> {
+    Expr(Expr<'a>),
+    Function(Function<'a>),
     Type(String, Type),
-    Variable(VariableKind, String, Type, Expr),
+    Variable(VariableKind, String, Type, Expr<'a>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -38,43 +35,42 @@ impl Display for VariableKind {
 }
 
 #[derive(Clone, PartialEq)]
-pub enum Expr {
+pub enum Expr<'a> {
     // Value creation
-    Unit,
     Literal(Literal),
-    Array(Vec<Expr>),
-    ArrayWithRepeat(Box<Expr>, Box<Expr>),
-    Struct(Path, Vec<(String, Expr)>),
-    Function(Function),
+    Array(&'a [Expr<'a>]),
+    ArrayWithRepeat(&'a Expr<'a>, &'a Expr<'a>),
+    Tuple(&'a [Expr<'a>]),
+    Struct(Path, &'a [(String, Expr<'a>)]),
+    Function(Function<'a>),
 
     // Value modification
-    Unary(UnaryOp, Box<Expr>),
-    Binary(BinaryOp, Box<Expr>, Box<Expr>),
-    Call(Box<Expr>, Vec<Expr>),
+    Unary(UnaryOp, &'a Expr<'a>),
+    Binary(BinaryOp, &'a Expr<'a>, &'a Expr<'a>),
+    Call(&'a Expr<'a>, &'a [Expr<'a>]),
 
     // Value access
     Ident(String),
-    Subscript(Box<Expr>, Box<Expr>),
-    FieldAccess(Box<Expr>, String),
+    Subscript(&'a Expr<'a>, &'a Expr<'a>),
+    FieldAccess(&'a Expr<'a>, String),
 
     // Control flow
     IfElse(
         /// Condition
-        Box<Expr>,
+        &'a Expr<'a>,
         /// Then branch
-        Box<Expr>,
+        &'a Expr<'a>,
         /// Else branch
-        Box<Expr>,
+        &'a Expr<'a>,
     ),
-    Block(Vec<Stmt>),
-    Break(Box<Expr>),
-    Return(Box<Expr>),
+    Block(Vec<Stmt<'a>>),
+    Break(&'a Expr<'a>),
+    Return(&'a Expr<'a>),
 }
 
-impl std::fmt::Debug for Expr {
+impl std::fmt::Debug for Expr<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Unit => f.write_str("Unit"),
             Self::Literal(arg0) => f.write_fmt(format_args!("Literal({arg0:?})")),
             Self::Array(arg0) => f.write_fmt(format_args!("Array({arg0:?})")),
             Self::ArrayWithRepeat(arg0, arg1) => f
@@ -82,6 +78,7 @@ impl std::fmt::Debug for Expr {
                 .field(arg0)
                 .field(arg1)
                 .finish(),
+            Self::Tuple(arg0) => f.debug_tuple("Tuple").field(arg0).finish(),
             Self::Struct(arg0, arg1) => f.debug_tuple("Struct").field(arg0).field(arg1).finish(),
             Self::Function(arg0) => f.write_fmt(format_args!("{arg0:#?}")),
 
@@ -117,14 +114,14 @@ impl std::fmt::Debug for Expr {
 }
 
 #[derive(Debug, Clone)]
-pub struct Function {
-    pub params: Vec<(String, Type)>,
-    pub named_params: HashMap<String, (Type, Expr)>,
+pub struct Function<'a> {
+    pub params: &'a [(String, Type)],
+    pub named_params: &'a [(String, Type, Expr<'a>)],
     pub return_type: Type,
-    pub body: Box<Expr>,
+    pub body: &'a Expr<'a>,
 }
 
-impl PartialEq for Function {
+impl PartialEq for Function<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.params
             .iter()
@@ -136,7 +133,7 @@ impl PartialEq for Function {
     }
 }
 
-impl Display for Function {
+impl Display for Function<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
             "fn({}) {}",
@@ -146,7 +143,7 @@ impl Display for Function {
                 .chain(
                     self.named_params
                         .iter()
-                        .map(|(name, (typ, expr))| format!("{name}: {typ} = {expr:?}"))
+                        .map(|(name, typ, expr)| format!("{name}: {typ} = {expr:?}"))
                 )
                 .join(", "),
             self.return_type
@@ -288,9 +285,6 @@ pub enum BinaryOp {
     GreaterThan,
     /// Less than or equal `1 >= 2`
     GreaterThanEq,
-
-    /// Assignment `left = right`
-    Assign,
 }
 
 impl Display for BinaryOp {

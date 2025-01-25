@@ -105,7 +105,7 @@ impl SymbolTableBuilder {
         let Function { params, body, .. } = func;
         self.enter_scope("<function>", SymbolTableType::Function);
 
-        for (name, _typ) in params {
+        for (name, _typ) in *params {
             self.register_name(name);
         }
         self.scan_expression(body);

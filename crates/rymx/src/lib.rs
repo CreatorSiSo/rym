@@ -1,7 +1,7 @@
 #![feature(let_chains)]
 
 mod ast;
-mod compile;
+mod codegen;
 // mod error;
 // mod parse;
 // mod span;

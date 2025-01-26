@@ -1,5 +1,5 @@
 ---
-source: crates/rymx/src/compile.rs
+source: crates/rymx/src/codegen/test.rs
 expression: output
 ---
 

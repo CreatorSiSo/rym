@@ -1,4 +1,6 @@
 mod lir;
+mod symbol;
+mod test;
 mod ty;
 
 use codegen::settings::Flags;
@@ -8,8 +10,6 @@ use cranelift_module::{DataDescription, Linkage, Module};
 use cranelift_object::{ObjectBuilder, ObjectModule, ObjectProduct};
 use lir::TypedExpr;
 use std::sync::Arc;
-
-mod symbol;
 
 struct Session {
     builder_context: FunctionBuilderContext,
@@ -107,27 +107,29 @@ struct FunctionTranslator<'a> {
 }
 
 impl FunctionTranslator<'_> {
-    fn translate_expr(&mut self, expr: &TypedExpr) -> Value {
+    fn translate_expr(&mut self, expr: &TypedExpr) -> Option<Value> {
         match &expr.0 {
-            lir::Expr::Literal(value) => self.translate_literal(*value, &expr.1),
+            lir::Expr::Literal(value) => Some(self.translate_literal(*value, &expr.1)),
             lir::Expr::Array(_) => todo!(),
             lir::Expr::Aggregate(_) => todo!(),
             lir::Expr::Unary(unary_op, typed_expr) => todo!(),
-            lir::Expr::Binary(binary_op, l, r) => self.translate_binary(*binary_op, l, r),
-            lir::Expr::Call(typed_expr, _) => todo!(),
-            lir::Expr::AccessLocal(i) => self.builder.use_var(Variable::new(*i)),
-            lir::Expr::AccessField(typed_expr, _) => todo!(),
-            lir::Expr::Assign(typed_expr, typed_expr1) => todo!(),
-            lir::Expr::Subscript(typed_expr, typed_expr1) => todo!(),
-            lir::Expr::IfElse(typed_expr, typed_expr1, typed_expr2) => todo!(),
-            lir::Expr::Loop(_) => todo!(),
+            lir::Expr::Binary(binary_op, l, r) => Some(self.translate_binary(*binary_op, l, r)),
+            lir::Expr::Call(_, _) => todo!(),
+            lir::Expr::AccessLocal(i) => Some(self.builder.use_var(Variable::new(*i))),
+            lir::Expr::AccessField(_, _) => todo!(),
+            lir::Expr::Assign(_, _) => todo!(),
+            lir::Expr::Subscript(_, _) => todo!(),
+            lir::Expr::IfElse(_, _, _) => todo!(),
+            lir::Expr::Loop(body) => {
+                self.translate_loop(body);
+                None
+            }
             lir::Expr::Block(_) => todo!(),
-            lir::Expr::Break(typed_expr) => todo!(),
+            lir::Expr::Break(_) => todo!(),
             lir::Expr::Return(expr) => {
-                let inner = self.translate_expr(expr);
+                let inner = self.translate_expr(expr).unwrap();
                 self.builder.ins().return_(&[inner]);
-                // TODO This is extremely hacky!!
-                Value::with_number(0).unwrap()
+                None
             }
         }
     }
@@ -155,8 +157,8 @@ impl FunctionTranslator<'_> {
         }
 
         let signed = matches!(l.1, ty::Type::Int(_));
-        let l = self.translate_expr(l);
-        let r = self.translate_expr(r);
+        let l = self.translate_expr(l).unwrap();
+        let r = self.translate_expr(r).unwrap();
 
         use lir::BinaryOp::*;
         let ins = self.builder.ins();
@@ -176,6 +178,38 @@ impl FunctionTranslator<'_> {
             (GreaterThan, false) => ins.icmp(IntCC::UnsignedGreaterThan, l, r),
             (GreaterThanEq, false) => ins.icmp(IntCC::UnsignedGreaterThanOrEqual, l, r),
         }
+    }
+
+    fn translate_loop(&mut self, body: &[lir::TypedExpr]) {
+        let ty_u32 = Type::int(32).unwrap();
+
+        let header_block = self.builder.create_block();
+        let body_block = self.builder.create_block();
+        // let exit_block = self.builder.create_block();
+
+        self.builder.ins().jump(header_block, &[]);
+        self.builder.switch_to_block(header_block);
+
+        self.builder.ins().jump(body_block, &[]);
+
+        self.builder.switch_to_block(body_block);
+        self.builder.seal_block(body_block);
+
+        for expr in body {
+            self.translate_expr(expr);
+        }
+
+        self.builder.ins().jump(header_block, &[]);
+
+        // We've reached the bottom of the loop, so there will be no
+        // more jumps to the header
+        self.builder.seal_block(header_block);
+
+        // self.builder.switch_to_block(exit_block);
+        // self.builder.seal_block(exit_block);
+
+        // const UNREACHABLE: u16 = 100;
+        // self.builder.ins().trap(TrapCode::User(UNREACHABLE));
     }
 }
 
@@ -219,65 +253,4 @@ impl Target {
     fn isa(&self) -> Arc<dyn isa::TargetIsa> {
         self.isa.clone()
     }
-}
-
-#[cfg(test)]
-macro_rules! typed {
-    ($e:expr, $t:expr) => {
-        TypedExpr(Box::leak(Box::new($e)), $t)
-    };
-}
-
-#[cfg(test)]
-fn test_compile(name: &str, func: ty::Function, body: lir::TypedExpr) {
-    use std::io::Read;
-    use std::process::Stdio;
-
-    let mut session = Session::new(&Target::new("riscv64"));
-    session.compile_function(name, &func, &body);
-    let mut objdump = std::process::Command::new("llvm-objdump")
-        .arg("-D")
-        .arg("-")
-        .stderr(Stdio::inherit())
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-
-    let mut input = object::write::StreamingBuffer::new(objdump.stdin.unwrap());
-    session.finish().object.emit(&mut input).unwrap();
-    drop(input);
-
-    let mut stdout = objdump.stdout.take().unwrap();
-    let mut output = String::new();
-    stdout.read_to_string(&mut output).unwrap();
-
-    insta::assert_display_snapshot!(output);
-}
-
-#[test]
-fn simple_add_sub() {
-    use lir::{BinaryOp, Expr, TypedExpr};
-    use ty::{Function, Type};
-    let ty_u8 = Type::Uint(8);
-
-    let add = Expr::Binary(
-        BinaryOp::Add,
-        typed!(Expr::AccessLocal(0), ty_u8),
-        typed!(Expr::AccessLocal(1), ty_u8),
-    );
-    let sub = Expr::Binary(
-        BinaryOp::Sub,
-        typed!(add, ty_u8),
-        typed!(Expr::Literal(10), ty_u8),
-    );
-    let ret = Expr::Return(typed!(sub, Type::Unit));
-    let body = typed!(ret, Type::Never);
-
-    let func = Function {
-        params: &[ty_u8, ty_u8],
-        result: ty_u8,
-    };
-
-    test_compile("simple_add_sub", func, body);
 }

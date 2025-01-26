@@ -1,3 +1,8 @@
+//! Low level intermediate representation
+//!
+//! - local and global variables have been converted to indices
+//! - types only descibe data layout
+
 use super::ty::Type;
 pub use crate::ast::{BinaryOp, UnaryOp};
 
@@ -12,7 +17,6 @@ pub enum Expr<'a> {
     // Value modification
     Unary(UnaryOp, TypedExpr<'a>),
     Binary(BinaryOp, TypedExpr<'a>, TypedExpr<'a>),
-    Call(TypedExpr<'a>, &'a [TypedExpr<'a>]),
 
     // Value access
     AccessLocal(usize),
@@ -21,6 +25,7 @@ pub enum Expr<'a> {
     Subscript(TypedExpr<'a>, TypedExpr<'a>),
 
     // Control flow
+    Call(TypedExpr<'a>, &'a [TypedExpr<'a>]),
     IfElse(
         /// Condition
         TypedExpr<'a>,

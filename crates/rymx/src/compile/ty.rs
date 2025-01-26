@@ -1,9 +1,9 @@
 use std::cmp::Ordering;
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Type<'a> {
     Unit,
-    Unkown,
+    Never,
     Type,
     Uint(u16),
     Int(u16),
@@ -11,23 +11,29 @@ pub enum Type<'a> {
     Slice { element: &'a Type<'a> },
     Enum { variants: &'a [Type<'a>] },
     Aggregate { fields: &'a [Type<'a>] },
-    Function {},
+    Function(&'a Function<'a>),
 }
 
 impl Type<'_> {
     pub fn layout(&self) -> Layout {
         match self {
             Type::Unit => Layout::Empty,
-            Type::Unkown => unreachable!(),
+            Type::Never => Layout::Empty,
             Type::Type => todo!(),
             Type::Uint(bits) | Type::Int(bits) => Layout::Int(layout_int(*bits as usize)),
             Type::Array { element, len } => Layout::Array(layout_array(element, *len)),
             Type::Slice { .. } => Layout::FatPointer(layout_fat_pointer()),
             Type::Enum { variants } => Layout::Enum(layout_enum(variants)),
             Type::Aggregate { fields } => Layout::Aggregate(layout_aggregate(fields)),
-            Type::Function {} => Layout::Pointer(layout_pointer()),
+            Type::Function(_) => Layout::Pointer(layout_pointer()),
         }
     }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub struct Function<'a> {
+    pub params: &'a [Type<'a>],
+    pub result: Type<'a>,
 }
 
 #[derive(Debug, PartialEq, Eq)]

@@ -1,0 +1,73 @@
+---
+source: crates/rymx/src/compile.rs
+expression: output
+---
+
+<stdin>:	file format elf64-littleriscv
+
+Disassembly of section .text:
+
+0000000000000000 <simple_add_sub>:
+       0: 00b5073b     	addw	a4, a0, a1
+       4: ff67051b     	addiw	a0, a4, -0xa
+       8: 00008067     	ret
+
+Disassembly of section .symtab:
+
+0000000000000000 <.symtab>:
+		...
+      18: 0001         	<unknown>
+      1a: 0000         	<unknown>
+      1c: 0004         	<unknown>
+      1e: fff1         	<unknown>
+		...
+      30: 0009         	<unknown>
+      32: 0000         	<unknown>
+      34: 0012         	<unknown>
+      36: 0001         	<unknown>
+		...
+      40: 000c         	<unknown>
+      42: 0000         	<unknown>
+      44: 0000         	<unknown>
+      46: 0000         	<unknown>
+
+Disassembly of section .strtab:
+
+0000000000000000 <.strtab>:
+       0: 7500         	<unknown>
+       2: 6e6e         	<unknown>
+       4: 6d61         	<unknown>
+       6: 6465         	<unknown>
+       8: 7300         	<unknown>
+       a: 6d69         	<unknown>
+       c: 6c70         	<unknown>
+       e: 5f65         	<unknown>
+      10: 6461         	<unknown>
+      12: 5f64         	<unknown>
+      14: 00627573     	csrrci	a0, 0x6, 0x4
+
+Disassembly of section .shstrtab:
+
+0000000000000000 <.shstrtab>:
+       0: 2e00         	<unknown>
+       2: 6574         	<unknown>
+       4: 7478         	<unknown>
+       6: 2e00         	<unknown>
+       8: 6f6e         	<unknown>
+       a: 6574         	<unknown>
+       c: 472e         	<unknown>
+       e: 554e         	<unknown>
+      10: 732d         	<unknown>
+      12: 6174         	<unknown>
+      14: 2e006b63     	bltu	zero, zero, 0x30a <.shstrtab+0x30a>
+      18: 74736873     	csrrsi	a6, mseccfg, 0x6
+      1c: 7472         	<unknown>
+      1e: 6261         	<unknown>
+      20: 2e00         	<unknown>
+      22: 74727473     	csrrci	s0, mseccfg, 0x4
+      26: 6261         	<unknown>
+      28: 2e00         	<unknown>
+      2a: 746d7973     	csrrci	s2, 0x746, 0x1a
+      2e: 6261         	<unknown>
+      30: 00           	<unknown>
+

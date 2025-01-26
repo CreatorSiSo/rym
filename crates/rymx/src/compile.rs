@@ -97,8 +97,6 @@ impl Session {
         };
         trans.translate_expr(body);
 
-        let return_val = trans.builder.block_params(entry_block)[0];
-
         trans.builder.finalize();
     }
 }
@@ -223,33 +221,63 @@ impl Target {
     }
 }
 
+#[cfg(test)]
+macro_rules! typed {
+    ($e:expr, $t:expr) => {
+        TypedExpr(Box::leak(Box::new($e)), $t)
+    };
+}
+
+#[cfg(test)]
+fn test_compile(name: &str, func: ty::Function, body: lir::TypedExpr) {
+    use std::io::Read;
+    use std::process::Stdio;
+
+    let mut session = Session::new(&Target::new("riscv64"));
+    session.compile_function(name, &func, &body);
+    let mut objdump = std::process::Command::new("llvm-objdump")
+        .arg("-D")
+        .arg("-")
+        .stderr(Stdio::inherit())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let mut input = object::write::StreamingBuffer::new(objdump.stdin.unwrap());
+    session.finish().object.emit(&mut input).unwrap();
+    drop(input);
+
+    let mut stdout = objdump.stdout.take().unwrap();
+    let mut output = String::new();
+    stdout.read_to_string(&mut output).unwrap();
+
+    insta::assert_display_snapshot!(output);
+}
+
 #[test]
-fn function() {
+fn simple_add_sub() {
     use lir::{BinaryOp, Expr, TypedExpr};
-    use std::io::Write;
     use ty::{Function, Type};
     let ty_u8 = Type::Uint(8);
 
-    let access_0 = TypedExpr(&Expr::AccessLocal(0), ty_u8);
-    let access_1 = TypedExpr(&Expr::AccessLocal(1), ty_u8);
-    let add = Expr::Binary(BinaryOp::Add, access_0, access_1);
+    let add = Expr::Binary(
+        BinaryOp::Add,
+        typed!(Expr::AccessLocal(0), ty_u8),
+        typed!(Expr::AccessLocal(1), ty_u8),
+    );
     let sub = Expr::Binary(
         BinaryOp::Sub,
-        TypedExpr(&add, ty_u8),
-        TypedExpr(&Expr::Literal(10), ty_u8),
+        typed!(add, ty_u8),
+        typed!(Expr::Literal(10), ty_u8),
     );
-    let ret = Expr::Return(TypedExpr(&sub, Type::Unit));
+    let ret = Expr::Return(typed!(sub, Type::Unit));
+    let body = typed!(ret, Type::Never);
 
     let func = Function {
         params: &[ty_u8, ty_u8],
         result: ty_u8,
     };
-    let body = TypedExpr(&ret, Type::Never);
 
-    let mut session = Session::new(&Target::new("riscv64"));
-    session.compile_function("add", &func, &body);
-    let mut output = Vec::new();
-    session.finish().object.emit(&mut output).unwrap();
-    let mut file = std::fs::File::create("./out.o").unwrap();
-    file.write_all(&output).unwrap();
+    test_compile("simple_add_sub", func, body);
 }

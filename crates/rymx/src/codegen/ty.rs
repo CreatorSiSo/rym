@@ -1,5 +1,7 @@
 use std::cmp::Ordering;
 
+const POINTER_SIZE: usize = size_of::<usize>();
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Type<'a> {
     Unit,
@@ -7,6 +9,7 @@ pub enum Type<'a> {
     Type,
     Uint(u16),
     Int(u16),
+    Mut(&'a Type<'a>),
     Array { element: &'a Type<'a>, len: usize },
     Slice { element: &'a Type<'a> },
     Enum { variants: &'a [Type<'a>] },
@@ -25,7 +28,35 @@ impl Type<'_> {
             Type::Slice { .. } => Layout::FatPointer(layout_fat_pointer()),
             Type::Enum { variants } => Layout::Enum(layout_enum(variants)),
             Type::Aggregate { fields } => Layout::Aggregate(layout_aggregate(fields)),
-            Type::Function(_) => Layout::Pointer(layout_pointer()),
+            Type::Mut(..) | Type::Function(..) => Layout::Pointer(layout_pointer()),
+        }
+    }
+
+    pub fn pointer_offsets(&self) -> Box<[usize]> {
+        fn is_pointer(layout: Layout) -> bool {
+            matches!(layout, Layout::FatPointer(..) | Layout::Pointer(..))
+        }
+        let layout = self.layout();
+
+        match (self, layout) {
+            (_, Layout::Empty) | (_, Layout::Int(..)) => Box::new([]),
+            (_, Layout::Pointer(layout)) => Box::new([layout.pointer_offset]),
+            (_, Layout::FatPointer(layout)) => Box::new([layout.pointer_offset]),
+            (Type::Array { element, len }, Layout::Array(..)) => {
+                if is_pointer(element.layout()) {
+                    Box::from_iter((0..*len).map(|i| i * element.layout().size()))
+                } else {
+                    Box::new([])
+                }
+            }
+            (Type::Enum { .. }, Layout::Enum(_layout)) => todo!(),
+            (Type::Aggregate { fields }, Layout::Aggregate(layout)) => Box::from_iter(
+                fields
+                    .iter()
+                    .zip(layout.offsets.iter())
+                    .filter_map(|(typ, offset)| is_pointer(typ.layout()).then_some(*offset)),
+            ),
+            _ => unreachable!(),
         }
     }
 
@@ -38,6 +69,10 @@ impl Type<'_> {
         match self {
             Type::Type => todo!(),
             Type::Unit | Type::Never | Type::Uint(_) | Type::Int(_) | Type::Function(_) => LEAF,
+
+            Type::Mut(..) => {
+                todo!()
+            }
 
             Type::Array { element, .. } | Type::Slice { element } => {
                 if false {
@@ -133,7 +168,7 @@ fn layout_enum(variants: &[Type]) -> EnumLayout {
     let tag_offset = 0;
     let tag_bits = enum_tag_bits(variants.len());
     let tag_size = pad_to_power_of_two(tag_bits.next_multiple_of(8) / 8);
-    if tag_size > 8 {
+    if tag_size > size_of::<u64>() {
         panic!("Enum tag too large!");
     }
 
@@ -191,20 +226,30 @@ fn layout_aggregate(fields: &[Type]) -> AggregateLayout {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct FatPointerLayout {
+    pub pointer_offset: usize,
+    pub len_offset: usize,
     pub size: usize,
 }
 
 const fn layout_fat_pointer() -> FatPointerLayout {
-    FatPointerLayout { size: 8 + 8 }
+    FatPointerLayout {
+        pointer_offset: 0,
+        len_offset: POINTER_SIZE,
+        size: POINTER_SIZE * 2,
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct PointerLayout {
+    pub pointer_offset: usize,
     pub size: usize,
 }
 
 const fn layout_pointer() -> PointerLayout {
-    PointerLayout { size: 8 }
+    PointerLayout {
+        pointer_offset: 0,
+        size: POINTER_SIZE,
+    }
 }
 
 #[test]

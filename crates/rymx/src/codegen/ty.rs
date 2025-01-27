@@ -28,6 +28,39 @@ impl Type<'_> {
             Type::Function(_) => Layout::Pointer(layout_pointer()),
         }
     }
+
+    /// Id used by the gc to follow pointers based on the data type
+    pub fn gc_id(&self, custom: &mut u32) -> u32 {
+        const LEAF: u32 = 0;
+        const SLICE_OF_POINTERS: u32 = 1;
+        const SLICE_OF_FAT_POINTERS: u32 = 2;
+
+        match self {
+            Type::Type => todo!(),
+            Type::Unit | Type::Never | Type::Uint(_) | Type::Int(_) | Type::Function(_) => LEAF,
+
+            Type::Array { element, .. } | Type::Slice { element } => {
+                if false {
+                    // TODO
+                    SLICE_OF_POINTERS
+                } else if matches!(element, Type::Slice { .. }) {
+                    SLICE_OF_FAT_POINTERS
+                } else {
+                    LEAF
+                }
+            }
+
+            Type::Enum { variants: types } | Type::Aggregate { fields: types } => {
+                let has_gc_child = types.iter().any(|typ| matches!(typ, Type::Slice { .. }));
+                if has_gc_child {
+                    *custom += 1;
+                    *custom
+                } else {
+                    LEAF
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]

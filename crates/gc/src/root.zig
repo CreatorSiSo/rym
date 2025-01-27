@@ -6,13 +6,13 @@ const pointerSize = @sizeOf(usize);
 
 export fn allocLeaf(size: usize) ?[*]u8 {
     const parts = alloc.alloc(size) catch return null;
-    parts.header.typ = .leaf;
+    parts.header.id = .leaf;
     return @ptrCast(parts.data);
 }
 
 export fn allocSliceOfPointers(size: usize) ?[*][*]u8 {
     const parts = alloc.alloc(size) catch return null;
-    parts.header.typ = .slice_of_pointers;
+    parts.header.id = .slice_of_pointers;
     return @ptrCast(@alignCast(parts.data));
 }
 
@@ -23,7 +23,7 @@ export fn allocSliceOfFatPointers(_: usize) ?[*][*]u8 {
 
 export fn allocCustom(size: usize, typ: u32) ?[*]u8 {
     const parts = alloc.alloc(size) catch return null;
-    parts.header.typ = @enumFromInt(typ);
+    parts.header.id = @enumFromInt(typ);
     return @ptrCast(parts.data);
 }
 
@@ -43,7 +43,7 @@ export fn mark(header: *Header, data: [*]u8) void {
         return;
     }
 
-    switch (header.typ) {
+    switch (header.id) {
         .leaf => return,
         .slice_of_pointers => {
             const slice: [*][*]u8 = @ptrCast(@alignCast(data));

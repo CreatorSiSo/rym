@@ -6,6 +6,8 @@ mod ty;
 use codegen::settings::Flags;
 use cranelift::codegen;
 use cranelift::prelude::{isa, *};
+use cranelift_codegen::entity::ListPool;
+use cranelift_codegen::ir::BlockCall;
 use cranelift_module::{DataDescription, Linkage, Module};
 use cranelift_object::{ObjectBuilder, ObjectModule, ObjectProduct};
 use lir::TypedExpr;
@@ -213,6 +215,66 @@ impl FunctionTranslator<'_> {
     }
 }
 
+pub fn generate_mark_custom<'a>(
+    target: &Target,
+    types: impl Iterator<Item = (u32, &'a ty::Type<'a>)>,
+) -> ObjectModule {
+    let Session {
+        mut builder_context,
+        mut context,
+        mut module,
+        ..
+    } = Session::new(target);
+
+    let ty_ptr = module.target_config().pointer_type();
+    let params = [
+        ty_ptr, // header pointer
+        ty_ptr, // data pointer
+    ];
+
+    let signature = &mut context.func.signature;
+    for typ in params {
+        signature.params.push(AbiParam::new(typ));
+    }
+
+    let mut builder = FunctionBuilder::new(&mut context.func, &mut builder_context);
+
+    let entry_block = builder.create_block();
+    builder.append_block_params_for_function_params(entry_block);
+    builder.switch_to_block(entry_block);
+    builder.seal_block(entry_block);
+
+    for (i, typ) in params.into_iter().enumerate() {
+        let val = builder.block_params(entry_block)[i];
+        let var = Variable::new(i);
+        builder.declare_var(var, typ);
+        builder.def_var(var, val);
+    }
+
+    let default = builder.create_block();
+    builder.switch_to_block(default);
+    builder.seal_block(default);
+    builder.ins().trap(TrapCode::User(123));
+    let default = builder.func.dfg.block_call(default, &[]);
+
+    // for (typ_id, typ) in types {
+    //     // TODO Generate body
+    // }
+
+    builder.create_jump_table(JumpTableData::new(default, &[]));
+
+    // builder.ins().return_(&[]);
+
+    builder.finalize();
+
+    let id = module
+        .declare_function("mark_custom", Linkage::Export, &context.func.signature)
+        .unwrap();
+    module.define_function(id, &mut context).unwrap();
+
+    module
+}
+
 enum AbiRepr {
     Single(Type),
     Pointer,
@@ -233,7 +295,7 @@ fn abi_repr(typ: &ty::Type) -> AbiRepr {
     }
 }
 
-struct Target {
+pub struct Target {
     isa: Arc<dyn isa::TargetIsa>,
 }
 

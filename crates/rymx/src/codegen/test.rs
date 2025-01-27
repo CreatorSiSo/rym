@@ -1,10 +1,10 @@
 #![cfg(test)]
 
-use super::{lir, ty, Session, Target};
+use super::{generate_mark_custom, lir, ty, Session, Target};
 use lir::{BinaryOp, Expr, TypedExpr};
 use ty::{Function, Type};
 
-use cranelift_object::object::write::StreamingBuffer;
+use cranelift_object::object::write::{Object, StreamingBuffer};
 use std::io::Read;
 use std::process::{Command, Stdio};
 
@@ -14,9 +14,7 @@ macro_rules! typed {
     };
 }
 
-fn test_compile(name: &str, func: ty::Function, body: lir::TypedExpr) {
-    let mut session = Session::new(&Target::new("riscv64"));
-    session.compile_function(name, &func, &body);
+fn assert_objdump(name: &str, object: Object<'static>) {
     let mut objdump = Command::new("llvm-objdump")
         .arg("-D")
         .arg("-")
@@ -27,7 +25,7 @@ fn test_compile(name: &str, func: ty::Function, body: lir::TypedExpr) {
         .unwrap();
 
     let mut input = StreamingBuffer::new(objdump.stdin.unwrap());
-    session.finish().object.emit(&mut input).unwrap();
+    object.emit(&mut input).unwrap();
     drop(input);
 
     let mut stdout = objdump.stdout.take().unwrap();
@@ -35,6 +33,23 @@ fn test_compile(name: &str, func: ty::Function, body: lir::TypedExpr) {
     stdout.read_to_string(&mut output).unwrap();
 
     insta::assert_snapshot!(name, output);
+}
+
+fn test_compile(name: &str, func: ty::Function, body: lir::TypedExpr) {
+    let mut session = Session::new(&Target::new("riscv64"));
+    session.compile_function(name, &func, &body);
+
+    assert_objdump(name, session.finish().object);
+}
+
+#[test]
+fn mark_custom() {
+    let mut custom = 3;
+    let module = generate_mark_custom(
+        &Target::new("riscv64"),
+        [Type::Unit].iter().map(|typ| (typ.gc_id(&mut custom), typ)),
+    );
+    assert_objdump("mark_custom", module.finish().object);
 }
 
 #[test]

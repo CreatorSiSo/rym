@@ -26,16 +26,6 @@ export fn allocCustom(size: usize, typ: u32) ?[*]u8 {
     return header.data().ptr;
 }
 
-export fn collectGarbage() void {
-    for (alloc.roots.items) |root| {
-        const header = followDataPointer(root);
-        mark(header);
-        header.marked = true;
-    }
-
-    sweep();
-}
-
 export fn addRoot(pointer: [*]u8) void {
     alloc.roots.append(pointer) catch @panic("Memory allocation error!");
 }
@@ -49,10 +39,20 @@ export fn removeRoot(pointer: [*]u8) void {
     }
 }
 
+export fn collectGarbage() void {
+    for (alloc.roots.items) |root| {
+        const header = followDataPointer(root);
+        mark(header);
+    }
+
+    sweep();
+}
+
 export fn mark(header: *Header) void {
     if (header.marked) {
         return;
     }
+    header.marked = true;
 
     switch (header.typ) {
         .leaf => return,
@@ -66,7 +66,6 @@ export fn mark(header: *Header) void {
                 // std.debug.print("child: {}\n", .{child});
 
                 mark(child);
-                child.marked = true;
             }
         },
         // else => mark_custom(header, @ptrCast(data)),

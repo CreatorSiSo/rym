@@ -1,13 +1,10 @@
 mod lir;
-mod symbol;
 mod test;
 mod ty;
 
 use codegen::settings::Flags;
 use cranelift::codegen;
 use cranelift::prelude::{isa, *};
-use cranelift_codegen::entity::ListPool;
-use cranelift_codegen::ir::BlockCall;
 use cranelift_module::{DataDescription, Linkage, Module};
 use cranelift_object::{ObjectBuilder, ObjectModule, ObjectProduct};
 use lir::TypedExpr;

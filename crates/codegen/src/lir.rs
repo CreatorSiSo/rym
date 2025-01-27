@@ -3,8 +3,8 @@
 //! - local and global variables have been converted to indices
 //! - types only descibe data layout
 
-use super::ty::Type;
-pub use crate::ast::{BinaryOp, UnaryOp};
+use crate::ty::Type;
+pub use ast::{BinaryOp, UnaryOp};
 
 pub struct TypedExpr<'a>(pub &'a Expr<'a>, pub Type<'a>);
 

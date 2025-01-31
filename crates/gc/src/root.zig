@@ -3,27 +3,19 @@ const alloc = @import("alloc.zig");
 const Header = alloc.Header;
 const pointerSize = @sizeOf(usize);
 
-export fn allocLeaf(size: usize) ?[*]u8 {
+export fn allocLayout(size: usize, typ: alloc.ObjType, maskOrPointer: usize) ?[*]u8 {
     const header = alloc.alloc(size) catch return null;
-    header.typ = .leaf;
+    header.typ = typ;
+    header.maskOrPointer = maskOrPointer;
     return header.data().ptr;
 }
 
 export fn allocSliceOfPointers(size: usize) ?[*][*]u8 {
-    const header = alloc.alloc(size) catch return null;
-    header.typ = .slice_of_pointers;
-    return @ptrCast(@alignCast(header.data()));
+    return @ptrCast(@alignCast(allocLayout(size, .slice_of_pointers, 0)));
 }
 
-export fn allocSliceOfFatPointers(_: usize) ?[*][*]u8 {
-    // TODO
-    return null;
-}
-
-export fn allocCustom(size: usize, typ: u32) ?[*]u8 {
-    const header = alloc.alloc(size) catch return null;
-    header.typ = @enumFromInt(typ);
-    return header.data().ptr;
+export fn allocSliceOfFatPointers(size: usize) ?[*][*]u8 {
+    return @ptrCast(@alignCast(allocLayout(size, .slice_of_fat_pointers, 0)));
 }
 
 export fn addRoot(pointer: [*]u8) void {
@@ -41,9 +33,12 @@ export fn removeRoot(pointer: [*]u8) void {
 
 export fn collectGarbage() void {
     for (alloc.roots.items) |root| {
-        const header = followDataPointer(root);
-        mark(header);
+        if (followDataPointer(root)) |header| {
+            mark(header);
+        }
     }
+
+    std.debug.print("{}", .{alloc.objects});
 
     sweep();
 }
@@ -62,10 +57,9 @@ export fn mark(header: *Header) void {
             const len = header.len / pointerSize;
             for (0..len) |i| {
                 const pointer = slice[i];
-                const child = followDataPointer(pointer);
-                // std.debug.print("child: {}\n", .{child});
-
-                mark(child);
+                if (followDataPointer(pointer)) |child| {
+                    mark(child);
+                }
             }
         },
         // else => mark_custom(header, @ptrCast(data)),
@@ -77,63 +71,65 @@ export fn mark(header: *Header) void {
 extern fn markCustom(header: *Header) void;
 
 fn sweep() void {
-    outer: while (true) {
-        for (alloc.objects.items, 0..) |header, i| {
-            if (!header.marked) {
-                alloc.free(header);
-                _ = alloc.objects.swapRemove(i);
-                continue :outer;
+    var prev: ?*Header = null;
+    var maybeNext = alloc.objects.next;
+    var i: usize = 0;
+    while (maybeNext) |next| {
+        i += 1;
+        const nextNext = next.next;
+
+        if (next.marked) {
+            next.marked = false;
+            prev = next;
+        } else {
+            if (prev) |actualPrev| {
+                actualPrev.next = next.next;
+            } else {
+                // First node deleted
+                alloc.objects.next = next.next;
             }
+            alloc.free(next);
         }
-
-        break :outer;
-    }
-
-    for (alloc.objects.items) |header| {
-        header.marked = false;
+        maybeNext = nextNext;
     }
 }
 
 // Gets the corresponding header of a pointer pointing into the data section of an object
-fn followDataPointer(pointer: [*]u8) *Header {
-    for (alloc.objects.items) |header| {
-        const data = header.data();
+fn followDataPointer(pointer: [*]u8) ?*Header {
+    const pointerInt = @intFromPtr(pointer);
+    var maybeNext = alloc.objects.next;
+
+    while (maybeNext) |next| {
+        const data = next.data();
         const dataStart = @intFromPtr(data.ptr);
         const dataEnd = dataStart + data.len;
-        const pointerInt = @intFromPtr(pointer);
-        if (dataStart >= pointerInt and pointerInt <= dataEnd) {
-            return header;
+        if ((dataStart <= pointerInt) and (pointerInt <= dataEnd)) {
+            return next;
         }
+        maybeNext = next.next;
     }
-    @panic("Corrupted pointers");
-}
 
-fn debugAllocations() void {
-    std.debug.print("--- Debug\n", .{});
-
-    for (alloc.objects.items) |header| {
-        std.debug.print("{}\n", .{header});
-    }
+    return null;
 }
 
 test "alloc and collect slice of pointers" {
-    const leaf0 = allocLeaf(4) orelse return;
-    const leaf1 = allocLeaf(16) orelse return;
+    const leaf0 = allocLayout(4, .leaf, 0) orelse return;
+    const leaf1 = allocLayout(16, .leaf, 0) orelse return;
     const slice = allocSliceOfPointers(pointerSize * 2) orelse return;
 
     slice[0] = leaf0;
     slice[1] = leaf1;
 
     addRoot(@ptrCast(slice));
-    debugAllocations();
+    std.debug.print("{}", .{alloc.objects});
 
     collectGarbage();
-    debugAllocations();
+    std.debug.print("{}", .{alloc.objects});
 
     removeRoot(@ptrCast(slice));
     collectGarbage();
-    debugAllocations();
+    std.debug.print("{}", .{alloc.objects});
 
     try std.testing.expectEqual(alloc.roots.items.len, 0);
-    try std.testing.expectEqual(alloc.objects.items.len, 0);
+    try std.testing.expectEqual(alloc.objects.len, 0);
 }

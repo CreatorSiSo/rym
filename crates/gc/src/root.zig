@@ -2,6 +2,7 @@ const std = @import("std");
 const alloc = @import("alloc.zig");
 const Header = alloc.Header;
 const pointerSize = @sizeOf(usize);
+var roots = std.ArrayList([*]u8).init(alloc.allocator);
 
 export fn allocLayout(size: usize, typ: alloc.ObjType, maskOrPointer: usize) ?[*]u8 {
     const header = alloc.alloc(size) catch return null;
@@ -19,26 +20,24 @@ export fn allocSliceOfFatPointers(size: usize) ?[*][*]u8 {
 }
 
 export fn addRoot(pointer: [*]u8) void {
-    alloc.roots.append(pointer) catch @panic("Memory allocation error!");
+    roots.append(pointer) catch @panic("Memory allocation error!");
 }
 
 export fn removeRoot(pointer: [*]u8) void {
-    for (alloc.roots.items, 0..) |root, i| {
+    for (roots.items, 0..) |root, i| {
         if (root == pointer) {
-            _ = alloc.roots.swapRemove(i);
+            _ = roots.swapRemove(i);
             return;
         }
     }
 }
 
 export fn collectGarbage() void {
-    for (alloc.roots.items) |root| {
+    for (roots.items) |root| {
         if (followDataPointer(root)) |header| {
             mark(header);
         }
     }
-
-    std.debug.print("{}", .{alloc.objects});
 
     sweep();
 }
@@ -126,10 +125,13 @@ test "alloc and collect slice of pointers" {
     collectGarbage();
     std.debug.print("{}", .{alloc.objects});
 
+    try std.testing.expectEqual(roots.items.len, 1);
+    try std.testing.expectEqual(alloc.objects.len(), 3);
+
     removeRoot(@ptrCast(slice));
     collectGarbage();
     std.debug.print("{}", .{alloc.objects});
 
-    try std.testing.expectEqual(alloc.roots.items.len, 0);
-    try std.testing.expectEqual(alloc.objects.len, 0);
+    try std.testing.expectEqual(roots.items.len, 0);
+    try std.testing.expectEqual(alloc.objects.len(), 0);
 }

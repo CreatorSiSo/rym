@@ -2,20 +2,28 @@ const std = @import("std");
 const AllocError = std.mem.Allocator.Error;
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-const allocator = gpa.allocator();
-pub var roots = std.ArrayList([*]u8).init(allocator);
+pub const allocator = gpa.allocator();
 
 const Objects = struct {
     next: ?*Header,
-    len: usize,
 
     fn init() Objects {
-        return .{ .next = null, .len = 0 };
+        return .{ .next = null };
     }
 
     pub fn push(self: *Objects, object: *Header) void {
         object.next = self.next;
         self.next = object;
+    }
+
+    pub fn len(self: *const Objects) usize {
+        var maybeNext = self.next;
+        var result: usize = 0;
+        while (maybeNext) |next| {
+            result += 1;
+            maybeNext = next.next;
+        }
+        return result;
     }
 
     pub fn format(self: *const Objects, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {

@@ -64,7 +64,8 @@ pub const Header = struct {
     len: usize,
     marked: bool,
     typ: ObjType,
-    maskOrPointer: usize,
+    maskLen: u16,
+    maskOrPointer: u48,
 
     pub fn fromAllocation(allocation: Allocation) *Header {
         return std.mem.bytesAsValue(Header, allocation);

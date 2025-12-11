@@ -2,24 +2,20 @@ use itertools::Itertools;
 use std::fmt::{Debug, Display};
 
 #[derive(Debug, Clone)]
-pub struct Module<'a> {
+pub struct Module {
     pub name: String,
-    pub constants: &'a [(String, Type, Expr<'a>)],
-    pub types: Vec<(String, Type)>,
-    pub sub_modules: Vec<Module<'a>>,
+    pub sub_modules: Vec<Module>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Stmt<'a> {
     Expr(Expr<'a>),
     Function(Function<'a>),
-    Type(String, Type),
     Variable(VariableKind, String, Type, Expr<'a>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VariableKind {
-    Const,
     Let,
     LetMut,
 }
@@ -27,7 +23,6 @@ pub enum VariableKind {
 impl Display for VariableKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
-            VariableKind::Const => "const",
             VariableKind::Let => "let",
             VariableKind::LetMut => "let mut",
         })
@@ -115,39 +110,47 @@ impl std::fmt::Debug for Expr<'_> {
 
 #[derive(Debug, Clone)]
 pub struct Function<'a> {
-    pub params: &'a [(String, Type)],
-    pub named_params: &'a [(String, Type, Expr<'a>)],
+    pub params: &'a [FunctionParam<'a>],
     pub return_type: Type,
     pub body: &'a Expr<'a>,
 }
 
 impl PartialEq for Function<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.params
-            .iter()
-            .zip(other.params.iter())
-            .all(|((_, typ0), (_, typ1))| typ0 == typ1)
-            && self.named_params == other.named_params
-            && self.return_type == other.return_type
-            && self.body == other.body
+        self.params == other.params && self.return_type == other.return_type
     }
 }
 
 impl Display for Function<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
-            "fn({}) {}",
-            self.params
-                .iter()
-                .map(|(_, typ)| format!("{typ}"))
-                .chain(
-                    self.named_params
-                        .iter()
-                        .map(|(name, typ, expr)| format!("{name}: {typ} = {expr:?}"))
-                )
-                .join(", "),
+            "({}) -> {}",
+            self.params.iter().map(FunctionParam::to_string).join(", "),
             self.return_type
         ))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionParam<'a> {
+    name: String,
+    typ: Type,
+    default_value: Option<Expr<'a>>,
+}
+
+impl PartialEq for FunctionParam<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.typ == other.typ
+    }
+}
+
+impl Display for FunctionParam<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(param) = &self.default_value {
+            write!(f, "{}: {} = {param:?}", self.name, self.typ)
+        } else {
+            write!(f, "{}: {}", self.name, self.typ)
+        }
     }
 }
 
@@ -158,17 +161,13 @@ pub enum Type {
     Unkown,
     Never,
     Literal(Literal),
-    Path(Path),
-    Generic(Box<Type>, Vec<Type>),
     Function {
         args: Vec<Type>,
-        named_args: Vec<(String, Type, Literal)>,
+        named_args: Vec<(String, Type)>,
         return_type: Box<Type>,
     },
     Array(ArraySize, Box<Type>),
-    Struct(Vec<(String, Type, Option<Literal>)>),
-    Enum(Vec<(String, Option<Type>)>),
-    Union(Vec<Type>),
+    Struct(Vec<(String, Type)>),
 }
 
 impl Display for Type {
@@ -178,8 +177,6 @@ impl Display for Type {
             Type::Unkown => write!(f, "<unknown>"),
             Type::Never => write!(f, "<never>"),
             Type::Literal(lit) => write!(f, "{lit}"),
-            Type::Path(path) => write!(f, "{path}"),
-            Type::Generic(typ, args) => write!(f, "{typ}[{}]", args.iter().join(", ")),
             Type::Function {
                 args,
                 named_args,
@@ -192,7 +189,7 @@ impl Display for Type {
                     .chain(
                         named_args
                             .iter()
-                            .map(|(name, typ, val)| format!("{name}: {typ} = {val}"))
+                            .map(|(name, typ)| format!("{name}: {typ}"))
                     )
                     .join(", "),
             ),
@@ -203,30 +200,9 @@ impl Display for Type {
                 if fields.is_empty() { "" } else { " " },
                 fields
                     .iter()
-                    .map(|(name, typ, maybe_val)| format!(
-                        "{name}: {typ}{}",
-                        maybe_val
-                            .as_ref()
-                            .map(|val| " = ".to_string() + &val.to_string())
-                            .unwrap_or("".into())
-                    ))
+                    .map(|(name, typ)| format!("{name}: {typ}",))
                     .join(", ")
             ),
-            Type::Enum(variants) => write!(
-                f,
-                "enum {}",
-                variants
-                    .iter()
-                    .map(|(name, maybe_typ)| format!(
-                        "{name}{}",
-                        maybe_typ
-                            .as_ref()
-                            .map(|typ| " ".to_string() + &typ.to_string())
-                            .unwrap_or("".to_string())
-                    ))
-                    .join(" | ")
-            ),
-            Type::Union(types) => write!(f, "union {}", types.iter().join(" | ")),
         }
     }
 }
@@ -234,7 +210,6 @@ impl Display for Type {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ArraySize {
     Unknown,
-    Path(Path),
     Int(u64),
 }
 
@@ -242,7 +217,6 @@ impl Display for ArraySize {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ArraySize::Unknown => write!(f, ""),
-            ArraySize::Path(path) => write!(f, "{path}"),
             ArraySize::Int(int) => write!(f, "{int}"),
         }
     }

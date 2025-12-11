@@ -29,19 +29,23 @@ which inspired me to start and continue working on this language.
 ## Examples
 
 ```rust
-fn main() ~Io {
-    for i in 0..=100:
+fn main() {
+    for i in 0..=100 {
         println(game(i));
+    }
 }
 
-fn game(x: Uint) String => {
-    const rule = fn(acc, num, word) =>
-        if (x mod num) == 0 then acc ++ word else acc;
+fn game(x: UInt) -> String {
+    let rule = { acc, num, word ->
+        if ((x % num) == 0) acc ++ word else acc
+    };
 
-    const default_rule = fn(acc) =>
-        if acc == "" then acc else x.to_string();
+    let default_rule = { acc ->
+        if (acc == "") acc else x.to_string()
+    };
 
-    "".rule(3, "Fizz")
+    String.new()
+      .rule(3, "Fizz")
       .rule(5, "Buzz")
       .rule(7, "Splash")
       .default_rule()
@@ -49,28 +53,29 @@ fn game(x: Uint) String => {
 ```
 
 ```rust
-fn main() ~Io, Result[(), Error] {
+fn main() -> Result<(), Error> {
     let msg = "Hello World";
     println(msg);
 
-    let mut num = 2/4 * (10 - 1);
-    println("Number:", num);
+    let num = 2/4 * (10 - 1);
+    println("Number: $num");
 
     const msg = msg + "!";
-    println("Combined:", msg, num);
+    println("Combined: $msg $num");
 }
 ```
 
 Early returns when unwrapping `Tryable`s
 
 ```rust
-fn main() Result[String, SpecificError] {
+fn main() -> Result<String, SpecificError> {
     let chained = maybe_error().try;
 
     // Same as:
-    let expanded = match maybe_error():
-        | Ok(val) => Ok(val.to_string()),
-        \ err => return err;
+    let expanded = match maybe_error() {
+        Ok(val) => Ok(val.to_string()),
+        err => return err,
+    }
 
     // ...
 
@@ -83,11 +88,12 @@ fn main() Result[String, SpecificError] {
 const chained = maybe_error()&.to_string()
 
 // Short form of:
-const chained = match maybe_error():
-    | Ok(val) => Ok(val.to_string()),
-    \ err => err;
+const chained = match maybe_error() {
+    Ok(val) => Ok(val.to_string()),
+    err => err,
+}
 // or:
-const chained = maybe_error().and_then(fn(val) Ok(val.to_string()))
+const chained = maybe_error().and_then({ Ok(val.to_string()) })
 ```
 -->
 

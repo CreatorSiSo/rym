@@ -8,10 +8,10 @@ pub struct Module {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Stmt<'a> {
-    Expr(Expr<'a>),
-    Function(Function<'a>),
-    Variable(VariableKind, String, Type, Expr<'a>),
+pub enum Stmt {
+    Expr(Expr),
+    Function(Function),
+    Variable(VariableKind, String, Type, Expr),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,44 +30,49 @@ impl Display for VariableKind {
 }
 
 #[derive(Clone, PartialEq)]
-pub enum Expr<'a> {
+pub enum Expr {
+    Error,
+    Unit,
+
     // Value creation
     Literal(Literal),
-    Array(&'a [Expr<'a>]),
-    ArrayWithRepeat(&'a Expr<'a>, &'a Expr<'a>),
-    Tuple(&'a [Expr<'a>]),
-    Struct(Path, &'a [(String, Expr<'a>)]),
-    Function(Function<'a>),
+    Array(Vec<Expr>),
+    ArrayWithRepeat(Box<Expr>, Box<Expr>),
+    Tuple(Vec<Expr>),
+    Struct(Path, Vec<(String, Expr)>),
+    Function(Function),
 
     // Value modification
-    Unary(UnaryOp, &'a Expr<'a>),
-    Binary(BinaryOp, &'a Expr<'a>, &'a Expr<'a>),
-    Call(&'a Expr<'a>, &'a [Expr<'a>]),
+    Unary(UnaryOp, Box<Expr>),
+    Binary(BinaryOp, Box<Expr>, Box<Expr>),
+    Call(Box<Expr>, Vec<Expr>),
 
     // Value access
     Ident(String),
-    Subscript(&'a Expr<'a>, &'a Expr<'a>),
-    FieldAccess(&'a Expr<'a>, String),
+    Subscript(Box<Expr>, Box<Expr>),
+    FieldAccess(Box<Expr>, String),
 
     // Control flow
     IfElse(
         /// Condition
-        &'a Expr<'a>,
+        Box<Expr>,
         /// Then branch
-        &'a Expr<'a>,
+        Box<Expr>,
         /// Else branch
-        &'a Expr<'a>,
+        Box<Expr>,
     ),
-    Block(Vec<Stmt<'a>>),
-    Break(&'a Expr<'a>),
-    Return(&'a Expr<'a>),
+    Block(Vec<Stmt>),
+    Break(Box<Expr>),
+    Return(Box<Expr>),
 }
 
-impl std::fmt::Debug for Expr<'_> {
+impl std::fmt::Debug for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Literal(arg0) => f.write_fmt(format_args!("Literal({arg0:?})")),
-            Self::Array(arg0) => f.write_fmt(format_args!("Array({arg0:?})")),
+            Self::Error => write!(f, "Error"),
+            Self::Unit => write!(f, "Unit"),
+            Self::Literal(arg0) => write!(f, "Literal({arg0:?})"),
+            Self::Array(arg0) => write!(f, "Array({arg0:?})"),
             Self::ArrayWithRepeat(arg0, arg1) => f
                 .debug_tuple("ArrayWithRepeat")
                 .field(arg0)
@@ -75,7 +80,7 @@ impl std::fmt::Debug for Expr<'_> {
                 .finish(),
             Self::Tuple(arg0) => f.debug_tuple("Tuple").field(arg0).finish(),
             Self::Struct(arg0, arg1) => f.debug_tuple("Struct").field(arg0).field(arg1).finish(),
-            Self::Function(arg0) => f.write_fmt(format_args!("{arg0:#?}")),
+            Self::Function(arg0) => write!(f, "{arg0:#?}"),
 
             Self::Unary(arg0, arg1) => f.debug_tuple(&arg0.to_string()).field(arg1).finish(),
             Self::Binary(arg0, arg1, arg2) => f
@@ -109,19 +114,20 @@ impl std::fmt::Debug for Expr<'_> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Function<'a> {
-    pub params: &'a [FunctionParam<'a>],
+pub struct Function {
+    pub name: Option<String>,
+    pub params: Vec<FunctionParam>,
     pub return_type: Type,
-    pub body: &'a Expr<'a>,
+    pub body: Box<Expr>,
 }
 
-impl PartialEq for Function<'_> {
+impl PartialEq for Function {
     fn eq(&self, other: &Self) -> bool {
         self.params == other.params && self.return_type == other.return_type
     }
 }
 
-impl Display for Function<'_> {
+impl Display for Function {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
             "({}) -> {}",
@@ -132,19 +138,19 @@ impl Display for Function<'_> {
 }
 
 #[derive(Debug, Clone)]
-pub struct FunctionParam<'a> {
-    name: String,
-    typ: Type,
-    default_value: Option<Expr<'a>>,
+pub struct FunctionParam {
+    pub name: String,
+    pub typ: Type,
+    pub default_value: Option<Expr>,
 }
 
-impl PartialEq for FunctionParam<'_> {
+impl PartialEq for FunctionParam {
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name && self.typ == other.typ
     }
 }
 
-impl Display for FunctionParam<'_> {
+impl Display for FunctionParam {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(param) = &self.default_value {
             write!(f, "{}: {} = {param:?}", self.name, self.typ)
@@ -160,13 +166,18 @@ pub enum Type {
     Unit,
     Unkown,
     Never,
-    Literal(Literal),
+    Int,
+    Float,
+    String,
     Function {
         args: Vec<Type>,
         named_args: Vec<(String, Type)>,
         return_type: Box<Type>,
     },
-    Array(ArraySize, Box<Type>),
+    Array {
+        len: Option<u64>,
+        element: Box<Type>,
+    },
     Struct(Vec<(String, Type)>),
 }
 
@@ -175,8 +186,10 @@ impl Display for Type {
         match self {
             Type::Unit => write!(f, "()"),
             Type::Unkown => write!(f, "<unknown>"),
-            Type::Never => write!(f, "<never>"),
-            Type::Literal(lit) => write!(f, "{lit}"),
+            Type::Never => write!(f, "!"),
+            Type::Int => write!(f, "Int"),
+            Type::Float => write!(f, "Float"),
+            Type::String => write!(f, "String"),
             Type::Function {
                 args,
                 named_args,
@@ -193,7 +206,11 @@ impl Display for Type {
                     )
                     .join(", "),
             ),
-            Type::Array(size, typ) => write!(f, "[{size}]{typ}",),
+            Type::Array {
+                len: Some(len),
+                element,
+            } => write!(f, "[{len}]{element}",),
+            Type::Array { len: None, element } => write!(f, "[]{element}",),
             Type::Struct(fields) => write!(
                 f,
                 "struct {{{0}{1}{0}}}",
@@ -259,6 +276,9 @@ pub enum BinaryOp {
     GreaterThan,
     /// Less than or equal `1 >= 2`
     GreaterThanEq,
+
+    // Assignment `tmp = 0`
+    Assign,
 }
 
 impl Display for BinaryOp {
@@ -292,7 +312,6 @@ impl Path {
 
 #[derive(Clone, PartialEq)]
 pub enum Literal {
-    Bool(bool),
     Int(i64),
     Float(f64),
     String(String),
@@ -301,7 +320,6 @@ pub enum Literal {
 impl std::fmt::Debug for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Bool(arg0) => f.write_fmt(format_args!("Bool: {arg0}")),
             Self::Int(arg0) => f.write_fmt(format_args!("Int: {arg0}")),
             Self::Float(arg0) => f.write_fmt(format_args!("Float: {arg0}")),
             Self::String(arg0) => f.write_fmt(format_args!("String: {arg0:?}")),
@@ -312,7 +330,6 @@ impl std::fmt::Debug for Literal {
 impl std::fmt::Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&match self {
-            Literal::Bool(inner) => inner.to_string(),
             Literal::Int(inner) => inner.to_string(),
             Literal::Float(inner) => inner.to_string(),
             Literal::String(inner) => inner.to_string(),

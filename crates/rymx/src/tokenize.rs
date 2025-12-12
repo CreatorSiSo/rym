@@ -137,6 +137,8 @@ pub enum Token {
     Dot,
     #[token("..")]
     DotDot,
+    #[token("!")]
+    Exclamation,
     #[token("+")]
     Plus,
     #[token("|")]

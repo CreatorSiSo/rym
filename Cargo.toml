@@ -1,14 +1,13 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
-members = ["crates/interpolate", "crates/ast", "crates/codegen", "crates/rymx"]
+members = ["crates/ast", "crates/rymx"]
 resolver = "2"
+edition = "2024"
 
 [workspace.dependencies]
-# smol_str = "0.2"
 stringx = "0.1"
 thiserror = "1"
-codegen = { path = "crates/codegen" }
 ast = { path = "crates/ast" }
 
 # TODO is this really the fastest and smallest profile?

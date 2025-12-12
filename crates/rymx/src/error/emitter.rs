@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::io;
-use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::mpsc;
 
 // pub trait Emitter {
 //     fn emit_diagnostic(&mut self, diagnostic: &Diagnostic);
@@ -16,12 +16,12 @@ use std::sync::mpsc::{self, Receiver, Sender};
 
 pub struct AriadneEmitter<W: io::Write> {
     pub source_map: SourceMap,
-    receiver: Receiver<Diagnostic>,
+    receiver: mpsc::Receiver<Diagnostic>,
     out: RefCell<W>,
 }
 
 impl<W: io::Write> AriadneEmitter<W> {
-    pub fn new(out: W) -> (Sender<Diagnostic>, Self) {
+    pub fn new(out: W) -> (mpsc::Sender<Diagnostic>, Self) {
         let (sender, receiver) = mpsc::channel();
         let emitter = Self {
             out: RefCell::new(out),
@@ -185,7 +185,7 @@ impl SourceMap {
     }
 
     pub fn replace(&mut self, id: SourceId, src: impl Into<Source>) {
-        let Some((_, ref mut source)) = self.map.get_mut(&id) else {
+        let Some((_, source)) = self.map.get_mut(&id) else {
             panic!("Internal Error: SourceId '{:?}' does not exist", id)
         };
         *source = src.into();

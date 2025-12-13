@@ -4,6 +4,7 @@ mod parse;
 mod span;
 pub mod std_lib;
 mod tokenize;
+mod typecheck;
 
 pub use error::AriadneEmitter;
 pub use interpret::Env;
@@ -14,6 +15,8 @@ use error::{Diagnostic, Level, SourceId};
 use interpret::{Interpret, Value};
 use span::Span;
 use tokenize::Token;
+
+use crate::typecheck::typecheck_function;
 
 pub fn interpret(env: &mut Env, ast: impl Interpret) -> Option<Value> {
     // let env_state: String = env
@@ -49,24 +52,42 @@ pub fn compile_module(
     let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src, src_id);
 
     let module = parse::parse_file(&tokens, src, src_id);
+
     // for diagnostic in diagnostics {
     //     emitter.send(diagnostic).unwrap();
     // }
     // Diagnostic::new(Level::Debug, "Finished parsing")
     //     .with_child(vec![], Level::Debug, format!("{module:#?}\n"))
     //     .emit(emitter);
+    println!("{:?}\n", &module);
+
+    let mut ctx = typecheck::Context {
+        symbol_table: typecheck::SymbolTable::new(),
+    };
+    for func in &module {
+        ctx.symbol_table.insert(
+            func.name.clone().unwrap(),
+            ast::Type::Function {
+                params: func
+                    .params
+                    .iter()
+                    .map(|param| (param.name.clone(), param.typ.clone()))
+                    .collect(),
+                result: Box::new(func.return_type.clone()),
+            },
+        );
+    }
+
+    for func in module {
+        typecheck_function(&mut ctx, &func);
+    }
 
     // TODO Name resolution
     // TODO Typechecking
     // TODO Const evaluation
     // TODO Generate intermediate representation
 
-    println!("{:?}", module);
-
-    Some(ast::Module {
-        name: todo!(),
-        sub_modules: todo!(),
-    })
+    None
 }
 
 // pub fn compile_stmt(

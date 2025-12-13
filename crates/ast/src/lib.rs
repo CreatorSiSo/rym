@@ -166,13 +166,13 @@ pub enum Type {
     Unit,
     Unkown,
     Never,
+    Bool,
     Int,
     Float,
     String,
     Function {
-        args: Vec<Type>,
-        named_args: Vec<(String, Type)>,
-        return_type: Box<Type>,
+        params: Vec<(String, Type)>,
+        result: Box<Type>,
     },
     Array {
         len: Option<u64>,
@@ -184,26 +184,19 @@ pub enum Type {
 impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Type::Unit => write!(f, "()"),
+            Type::Unit => write!(f, "Unit"),
             Type::Unkown => write!(f, "<unknown>"),
             Type::Never => write!(f, "!"),
+            Type::Bool => write!(f, "Bool"),
             Type::Int => write!(f, "Int"),
             Type::Float => write!(f, "Float"),
             Type::String => write!(f, "String"),
-            Type::Function {
-                args,
-                named_args,
-                return_type,
-            } => write!(
+            Type::Function { params, result } => write!(
                 f,
-                "fn({}) {return_type}",
-                args.iter()
-                    .map(Type::to_string)
-                    .chain(
-                        named_args
-                            .iter()
-                            .map(|(name, typ)| format!("{name}: {typ}"))
-                    )
+                "fn({}) -> {result}",
+                params
+                    .iter()
+                    .map(|(name, typ)| format!("{name}: {typ}"))
                     .join(", "),
             ),
             Type::Array {

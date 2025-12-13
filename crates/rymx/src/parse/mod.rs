@@ -1,5 +1,6 @@
-// use self::error::{ParseError, Pattern};
-use crate::tokenize::Token;
+mod error;
+
+use crate::{error::Diagnostic, parse::error::map_parse_result, tokenize::Token};
 use ast::{Expr, ExprKind, SpannedExpr, SpannedFunction, SpannedStmt};
 use chumsky::{
     extra::Full,
@@ -15,17 +16,17 @@ pub fn parse_file<'src>(
     tokens: &[(Token, Span)],
     src: &'src str,
     src_id: SourceId,
-) -> Vec<SpannedFunction> {
-    with_src(module(), src)
-        .parse(tokens.map(
-            Span {
-                start: src.len(),
-                end: src.len(),
-                id: src_id,
-            },
-            |(token, span)| (token, span),
-        ))
-        .unwrap()
+) -> Result<Vec<SpannedFunction>, Vec<Diagnostic>> {
+    let result = with_src(module(), src).parse(tokens.map(
+        Span {
+            start: src.len(),
+            end: src.len(),
+            id: src_id,
+        },
+        |(token, span)| (token, span),
+    ));
+
+    map_parse_result(result)
 }
 
 fn with_src<'src, I>(

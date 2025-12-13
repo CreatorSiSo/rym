@@ -48,6 +48,7 @@ impl<W: io::Write> AriadneEmitter<W> {
                 write!(out, "{}", child.message).unwrap();
             }
             writeln!(out).unwrap();
+            out.flush().unwrap();
             return;
         };
 

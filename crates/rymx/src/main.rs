@@ -108,7 +108,7 @@ fn cmd_run(_write_flags: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
     let src_id = emitter.source_map.add(path.to_string_lossy(), &src);
 
     std::thread::spawn(move || {
-        let module = compile_module(sender.clone(), &src, src_id)?;
+        let _module = compile_module(sender.clone(), &src, src_id)?;
         // let mut env = Env::new(sender).with_constants(rymx::std_lib::CONSTANTS);
         // interpret(&mut env, module);
         Some(())

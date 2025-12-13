@@ -1,9 +1,9 @@
 fn main() {
-    test_fib("fib_if", fib_if);
+    test_fib("fib_if", fib_if)
     // test_fib("fib_match", fib_match);
     // test_fib("fib_oneliner", fib_oneliner);
-    test_countdown();
-    test_fake_loops();
+    test_countdown()
+    test_fake_loops()
 }
 
 fn fib_if(n: Int) -> Uint {

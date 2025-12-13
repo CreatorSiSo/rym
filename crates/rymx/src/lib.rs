@@ -51,26 +51,36 @@ pub fn compile_module(
 ) -> Option<ast::Module> {
     let tokens: Vec<(Token, Span)> = tokenize(emitter.clone(), src, src_id);
 
-    let module = parse::parse_file(&tokens, src, src_id);
+    let parse_result = parse::parse_file(&tokens, src, src_id);
 
-    // for diagnostic in diagnostics {
-    //     emitter.send(diagnostic).unwrap();
-    // }
-    // Diagnostic::new(Level::Debug, "Finished parsing")
-    //     .with_child(vec![], Level::Debug, format!("{module:#?}\n"))
-    //     .emit(emitter);
-    println!("{:?}\n", &module);
+    Diagnostic::new(Level::Debug, "Finished Parsing").emit(emitter.clone());
+    let funcs = match parse_result {
+        Ok(funcs) => {
+            for func in &funcs {
+                Diagnostic::new(Level::Debug, format!("\n{func}")).emit(emitter.clone());
+            }
+            funcs
+        }
+        Err(diagnostics) => {
+            for diagnostic in diagnostics {
+                diagnostic.emit(emitter.clone());
+            }
+            return None;
+        }
+    };
 
-    let mut ctx = typecheck::TypeChecker {
+    let mut type_checker = typecheck::TypeChecker {
         symbol_table: typecheck::SymbolTable::new(),
     };
-    for func in &module {
-        ctx.symbol_table
+    for func in &funcs {
+        type_checker
+            .symbol_table
             .insert(func.name.clone().unwrap(), type_of_function(func));
     }
 
-    for func in module {
-        ctx.typecheck_function(&func);
+    for func in funcs {
+        let typed_func = type_checker.typecheck_function(&func);
+        println!("{typed_func}\n");
     }
 
     // TODO Name resolution

@@ -1,22 +1,22 @@
+pub mod std_lib;
+
 mod error;
 mod interpret;
 mod parse;
-mod span;
-pub mod std_lib;
 mod tokenize;
 mod typecheck;
 
 pub use error::AriadneEmitter;
 pub use interpret::Env;
-use std::sync::mpsc;
 pub use tokenize::tokenizer;
 
-use error::{Diagnostic, Level, SourceId};
+use error::{Diagnostic, Level};
 use interpret::{Interpret, Value};
-use span::Span;
+use span::{SourceId, Span};
+use std::sync::mpsc;
 use tokenize::Token;
 
-use crate::typecheck::typecheck_function;
+use crate::typecheck::type_of_function;
 
 pub fn interpret(env: &mut Env, ast: impl Interpret) -> Option<Value> {
     // let env_state: String = env
@@ -61,25 +61,16 @@ pub fn compile_module(
     //     .emit(emitter);
     println!("{:?}\n", &module);
 
-    let mut ctx = typecheck::Context {
+    let mut ctx = typecheck::TypeChecker {
         symbol_table: typecheck::SymbolTable::new(),
     };
     for func in &module {
-        ctx.symbol_table.insert(
-            func.name.clone().unwrap(),
-            ast::Type::Function {
-                params: func
-                    .params
-                    .iter()
-                    .map(|param| (param.name.clone(), param.typ.clone()))
-                    .collect(),
-                result: Box::new(func.return_type.clone()),
-            },
-        );
+        ctx.symbol_table
+            .insert(func.name.clone().unwrap(), type_of_function(func));
     }
 
     for func in module {
-        typecheck_function(&mut ctx, &func);
+        ctx.typecheck_function(&func);
     }
 
     // TODO Name resolution

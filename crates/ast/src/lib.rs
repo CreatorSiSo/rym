@@ -1,5 +1,14 @@
 use itertools::Itertools;
+use span::Span;
 use std::fmt::{Debug, Display};
+
+pub type SpannedExpr = Expr<Span>;
+pub type SpannedStmt = Stmt<Span>;
+pub type SpannedFunction = Function<Span>;
+
+pub type TypedExpr = Expr<(Span, Type)>;
+pub type TypedStmt = Stmt<(Span, Type)>;
+pub type TypedFunction = Function<(Span, Type)>;
 
 #[derive(Debug, Clone)]
 pub struct Module {
@@ -8,10 +17,10 @@ pub struct Module {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Stmt {
-    Expr(Expr),
-    Function(Function),
-    Variable(VariableKind, String, Type, Expr),
+pub enum Stmt<Extra: Debug + Clone> {
+    Expr(Expr<Extra>),
+    Function(Function<Extra>),
+    Variable(VariableKind, String, Type, Expr<Extra>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -29,44 +38,52 @@ impl Display for VariableKind {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct Expr<Extra: Debug + Clone> {
+    pub kind: ExprKind<Extra>,
+    pub extra: Extra,
+}
+
+pub type ExprRef<Extra> = Box<Expr<Extra>>;
+
 #[derive(Clone, PartialEq)]
-pub enum Expr {
+pub enum ExprKind<Extra: Debug + Clone> {
     Error,
     Unit,
 
     // Value creation
     Literal(Literal),
-    Array(Vec<Expr>),
-    ArrayWithRepeat(Box<Expr>, Box<Expr>),
-    Tuple(Vec<Expr>),
-    Struct(Path, Vec<(String, Expr)>),
-    Function(Function),
+    Array(Vec<ExprRef<Extra>>),
+    ArrayWithRepeat(ExprRef<Extra>, ExprRef<Extra>),
+    Tuple(Vec<ExprRef<Extra>>),
+    Struct(Path, Vec<(String, ExprRef<Extra>)>),
+    Function(Function<Extra>),
 
     // Value modification
-    Unary(UnaryOp, Box<Expr>),
-    Binary(BinaryOp, Box<Expr>, Box<Expr>),
-    Call(Box<Expr>, Vec<Expr>),
+    Unary(UnaryOp, ExprRef<Extra>),
+    Binary(BinaryOp, ExprRef<Extra>, ExprRef<Extra>),
+    Call(ExprRef<Extra>, Vec<Expr<Extra>>),
 
     // Value access
     Ident(String),
-    Subscript(Box<Expr>, Box<Expr>),
-    FieldAccess(Box<Expr>, String),
+    Subscript(ExprRef<Extra>, ExprRef<Extra>),
+    FieldAccess(ExprRef<Extra>, String),
 
     // Control flow
     IfElse(
         /// Condition
-        Box<Expr>,
+        ExprRef<Extra>,
         /// Then branch
-        Box<Expr>,
+        ExprRef<Extra>,
         /// Else branch
-        Box<Expr>,
+        ExprRef<Extra>,
     ),
-    Block(Vec<Stmt>),
-    Break(Box<Expr>),
-    Return(Box<Expr>),
+    Block(Vec<Stmt<Extra>>),
+    Break(ExprRef<Extra>),
+    Return(ExprRef<Extra>),
 }
 
-impl std::fmt::Debug for Expr {
+impl<E: Debug + Clone> Debug for ExprKind<E> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Error => write!(f, "Error"),
@@ -114,20 +131,20 @@ impl std::fmt::Debug for Expr {
 }
 
 #[derive(Debug, Clone)]
-pub struct Function {
+pub struct Function<Extra: Debug + Clone> {
     pub name: Option<String>,
-    pub params: Vec<FunctionParam>,
+    pub params: Vec<FunctionParam<Extra>>,
     pub return_type: Type,
-    pub body: Box<Expr>,
+    pub body: ExprRef<Extra>,
 }
 
-impl PartialEq for Function {
+impl<Extra: PartialEq + Debug + Clone> PartialEq for Function<Extra> {
     fn eq(&self, other: &Self) -> bool {
         self.params == other.params && self.return_type == other.return_type
     }
 }
 
-impl Display for Function {
+impl<Extra: Display + Debug + Clone> Display for Function<Extra> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
             "({}) -> {}",
@@ -138,22 +155,22 @@ impl Display for Function {
 }
 
 #[derive(Debug, Clone)]
-pub struct FunctionParam {
+pub struct FunctionParam<E> {
     pub name: String,
     pub typ: Type,
-    pub default_value: Option<Expr>,
+    pub default_value: Option<E>,
 }
 
-impl PartialEq for FunctionParam {
+impl<E: PartialEq> PartialEq for FunctionParam<E> {
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name && self.typ == other.typ
     }
 }
 
-impl Display for FunctionParam {
+impl<E: Display> Display for FunctionParam<E> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(param) = &self.default_value {
-            write!(f, "{}: {} = {param:?}", self.name, self.typ)
+            write!(f, "{}: {} = {param}", self.name, self.typ)
         } else {
             write!(f, "{}: {}", self.name, self.typ)
         }

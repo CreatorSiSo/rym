@@ -1,14 +1,17 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
-members = ["crates/ast", "crates/rymx"]
+members = ["crates/ast", "crates/rymx", "crates/span"]
 resolver = "2"
 edition = "2024"
 
 [workspace.dependencies]
+ast = { path = "crates/ast" }
+span = { path = "crates/span" }
 stringx = "0.1"
 thiserror = "1"
-ast = { path = "crates/ast" }
+chumsky = { version = "0.11", features = ["pratt"] }
+ariadne = "0.3"
 
 # TODO is this really the fastest and smallest profile?
 # smallest binary without compromising on speed

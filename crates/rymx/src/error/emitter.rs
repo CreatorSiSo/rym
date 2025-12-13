@@ -1,9 +1,8 @@
-use crate::error::diagnostic::SubDiagnostic;
-use crate::span::Span;
-
 use super::{Diagnostic, Level};
+use crate::error::diagnostic::SubDiagnostic;
 use ariadne::{Cache, Color, Label, ReportKind, Source};
 use itertools::Itertools;
+use span::{SourceId, Span};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
@@ -152,7 +151,7 @@ fn level_to_color(level: Level) -> Color {
 #[derive(Debug)]
 pub struct SourceMap {
     map: HashMap<SourceId, (String, Source)>,
-    next_id: SourceId,
+    id: SourceId,
 }
 
 impl Cache<SourceId> for &SourceMap {
@@ -173,14 +172,15 @@ impl SourceMap {
     fn new() -> Self {
         Self {
             map: HashMap::new(),
-            next_id: SourceId::FIRST,
+            id: SourceId::default(),
         }
     }
 
     pub fn add(&mut self, name: impl Into<String>, src: impl Into<Source>) -> SourceId {
-        let id = self.next_id;
+        let prev_id = self.id;
+        let id = SourceId::new(prev_id);
+        self.id = id;
         self.map.insert(id, (name.into(), src.into()));
-        self.next_id.0 += 1;
         id
     }
 
@@ -198,24 +198,4 @@ impl SourceMap {
     pub fn name(&self, id: SourceId) -> Option<&String> {
         self.map.get(&id).map(|(name, _)| name)
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct SourceId(u32);
-
-impl Display for SourceId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Debug::fmt(&self, f)
-    }
-}
-
-impl Default for SourceId {
-    fn default() -> Self {
-        Self::INVALID
-    }
-}
-
-impl SourceId {
-    pub const INVALID: Self = Self(0);
-    const FIRST: Self = Self(1);
 }

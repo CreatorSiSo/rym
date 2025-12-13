@@ -1,14 +1,7 @@
-use crate::error::SourceId;
 use core::ops::Range;
 use std::fmt::{Debug, Display};
 
 type Index = usize;
-
-#[derive(Debug)]
-pub struct Spanned<T> {
-    val: T,
-    span: Span,
-}
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Span {
@@ -117,4 +110,27 @@ impl ariadne::Span for Span {
     fn end(&self) -> usize {
         self.end
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SourceId(u32);
+
+impl Display for SourceId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(&self, f)
+    }
+}
+
+impl Default for SourceId {
+    fn default() -> Self {
+        Self::INVALID
+    }
+}
+
+impl SourceId {
+    pub fn new(prev: Self) -> Self {
+        Self(prev.0 + 1)
+    }
+
+    pub const INVALID: Self = Self(0);
 }

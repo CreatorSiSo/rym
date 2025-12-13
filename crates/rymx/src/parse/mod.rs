@@ -1,10 +1,12 @@
 // use self::error::{ParseError, Pattern};
-use crate::{error::SourceId, span::Span, tokenize::Token};
+use crate::tokenize::Token;
+use ast::{Expr, ExprKind, SpannedExpr, SpannedFunction, SpannedStmt};
 use chumsky::{
     extra::Full,
     input::{Input, MapExtra, ValueInput},
     prelude::*,
 };
+use span::{SourceId, Span};
 
 type Error<'src> = Rich<'src, Token, Span>;
 type Extra<'src> = Full<Error<'src>, (), &'src str>;
@@ -13,7 +15,7 @@ pub fn parse_file<'src>(
     tokens: &[(Token, Span)],
     src: &'src str,
     src_id: SourceId,
-) -> Vec<ast::Function> {
+) -> Vec<SpannedFunction> {
     with_src(module(), src)
         .parse(tokens.map(
             Span {
@@ -27,23 +29,23 @@ pub fn parse_file<'src>(
 }
 
 fn with_src<'src, I>(
-    parser: impl Parser<'src, I, Vec<ast::Function>, Extra<'src>>,
+    parser: impl Parser<'src, I, Vec<SpannedFunction>, Extra<'src>>,
     src: &'src str,
-) -> impl Parser<'src, I, Vec<ast::Function>, Extra<'src>>
+) -> impl Parser<'src, I, Vec<SpannedFunction>, Extra<'src>>
 where
     I: ValueInput<'src, Span = Span, Token = Token>,
 {
     parser.with_ctx(src)
 }
 
-fn module<'src, I>() -> impl Parser<'src, I, Vec<ast::Function>, Extra<'src>>
+fn module<'src, I>() -> impl Parser<'src, I, Vec<SpannedFunction>, Extra<'src>>
 where
     I: ValueInput<'src, Span = Span, Token = Token>,
 {
     function().repeated().collect()
 }
 
-fn function<'src, I>() -> impl Parser<'src, I, ast::Function, Extra<'src>> + Clone
+fn function<'src, I>() -> impl Parser<'src, I, SpannedFunction, Extra<'src>> + Clone
 where
     I: ValueInput<'src, Span = Span, Token = Token>,
 {
@@ -53,20 +55,31 @@ where
             parameter()
                 .separated_by(just(Token::Comma))
                 .allow_trailing()
-                .collect::<Vec<ast::FunctionParam>>()
+                .collect::<Vec<ast::FunctionParam<Span>>>()
                 .delimited_by(just(Token::ParenOpen), just(Token::ParenClose)),
         )
         .then(just(Token::ThinArrow).ignore_then(typ()).or_not())
-        .then(block().or_not())
-        .map(|(((name, params), return_type), body)| ast::Function {
-            name: name.map(String::from),
-            params,
-            return_type: return_type.unwrap_or(ast::Type::Unit),
-            body: Box::new(body.map(ast::Expr::Block).unwrap_or(ast::Expr::Error)),
-        })
+        .then(
+            block()
+                .or_not()
+                .map_with(|body, extra| (body, extra.span())),
+        )
+        .map(
+            |(((name, params), return_type), (body, body_span))| SpannedFunction {
+                name: name.map(String::from),
+                params,
+                return_type: return_type.unwrap_or(ast::Type::Unit),
+                body: Box::new(Expr {
+                    kind: body
+                        .map(ast::ExprKind::Block)
+                        .unwrap_or(ast::ExprKind::Error),
+                    extra: body_span,
+                }),
+            },
+        )
 }
 
-fn block<'src, I>() -> impl Parser<'src, I, Vec<ast::Stmt>, Extra<'src>> + Clone
+fn block<'src, I>() -> impl Parser<'src, I, Vec<SpannedStmt>, Extra<'src>> + Clone
 where
     I: ValueInput<'src, Span = Span, Token = Token>,
 {
@@ -76,12 +89,12 @@ where
         .delimited_by(just(Token::BraceOpen), just(Token::BraceClose))
 }
 
-fn statement<'src, I>() -> impl Parser<'src, I, ast::Stmt, Extra<'src>> + Clone
+fn statement<'src, I>() -> impl Parser<'src, I, SpannedStmt, Extra<'src>> + Clone
 where
     I: ValueInput<'src, Span = Span, Token = Token>,
 {
     choice((
-        expression().map(ast::Stmt::Expr),
+        expression().map(SpannedStmt::Expr),
         just(Token::Let)
             .ignore_then(just(Token::Mut).or_not())
             .then(ident())
@@ -103,13 +116,19 @@ where
     ))
 }
 
-fn expression<'src, I>() -> impl Parser<'src, I, ast::Expr, Extra<'src>> + Clone
+fn expression<'src, I>() -> impl Parser<'src, I, SpannedExpr, Extra<'src>> + Clone
 where
     I: ValueInput<'src, Span = Span, Token = Token>,
 {
     recursive(|expr| {
-        let literal = literal().map(ast::Expr::Literal);
-        let ident = ident().map(|ident| ast::Expr::Ident(ident.to_owned()));
+        let literal = literal().map_with(|lit, extra| Expr {
+            kind: ExprKind::Literal(lit),
+            extra: extra.span(),
+        });
+        let ident = ident().map_with(|ident, extra| Expr {
+            kind: ExprKind::Ident(ident.to_owned()),
+            extra: extra.span(),
+        });
 
         let atom = choice((
             literal,
@@ -122,32 +141,42 @@ where
             .clone()
             .separated_by(just(Token::Comma))
             .allow_trailing()
-            .collect::<Vec<ast::Expr>>();
+            .collect::<Vec<SpannedExpr>>();
 
-        let call = atom.foldl(
+        let call = atom.foldl_with(
             arguments
                 .delimited_by(just(Token::ParenOpen), just(Token::ParenClose))
                 .repeated(),
-            |func, args| ast::Expr::Call(Box::new(func), args),
+            |func, args, extra| Expr {
+                kind: ExprKind::Call(Box::new(func), args),
+                extra: extra.span(),
+            },
         );
 
         let if_else = just(Token::If)
             .ignore_then(expr.clone())
             .then(expr.clone())
             .then(just(Token::Else).ignore_then(expr.clone()).or_not())
-            .map(|((cond, a), b)| {
-                ast::Expr::IfElse(
-                    Box::new(cond),
-                    Box::new(a),
-                    Box::new(b.unwrap_or(ast::Expr::Block(Vec::new()))),
-                )
+            .map_with(|((cond, a), b), extra| {
+                let span_a = a.extra;
+                Expr {
+                    kind: ExprKind::IfElse(
+                        Box::new(cond),
+                        Box::new(a),
+                        Box::new(b.unwrap_or(Expr {
+                            kind: ExprKind::Block(Vec::new()),
+                            extra: Span::new(span_a.end, span_a.end).with_id(span_a.id),
+                        })),
+                    ),
+                    extra: extra.span(),
+                }
             });
 
         choice((call, if_else))
     })
 }
 
-fn parameter<'src, I>() -> impl Parser<'src, I, ast::FunctionParam, Extra<'src>> + Clone
+fn parameter<'src, I>() -> impl Parser<'src, I, ast::FunctionParam<Span>, Extra<'src>> + Clone
 where
     I: ValueInput<'src, Span = Span, Token = Token>,
 {

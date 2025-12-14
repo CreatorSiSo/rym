@@ -1,13 +1,12 @@
 use super::{Diagnostic, Level};
 use crate::error::diagnostic::SubDiagnostic;
-use ariadne::{Cache, Color, Label, ReportKind, Source};
+use ariadne::{Cache, Color, Config, Label, ReportKind, Source};
 use itertools::Itertools;
 use span::{SourceId, Span};
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 use std::io;
-use std::sync::mpsc;
+use std::sync::{Mutex, mpsc};
 
 // pub trait Emitter {
 //     fn emit_diagnostic(&mut self, diagnostic: &Diagnostic);
@@ -16,14 +15,14 @@ use std::sync::mpsc;
 pub struct AriadneEmitter<W: io::Write> {
     pub source_map: SourceMap,
     receiver: mpsc::Receiver<Diagnostic>,
-    out: RefCell<W>,
+    out: Mutex<W>,
 }
 
 impl<W: io::Write> AriadneEmitter<W> {
     pub fn new(out: W) -> (mpsc::Sender<Diagnostic>, Self) {
         let (sender, receiver) = mpsc::channel();
         let emitter = Self {
-            out: RefCell::new(out),
+            out: Mutex::new(out),
             source_map: SourceMap::new(),
             receiver,
         };
@@ -33,22 +32,29 @@ impl<W: io::Write> AriadneEmitter<W> {
     pub fn emit(&self, diagnostic: Diagnostic) {
         type Report<'a> = ariadne::Report<'a, crate::Span>;
 
+        let config = Config::default()
+            .with_char_set(ariadne::CharSet::Unicode)
+            .with_cross_gap(true);
+
         if diagnostic.span.is_none() && diagnostic.level == Level::Debug {
-            let mut out = self.out.borrow_mut();
-            Report::build(
+            let mut builder = Report::build(
                 level_to_kind(diagnostic.level),
-                SourceId::INVALID,
-                diagnostic.span.unwrap_or(Span::new(0, 0)).start,
+                diagnostic.span.unwrap_or(Span::new(0, 0)),
             )
-            .with_message(&diagnostic.message)
-            .finish()
-            .write(&self.source_map, out.by_ref())
-            .unwrap();
+            .with_config(config)
+            .with_message(&diagnostic.message);
+
             for child in &diagnostic.children {
-                write!(out, "{}", child.message).unwrap();
+                builder.set_note(&child.message);
             }
+
+            let mut out = self.out.lock().unwrap();
+            builder
+                .finish()
+                .write(&self.source_map, out.by_ref())
+                .unwrap();
             writeln!(out).unwrap();
-            out.flush().unwrap();
+
             return;
         };
 
@@ -80,9 +86,9 @@ impl<W: io::Write> AriadneEmitter<W> {
 
         let mut builder = Report::build(
             level_to_kind(diagnostic.level),
-            SourceId::INVALID,
-            diagnostic.span.unwrap_or(Span::new(0, 0)).start,
+            diagnostic.span.unwrap_or(Span::new(0, 0)),
         )
+        .with_config(config)
         .with_message(&diagnostic.message);
 
         if diagnostic.children.is_empty()
@@ -106,7 +112,7 @@ impl<W: io::Write> AriadneEmitter<W> {
             }
         }
 
-        let mut out = self.out.borrow_mut();
+        let mut out = self.out.lock().unwrap();
         builder
             .finish()
             .write(&self.source_map, out.by_ref())
@@ -115,11 +121,11 @@ impl<W: io::Write> AriadneEmitter<W> {
     }
 
     /// Emit all received [`Diagnostic`]s without blocking
-    pub fn emit_all(&self) {
-        for diagnostic in self.receiver.try_iter() {
-            self.emit(diagnostic);
-        }
-    }
+    // pub fn emit_all(&self) {
+    //     for diagnostic in self.receiver.try_iter() {
+    //         self.emit(diagnostic);
+    //     }
+    // }
 
     /// Emit all received [`Diagnostic`]s by blocking until every [Sender] is dropped
     pub fn emit_all_blocking(self) {
@@ -141,11 +147,11 @@ fn level_to_kind(level: Level) -> ReportKind<'static> {
 
 fn level_to_color(level: Level) -> Color {
     match level {
-        Level::Error => Color::Red,
-        Level::Warning => Color::Yellow,
-        Level::Note => Color::Unset,
-        Level::Help => Color::Unset,
-        Level::Debug => Color::Unset,
+        Level::Error => Color::BrightRed,
+        Level::Warning => Color::BrightYellow,
+        Level::Note => Color::BrightGreen,
+        Level::Help => Color::BrightBlue,
+        Level::Debug => Color::default(),
     }
 }
 
@@ -156,14 +162,16 @@ pub struct SourceMap {
 }
 
 impl Cache<SourceId> for &SourceMap {
-    fn fetch(&mut self, id: &SourceId) -> Result<&Source, Box<dyn Debug + '_>> {
+    type Storage = String;
+
+    fn fetch(&mut self, id: &SourceId) -> Result<&Source<Self::Storage>, impl std::fmt::Debug> {
         match self.source(*id) {
-            Some(source) => Ok(source),
+            Some(source) => Ok::<&ariadne::Source, String>(source),
             None => panic!("Internal Error: SourceId '{:?}' does not exist", id),
         }
     }
 
-    fn display<'a>(&self, id: &'a SourceId) -> Option<Box<dyn Display + 'a>> {
+    fn display<'a>(&self, id: &'a SourceId) -> Option<impl std::fmt::Display + 'a> {
         let name = self.name(*id)?;
         Some(Box::new(name.to_owned()))
     }
@@ -177,19 +185,19 @@ impl SourceMap {
         }
     }
 
-    pub fn add(&mut self, name: impl Into<String>, src: impl Into<Source>) -> SourceId {
+    pub fn add(&mut self, name: impl Into<String>, src: Source) -> SourceId {
         let prev_id = self.id;
         let id = SourceId::new(prev_id);
         self.id = id;
-        self.map.insert(id, (name.into(), src.into()));
+        self.map.insert(id, (name.into(), src));
         id
     }
 
-    pub fn replace(&mut self, id: SourceId, src: impl Into<Source>) {
+    pub fn replace(&mut self, id: SourceId, src: Source) {
         let Some((_, source)) = self.map.get_mut(&id) else {
             panic!("Internal Error: SourceId '{:?}' does not exist", id)
         };
-        *source = src.into();
+        *source = src;
     }
 
     pub fn source(&self, id: SourceId) -> Option<&Source> {

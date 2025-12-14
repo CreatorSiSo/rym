@@ -1,5 +1,5 @@
 /// Doc comment
-const test = 0;
+//const test = 0;
 
 fn main() {
     return /* Inline comment */;

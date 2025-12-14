@@ -105,6 +105,12 @@ impl MultiSpan for Vec<Span> {
     }
 }
 
+impl<const N: usize> MultiSpan for [Span; N] {
+    fn into_vec(self) -> Vec<Span> {
+        self.to_vec()
+    }
+}
+
 impl MultiSpan for &[Span] {
     fn into_vec(self) -> Vec<Span> {
         self.to_vec()

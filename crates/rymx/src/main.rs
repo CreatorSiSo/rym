@@ -1,10 +1,8 @@
+use ariadne::Source;
 use clap::{Command, arg, command};
 use rustyline::{Editor, error::ReadlineError};
-use rymx::{AriadneEmitter, Env, compile_module, interpret};
+use rymx::{AriadneEmitter, compile_module};
 use std::{fs::read_to_string, path::PathBuf};
-
-#[derive(Debug)]
-struct Arguments {}
 
 fn main() -> anyhow::Result<()> {
     let mut command = command!()
@@ -51,9 +49,9 @@ fn cmd_repl(_write_flags: Vec<String>) -> anyhow::Result<()> {
     //     Box::new(File::create(PathBuf::from("repl.debug"))?)
     // };
 
-    let (sender, mut emitter) = AriadneEmitter::new(std::io::stderr());
+    let (_, mut emitter) = AriadneEmitter::new(std::io::stderr());
     // let mut env = Env::new(sender.clone()).with_constants(rymx::std_lib::CONSTANTS);
-    let src_id = emitter.source_map.add("repl", "");
+    let src_id = emitter.source_map.add("repl", Source::from("".to_owned()));
     loop {
         let readline = editor.readline("➤ ");
 
@@ -66,7 +64,7 @@ fn cmd_repl(_write_flags: Vec<String>) -> anyhow::Result<()> {
                 }
 
                 editor.add_history_entry(&line).unwrap();
-                emitter.source_map.replace(src_id, &line);
+                emitter.source_map.replace(src_id, Source::from(line));
 
                 // compile_stmt(sender.clone(), &line, src_id)
                 // .and_then(|expr| interpret(&mut env, expr))
@@ -86,7 +84,8 @@ fn cmd_repl(_write_flags: Vec<String>) -> anyhow::Result<()> {
             }
         }
 
-        emitter.emit_all();
+        // TODO
+        // emitter.emit_all();
     }
 
     editor.save_history(".history")?;
@@ -105,7 +104,9 @@ fn cmd_run(_write_flags: Vec<String>, path: PathBuf) -> anyhow::Result<()> {
     // };
 
     let (sender, mut emitter) = AriadneEmitter::new(std::io::stderr());
-    let src_id = emitter.source_map.add(path.to_string_lossy(), &src);
+    let src_id = emitter
+        .source_map
+        .add(path.to_string_lossy(), Source::from(src.clone()));
 
     std::thread::spawn(move || {
         let _module = compile_module(sender.clone(), &src, src_id)?;

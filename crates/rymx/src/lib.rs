@@ -71,6 +71,7 @@ pub fn compile_module(
 
     let mut type_checker = typecheck::TypeChecker {
         symbol_table: typecheck::SymbolTable::new(),
+        emitter: emitter.clone(),
     };
     for func in &funcs {
         type_checker
@@ -80,7 +81,7 @@ pub fn compile_module(
 
     for func in funcs {
         let typed_func = type_checker.typecheck_function(&func);
-        println!("{typed_func}\n");
+        Diagnostic::new(Level::Debug, format!("\n{typed_func}")).emit(emitter.clone());
     }
 
     // TODO Name resolution

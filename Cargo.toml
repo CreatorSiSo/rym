@@ -11,7 +11,7 @@ span = { path = "crates/span" }
 stringx = "0.1"
 thiserror = "1"
 chumsky = { version = "0.11", features = ["pratt"] }
-ariadne = "0.3"
+ariadne = "0.6"
 
 # TODO is this really the fastest and smallest profile?
 # smallest binary without compromising on speed
